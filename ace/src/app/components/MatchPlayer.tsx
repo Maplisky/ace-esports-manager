@@ -15,12 +15,17 @@ const RESULT_MS = 750;
 
 interface Pos { mi: number; ri: number; ei: number } // ei: -1=回合头, 0..n-1=事件, n=回合结果
 
-export function MatchPlayer(props: { record: MatchRecord; state: GameState; onClose: () => void }) {
+export function MatchPlayer(props: { record: MatchRecord; state: GameState; onClose: () => void; startFinished?: boolean }) {
   const { record, state, onClose } = props;
-  const [pos, setPos] = useState<Pos>({ mi: 0, ri: 0, ei: -1 });
-  const [playing, setPlaying] = useState(true);
+  const startAtEnd = props.startFinished === true;
+  const [pos, setPos] = useState<Pos>(() =>
+    startAtEnd
+      ? { mi: record.maps.length - 1, ri: Math.max(0, (record.maps[record.maps.length - 1]?.rounds.length ?? 1) - 1), ei: 99 }
+      : { mi: 0, ri: 0, ei: -1 },
+  );
+  const [playing, setPlaying] = useState(!startAtEnd);
   const [speed, setSpeed] = useState(2);
-  const [finished, setFinished] = useState(false);
+  const [finished, setFinished] = useState(startAtEnd);
   const timer = useRef<number | null>(null);
 
   const map = record.maps[pos.mi];
@@ -256,7 +261,7 @@ function totalProgress(record: MatchRecord, pos: Pos): number {
   return total > 0 ? Math.min(100, (done / total) * 100) : 0;
 }
 
-/** 赛后强度归因条（GDD §10.2）：双方各修正项贡献对比，正右负左 */
+/** 赛后强度归因条（GDD §10.2）：发散式对比——中间零线，A 优势向左、B 优势向右，条长按各行差值归一化 */
 const EDGE_LABELS: [keyof import("../../core/types.ts").EdgeBreakdown, string][] = [
   ["base", "基础阵容"], ["igl", "指挥"], ["chem", "化学反应"], ["coach", "教练"],
   ["meta", "版本适配"], ["map", "图池熟练"], ["prep", "针对准备"], ["familiarity", "英雄熟练"],
@@ -264,45 +269,62 @@ const EDGE_LABELS: [keyof import("../../core/types.ts").EdgeBreakdown, string][]
 ];
 
 function AttributionTable({ record, state }: { record: MatchRecord; state: GameState }) {
-  const last = record.maps[record.maps.length - 1];
-  if (!last?.edges) return null;
-  const { A, B } = last.edges;
-  const maxAbs = Math.max(0.5, ...EDGE_LABELS.map(([k]) => Math.max(Math.abs(A[k] ?? 0), Math.abs(B[k] ?? 0))));
+  if (record.maps.length === 0 || !record.maps[0]!.edges) return null;
   const tagA = state.teams[record.teamA]?.tag ?? "A";
   const tagB = state.teams[record.teamB]?.tag ?? "B";
+  const rows = EDGE_LABELS.map(([k, label]) => {
+    const va = avgOf(record, "A", k);
+    const vb = avgOf(record, "B", k);
+    return { k, label, va, vb, diff: va - vb }; // diff > 0 = A 占优
+  });
+  const maxDiff = Math.max(0.5, ...rows.map((r) => Math.abs(r.diff)));
   return (
     <div style={{ textAlign: "left", marginTop: 14 }}>
       <div className="muted small" style={{ textAlign: "center", marginBottom: 6 }}>
-        强度归因 · 决胜图（{MAP_BY_ID.get(last.map)?.name ?? last.map}）
+        强度归因 · 全部 {record.maps.length} 图均值（谁占优：条向谁的方向延伸）
       </div>
       <table>
         <thead>
-          <tr><th style={{ width: "38%", textAlign: "right" }}>{tagA}</th><th style={{ textAlign: "center", width: "24%" }}>维度</th><th style={{ width: "38%" }}>{tagB}</th></tr>
+          <tr><th style={{ width: "16%", textAlign: "right" }}>{tagA}</th><th style={{ textAlign: "center", width: "12%" }}>维度</th><th style={{ textAlign: "left", width: "16%" }}>{tagB}</th><th>归因（A ← | → B）</th></tr>
         </thead>
         <tbody>
-          {EDGE_LABELS.map(([k, label]) => {
-            const va = A[k] ?? 0;
-            const vb = B[k] ?? 0;
+          {rows.map(({ k, label, va, vb, diff }) => {
+            const pct = (Math.abs(diff) / maxDiff) * 50; // 半宽归一化（0-50%）
+            const aWins = diff > 0;
             return (
               <tr key={k}>
-                <td style={{ textAlign: "right" }}>
-                  <span className="muted small" style={{ marginRight: 6 }}>{va >= 0 ? "+" : ""}{va.toFixed(2)}</span>
-                  <span className="bar-track" style={{ width: 90 }}>
-                    <span className="bar-fill" style={{ float: "right", width: `${(Math.abs(va) / maxAbs) * 100}%`, background: va >= 0 ? "var(--green)" : "var(--accent)" }} />
-                  </span>
-                </td>
+                <td style={{ textAlign: "right" }} className="small">{va >= 0 ? "+" : ""}{va.toFixed(2)}</td>
                 <td style={{ textAlign: "center" }} className="muted small">{label}</td>
+                <td className="small">{vb >= 0 ? "+" : ""}{vb.toFixed(2)}</td>
                 <td>
-                  <span className="bar-track" style={{ width: 90 }}>
-                    <span className="bar-fill" style={{ width: `${(Math.abs(vb) / maxAbs) * 100}%`, background: vb >= 0 ? "var(--green)" : "var(--accent)" }} />
-                  </span>
-                  <span className="muted small" style={{ marginLeft: 6 }}>{vb >= 0 ? "+" : ""}{vb.toFixed(2)}</span>
+                    <div style={{ position: "relative", height: 12, background: "var(--panel2)", borderRadius: 6, overflow: "hidden", width: "100%", maxWidth: 260 }}>
+                    <div style={{ position: "absolute", left: "50%", top: 0, bottom: 0, width: 1, background: "var(--line)" }} />
+                    <div
+                      style={{
+                        position: "absolute", top: 0, bottom: 0,
+                        // A 在左列：A 占优 → 条向左延伸（绿）；B 占优 → 向右延伸（红）
+                        ...(aWins ? { right: "50%", width: `${pct}%`, background: "var(--green)" } : { left: "50%", width: `${pct}%`, background: "var(--accent)" }),
+                      }}
+                    />
+                  </div>
                 </td>
               </tr>
             );
           })}
         </tbody>
       </table>
+      <div className="muted small" style={{ textAlign: "center", marginTop: 4 }}>
+        <span className="tag green">← A 优势</span> 中线为均势 <span className="tag red">B 优势 →</span> · 条长按各行差值归一化
+      </div>
     </div>
   );
+}
+
+/** 某方某维度在全部已打地图上的均值 */
+function avgOf(record: MatchRecord, side: "A" | "B", key: keyof import("../../core/types.ts").EdgeBreakdown): number {
+  const vals = record.maps
+    .map((m) => m.edges?.[side]?.[key])
+    .filter((v): v is number => typeof v === "number");
+  if (vals.length === 0) return 0;
+  return vals.reduce((s, v) => s + v, 0) / vals.length;
 }

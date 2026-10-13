@@ -1,0 +1,69 @@
+/** 赛前准备回归（GDD §5.5/§7.1）：mineHold 拦截、playHeldMatch 回放、mapLock/首发生效 */
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { generateWorld } from "../src/core/worldgen.ts";
+import { initSeasonFixtures, advanceDay, playHeldMatch } from "../src/core/sim/day.ts";
+
+test("赛前准备：mineHold 拦截我的比赛，AI 比赛照常；playHeldMatch 回放且选择生效", () => {
+  const state = generateWorld(2026);
+  initSeasonFixtures(state);
+  // 我的队从揭幕杯参赛队中取（保证有被拦截的比赛）
+  const myId = state.comps["cup"]!.teamIds[0]!;
+  state.myTeamId = myId;
+  state.day = 25; // 揭幕杯 QF 日（我的比赛）
+
+  const heldArgs: { fixtureId: string; teamA: string; teamB: string }[] = [];
+  const r = advanceDay(
+    state,
+    [],
+    (rec, fid, mine) => {
+      if (mine) assert.fail("被拦截的我的比赛不应在 advanceDay 内自动打完");
+    },
+    (fixtureId, teamA, teamB) => {
+      heldArgs.push({ fixtureId, teamA, teamB });
+      return true;
+    },
+  );
+  // 拦截恰好一次，且是我的比赛
+  assert.equal(heldArgs.length, 1);
+  assert.ok(heldArgs[0]!.teamA === myId || heldArgs[0]!.teamB === myId);
+  const team = state.teams[myId]!;
+  // 同日 AI 比赛（揭幕杯另外三场 QF）照常打完
+  const qfPlayed = state.fixtures.filter((f) => f.label.includes("四分之一决赛") && f.played);
+  assert.equal(qfPlayed.length, 3, `AI QF 应打完 3 场: ${qfPlayed.length}`);
+  // 我的 QF 未打
+  const myFixture = state.fixtures.find((f) => f.id === heldArgs[0]!.fixtureId)!;
+  assert.equal(myFixture.played, false);
+
+  // 赛前准备：手动 BP 图序 + 指定首发（把替补提上来）
+  const manualMaps = ["xueyuan", "jingjie", "kongting"];
+  const benchId = team.roster.find((pid) => !team.starters.includes(pid))!;
+  const starters = team.starters.slice(0, 4).concat(benchId);
+  const rec = playHeldMatch(
+    state,
+    myFixture.id,
+    { starters, maps: manualMaps, agentPicks: {} },
+  );
+  assert.ok(rec, "应产出 MatchRecord");
+  assert.equal(myFixture.played, true);
+  // mapLock 生效：图序一致
+  assert.deepEqual(
+    rec!.maps.map((m) => m.map),
+    manualMaps,
+  );
+  // 首发生效：替补出现在回放 lines 里，被换下的首发不在
+  const bench = state.players[benchId]!;
+  assert.ok(rec!.maps.some((m) => m.lines[benchId] !== undefined), `替补 ${bench.ign} 应上场`);
+  // 赛后：疲劳/生涯已累计
+  assert.ok(bench.career.maps > 0);
+});
+
+test("赛前准备：不带 mineHold 的旧调用路径行为不变（我的比赛自动打完）", () => {
+  const state = generateWorld(31);
+  initSeasonFixtures(state);
+  state.myTeamId = "T0";
+  state.day = 25;
+  advanceDay(state);
+  const qfPlayed = state.fixtures.filter((f) => f.label.includes("四分之一决赛") && f.played);
+  assert.equal(qfPlayed.length, 4, "无拦截时 4 场 QF 全部自动打完（含我的比赛）");
+});

@@ -1,6 +1,6 @@
 /** 模拟 Worker（GDD §11.1）：权威 state 常驻此处，主线程只拿快照渲染。 */
 import { generateWorld, resetPlayerSeq } from "../../core/worldgen.ts";
-import { initSeasonFixtures, advanceDay } from "../../core/sim/day.ts";
+import { initSeasonFixtures, advanceDay, playHeldMatch } from "../../core/sim/day.ts";
 import type { GameState, MatchRecord, Preset } from "../../core/types.ts";
 
 export interface SavedPayload {
@@ -25,20 +25,42 @@ function doAdvance(maxDays = 1): void {
   if (!state) return;
   const notes: string[] = [];
   const playedMine: string[] = [];
+  const held: { fixtureId: string; teamA: string; teamB: string; bo: 1 | 3 | 5; label: string } | null = null;
   let seasonEnded = false;
   for (let i = 0; i < maxDays && !seasonEnded; i++) {
-    const r = advanceDay(state, [], (rec, fixtureId, mine) => {
-      if (mine) {
-        records[fixtureId] = rec;
-        playedMine.push(fixtureId);
-      }
-    });
+    const r = advanceDay(
+      state,
+      [],
+      (rec, fixtureId, mine) => {
+        if (mine) {
+          records[fixtureId] = rec;
+          playedMine.push(fixtureId);
+        }
+      },
+      // 我的比赛开打前：拦截并停车（第一场生效，后续场次正常）
+      (fixtureId, teamA, teamB, bo, label) => {
+        void held;
+        replyHeld = { fixtureId, teamA, teamB, bo, label };
+        return true;
+      },
+    );
     notes.push(...r.notes);
     seasonEnded = r.seasonEnded;
-    if (playedMine.length > 0 && maxDays > 1) break; // 推进到下一场：打完我的比赛即停
+    if (replyHeld) break; // 停车等待赛前准备
   }
-  reply({ type: "advanced", ...snapshot(), notes, playedMine, seasonEnded });
+  reply({
+    type: "advanced",
+    ...snapshot(),
+    notes,
+    playedMine: replyHeld ? [] : playedMine,
+    seasonEnded,
+    held: replyHeld,
+  });
+  replyHeld = null;
 }
+
+/** 被拦截等待赛前准备的我的比赛 */
+let replyHeld: { fixtureId: string; teamA: string; teamB: string; bo: 1 | 3 | 5; label: string } | null = null;
 
 self.onmessage = (e: MessageEvent) => {
   const msg = e.data as Record<string, unknown>;
@@ -60,7 +82,7 @@ self.onmessage = (e: MessageEvent) => {
   } else if (type === "advance") {
     doAdvance(1);
   } else if (type === "advanceToNextMatch") {
-    doAdvance(140);
+    doAdvance(320); // 跨越休赛期 + 季前 + 揭幕杯（最长约 160 天）
   } else if (type === "setStarters") {
     if (state?.myTeamId) {
       const team = state.teams[state.myTeamId];
@@ -105,6 +127,24 @@ self.onmessage = (e: MessageEvent) => {
   } else if (type === "getRecord") {
     const rec = records[msg.fixtureId as string] ?? null;
     reply({ type: "record", fixtureId: msg.fixtureId, record: rec ? structuredClone(rec) : null });
+  } else if (type === "playHeldMatch") {
+    if (state) {
+      const rec = playHeldMatch(
+        state,
+        msg.fixtureId as string,
+        {
+          starters: msg.starters as string[] | undefined,
+          maps: msg.maps as string[] | null | undefined,
+          agentPicks: msg.agentPicks as Record<string, Record<string, string>> | undefined,
+        },
+        (rec2, fid) => {
+          records[fid] = rec2;
+        },
+      );
+      reply({ type: "played", ...snapshot(), record: rec ? structuredClone(rec) : null });
+    } else {
+      reply({ type: "played", state: null, records: {}, record: null });
+    }
   } else if (type === "getSnapshot") {
     reply({ type: "snapshot", ...snapshot() });
   }

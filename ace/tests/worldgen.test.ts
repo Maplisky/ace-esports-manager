@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { Rng, hashString } from "../src/core/rng.ts";
 import { generateWorld, computeOverall } from "../src/core/worldgen.ts";
-import { initSeasonFixtures, advanceDay } from "../src/core/sim/day.ts";
+import { initSeasonFixtures, advanceDay, isLeapYear, daysInYear } from "../src/core/sim/day.ts";
 
 test("RNG：同种子序列一致，不同种子不同", () => {
   const a = new Rng(12345);
@@ -80,36 +80,46 @@ test("computeOverall：权重合成在 30-99 内", () => {
   }
 });
 
-test("赛程：揭幕杯 + 双循环，日推进打完一个赛季", () => {
+test("赛历与翻年：自然年日历（含 Stage2/休赛期），年末按实际天数翻年", () => {
   const state = generateWorld(777);
   initSeasonFixtures(state);
   state.myTeamId = "T0";
-  // 赛程数量：杯 4+2+1=7；联赛 10 队双循环 90 场；8 队双循环 56 场
-  assert.equal(state.fixtures.length, 7 + 90 + 56);
-  // 推进到收官日前夕（121）；从 121 再推进的那一步会同时完成收官+翻年
-  for (let d = 0; d < 200 && state.day < 121; d++) {
+  // 赛程数量：杯 7；Stage1 90+56；Stage2 90+56
+  assert.equal(state.fixtures.length, 7 + 90 + 56 + 90 + 56);
+  // 推进到 Stage1 收官前夕（121）：杯赛 + Stage1 全部打完，Stage2 未开打
+  for (let d = 0; d < 400 && state.day < 121; d++) {
     advanceDay(state);
   }
-  assert.equal(state.day, 121, "应推进到收官日前夕");
-  // 旧赛季所有比赛打完
-  const unplayed = state.fixtures.filter((f) => f.teamA !== "" && f.teamB !== "" && !f.played);
-  assert.equal(unplayed.length, 0, `未打完: ${unplayed.length}`);
-  // 杯赛决赛已回填且打出冠军
-  const final = state.fixtures.find((f) => f.label.includes("总决赛"));
-  assert.ok(final && final.played && final.teamA !== "" && final.teamB !== "");
-  // 积分榜：胜负守恒（90 场 = 90 胜 + 90 负）
+  assert.equal(state.day, 121, "应推进到 Stage1 收官前夕");
+  const unplayedBefore = state.fixtures.filter((f) => f.teamA !== "" && f.teamB !== "" && !f.played);
+  assert.ok(unplayedBefore.every((f) => f.stage === "stage2"), "121 天前未打的只能是 Stage2");
+  assert.equal(unplayedBefore.length, 146, `Stage2 应有 146 场未打: ${unplayedBefore.length}`);
+  // Stage1 积分守恒（90 场 = 180 胜负）
   const comp = state.comps["stage1-t1"]!;
   const totalPlayed = Object.values(comp.standings).reduce((s, e) => s + e.w + e.l, 0);
   assert.equal(totalPlayed, 180);
-  // 翻年：收官 + 新赛程生成、年份/年龄推进（v1.9 修复验证）
-  const r2 = advanceDay(state);
-  assert.ok(r2.seasonEnded, "收官日应触发赛季结束");
+  // 翻年：推进到自然年末（2026 非闰年 = 365 天），收官 + 新赛季
+  const aPlayer = Object.values(state.players)[0]!;
+  const ageAtStart = aPlayer.age;
+  let ended = false;
+  for (let d = 0; d < 400 && !ended; d++) {
+    const r = advanceDay(state);
+    ended = r.seasonEnded;
+  }
+  assert.ok(ended, "年末应触发赛季收官");
   assert.equal(state.year, 2027, "应进入 2027 赛季");
   assert.equal(state.day, 1, "翻年后天数重置");
-  assert.equal(state.fixtures.length, 153, "新赛季赛程已生成");
-  assert.equal(state.fixtures.filter((f) => !f.played).length, 153);
+  assert.equal(state.fixtures.length, 299, "新赛季赛程已生成（含 Stage2）");
   assert.ok(state.news.some((n) => n.text.includes("收官")));
   assert.ok(state.news.some((n) => n.text.includes("2027 赛季开始")));
-  const aPlayer = Object.values(state.players)[0]!;
+  assert.ok(state.news.some((n) => n.text.includes("Stage 2 联赛进入前四")));
+  assert.equal(aPlayer.age, ageAtStart + 1, "翻年年龄 +1");
   assert.ok(aPlayer.contractYears >= 0, "合同年递减不越界");
+});
+
+test("闰年：2028 为 366 天（GDD 日期表考虑闰年）", () => {
+  assert.equal(daysInYear(2026), 365);
+  assert.equal(daysInYear(2028), 366);
+  assert.equal(daysInYear(2000), 366);
+  assert.equal(daysInYear(2100), 365);
 });

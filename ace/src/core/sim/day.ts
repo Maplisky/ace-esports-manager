@@ -11,14 +11,29 @@ import { simMatch } from "./match.ts";
 import { buildCup, buildLeague, fillNextSlot } from "./fixtures.ts";
 import type { GameState, MatchRecord, NewsItem } from "../types.ts";
 
-/** v0.1 赛历：季前 1-24 · 揭幕杯 25-52 · Stage1 53-118 · 收官 119-122 */
+/**
+ * 赛历（GDD §4.2，按自然年排布，考虑闰年）：
+ * 季前 1-24 · 揭幕杯 25-52 · Stage1 53-122 · 夏季窗口 123-152 · Stage2 153-232 · 休赛期 233-年末
+ * 闰年（2028/2032…）为 366 天，2 月 29 日自然存在；年末跨年翻页。
+ */
+export function isLeapYear(y: number): boolean {
+  return (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+}
+export function daysInYear(y: number): number {
+  return isLeapYear(y) ? 366 : 365;
+}
+
 export const CALENDAR = {
   preseasonEnd: 24,
   cupStart: 25,
   cupEnd: 52,
   stage1Start: 53,
-  stage1End: 118,
-  seasonEnd: 122,
+  stage1End: 122,
+  summerStart: 123,
+  summerEnd: 152,
+  stage2Start: 153,
+  stage2End: 232,
+  offseasonStart: 233,
 } as const;
 
 export interface AdvanceResult {
@@ -28,7 +43,7 @@ export interface AdvanceResult {
   seasonEnded: boolean;
 }
 
-/** 开赛程：揭幕杯（一级前 8）+ 双循环联赛（一级/次级各一）。按年份变化种子，避免每赛季赛程雷同。 */
+/** 开赛程：揭幕杯（一级前 8）+ 双循环联赛（一级/次级各一 × Stage1/Stage2）。按年份变化种子。 */
 export function initSeasonFixtures(state: GameState): void {
   const rng = new Rng((state.seed ^ Math.imul(state.year, 0x9e3779b9)) >>> 0);
   const t1 = Object.values(state.teams).filter((t) => t.tier === 1);
@@ -36,6 +51,8 @@ export function initSeasonFixtures(state: GameState): void {
   state.comps["cup"] = { key: "cup", name: "揭幕杯", stage: "cup", teamIds: [], standings: {} };
   state.comps["stage1-t1"] = { key: "stage1-t1", name: "VCT-P 霞赛区 · Stage 1", stage: "stage1", teamIds: t1.map((t) => t.id), standings: {} };
   state.comps["stage1-t2"] = { key: "stage1-t2", name: "挑战者联赛 · Stage 1", stage: "stage1", teamIds: t2.map((t) => t.id), standings: {} };
+  state.comps["stage2-t1"] = { key: "stage2-t1", name: "VCT-P 霞赛区 · Stage 2", stage: "stage2", teamIds: t1.map((t) => t.id), standings: {} };
+  state.comps["stage2-t2"] = { key: "stage2-t2", name: "挑战者联赛 · Stage 2", stage: "stage2", teamIds: t2.map((t) => t.id), standings: {} };
   for (const comp of Object.values(state.comps)) {
     if (comp.key === "cup") continue;
     for (const id of comp.teamIds) {
@@ -52,6 +69,8 @@ export function initSeasonFixtures(state: GameState): void {
   buildCup(state.fixtures, { comp: "cup", name: "揭幕杯", stage: "cup", teamIds: cupTeams, startDay: CALENDAR.cupStart + 1, gapDays: 8, bo: 3, rng });
   buildLeague(state.fixtures, { comp: "stage1-t1", name: "霞赛区联赛", stage: "stage1", teamIds: t1.map((t) => t.id), startDay: CALENDAR.stage1Start + 2, endDay: CALENDAR.stage1End, bo: 3, rng });
   buildLeague(state.fixtures, { comp: "stage1-t2", name: "挑战者联赛", stage: "stage1", teamIds: t2.map((t) => t.id), startDay: CALENDAR.stage1Start + 2, endDay: CALENDAR.stage1End, bo: 3, rng });
+  buildLeague(state.fixtures, { comp: "stage2-t1", name: "霞赛区联赛", stage: "stage2", teamIds: t1.map((t) => t.id), startDay: CALENDAR.stage2Start + 2, endDay: CALENDAR.stage2End, bo: 3, rng });
+  buildLeague(state.fixtures, { comp: "stage2-t2", name: "挑战者联赛", stage: "stage2", teamIds: t2.map((t) => t.id), startDay: CALENDAR.stage2Start + 2, endDay: CALENDAR.stage2End, bo: 3, rng });
 }
 
 function applyStandings(state: GameState, compKey: string, teamA: string, teamB: string, mapScore: [number, number], maps: { score: [number, number] }[]): void {
@@ -78,12 +97,12 @@ function weeklyTick(state: GameState, rng: Rng): void {
   const myPlayers = myTeam ? myTeam.roster.map((id) => state.players[id]).filter((p): p is NonNullable<typeof p> => !!p) : [];
   const trainDays = state.teamSchedule.filter((s) => s !== "rest").length;
 
-  // ── 团队层：跑图涨图池熟练（每天 +0.4，只按天算不乘人数——v1.9 检错修复）──
+  // ── 团队层：跑图涨图池熟练（每天 +0.4，浮点累进——round 会吃掉小数增量）──
   if (myTeam) {
     for (const slot of state.teamSchedule) {
       if (slot === "map") {
         for (const mid of state.trainingMaps) {
-          myTeam.mapPref[mid] = clamp(Math.round((myTeam.mapPref[mid] ?? 50) + 0.4), 20, 95);
+          myTeam.mapPref[mid] = clamp((myTeam.mapPref[mid] ?? 50) + 0.4, 20, 95);
         }
       }
     }
@@ -116,10 +135,10 @@ function weeklyTick(state: GameState, rng: Rng): void {
       } else if (focus === "rest") {
         p.fatigue = clamp(p.fatigue - 2, 0, 100);
       }
-      // 经验满 100 → 属性 +1（可多次触发）
-      for (const [attrKey, val] of Object.entries(p.xp)) {
-        while ((val ?? 0) >= XP_PER_ATTR_POINT) {
-          p.xp[attrKey] = val - XP_PER_ATTR_POINT;
+      // 经验满 100 → 属性 +1（可多次触发；注意读池子当前值，否则跨过 100 会死循环——v1.9 检错）
+      for (const attrKey of Object.keys(p.xp)) {
+        while ((p.xp[attrKey] ?? 0) >= XP_PER_ATTR_POINT) {
+          p.xp[attrKey] = (p.xp[attrKey] ?? 0) - XP_PER_ATTR_POINT;
           const k = attrKey as keyof PlayerAttrs;
           p.attrs[k] = clamp(p.attrs[k] + 1, 30, cap);
         }
@@ -145,14 +164,54 @@ function weeklyTick(state: GameState, rng: Rng): void {
 
 function setStage(state: GameState): void {
   const d = state.day;
-  state.stage = d <= CALENDAR.preseasonEnd ? "preseason" : d <= CALENDAR.cupEnd ? "cup" : d <= CALENDAR.stage1End ? "stage1" : "stage1";
+  state.stage =
+    d <= CALENDAR.preseasonEnd ? "preseason"
+    : d <= CALENDAR.cupEnd ? "cup"
+    : d <= CALENDAR.stage1End ? "stage1"
+    : d <= CALENDAR.summerEnd ? "summer"
+    : d <= CALENDAR.stage2End ? "stage2"
+    : "offseason";
 }
 
-/** 推进一天。onMatch：每场结束回调（Worker 捕获 MatchRecord 用）。 */
+/** 阶段收官结算：按最终名次结算董事会目标（GDD §9.5） */
+function settleObjective(state: GameState, compKey: string, stageName: string, notes: NewsItem[]): void {
+  const obj = state.objective;
+  if (!obj || !state.myTeamId) return;
+  const table = Object.values(state.comps[compKey]?.standings ?? {}).sort(
+    (x, y) => y.pts - x.pts || (y.mapW - y.mapL) - (x.mapW - x.mapL) || (y.roundW - y.roundL) - (x.roundW - x.roundL),
+  );
+  const place = table.findIndex((s) => s.teamId === state.myTeamId) + 1;
+  if (place <= 0) return;
+  const met = place <= obj.placeAtLeast;
+  state.boardConfidence = clamp(state.boardConfidence + (met ? Math.min(14, 6 + (obj.placeAtLeast - place) * 2) : -Math.min(16, 2 + (place - obj.placeAtLeast) * 3)), 0, 100);
+  notes.push({
+    day: state.day, kind: "club", important: true,
+    text: met
+      ? `✅ ${stageName}目标达成：第 ${place} 名（要求前 ${obj.placeAtLeast}），董事会满意。`
+      : `❌ ${stageName}目标未达成：第 ${place} 名（要求前 ${obj.placeAtLeast}），董事会不满。`,
+  });
+}
+
+/** 联赛冠军荣誉（career.titles 是退役转教练与名人堂的输入，GDD §8.3） */
+function awardLeagueTitle(state: GameState, compKey: string, notes: NewsItem[]): void {
+  const table = Object.values(state.comps[compKey]?.standings ?? {}).sort(
+    (x, y) => y.pts - x.pts || (y.mapW - y.mapL) - (x.mapW - x.mapL),
+  );
+  const champ = table[0]?.teamId;
+  if (!champ) return;
+  for (const pid of (state.teams[champ] as GameState["teams"][string]).roster) {
+    const p = state.players[pid];
+    if (p) p.career.titles++;
+  }
+  notes.push({ day: state.day, kind: "league", important: true, text: `🏆 ${state.teams[champ]?.name} 加冕 ${compKey.includes("t2") ? "挑战者联赛" : "霞赛区联赛"}${compKey.includes("stage2") ? " Stage 2" : " Stage 1"} 冠军` });
+}
+
+/** 推进一天。onMatch：每场结束回调。mineHold：我的比赛开打前暂停（返回 true 表示拦截，由调用方带参重放）。 */
 export function advanceDay(
   state: GameState,
   notes: NewsItem[] = [],
   onMatch?: (rec: MatchRecord, fixtureId: string, mine: boolean) => void,
+  mineHold?: (fixtureId: string, teamA: string, teamB: string, bo: 1 | 3 | 5, label: string) => boolean,
 ): AdvanceResult {
   state.day++;
   setStage(state);
@@ -160,23 +219,47 @@ export function advanceDay(
   const rng = new Rng(hashString(`${state.seed}:day:${state.day}`));
   const playedMine: string[] = [];
   let seasonEnded = false;
+  let held = false;
 
   // 阶段切换
   if (state.day === CALENDAR.cupStart) {
     notes.push({ day: state.day, kind: "league", text: "—— 进入揭幕杯 ——" });
   } else if (state.day === CALENDAR.stage1Start) {
     notes.push({ day: state.day, kind: "league", text: "—— 进入 Stage 1 联赛 ——" });
-    // 董事会目标（简化：进入前四）
     if (state.myTeamId) {
       state.objective = { stage: "stage1", placeAtLeast: 4, text: "董事会要求：Stage 1 联赛进入前四。" };
       notes.push({ day: state.day, kind: "club", important: true, text: state.objective.text });
     }
+  } else if (state.day === CALENDAR.summerStart) {
+    // Stage1 收官：结算目标 + 冠军荣誉
+    settleObjective(state, "stage1-t1", "Stage 1", notes);
+    awardLeagueTitle(state, "stage1-t1", notes);
+    awardLeagueTitle(state, "stage1-t2", notes);
+    notes.push({ day: state.day, kind: "league", text: "—— 进入夏季窗口（休整与练兵）——" });
+  } else if (state.day === CALENDAR.stage2Start) {
+    notes.push({ day: state.day, kind: "league", text: "—— 进入 Stage 2 联赛 ——" });
+    if (state.myTeamId) {
+      state.objective = { stage: "stage2", placeAtLeast: 4, text: "董事会要求：Stage 2 联赛进入前四。" };
+      notes.push({ day: state.day, kind: "club", important: true, text: state.objective.text });
+    }
+  } else if (state.day === CALENDAR.offseasonStart) {
+    // Stage2 收官
+    settleObjective(state, "stage2-t1", "Stage 2", notes);
+    awardLeagueTitle(state, "stage2-t1", notes);
+    awardLeagueTitle(state, "stage2-t2", notes);
+    notes.push({ day: state.day, kind: "league", text: "—— 进入休赛期 ——" });
   }
 
   // 当日比赛
   const todays = state.fixtures.filter((f) => f.day === state.day && !f.played && f.teamA !== "" && f.teamB !== "");
   for (const f of todays) {
     const mine = f.teamA === state.myTeamId || f.teamB === state.myTeamId;
+    if (mine && mineHold && !held) {
+      if (!mineHold(f.id, f.teamA, f.teamB, f.bo, f.label)) continue; // 调用方不拦截则正常打
+      held = true;
+      playedMine.push(f.id); // 标记为"我的比赛待打"
+      continue; // 暂停：等玩家完成赛前准备后由 playHeldMatch 重放
+    }
     const seed = hashString(`${state.seed}:${f.id}`);
     const rec = simMatch(state, f.teamA, f.teamB, f.bo, seed, f.id);
     f.played = true;
@@ -203,38 +286,10 @@ export function advanceDay(
   // 周结算
   if (state.day % 7 === 0) weeklyTick(state, rng);
 
-  // 赛季收官 + 翻年（v1.9 检错修复：原实现收官后日历死掉）
-  if (state.day === CALENDAR.seasonEnd) {
+  // 年末收官 + 翻年（按自然年天数，闰年 366 天；v1.9 检错修复：原实现收官后日历死掉）
+  if (state.day === daysInYear(state.year)) {
     seasonEnded = true;
     notes.push({ day: state.day, kind: "league", important: true, text: `—— ${state.year} 赛季收官 ——` });
-    if (state.myTeamId && state.objective) {
-      const comp = state.comps["stage1-t1"];
-      const myId = state.myTeamId;
-      const sorted = Object.values(comp?.standings ?? {}).sort(
-        (x, y) => y.pts - x.pts || (y.mapW - y.mapL) - (x.mapW - x.mapL) || (y.roundW - y.roundL) - (x.roundW - x.roundL),
-      );
-      const place = sorted.findIndex((s) => s.teamId === myId) + 1;
-      const met = place > 0 && place <= state.objective.placeAtLeast;
-      state.boardConfidence = clamp(state.boardConfidence + (met ? 10 : -12), 0, 100);
-      notes.push({
-        day: state.day, kind: "club", important: true,
-        text: met
-          ? `✅ 赛季目标达成：第 ${place} 名（要求前 ${state.objective.placeAtLeast}），董事会满意。`
-          : `❌ 赛季目标未达成：第 ${place} 名（要求前 ${state.objective.placeAtLeast}），董事会不满。`,
-      });
-    }
-    // 联赛冠军荣誉
-    const leagueTable = Object.values(state.comps["stage1-t1"]?.standings ?? {}).sort(
-      (x, y) => y.pts - x.pts || (y.mapW - y.mapL) - (x.mapW - x.mapL),
-    );
-    const leagueChamp = leagueTable[0]?.teamId;
-    if (leagueChamp) {
-      for (const pid of (state.teams[leagueChamp] as GameState["teams"][string]).roster) {
-        const p = state.players[pid];
-        if (p) p.career.titles++;
-      }
-      notes.push({ day: state.day, kind: "league", important: true, text: `🏆 ${state.teams[leagueChamp]?.name} 加冕 ${state.year} 赛季联赛冠军` });
-    }
     // 翻年：年龄 +1 / 合同 −1 / 新赛季赛程
     state.year++;
     for (const p of Object.values(state.players)) {
@@ -256,4 +311,64 @@ export function advanceDay(
   }
 
   return { day: state.day, notes: notes.map((n) => n.text), playedMine, seasonEnded };
+}
+
+/** 赛前准备完成后重放"被拦截的我的比赛"（玩家 BP/英雄/首发生效） */
+export function playHeldMatch(
+  state: GameState,
+  fixtureId: string,
+  opts: { starters?: string[]; maps?: string[] | null; agentPicks?: Record<string, Record<string, string>> },
+  onMatch?: (rec: MatchRecord, fixtureId: string, mine: boolean) => void,
+): MatchRecord | null {
+  const f = state.fixtures.find((x) => x.id === fixtureId);
+  if (!f || f.played) return null;
+  // 首发确认
+  if (opts.starters && state.myTeamId) {
+    const team = state.teams[state.myTeamId];
+    if (team) team.starters = opts.starters;
+  }
+  // 手动 BP → 覆盖该场图池（写回 fixture 级 mapLock；引擎经 vetoOverride 读取）
+  if (opts.maps && opts.maps.length > 0) {
+    f.mapLock = opts.maps.slice();
+  }
+  // 每图英雄 → 临时预案（preferred 标记，引擎 presetAgents 读取）
+  if (opts.agentPicks && state.myTeamId) {
+    const team = state.teams[state.myTeamId];
+    if (team) {
+      for (const [mapId, assign] of Object.entries(opts.agentPicks)) {
+        const list = (team.presets[mapId] ?? []).slice();
+        const name = "__prematch__";
+        const existing = list.findIndex((p) => p.name === name);
+        if (existing >= 0) list[existing] = { name, agents: assign, preferred: true };
+        else list.push({ name, agents: assign, preferred: true });
+        for (const p of list) if (p.name !== name) p.preferred = false;
+        team.presets[mapId] = list;
+      }
+    }
+  }
+  const seed = hashString(`${state.seed}:${f.id}`);
+  const rec = simMatch(state, f.teamA, f.teamB, f.bo, seed, f.id, f.mapLock);
+  f.played = true;
+  // 与 advanceDay 同样的赛后处理
+  const notes: NewsItem[] = [];
+  applyStandings(state, f.comp, f.teamA, f.teamB, rec.score, rec.maps);
+  fillNextSlot(state.fixtures, f, rec.winner === "A" ? f.teamA : f.teamB);
+  const tagA = (state.teams[f.teamA] as GameState["teams"][string]).tag;
+  const tagB = (state.teams[f.teamB] as GameState["teams"][string]).tag;
+  notes.push({ day: state.day, kind: "match", text: `${f.label}｜${tagA} ${rec.score[0]}-${rec.score[1]} ${tagB}`, important: true });
+  onMatch?.(rec, f.id, true);
+  if (f.label.includes("总决赛") && state.day >= CALENDAR.cupStart && state.day <= CALENDAR.cupEnd) {
+    const champ = rec.winner === "A" ? f.teamA : f.teamB;
+    const champTeam = state.teams[champ] as GameState["teams"][string];
+    for (const pid of champTeam.roster) {
+      const p = state.players[pid];
+      if (p) p.career.titles++;
+    }
+    notes.push({ day: state.day, kind: "league", important: true, text: `🏆 ${champTeam.name} 夺得揭幕杯冠军！` });
+  }
+  for (const n of notes) {
+    state.news.push(n);
+    if (state.news.length > 400) state.news.splice(0, state.news.length - 400);
+  }
+  return rec;
 }

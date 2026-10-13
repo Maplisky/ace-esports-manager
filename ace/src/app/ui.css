@@ -110,7 +110,7 @@ tr.me td { background: rgba(255, 70, 85, 0.07); }
 .tag.green { color: var(--green); border-color: var(--green); }
 .tag.orange { color: var(--orange); border-color: var(--orange); }
 .bar-track { background: var(--panel2); border-radius: 4px; height: 8px; width: 90px; overflow: hidden; display: inline-block; vertical-align: middle; }
-.bar-fill { height: 100%; }
+.bar-fill { height: 100%; display: block; }
 .startgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
 .teamcard { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; cursor: pointer; }
 .teamcard:hover { border-color: var(--accent); }

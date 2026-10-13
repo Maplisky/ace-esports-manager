@@ -116,14 +116,15 @@ export function OverviewPage(props: {
         </div>
       )}
 
-      {(["stage1-t1", "stage1-t2"] as const).map((key) => {
-        const comp = state.comps[key];
-        if (!comp) return null;
+      {Object.values(state.comps)
+        .filter((c) => c.key !== "cup" && Object.keys(c.standings).length > 0)
+        .sort((a, b) => a.key.localeCompare(b.key))
+        .map((comp) => {
         const table = Object.values(comp.standings).sort(
           (a, b) => b.pts - a.pts || (b.mapW - b.mapL) - (a.mapW - a.mapL) || (b.roundW - b.roundL) - (a.roundW - a.roundL),
         );
         return (
-          <div className="card" key={key}>
+          <div className="card" key={comp.key}>
             <h3>📊 {comp.name} · 积分榜</h3>
             <table>
               <thead>
@@ -194,7 +195,7 @@ export function fixtureLabel(state: GameState, f: { teamA: string; teamB: string
 
 export function formatDate(year: number, day: number): string {
   const d = new Date(Date.UTC(year, 0, 1));
-  d.setUTCDate(d.getUTCDate() + day);
+  d.setUTCDate(d.getUTCDate() + day - 1); // 第 1 天 = 1 月 1 日；闰年由 Date 自然处理
   return `${d.getUTCMonth() + 1}/${d.getUTCDate()}`;
 }
 

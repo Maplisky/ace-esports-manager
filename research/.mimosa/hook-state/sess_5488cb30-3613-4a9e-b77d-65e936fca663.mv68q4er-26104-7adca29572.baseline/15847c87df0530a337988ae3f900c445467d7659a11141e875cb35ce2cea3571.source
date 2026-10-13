@@ -1,1 +1,0 @@
-const t="valmanager:card:id",r=()=>{try{return localStorage.getItem(t)}catch{return null}},a=e=>{try{e?localStorage.setItem(t,e):localStorage.removeItem(t)}catch{}},c=e=>`${e.slice(0,7)}-••••-${e.slice(-4)}`;export{a,c as m,r};

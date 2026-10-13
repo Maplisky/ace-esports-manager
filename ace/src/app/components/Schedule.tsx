@@ -57,5 +57,12 @@ export function SchedulePage(props: { state: GameState; records: Record<string, 
 }
 
 function stageName(stage: string): string {
-  return stage === "cup" ? "揭幕杯" : stage === "stage1" ? "Stage 1" : stage;
+  switch (stage) {
+    case "preseason": return "季前准备";
+    case "cup": return "揭幕杯";
+    case "stage1": return "Stage 1";
+    case "summer": return "夏季窗口";
+    case "stage2": return "Stage 2";
+    default: return "休赛期";
+  }
 }

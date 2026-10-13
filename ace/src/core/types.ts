@@ -2,6 +2,9 @@
 
 export type Duty = "duelist" | "initiator" | "controller" | "sentinel";
 
+/** 赛历阶段（GDD §4.2）：自然年内六段 + 休赛期 */
+export type Stage = "preseason" | "cup" | "stage1" | "summer" | "stage2" | "offseason";
+
 export const DUTIES: readonly Duty[] = ["duelist", "initiator", "controller", "sentinel"];
 
 /** 职责向量：四项之和 = 1（GDD §6.1） */
@@ -220,13 +223,15 @@ export interface MatchRecord {
 export interface Fixture {
   id: string;
   day: number;
-  stage: "preseason" | "cup" | "stage1";
+  stage: Stage;
   comp: string;
   teamA: string;
   teamB: string;
   bo: 1 | 3 | 5;
   label: string;
   played: boolean;
+  /** 玩家手动 BP 锁定的图序列（赛前准备写入，引擎优先于自动 BP） */
+  mapLock?: string[];
   /** 淘汰赛胜者去向（下一轮 fixtureId），杯赛用 */
   nextFixtureId?: string;
   /** 淘汰赛 slot 标记（teamA/teamB 待定时的占位） */

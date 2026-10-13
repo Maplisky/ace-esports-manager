@@ -346,12 +346,12 @@ function presetAgents(state: GameState, team: Team, mapId: string): Record<strin
   return preferred.agents;
 }
 
-/** 模拟一场比赛（含 BP）。会累计生涯与赛后状态（疲劳/状态/士气）。 */
-export function simMatch(state: GameState, teamAId: string, teamBId: string, bo: 1 | 3 | 5, seed: number, matchId: string): MatchRecord {
+/** 模拟一场比赛（含 BP；fixture.mapLock 优先——玩家手动 BP）。会累计生涯与赛后状态。 */
+export function simMatch(state: GameState, teamAId: string, teamBId: string, bo: 1 | 3 | 5, seed: number, matchId: string, mapLock?: string[]): MatchRecord {
   const rng = new Rng(seed);
   const teamA = state.teams[teamAId] as Team;
   const teamB = state.teams[teamBId] as Team;
-  const veto = runVeto(teamA, teamB, bo, rng);
+  const veto = mapLock && mapLock.length > 0 ? { maps: mapLock.slice(), log: ["手动 BP"] } : runVeto(teamA, teamB, bo, rng);
 
   const makeSim = (side: "A" | "B", team: Team): SimTeam => {
     const roster = team.starters

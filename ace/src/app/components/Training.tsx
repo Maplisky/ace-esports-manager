@@ -1,22 +1,58 @@
 import { useState } from "react";
 import type { GameState } from "../../core/types.ts";
 import { MAPS } from "../../core/data/maps.ts";
+import { AGENT_BY_ID } from "../../core/data/agents.ts";
+import { INDIVIDUAL_OPTIONS, OPTION_BY_KEY, recommendFocus, XP_PER_DAY, XP_PER_ATTR_POINT } from "../../core/data/training.ts";
 import { useStore } from "../store.ts";
 
-const SLOTS: { key: string; name: string; desc: string }[] = [
-  { key: "map", name: "跑图", desc: "所选地图熟练 +0.4/天（上限 95），阵容磨合" },
-  { key: "review", name: "复盘", desc: "意识/沟通缓速成长（受潜力上限约束）" },
-  { key: "scrim", name: "对抗", desc: "队内赛：疲劳 +5，士气 +1" },
-  { key: "individual", name: "个人", desc: "自由训练（v0.5 接个人轨道）" },
-  { key: "rest", name: "休息", desc: "疲劳 −4" },
+const TEAM_SLOTS: { key: string; name: string; desc: string }[] = [
+  { key: "map", name: "跑图", desc: "所选地图熟练 +0.4/天（上限 95）" },
+  { key: "review", name: "复盘", desc: "全队意识/沟通经验（团队通道）" },
+  { key: "scrim", name: "对抗", desc: "队内赛：疲劳 +5/天，士气 +1/周" },
+  { key: "rest", name: "休息", desc: "全队调整，个人训练也停" },
 ];
 
-/** 训练页（GDD §6.3 v1.1 逐日课表，v0.1 团队层） */
+const ATTR_CN: Record<string, string> = {
+  aim: "枪法", reaction: "反应", awareness: "意识", utility: "道具",
+  clutch: "残局", teamwork: "协同", communication: "沟通", igl: "指挥",
+};
+
+function primaryDuty(state: GameState, pid: string): "duelist" | "initiator" | "controller" | "sentinel" {
+  const p = state.players[pid]!;
+  const sum = { duelist: 0, initiator: 0, controller: 0, sentinel: 0 };
+  let w = 0;
+  for (const agentId of p.agentPool) {
+    const a = AGENT_BY_ID.get(agentId);
+    if (!a) continue;
+    const pro = p.agentPro[agentId] ?? 0;
+    for (const k of ["duelist", "initiator", "controller", "sentinel"] as const) sum[k] += a.duty[k] * pro;
+    w += pro;
+  }
+  let best: "duelist" | "initiator" | "controller" | "sentinel" = "duelist";
+  let bestV = -1;
+  for (const k of ["initiator", "controller", "sentinel", "duelist"] as const) {
+    if (w > 0 && sum[k] / w > bestV) {
+      bestV = sum[k] / w;
+      best = k;
+    }
+  }
+  return best;
+}
+
+/** 训练页（GDD §6.3 v1.1）：团队课表与个人训练并行 */
 export function TrainingPage(props: { state: GameState }) {
   const { state } = props;
   const setTeamSchedule = useStore((s) => s.setTeamSchedule);
-  const [slots, setSlots] = useState<string[]>(() => (state.teamSchedule.length === 7 ? state.teamSchedule.slice() : ["map", "map", "review", "scrim", "individual", "individual", "rest"]));
+  const myId = state.myTeamId ?? "";
+  const team = state.teams[myId];
+  const [slots, setSlots] = useState<string[]>(() =>
+    state.teamSchedule.some((s) => s === "individual")
+      ? state.teamSchedule.map((s) => (s === "individual" ? "review" : s))
+      : state.teamSchedule.slice(),
+  );
   const [maps, setMaps] = useState<string[]>(() => (state.trainingMaps.length ? state.trainingMaps.slice() : [MAPS[0]!.id]));
+  const [schedules, setSchedules] = useState<Record<string, string>>(() => ({ ...state.schedules }));
+  if (!team) return null;
 
   const setSlot = (idx: number, key: string) => {
     const next = slots.slice();
@@ -24,21 +60,18 @@ export function TrainingPage(props: { state: GameState }) {
     setSlots(next);
   };
   const toggleMap = (id: string) => {
-    setMaps((cur) => {
-      if (cur.includes(id)) return cur.filter((x) => x !== id);
-      return [...cur, id].slice(-2); // 最多两张（GDD §6.3：一周最多两张图）
-    });
+    setMaps((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id].slice(-2)));
   };
-  const mapDays = slots.filter((s) => s === "map").length;
-  const restDays = slots.filter((s) => s === "rest").length;
+  const trainDays = slots.filter((s) => s !== "rest").length;
+  const roster = team.roster.map((pid) => state.players[pid]!);
 
   return (
     <div>
       <div className="card">
-        <h3>🏋 团队周课表（确定后练 7 天）</h3>
+        <h3>🏋 团队课表（练 7 天 · 与个人训练并行）</h3>
         <table>
           <thead>
-            <tr><th>日</th><th>项目</th></tr>
+            <tr><th style={{ width: 90 }}>日</th><th style={{ width: 110 }}>项目</th><th>效果</th></tr>
           </thead>
           <tbody>
             {slots.map((slot, i) => (
@@ -46,49 +79,108 @@ export function TrainingPage(props: { state: GameState }) {
                 <td className="muted">第 {i + 1} 天</td>
                 <td>
                   <select value={slot} onChange={(e) => setSlot(i, e.target.value)}>
-                    {SLOTS.map((s) => (
+                    {TEAM_SLOTS.map((s) => (
                       <option key={s.key} value={s.key}>{s.name}</option>
                     ))}
                   </select>
-                  <span className="muted small" style={{ marginLeft: 10 }}>
-                    {SLOTS.find((s) => s.key === slot)?.desc}
-                  </span>
                 </td>
+                <td className="muted small">{TEAM_SLOTS.find((s) => s.key === slot)?.desc}</td>
               </tr>
             ))}
           </tbody>
         </table>
-        <div className="muted small" style={{ marginTop: 8 }}>
-          本周：跑图 {mapDays} 天 · 休息 {restDays} 天 · 比赛日自动占槽（无训练收益）
+        <div className="row" style={{ marginTop: 10, flexWrap: "wrap" }}>
+          <span className="small">跑图目标（≤2 张）：</span>
+          {MAPS.map((m) => (
+            <button key={m.id} className={maps.includes(m.id) ? "primary" : "ghost small"} onClick={() => toggleMap(m.id)}>
+              {m.name} <span className="muted">{Math.round(team.mapPref[m.id] ?? 50)}</span>
+            </button>
+          ))}
+        </div>
+        <div className="muted small" style={{ marginTop: 6 }}>
+          本周训练日 {trainDays} 天 · 比赛日自动占槽 · 训练日数量影响个人训练经验积累
         </div>
       </div>
 
       <div className="card">
-        <h3>🗺 跑图目标（≤2 张，四周不练的图会衰减）</h3>
-        <div className="row" style={{ flexWrap: "wrap" }}>
-          {MAPS.map((m) => {
-            const on = maps.includes(m.id);
-            return (
-              <button key={m.id} className={on ? "primary" : ""} onClick={() => toggleMap(m.id)}>
-                {m.name} <span className="muted small">{state.myTeamId ? state.teams[state.myTeamId]?.mapPref[m.id] ?? 50 : 50}</span>
-              </button>
-            );
-          })}
+        <h3>🎯 个人训练（每名选手独立项目 · {XP_PER_ATTR_POINT} 经验 = +1 属性）</h3>
+        <table>
+          <thead>
+            <tr><th>选手</th><th style={{ width: 150 }}>训练项目</th><th>具体指标</th><th style={{ width: 160 }}>进度 → 下一点</th><th>本周预期</th></tr>
+          </thead>
+          <tbody>
+            {roster.map((p) => {
+              const focus = schedules[p.id] ?? "rest";
+              const opt = OPTION_BY_KEY.get(focus);
+              const rec = recommendFocus(primaryDuty(state, p.id), p.isIgl);
+              const attrKey = opt?.attr;
+              const xpNow = attrKey ? Math.round((p.xp?.[attrKey] ?? 0) * 10) / 10 : null;
+              const weekly = attrKey && trainDays > 0
+                ? Math.round(((XP_PER_DAY[0] + XP_PER_DAY[1]) / 2) * trainDays * (0.75 + p.morale / 200) * (p.fatigue > 70 ? 0.5 : p.fatigue > 45 ? 0.8 : 1) * 10) / 10
+                : null;
+              return (
+                <tr key={p.id}>
+                  <td>
+                    {p.ign}
+                    {p.isIgl && <span className="tag" style={{ marginLeft: 6 }}>指挥</span>}
+                    {focus === rec && <span className="tag green" style={{ marginLeft: 6 }}>推荐</span>}
+                  </td>
+                  <td>
+                    <select
+                      value={focus}
+                      onChange={(e) => setSchedules((s) => ({ ...s, [p.id]: e.target.value }))}
+                    >
+                      {INDIVIDUAL_OPTIONS.map((o) => (
+                        <option key={o.key} value={o.key}>
+                          {o.name}
+                          {o.key === rec ? " ★" : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td className="muted small">
+                    {opt?.attr ? `训练 ${ATTR_CN[opt.attr]}（${opt.attr}）· ${opt.desc}` : "不安排加练"}
+                    {state.schedules[p.id] !== undefined && schedules[p.id] !== state.schedules[p.id] && (
+                      <span className="tag orange" style={{ marginLeft: 6 }}>待保存</span>
+                    )}
+                  </td>
+                  <td>
+                    {attrKey ? (
+                      <span className="row" style={{ gap: 6 }}>
+                        <span className="bar-track" style={{ width: 90 }}>
+                          <span
+                            className="bar-fill"
+                            style={{ width: `${Math.min(100, ((xpNow ?? 0) / XP_PER_ATTR_POINT) * 100)}%`, background: "var(--blue)" }}
+                          />
+                        </span>
+                        <span className="muted small">{xpNow}/{XP_PER_ATTR_POINT}</span>
+                      </span>
+                    ) : (
+                      <span className="muted small">—</span>
+                    )}
+                  </td>
+                  <td className="muted small">
+                    {weekly !== null ? `+${weekly} 经验` : focus === "rest" ? "休息" : "—"}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        <div className="muted small" style={{ marginTop: 8 }}>
+          ★ = 按职责/指挥推荐的推荐项 · 经验受士气、疲劳、教练培养与训练日数量影响 · 属性成长不超过潜力+5
         </div>
       </div>
 
       <button
         className="primary"
         onClick={() => {
-          const finalMaps = mapDays > 0 && maps.length === 0 ? ["jingjie"] : maps;
-          void setTeamSchedule(slots, finalMaps);
+          const finalMaps = maps.length ? maps : ["jingjie"];
+          void setTeamSchedule(slots, finalMaps, schedules);
         }}
       >
-        📌 确定本周训练计划
+        📌 保存训练计划（团队 + 个人）
       </button>
-      <div className="muted small" style={{ marginTop: 8 }}>
-        教练与设施会乘算训练收益；商务活动占用的天数会扣减训练（GDD §6.3）。
-      </div>
     </div>
   );
 }

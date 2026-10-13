@@ -7,6 +7,7 @@ import { SquadPage } from "./components/Squad.tsx";
 import { TacticsPage } from "./components/Tactics.tsx";
 import { TrainingPage } from "./components/Training.tsx";
 import { MatchPlayer } from "./components/MatchPlayer.tsx";
+import { PreMatch } from "./components/PreMatch.tsx";
 
 const PAGES: { key: "overview" | "schedule" | "squad" | "tactics" | "training"; label: string }[] = [
   { key: "overview", label: "总览" },
@@ -17,7 +18,7 @@ const PAGES: { key: "overview" | "schedule" | "squad" | "tactics" | "training"; 
 ];
 
 export function App() {
-  const { ready, screen, page, state, records, viewerFixtureId, busy, toast, boot, setPage, closeViewer, advance, advanceToNextMatch } = useStore();
+  const { ready, screen, page, state, records, viewerFixtureId, viewerStartFinished, held, busy, toast, boot, setPage, closeViewer, advance, advanceToNextMatch, playHeld } = useStore();
 
   useEffect(() => {
     void boot();
@@ -69,10 +70,23 @@ export function App() {
         </main>
       </div>
 
+      {held && (
+        <PreMatch
+          state={state}
+          fixtureId={held.fixtureId}
+          teamAId={held.teamA}
+          teamBId={held.teamB}
+          bo={held.bo}
+          label={held.label}
+          onConfirm={(r) => void playHeld(r)}
+        />
+      )}
+
       {viewerRecord && (
         <MatchPlayer
           record={viewerRecord}
           state={state}
+          startFinished={viewerStartFinished}
           onClose={closeViewer}
         />
       )}
@@ -92,7 +106,14 @@ export function App() {
 }
 
 export function stageName(stage: string): string {
-  return stage === "preseason" ? "季前准备" : stage === "cup" ? "揭幕杯" : stage === "stage1" ? "Stage 1" : stage;
+  switch (stage) {
+    case "preseason": return "季前准备";
+    case "cup": return "揭幕杯";
+    case "stage1": return "Stage 1";
+    case "summer": return "夏季窗口";
+    case "stage2": return "Stage 2";
+    default: return "休赛期";
+  }
 }
 
 function nextFixtureLabel(state: import("../core/types.ts").GameState, teamA: string, teamB: string, day: number): string {
