@@ -125,7 +125,11 @@ export function PreMatch(props: {
               自动 BP 按双方图池熟练推荐（ban 对方强图、pick 我方强图）。手动可改，决胜图仍随机。
               {(() => {
                 const intel = intelOf(state, opp.id);
-                return intel === 0 ? " 尚未侦察对手——看不到他们的图池评估。" : "";
+                const base = intel === 0 ? " 尚未侦察对手——看不到他们的图池评估。" : "";
+                // 招牌战术反向泄露提示（GDD §6.4）：同一预案重复使用 → 对手针对性提升
+                const usage = myTeam.patternUsage[activeMaps[0] ?? ""] ?? 0;
+                const leak = usage >= 3 ? ` ⚠ 我方该预案已连续使用 ${usage} 场，对手针对性 +${(Math.min(1.2, usage * 0.12)).toFixed(1)}，建议更换。` : "";
+                return base + leak;
               })()}
             </div>
             {/* 对手图池评估：情报门控（GDD §7.2）——零情报不显示 */}
