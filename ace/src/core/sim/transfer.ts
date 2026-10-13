@@ -158,11 +158,12 @@ export function completeTransfer(state: GameState, offer: TransferOffer, rng: Rn
   return notes;
 }
 
-/** 解约：赔付剩余合同 40%，成为自由人（GDD §8.2） */
+/** 解约：赔付剩余合同 40%，成为自由人（GDD §8.2）。阵容只剩 5 人时禁止解约（GDD 名单下限）。 */
 export function releasePlayer(state: GameState, playerId: string): string {
   const p = state.players[playerId] as Player;
   const team = p.teamId ? state.teams[p.teamId] : null;
   if (!team) return "他已是自由人。";
+  if (team.roster.length <= 5) return "阵容只剩五人，再放走就凑不齐首发了——先补人。";
   const cost = Math.round(p.salary * Math.max(0, p.contractYears) * 0.4);
   team.budget -= cost;
   team.roster = team.roster.filter((id) => id !== playerId);

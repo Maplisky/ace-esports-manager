@@ -4,7 +4,7 @@
  * 比赛模拟经 simMatch（确定性 seed = hash(worldSeed:fixtureId)）。
  */
 import { Rng, clamp, hashString } from "../rng.ts";
-import { computeOverall } from "../worldgen.ts";
+import { computeOverall, spawnFreeAgents } from "../worldgen.ts";
 import { OPTION_BY_KEY, XP_PER_ATTR_POINT, XP_PER_DAY } from "../data/training.ts";
 import { spawnDailyEvents, spawnBirthdays, resolveEvent } from "./events.ts";
 import { aiWeeklyTransfers } from "./transfer.ts";
@@ -340,17 +340,22 @@ export function advanceDay(
   if (state.day === daysInYear(state.year)) {
     seasonEnded = true;
     notes.push({ day: state.day, kind: "league", important: true, text: `—— ${state.year} 赛季收官 ——` });
-    // 翻年：年龄 +1 / 合同 −1 / 新赛季赛程
+    // 翻年：年龄 +1 / 合同 −1 / 抑制器与事件状态重置（旧年 lastEventDay 会让新年负面事件被错误抑制） / 新赛季赛程
     state.year++;
     for (const p of Object.values(state.players)) {
       p.age++;
       if (p.contractYears > 0) p.contractYears--;
+      p.lastEventDay = 0;
     }
+    state.lastEventDay = 0;
     state.day = 1;
     state.fixtures = [];
     state.objective = null;
     state.boardConfidence = clamp(state.boardConfidence, 20, 90);
     initSeasonFixtures(state);
+    // 休赛期自由市场补强（GDD §6.5）：8-12 名新自由人
+    const faRng = new Rng((state.seed ^ Math.imul(state.year, 0x5f5f)) >>> 0);
+    spawnFreeAgents(state, faRng, 8 + faRng.int(0, 4));
     notes.push({ day: 1, kind: "league", important: true, text: `—— ${state.year} 赛季开始 · 季前准备 ——` });
   }
 

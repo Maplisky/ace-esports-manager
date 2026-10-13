@@ -71,7 +71,7 @@ test("即时谈判：startNegotiation 写回轮次与态度", () => {
   assert.ok(r.demand.length > 0);
 });
 
-test("解约：赔付 40% 并进入自由池", () => {
+test("解约：赔付 40% 并进入自由池；阵容 5 人时禁止解约", () => {
   const state = setup();
   const team = state.teams["T0"]!;
   const pid = team.roster[1]!;
@@ -84,6 +84,17 @@ test("解约：赔付 40% 并进入自由池", () => {
   assert.equal(team.budget, budgetBefore - 80_000); // 100K × 2 年 × 40%
   assert.equal(p.teamId, null);
   assert.equal(team.roster.includes(pid), false);
+  // 名单下限：降到 5 人后继续解约应被拒绝
+  while (team.roster.length > 5) {
+    releasePlayer(state, team.roster[0]!);
+  }
+  const last = team.roster[0]!;
+  const lastP = state.players[last]!;
+  const beforeBudget = team.budget;
+  const refuse = releasePlayer(state, last);
+  assert.ok(refuse.includes("凑不齐首发"), "5 人名单应禁止解约");
+  assert.equal(lastP.teamId, "T0", "选手应留在队中");
+  assert.equal(team.budget, beforeBudget, "被拒解决约不应扣钱");
 });
 
 test("AI 挖角：周结算产生对我方报价（确定性抽取），7 天答复窗过期清除", () => {

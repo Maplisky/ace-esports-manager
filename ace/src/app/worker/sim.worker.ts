@@ -275,6 +275,11 @@ self.onmessage = (e: MessageEvent) => {
     if ((state.teams[state.myTeamId as string]?.roster.length ?? 7) >= 7) {
       return reply({ type: "negotiation", error: "名单已满（7/7），先放走一人再签。", ...snapshot() });
     }
+    // 预算强制（GDD §8.4）：转会费 + 签字费 ≤ 预算
+    const myTeam = state.teams[state.myTeamId as string]!;
+    if (myTeam.budget < (msg.fee as number) + (msg.signingBonus as number)) {
+      return reply({ type: "negotiation", error: "预算不足：转会费与签字费合计超出俱乐部资金。", ...snapshot() });
+    }
     state.actionPoints--;
     const offer: TransferOffer = {
       id: `NEG${state.day}_${msg.playerId as string}`,
@@ -306,11 +311,15 @@ self.onmessage = (e: MessageEvent) => {
     }
   } else if (type === "finalizeNegotiation") {
     if (state && negSession) {
-      // 名单上限校验（谈判期间名单可能已满）
+      // 名单上限与预算复检（谈判期间资金/名单可能已变化）
       const myTeam = state.myTeamId ? state.teams[state.myTeamId] : null;
       if (myTeam && myTeam.roster.length >= 7) {
         negSession = null;
         return reply({ type: "negotiationFinal", ...snapshot(), accepted: false, reason: "名单已满（7/7），签约取消。" });
+      }
+      if (myTeam && myTeam.budget < negSession.fee + negSession.signingBonus) {
+        negSession = null;
+        return reply({ type: "negotiationFinal", ...snapshot(), accepted: false, reason: "预算不足，签约取消。" });
       }
       const rng = new Rng(hashString(`${state.seed}:neg:${negSession.playerId}:${state.day}`));
       const r = finalizeOffer(state, negSession, rng);

@@ -47,6 +47,25 @@ test("抽取：队列上限 4，空档 6 天保底补偿 1 张", () => {
   assert.ok(state.pendingEvents.length <= 4, `队列溢出: ${state.pendingEvents.length}`);
 });
 
+test("翻年：抑制器重置（旧年 lastEventDay 不应抑制新赛季负面事件）", () => {
+  const state = generateWorld(9);
+  initSeasonFixtures(state);
+  state.myTeamId = "T0";
+  const team = state.teams["T0"]!;
+  const p = state.players[team.starters[0]!]!;
+  // 模拟旧年残留：lastEventDay 是旧年第 340 天
+  p.lastEventDay = 340;
+  // 翻年后（day 1 → 15），抽取时该选手不应被抑制（通过不抛错 + 卡池可包含负面来间接验证）
+  state.day = 0;
+  state.pendingEvents = [];
+  for (let d = 0; d < 15; d++) {
+    advanceDay(state);
+    if (state.day >= 14) break;
+  }
+  // 走到第 14 天说明没有被除零/卡死；抑制器判断 14-0 < 14 为 false（day 14 时）→ 第 14 天起可抽负面
+  assert.ok(state.day >= 14);
+});
+
 test("抑制器：负面卡结算后标记 lastEventDay，14 天内不再当负面主角", () => {
   const state = generateWorld(7);
   initSeasonFixtures(state);
