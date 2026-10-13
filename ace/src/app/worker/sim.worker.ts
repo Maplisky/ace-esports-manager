@@ -96,6 +96,7 @@ function migrate(state: GameState): GameState {
   }
   state.pendingEvents ??= [];
   state.lastEventDay ??= 0;
+  state.scouting ??= {};
   return state;
 }
 
@@ -188,6 +189,20 @@ self.onmessage = (e: MessageEvent) => {
       reply({ type: "snapshot", ...snapshot(), result: r?.result ?? null });
     } else {
       reply({ type: "snapshot", state: null, records: {}, result: null });
+    }
+  } else if (type === "scoutTeam") {
+    if (state) {
+      if (state.actionPoints < 1) {
+        reply({ type: "snapshot", ...snapshot(), error: "行动力不足：侦察花 1 点。" });
+      } else {
+        state.actionPoints--;
+        const oppId = msg.teamId as string;
+        const cur = state.scouting[oppId] ?? { points: 0, last: 0 };
+        state.scouting[oppId] = { points: Math.min(10, cur.points + 2), last: state.day };
+        reply({ type: "snapshot", ...snapshot(), intel: state.scouting[oppId]!.points });
+      }
+    } else {
+      reply({ type: "snapshot", state: null, records: {} });
     }
   } else if (type === "getSnapshot") {
     reply({ type: "snapshot", ...snapshot() });

@@ -1,6 +1,7 @@
 import type { GameState } from "../../core/types.ts";
 import { AGENT_BY_ID } from "../../core/data/agents.ts";
 import { stageName } from "../App.tsx";
+import { intelOf, estimateMapStrength, starsOf } from "../../core/sim/intel.ts";
 
 export function TopBar(props: {
   teamTag: string; teamName: string; year: number; day: number; stage: string;
@@ -48,6 +49,7 @@ export function OverviewPage(props: {
   busy: boolean;
   onAdvance: () => void;
   onAdvanceToMatch: () => void;
+  onScout: (teamId: string) => void;
 }) {
   const { state } = props;
   const myId = state.myTeamId ?? "";
@@ -58,6 +60,9 @@ export function OverviewPage(props: {
     (f) => !f.played && f.teamA !== "" && f.teamB !== "" && (f.teamA === myId || f.teamB === myId),
   );
   const recentNews = state.news.slice(-14).reverse();
+  const nextOppId = nextFixture ? (nextFixture.teamA === myId ? nextFixture.teamB : nextFixture.teamA) : null;
+  const intel = nextOppId ? intelOf(state, nextOppId) : 0;
+  const intelLv = intel >= 6 ? 3 : intel >= 3 ? 2 : intel >= 1 ? 1 : 0;
 
   return (
     <div>
@@ -89,6 +94,42 @@ export function OverviewPage(props: {
         </div>
         {props.busy && <div className="muted small" style={{ marginTop: 8 }}>世界演算中…</div>}
       </div>
+
+      {/* 侦察对手（GDD §7.2 情报系统） */}
+      {nextOppId && (
+        <div className="card">
+          <h3>🔍 情报 · {state.teams[nextOppId]?.name}
+            <span className={`tag${intelLv >= 2 ? " green" : intelLv === 1 ? " orange" : ""}`} style={{ marginLeft: 10 }}>
+              情报 {intel}/10
+            </span>
+          </h3>
+          {intelLv === 0 ? (
+            <div className="muted small">尚未侦察：看不到对手的图池倾向与强度评估。</div>
+          ) : (
+            <div className="row small" style={{ flexWrap: "wrap", gap: 12 }}>
+              {["jingjie", "xiajing", "panyan", "yugang", "xueyuan", "kongting", "fenlu"].map((mid) => {
+                const m = [
+                  { id: "jingjie", name: "净界" }, { id: "xiajing", name: "霞径" }, { id: "panyan", name: "磐岩" },
+                  { id: "yugang", name: "雨港" }, { id: "xueyuan", name: "雪原" }, { id: "kongting", name: "空庭" }, { id: "fenlu", name: "焚炉" },
+                ].find((x) => x.id === mid)!;
+                const oppTeam = state.teams[nextOppId]!;
+                const stars = starsOf(estimateMapStrength(state, oppTeam, { id: m.id, name: m.name, sites: 2, openness: 0.5, vertical: 0.5, corridor: 0.5 }));
+                return (
+                  <span key={mid}>
+                    {m.name} <span className={stars === 3 ? "tag red" : stars === 2 ? "tag orange" : "tag green"}>{"★".repeat(stars)}</span>
+                  </span>
+                );
+              })}
+            </div>
+          )}
+          <div className="row" style={{ marginTop: 8 }}>
+            <button className="small" disabled={props.busy || state.actionPoints < 1} onClick={() => props.onScout(nextOppId)}>
+              🔍 侦察对手（1 行动力，情报 +2）
+            </button>
+            <span className="muted small">情报带来针对性准备加成（最高 +2.2 强度），长期不侦察会过时。</span>
+          </div>
+        </div>
+      )}
 
       {myTeam && (
         <div className="card">

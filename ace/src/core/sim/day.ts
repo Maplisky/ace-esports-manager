@@ -8,6 +8,7 @@ import { computeOverall } from "../worldgen.ts";
 import { OPTION_BY_KEY, XP_PER_ATTR_POINT, XP_PER_DAY } from "../data/training.ts";
 import { spawnDailyEvents, spawnBirthdays, resolveEvent } from "./events.ts";
 import { aiWeeklyTransfers } from "./transfer.ts";
+import { decayIntel } from "./intel.ts";
 import type { PlayerAttrs } from "../types.ts";
 import { simMatch } from "./match.ts";
 import { buildCup, buildLeague, fillNextSlot } from "./fixtures.ts";
@@ -292,6 +293,7 @@ export function advanceDay(
   // 周结算
   if (state.day % 7 === 0) {
     weeklyTick(state, rng);
+    decayIntel(state); // 情报过时衰减（GDD §7.2）
     // AI 转会动态 + 挖角（GDD §8.2）
     const aiNotes = aiWeeklyTransfers(state, rng, (offer) => {
       notes.push({ day: state.day, kind: "transfer", important: true, text: offer.demand });

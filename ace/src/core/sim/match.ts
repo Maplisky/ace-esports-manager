@@ -11,6 +11,7 @@ import {
   computeSide, dutyKillWeight, dutyDeathWeight, dutyEntryWeight,
   effectiveOverall, LOGISTIC_K, SWING_SD,
 } from "./strength.ts";
+import { intelOf } from "./intel.ts";
 import { runVeto } from "./veto.ts";
 import type { BuyType, GameState, MapRecord, MatchRecord, Player, PlayerLine, RoundEvent, RoundRecord, Team } from "../types.ts";
 
@@ -93,8 +94,11 @@ function addUlt(ult: Map<string, number>, pid: string, n: number, team: SimTeam,
 function simMap(state: GameState, mapId: string, A: SimTeam, B: SimTeam, rng: Rng): MapRecord {
   const map = MAP_BY_ID.get(mapId) ?? MAPS[0]!;
   // 每图重算强度（图池熟练/meta/玩家预案英雄随图变化）
-  A.str = computeSide({ team: A.team, players: state.players, map, day: state.day, agentAssign: presetAgents(state, A.team, mapId) });
-  B.str = computeSide({ team: B.team, players: state.players, map, day: state.day, agentAssign: presetAgents(state, B.team, mapId) });
+  // 针对准备（GDD §7.2）：我方对对手的情报点 → 针对加成（×0.22，最高 +2.2）；AI 侧 v0.5 不启用情报
+  const intelA = A.team.id === state.myTeamId ? intelOf(state, B.team.id) : 0;
+  const intelB = B.team.id === state.myTeamId ? intelOf(state, A.team.id) : 0;
+  A.str = computeSide({ team: A.team, players: state.players, map, day: state.day, agentAssign: presetAgents(state, A.team, mapId), intel: intelA });
+  B.str = computeSide({ team: B.team, players: state.players, map, day: state.day, agentAssign: presetAgents(state, B.team, mapId), intel: intelB });
 
   const lines: Record<string, PlayerLine> = {};
   const allPlayers = [...A.players, ...B.players];

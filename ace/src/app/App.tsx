@@ -21,7 +21,7 @@ const PAGES: { key: "overview" | "schedule" | "squad" | "tactics" | "training" |
 ];
 
 export function App() {
-  const { ready, screen, page, state, records, viewerFixtureId, viewerStartFinished, held, busy, toast, boot, setPage, closeViewer, advance, advanceToNextMatch, playHeld } = useStore();
+  const { ready, screen, page, state, records, viewerFixtureId, viewerStartFinished, held, busy, toast, boot, setPage, closeViewer, advance, advanceToNextMatch, playHeld, scoutTeam } = useStore();
 
   useEffect(() => {
     void boot();
@@ -64,6 +64,7 @@ export function App() {
               busy={busy}
               onAdvance={() => void advance()}
               onAdvanceToMatch={() => void advanceToNextMatch()}
+              onScout={(teamId) => void scoutTeam(teamId)}
             />
           )}
           {page === "schedule" && <SchedulePage state={state} records={records} />}

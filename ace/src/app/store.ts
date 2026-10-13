@@ -66,6 +66,7 @@ interface AppStore {
   releasePlayer: (pid: string) => Promise<void>;
   respondBid: (offerId: string, accept: boolean) => Promise<void>;
   resolveEvent: (uid: string, optionIndex: number) => Promise<void>;
+  scoutTeam: (teamId: string) => Promise<void>;
 }
 
 let worker: Worker | null = null;
@@ -280,5 +281,16 @@ export const useStore = create<AppStore>((set, get) => ({
     records = res.records;
     set({ state: res.state, records });
     if (res.result) get().showToast(res.result.slice(0, 60));
+  },
+
+  scoutTeam: async (teamId) => {
+    const res = await call<{ state?: GameState; records?: Record<string, MatchRecord>; intel?: number; error?: string }>({ type: "scoutTeam", teamId });
+    if (res.error || !res.state) {
+      get().showToast(res.error ?? "无法侦察");
+      return;
+    }
+    records = res.records ?? get().records;
+    set({ state: res.state, records });
+    get().showToast(`侦察完成：情报等级 ${res.intel ?? 0}/10`);
   },
 }));

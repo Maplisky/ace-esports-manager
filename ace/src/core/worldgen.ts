@@ -263,6 +263,7 @@ export function generateWorld(seed: number): GameState {
     news: [],
     pendingEvents: [],
     lastEventDay: 0,
+    scouting: {},
     transferFeed: [],
     incomingBids: [],
     manager: {

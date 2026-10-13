@@ -373,6 +373,8 @@ export interface GameState {
   pendingEvents: PendingEventCard[];
   /** 上次事件日（空回合补偿用） */
   lastEventDay: number;
+  /** 情报系统（GDD §7.2）：对手 teamId → 情报点 0-10 与最近侦察日 */
+  scouting: Record<string, { points: number; last: number }>;
   boardConfidence: number;
   objective: Objective | null;
   /** 行动力（v0.1：3/天） */
