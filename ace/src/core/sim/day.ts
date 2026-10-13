@@ -9,6 +9,7 @@ import { OPTION_BY_KEY, XP_PER_ATTR_POINT, XP_PER_DAY } from "../data/training.t
 import { spawnDailyEvents, spawnBirthdays, resolveEvent } from "./events.ts";
 import { aiWeeklyTransfers } from "./transfer.ts";
 import { decayIntel } from "./intel.ts";
+import { refreshCommercialWeek, weeklySponsorIncome } from "./business.ts";
 import type { PlayerAttrs } from "../types.ts";
 import { simMatch } from "./match.ts";
 import { buildCup, buildLeague, fillNextSlot } from "./fixtures.ts";
@@ -132,12 +133,14 @@ function weeklyTick(state: GameState, rng: Rng): void {
           const moraleF = 0.75 + p.morale / 200;
           const fatigueF = p.fatigue > 70 ? 0.5 : p.fatigue > 45 ? 0.8 : 1;
           const coachF = 1 + (myTeam.coach.development - 55) / 100;
-          const gain = rng.range(XP_PER_DAY[0], XP_PER_DAY[1]) * trainDays * moraleF * fatigueF * coachF;
+          const commF = 1 - 0.25 * Math.min(2, p.commercialDays ?? 0); // 商务占用惩罚（GDD §8.4）
+          const gain = rng.range(XP_PER_DAY[0], XP_PER_DAY[1]) * trainDays * moraleF * fatigueF * coachF * commF;
           p.xp[opt.attr] = (p.xp[opt.attr] ?? 0) + gain;
         }
       } else if (focus === "rest") {
         p.fatigue = clamp(p.fatigue - 2, 0, 100);
       }
+      if (p.stream && p.stream.untilDay > state.day) p.fatigue = clamp(p.fatigue + 2, 0, 100); // 直播占用（GDD §8.4）
       // 经验满 100 → 属性 +1（可多次触发；注意读池子当前值，否则跨过 100 会死循环——v1.9 检错）
       for (const attrKey of Object.keys(p.xp)) {
         while ((p.xp[attrKey] ?? 0) >= XP_PER_ATTR_POINT) {
@@ -320,7 +323,16 @@ export function advanceDay(
   // 周结算
   if (state.day % 7 === 0) {
     weeklyTick(state, rng);
+    refreshCommercialWeek(state, rng);
     decayIntel(state); // 情报过时衰减（GDD §7.2）
+    // 商务周结算：赞助/直播收入入账 + 邀约刷新（GDD §8.4）
+    const bizIncome = weeklySponsorIncome(state);
+    if (bizIncome > 0 && state.myTeamId) {
+      const myTeam = state.teams[state.myTeamId] as GameState["teams"][string];
+      myTeam.budget += bizIncome;
+      state.finances.log.push({ day: state.day, label: "商务周收入（赞助/直播）", amount: bizIncome });
+      if (state.finances.log.length > 100) state.finances.log.splice(0, state.finances.log.length - 100);
+    }
     // AI 转会动态 + 挖角（GDD §8.2）
     const aiNotes = aiWeeklyTransfers(state, rng, (offer) => {
       notes.push({ day: state.day, kind: "transfer", important: true, text: offer.demand });

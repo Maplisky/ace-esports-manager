@@ -6,17 +6,19 @@ import { SchedulePage } from "./components/Schedule.tsx";
 import { SquadPage } from "./components/Squad.tsx";
 import { TacticsPage } from "./components/Tactics.tsx";
 import { TrainingPage } from "./components/Training.tsx";
+import { BusinessPage } from "./components/Business.tsx";
 import { TransferPage } from "./components/Transfer.tsx";
 import { MatchPlayer } from "./components/MatchPlayer.tsx";
 import { PreMatch } from "./components/PreMatch.tsx";
 import { EventCardModal } from "./components/EventCards.tsx";
 
-const PAGES: { key: "overview" | "schedule" | "squad" | "tactics" | "training" | "transfer"; label: string }[] = [
+const PAGES: { key: "overview" | "schedule" | "squad" | "tactics" | "training" | "transfer" | "business"; label: string }[] = [
   { key: "overview", label: "总览" },
   { key: "schedule", label: "赛程" },
   { key: "squad", label: "阵容" },
   { key: "tactics", label: "战术" },
   { key: "training", label: "训练" },
+  { key: "business", label: "商务" },
   { key: "transfer", label: "转会" },
 ];
 
@@ -72,6 +74,7 @@ export function App() {
           {page === "tactics" && <TacticsPage state={state} />}
           {page === "training" && <TrainingPage state={state} />}
           {page === "transfer" && <TransferPage state={state} />}
+          {page === "business" && <BusinessPage state={state} />}
         </main>
       </div>
 

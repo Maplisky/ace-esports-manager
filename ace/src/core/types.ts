@@ -101,6 +101,10 @@ export interface Player {
   homegrown: boolean;
   /** 生涯累计缺场周数（挖角倾向参考） */
   benchedWeeks: number;
+  /** 本周商务占用天数（≥2 天训练收益 −25%/天；每周重置） */
+  commercialDays: number;
+  /** 直播合同（null = 无；GDD §8.4） */
+  stream: { weekly: number; untilDay: number } | null;
   /** 生日（赛季内第 N 天，seeded 生成；当日开 7 天祝福窗口） */
   birthdayDay: number;
   /** 上次成为负面事件主角的天（14 天抑制器） */
@@ -133,8 +137,31 @@ export interface Team {
   mapPref: Record<string, number>;
   /** 全队羁绊 0-100 */
   bond: number;
+  /** 赞助商（GDD §8.4） */
+  sponsors: Sponsor[];
   /** 玩家可用预案：每图多套（key = mapId）；v0.1 core 仅存储，由战术层消费 */
   presets: Record<string, Preset[]>;
+}
+
+export interface Sponsor {
+  id: string;
+  name: string;
+  tier: 1 | 2 | 3;
+  perSeason: number;
+  years: number;
+  signedYear: number;
+}
+
+export interface SponsorOffer extends Sponsor {
+  expires: number;
+}
+
+export interface GigOffer {
+  id: string;
+  playerId: string;
+  brand: string;
+  pay: number;
+  day: number;
 }
 
 export interface Preset {
@@ -377,6 +404,12 @@ export interface GameState {
   lastEventDay: number;
   /** 情报系统（GDD §7.2）：对手 teamId → 情报点 0-10 与最近侦察日 */
   scouting: Record<string, { points: number; last: number }>;
+  /** 赞助意向池（每周刷新，带过期） */
+  sponsorOffers: SponsorOffer[];
+  /** 选手商务邀约（本周有效） */
+  gigOffers: GigOffer[];
+  /** 资金流水（最近 100 条；余额以 team.budget 为准） */
+  finances: { log: { day: number; label: string; amount: number }[] };
   boardConfidence: number;
   objective: Objective | null;
   /** 行动力（v0.1：3/天） */

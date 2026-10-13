@@ -144,6 +144,8 @@ function makePlayer(
     isIgl,
     focus: "rest",
     xp: {},
+    commercialDays: 0,
+    stream: null,
     listed: false,
     releaseClause: 0,
     noPoach: false,
@@ -218,6 +220,7 @@ function makeTeam(rng: Rng, id: string, name: string, tag: string, tier: 1 | 2, 
     budget: tier === 1 ? rng.int(3_000_000, 8_000_000) : rng.int(300_000, 900_000),
     reputation: tier === 1 ? rng.int(50, 80) : rng.int(30, 50),
     personality: rng.pick(personalities),
+    sponsors: [],
     mapPref,
     bond: rng.int(45, 65),
     presets: {},
@@ -265,7 +268,10 @@ export function generateWorld(seed: number): GameState {
     lastEventDay: 0,
     scouting: {},
     transferFeed: [],
-    incomingBids: [],    manager: {
+    incomingBids: [],
+    sponsorOffers: [],
+    gigOffers: [],
+    finances: { log: [] },    manager: {
       name: "经理",
       reputation: 40,
       skills: { training: 50, negotiation: 50, tactics: 50, scouting: 50, medical: 50, business: 50, locker: 50, youth: 50 },
@@ -280,6 +286,17 @@ export function generateWorld(seed: number): GameState {
   };
   // 自由市场：14 名自由人（新开局即有可签目标；GDD §6.5）
   spawnFreeAgents(state, rng, 14);
+  // 开局赞助：每队 2 档随机地方赞助（v0.5-4 商务系统）
+  for (const t of Object.values(teams)) {
+    t.sponsors = [0, 1].map((k) => ({
+      id: `SP0_${t.id}_${k}`,
+      name: ["晨光乳业", "飞毛腿快递", "街角咖啡", "雷霆文具"][rng.int(0, 3)],
+      tier: 1 as const,
+      perSeason: Math.round(rng.range(80_000, 150_000) / 1000) * 1000,
+      years: rng.int(1, 2),
+      signedYear: 2026,
+    }));
+  }
   return state;
 }
 
@@ -311,6 +328,7 @@ export function makeSyntheticTeam(id: string, tag: string, targetOverall: number
     coach: { name: "测试教练", tactics: 60, development: 60, motivation: 60 },
     facilities: 60, budget: 5_000_000, reputation: 60,
     personality: "steady", mapPref, bond: 50, presets: {},
+    sponsors: [],
   };
   return { team, players };
 }

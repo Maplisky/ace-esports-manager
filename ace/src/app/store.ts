@@ -5,7 +5,7 @@ import { loadGame, saveGame, type SavedGame } from "./save.ts";
 import type { PreMatchResult } from "./components/PreMatch.tsx";
 
 type Screen = "start" | "main";
-type Page = "overview" | "schedule" | "squad" | "tactics" | "training" | "transfer";
+type Page = "overview" | "schedule" | "squad" | "tactics" | "training" | "transfer" | "business";
 
 export interface NegotiationState {
   offer: TransferOffer;
@@ -67,6 +67,12 @@ interface AppStore {
   respondBid: (offerId: string, accept: boolean) => Promise<void>;
   resolveEvent: (uid: string, optionIndex: number) => Promise<void>;
   scoutTeam: (teamId: string) => Promise<void>;
+  signSponsor: (offerId: string) => Promise<void>;
+  cancelSponsor: (sponsorId: string) => Promise<void>;
+  acceptGig: (gigId: string) => Promise<void>;
+  declineGig: (gigId: string) => Promise<void>;
+  signStream: (playerId: string) => Promise<void>;
+  cancelStream: (playerId: string) => Promise<void>;
 }
 
 let worker: Worker | null = null;
@@ -292,5 +298,42 @@ export const useStore = create<AppStore>((set, get) => ({
     records = res.records ?? get().records;
     set({ state: res.state, records });
     get().showToast(`侦察完成：情报等级 ${res.intel ?? 0}/10`);
+  },
+
+  signSponsor: async (offerId) => {
+    const res = await call<{ state?: GameState; records?: Record<string, MatchRecord>; message?: string }>({ type: "signSponsor", offerId });
+    if (res.state) {
+      records = res.records ?? get().records;
+      set({ state: res.state, records });
+      get().showToast(res.message ?? "已签约");
+    }
+  },
+  cancelSponsor: async (sponsorId) => {
+    const res = await call<{ state?: GameState; records?: Record<string, MatchRecord> }>({ type: "cancelSponsor", sponsorId });
+    if (res.state) set({ state: res.state, records: res.records ?? get().records });
+  },
+  acceptGig: async (gigId) => {
+    const res = await call<{ state?: GameState; records?: Record<string, MatchRecord>; message?: string }>({ type: "acceptGig", gigId });
+    if (res.state) {
+      records = res.records ?? get().records;
+      set({ state: res.state, records });
+      if (res.message) get().showToast(res.message);
+    }
+  },
+  declineGig: async (gigId) => {
+    const res = await call<{ state?: GameState; records?: Record<string, MatchRecord> }>({ type: "declineGig", gigId });
+    if (res.state) set({ state: res.state, records: res.records ?? get().records });
+  },
+  signStream: async (playerId) => {
+    const res = await call<{ state?: GameState; records?: Record<string, MatchRecord>; message?: string }>({ type: "signStream", playerId });
+    if (res.state) {
+      records = res.records ?? get().records;
+      set({ state: res.state, records });
+      if (res.message) get().showToast(res.message);
+    }
+  },
+  cancelStream: async (playerId) => {
+    const res = await call<{ state?: GameState; records?: Record<string, MatchRecord> }>({ type: "cancelStream", playerId });
+    if (res.state) set({ state: res.state, records: res.records ?? get().records });
   },
 }));

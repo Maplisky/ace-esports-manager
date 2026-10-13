@@ -3,6 +3,7 @@ import { generateWorld, resetPlayerSeq, salaryFor, spawnFreeAgents } from "../..
 import { initSeasonFixtures, advanceDay, playHeldMatch } from "../../core/sim/day.ts";
 import { spawnDailyEvents, spawnBirthdays, resolveEvent } from "../../core/sim/events.ts";
 import { startNegotiation, reNegotiate, finalizeOffer, completeTransfer, releasePlayer, inTransferWindow, graceRemain } from "../../core/sim/transfer.ts";
+import { signSponsorOffer, cancelSponsorById, acceptGig, declineGig, signStream, cancelStream } from "../../core/sim/business.ts";
 import { Rng, hashString } from "../../core/rng.ts";
 import type { GameState, MatchRecord, Preset, TransferOffer } from "../../core/types.ts";
 
@@ -204,6 +205,39 @@ self.onmessage = (e: MessageEvent) => {
     } else {
       reply({ type: "snapshot", state: null, records: {} });
     }
+  } else if (type === "signSponsor") {
+    if (state) {
+      const offer = (state.sponsorOffers ?? []).find((o) => o.id === msg.offerId);
+      if (offer) {
+        const r = signSponsorOffer(state, offer, new Rng(hashString(`${state.seed}:sp:${offer.id}`)));
+        reply({ type: "snapshot", ...snapshot(), message: r.text });
+        return;
+      }
+    }
+    reply({ type: "snapshot", ...snapshot(), message: "赞助意向已过期。" });
+  } else if (type === "cancelSponsor") {
+    if (state) cancelSponsorById(state, msg.sponsorId as string);
+    reply({ type: "snapshot", ...snapshot() });
+  } else if (type === "acceptGig") {
+    let message = "";
+    if (state) {
+      const r = acceptGig(state, msg.gigId as string);
+      message = r.text;
+    }
+    reply({ type: "snapshot", ...snapshot(), message });
+  } else if (type === "declineGig") {
+    if (state) state.gigOffers = state.gigOffers.filter((g) => g.id !== msg.gigId);
+    reply({ type: "snapshot", ...snapshot() });
+  } else if (type === "signStream") {
+    if (state) {
+      const r = signStream(state, msg.playerId as string, 3, new Rng(hashString(`${state.seed}:stream:${msg.playerId}`)));
+      reply({ type: "snapshot", ...snapshot(), message: r.text });
+      return;
+    }
+    reply({ type: "snapshot", state: null, records: {} });
+  } else if (type === "cancelStream") {
+    if (state) cancelStream(state, msg.playerId as string);
+    reply({ type: "snapshot", ...snapshot() });
   } else if (type === "getSnapshot") {
     reply({ type: "snapshot", ...snapshot() });
   } else if (type === "listPlayer") {
