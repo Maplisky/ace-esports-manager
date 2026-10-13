@@ -1,0 +1,115 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { Rng, hashString } from "../src/core/rng.ts";
+import { generateWorld, computeOverall } from "../src/core/worldgen.ts";
+import { initSeasonFixtures, advanceDay } from "../src/core/sim/day.ts";
+
+test("RNG：同种子序列一致，不同种子不同", () => {
+  const a = new Rng(12345);
+  const b = new Rng(12345);
+  const c = new Rng(54321);
+  const seqA = Array.from({ length: 50 }, () => a.next());
+  const seqB = Array.from({ length: 50 }, () => b.next());
+  const seqC = Array.from({ length: 50 }, () => c.next());
+  assert.deepEqual(seqA, seqB);
+  assert.notDeepEqual(seqA, seqC);
+});
+
+test("RNG：分布与边界", () => {
+  const rng = new Rng(42);
+  const n = 20000;
+  let sum = 0;
+  for (let i = 0; i < n; i++) {
+    const v = rng.next();
+    assert.ok(v >= 0 && v < 1);
+    sum += v;
+  }
+  assert.ok(Math.abs(sum / n - 0.5) < 0.01, `均值偏离: ${sum / n}`);
+  for (let i = 0; i < 1000; i++) {
+    const v = rng.int(3, 7);
+    assert.ok(v >= 3 && v <= 7);
+  }
+  const arr = rng.shuffle([1, 2, 3, 4, 5, 6, 7, 8]);
+  assert.equal(arr.length, 8);
+  assert.equal(new Set(arr).size, 8);
+});
+
+test("hashString：确定性且发散", () => {
+  assert.equal(hashString("abc"), hashString("abc"));
+  assert.notEqual(hashString("abc"), hashString("abd"));
+});
+
+test("世界生成：规模与健全性", () => {
+  const state = generateWorld(2026);
+  const teams = Object.values(state.teams);
+  assert.equal(teams.length, 18);
+  const t1 = teams.filter((t) => t.tier === 1);
+  const t2 = teams.filter((t) => t.tier === 2);
+  assert.equal(t1.length, 10);
+  assert.equal(t2.length, 8);
+  // 每队 7 人，5 首发，恰 1 名 IGL
+  for (const t of teams) {
+    assert.equal(t.roster.length, 7, `${t.name} 人数`);
+    assert.equal(t.starters.length, 5);
+    const igls = t.roster.filter((pid) => state.players[pid]?.isIgl);
+    assert.equal(igls.length, 1, `${t.name} IGL 数`);
+    for (const pid of t.roster) {
+      const p = state.players[pid] as import("../src/core/types.ts").Player;
+      assert.ok(p.overall >= 50 && p.overall <= 95, `${p.ign} overall ${p.overall}`);
+      assert.ok(p.agentPool.length >= 3, `${p.ign} 英雄池`);
+      assert.ok(p.salary > 0);
+      assert.equal(p.homegrown, false);
+    }
+  }
+  // 一级整体强于次级
+  const avg = (ts: typeof teams) =>
+    ts.reduce((s, t) => s + t.roster.reduce((x, pid) => x + (state.players[pid]?.overall ?? 0), 0) / t.roster.length, 0) / ts.length;
+  assert.ok(avg(t1) > avg(t2) + 3, `一级均值 ${avg(t1).toFixed(1)} 应高于次级 ${avg(t2).toFixed(1)}`);
+});
+
+test("computeOverall：权重合成在 30-99 内", () => {
+  const rng = new Rng(7);
+  for (let i = 0; i < 100; i++) {
+    const attrs = {
+      aim: rng.int(30, 99), reaction: rng.int(30, 99), awareness: rng.int(30, 99),
+      utility: rng.int(30, 99), clutch: rng.int(30, 99), teamwork: rng.int(30, 99),
+      communication: rng.int(30, 99), igl: rng.int(30, 99),
+    };
+    const o = computeOverall(attrs);
+    assert.ok(o >= 30 && o <= 99);
+  }
+});
+
+test("赛程：揭幕杯 + 双循环，日推进打完一个赛季", () => {
+  const state = generateWorld(777);
+  initSeasonFixtures(state);
+  state.myTeamId = "T0";
+  // 赛程数量：杯 4+2+1=7；联赛 10 队双循环 90 场；8 队双循环 56 场
+  assert.equal(state.fixtures.length, 7 + 90 + 56);
+  // 推进到收官日前夕（121）；从 121 再推进的那一步会同时完成收官+翻年
+  for (let d = 0; d < 200 && state.day < 121; d++) {
+    advanceDay(state);
+  }
+  assert.equal(state.day, 121, "应推进到收官日前夕");
+  // 旧赛季所有比赛打完
+  const unplayed = state.fixtures.filter((f) => f.teamA !== "" && f.teamB !== "" && !f.played);
+  assert.equal(unplayed.length, 0, `未打完: ${unplayed.length}`);
+  // 杯赛决赛已回填且打出冠军
+  const final = state.fixtures.find((f) => f.label.includes("总决赛"));
+  assert.ok(final && final.played && final.teamA !== "" && final.teamB !== "");
+  // 积分榜：胜负守恒（90 场 = 90 胜 + 90 负）
+  const comp = state.comps["stage1-t1"]!;
+  const totalPlayed = Object.values(comp.standings).reduce((s, e) => s + e.w + e.l, 0);
+  assert.equal(totalPlayed, 180);
+  // 翻年：收官 + 新赛程生成、年份/年龄推进（v1.9 修复验证）
+  const r2 = advanceDay(state);
+  assert.ok(r2.seasonEnded, "收官日应触发赛季结束");
+  assert.equal(state.year, 2027, "应进入 2027 赛季");
+  assert.equal(state.day, 1, "翻年后天数重置");
+  assert.equal(state.fixtures.length, 153, "新赛季赛程已生成");
+  assert.equal(state.fixtures.filter((f) => !f.played).length, 153);
+  assert.ok(state.news.some((n) => n.text.includes("收官")));
+  assert.ok(state.news.some((n) => n.text.includes("2027 赛季开始")));
+  const aPlayer = Object.values(state.players)[0]!;
+  assert.ok(aPlayer.contractYears >= 0, "合同年递减不越界");
+});

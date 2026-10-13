@@ -1,0 +1,4282 @@
+"确定"
+"取消"
+"常规赛"
+"),
+        l = new Map;
+    for (const o of [...e].sort((d, m) => d.day - m.day)) l.set(i(o), [...l.get(i(o)) ?? [], o]);
+    const t = l.size;
+    if (!t) return;
+    const c = Math.max(2, Math.max(1, a - n) / Math.max(1, t - 1));
+    let r = 0;
+    for (const o of l.values()) {
+        const d = n + Math.round(r++ * c);
+        for (const m of o) m.day = d
+    }
+}
+
+function bm(e, n, a, i, l, t, c, r) {
+    const o = Nr(n, r);
+    if (!o.length) return [];
+    const d = Math.max(1, t - l),
+        m = Math.max(2, d / Math.max(1, o.length - 1)),
+        h = [];
+    return o.forEach((u, f) => {
+        const p = l + Math.round(f * m);
+        for (const [g, v] of u) h.push(Ws(p, i, e.key, g, v, c, `常规赛 第${f+1}轮 · ${a}`))
+    }), h
+}
+
+function Na(e, n) {
+    const a = new Set(n);
+    return xn(e).filter(i => a.has(i))
+}
+
+function xn(e) {
+    return Object.values(e.standings).slice().sort((n, a) => a.w - n.w || a.mapW - a.mapL - (n.mapW - n.mapL) || a.roundW - a.roundL - (n.roundW - n.roundL) || a.mapW - n.mapW).map(n => n.teamId)
+}
+
+function km(e, n) {
+    if (!n.result) return;
+    const a = e.standings[n.teamA],
+        i = e.standings[n.teamB];
+    if (!a || !i) return;
+    const {
+        mapsWonA: l,
+        mapsWonB: t,
+        maps: c
+    } = n.result;
+    l > t ? (a.w++, i.l++, a.pts += 3) : (i.w++, a.l++, i.pts += 3), a.mapW += l, a.mapL += t, i.mapW += t, i.mapL += l;
+    for (const o of c) a.roundW += o.scoreA, a.roundL += o.scoreB, i.roundW += o.scoreB, i.roundL += o.scoreA
+}
+const kr = e => {
+    switch (e) {
+        case 2:
+            return "
+"半决赛"
+"四分之一决赛"
+"八分之一决赛"
+" ? 52e4 : 22e4 + 9e3 * n.champPoints + 7e3 * Math.max(0, n.reputation - 50);
+    return Math.round(i * (n.tier === 1 ? 1 : .3))
+}
+
+function Cr(e) {
+    const n = e.teams[e.myTeam];
+    if (!n) return 0;
+    const a = 1e5 + 5e3 * n.champPoints + 4e3 * Math.max(0, n.reputation - 50);
+    return Math.round(a * (n.tier === 1 ? 1 : .3))
+}
+const Ns = 28e4;
+
+function Cm(e, n) {
+    const a = e.teams[e.myTeam];
+    if (!a) return;
+    const i = yn(e),
+        l = Math.round(Tr(e) * i.share / 100);
+    if (l > 0 && (a.budget += l, e.finances.balance += l, e.finances.log.push({
+            day: e.day,
+            label: `联盟分成 · 年度捆绑包（${i.share}%）`,
+            amount: l
+        }), n.push(`📦 年度捆绑包结算（${i.mode==="
+"固定"
+"销量"
+"联盟特别企划 · 销量对赌"
+"赌对了"
+"买断更划算"
+"找不到俱乐部。"
+"今年已经和联盟谈过了，一年只能谈一次。"
+",
+            important: !0,
+            text: `🤝 ${o}`
+        }), o
+    }
+    return `联盟没让步，分成维持 ${a.share}%，明年再谈。`
+}
+
+function nl(e, n) {
+    const a = yn(e);
+    return a.mode === n ? "
+"合作方式只能在 Masters I 之前改，现在改不了了。"
+"今年的合作方式已经定过一次了。"
+"已改为销量分成，收入跟着声望和成绩走。"
+"已改为固定结算，每年一笔固定分成。"
+"现在没有待答复的联盟企划。"
+"这个企划已经过期了。"
+"联盟特别企划 · 买断"
+"已选销量对赌，赛季末按声望和成绩结算。"
+"📦 联盟的捆绑包企划没答复，已撤回。"
+"选手奖金分成"
+"赞助收入"
+"联盟津贴"
+"选手薪资"
+"运营开支"
+"俱乐部未知"
+"传闻"
+"意向"
+"挂牌"
+"官宣"
+"自由签约"
+"离队"
+"告吹"
+"报价"
+"绯闻"
+"有消息称"
+"谈判中"
+"全部"
+"]);
+
+function Ee(e, n, a, i = {}) {
+    const l = {
+        y: e.year,
+        d: e.day,
+        k: n,
+        p: a.id,
+        n: a.ign,
+        o: Math.round(a.overall)
+    };
+    i.f !== void 0 && (l.f = i.f), i.t !== void 0 && (l.t = i.t), i.fee && (l.fee = Math.round(i.fee)), i.c && (l.c = i.c), i.w && (l.w = i.w);
+    const t = e.transferFeed ?? (e.transferFeed = []);
+    return t.push(l), t.length > pi && Hm(e), l
+}
+
+function Hm(e) {
+    const n = e.transferFeed;
+    if (!n || n.length <= pi) return;
+    let a = n.length - pi;
+    const i = Ge(e) - 30,
+        l = n.filter(t => a > 0 && Gm.has(t.k) && Ge({
+            year: t.y,
+            day: t.d
+        }) < i ? (a--, !1) : !0);
+    e.transferFeed = a > 0 ? l.slice(a) : l
+}
+
+function ba(e, n) {
+    n.movedOn = Ge(e), n.wantsOut = void 0, n.listed = !1, n.listedOn = void 0
+}
+
+function zm(e, n) {
+    let a = 0,
+        i = 0;
+    for (const l of e.fixtures) {
+        if (!l.played || l.scrim || !l.result || l.teamA !== n && l.teamB !== n) continue;
+        const t = l.result.mapsWonA > l.result.mapsWonB;
+        l.teamA === n === t ? a++ : i++
+    }
+    return {
+        w: a,
+        l: i
+    }
+}
+const ei = 7;
+
+function Rs(e, n) {
+    const a = e.teams[n];
+    return !a || a.roster.length < ei ? null : n === e.myTeam ? `名单已满（${ei}/${ei}），先放走一人再签。` : `${a.name} 的名单已满。`
+}
+const $s = [
+        [0, 20],
+        [63, 90],
+        [165, 198],
+        [323, 363]
+    ],
+    ct = e => {
+        var n;
+        return ((n = $s.find(([a, i]) => e >= a && e <= i)) == null ? void 0 : n[1]) ?? null
+    },
+    ss = e => e < 0 || $s.some(([n, a]) => e >= n && e <= a),
+    ot = e => ss(e.day) ? null : "
+",
+            why: `薪资远低于他的期望（约 ${cl(l)}/年）`
+        }
+    };
+    const u = n.teamId ? e.teams[n.teamId] : null,
+        f = Jm(e, n, a, d),
+        p = !!u && u.id === a.id,
+        g = [{
+            key: "
+",
+            v: (t / l - 1) * 60,
+            why: `薪资低于他的期望（约 ${cl(l)}/年）`
+        }, {
+            key: "
+"签字费缺乏吸引力"
+"奖金分成偏低"
+"他希望被当作球队核心"
+"认为这支球队不如他现在的平台"
+"不愿意降级去次级联赛"
+"对这支球队归属感不深（靠年头和荣誉慢慢涨，挂牌会掉一大截）"
+"对现在的俱乐部感情很深"
+"不愿接受转会限制条款"
+"不再信任俱乐部对他的安排"
+"你的谈判能力不足以说服他"
+"认为你的执教履历还不足以说服他"
+"合同年限须为 1–4 年。"
+"奖金分成须为 0–35%。"
+"合同条款无效。"
+"合同金额必须是有效的非负数字。"
+"只能与本队选手续约。"
+"资金不足，无法支付续约签字费。"
+"这与现有合同相同，不需要重复签约。"
+"几乎不可能"
+"很可能接受"
+"有机会"
+"希望不大"
+"阵容只剩五人，再放走就凑不齐首发。先补人。"
+"对方只剩五名球员，放人就凑不齐首发了。"
+",
+                text: `${c.name} 紧急签下自由人 ${h.ign}（${h.overall}）填补空缺。`
+            }))
+        }
+        c.starters.length < 5 && (c.starters = vs(e, c.id)), c.budget += i, c.id === e.myTeam && (e.finances.balance += i, e.finances.log.push({
+            day: e.day,
+            label: `出售 ${n.ign}`,
+            amount: i
+        }))
+    }
+    Rn(e, n), r.roster.push(n.id), r.budget -= i, r.id === e.myTeam && (e.finances.balance -= i, e.finances.log.push({
+        day: e.day,
+        label: `签下 ${n.ign}`,
+        amount: -i
+    }), e.training[n.id] = "
+"), (c == null ? void 0 : c.id) !== a && Wm(n, a), n.teamId = a, a === e.myTeam && (n.arrivedOverall = n.overall, e.tally ?? (e.tally = {
+        signed: 0,
+        hired: 0,
+        earned: 0,
+        commercial: 0
+    }), e.tally.signed += 1), n.contract = {
+        ...l
+    }, n.salary = l.salary, n.contractYears = l.years, n.expiredYear = void 0, n.grievance = 0, n.listed = !1, n.listedOn = void 0, n.wantsOut = void 0, (c == null ? void 0 : c.id) === a && jn(n, Or), l.signingBonus > 0 && (r.budget -= l.signingBonus, r.id === e.myTeam && (e.finances.balance -= l.signingBonus, e.finances.log.push({
+        day: e.day,
+        label: `签字费 ${n.ign}`,
+        amount: -l.signingBonus
+    }))), n.morale = R(n.morale + 8, 0, 100), n.joinedYear = e.year, va(e, n, a), Gn(n), r.id !== e.myTeam ? r.starters = vs(e, r.id) : r.starters.length < 5 && (r.starters = vs(e, r.id)), c && Ki(e, c.id);
+    const d = r.id !== e.myTeam && ((e.enquiries ?? []).some(m => m.playerId === n.id && !m.answer) || e.offers.some(m => m.playerId === n.id && m.status === "
+"你之前在接触他"
+"紧急补位"
+",
+        text: (i > 0 ? `${r.name} 以 $${i.toLocaleString()} 的转会费从 ${(c==null?void 0:c.name)??"
+"} 签下 ${n.ign}（${n.overall}）。` : `${r.name} 免转会费签下自由人 ${n.ign}（${n.overall}）。`) + (d ? "
+",
+            important: !0,
+            text: l
+        })
+    }
+    if (a) {
+        a.roster = a.roster.filter(l => l !== n.id), a.starters = a.starters.filter(l => l !== n.id), a.starters.length < 5 && (a.starters = vs(e, a.id));
+        const i = Math.round(n.salary * Math.max(0, n.contractYears) * .4);
+        a.budget -= i, a.id === e.myTeam && (e.finances.balance -= i, e.finances.log.push({
+            day: e.day,
+            label: `解约 ${n.ign}`,
+            amount: -i
+        }))
+    }
+    return Rn(e, n), n.teamId = null, n.contractYears = 0, n.listed = !1, n.listedOn = void 0, n.morale = R(n.morale - 6, 0, 100), Ee(e, "
+"解约"
+"某队"
+"决斗者"
+"先锋"
+"控场"
+"哨卫"
+"俱乐部换帅，不再推进"
+"别队"
+"转会窗口关闭"
+"买方预算不够"
+"买方名单已满"
+"原俱乐部"
+"
+                };
+            if (!zn(e, u, h, j, n).ok) v = `${u.ign} 不愿加盟`;
+            else if (Vn(e, u, h.id, m.fee, j, "
+")) {
+                if (cr(e, h.id)) {
+                    const b = `⚔️ 宿敌 ${h.tag} 从 ${(p==null?void 0:p.tag)??"
+"} 买来 ${u.ign}（${u.overall}）。`;
+                    a == null || a.push(b), e.news.push({
+                        day: e.day,
+                        kind: "
+"阵容规则不允许"
+"不放人"
+"他已挂牌"
+"他想离队"
+", h, {
+                    f: c.id,
+                    t: (g == null ? void 0 : g.id) ?? null,
+                    w: N ? `${v} · 已挂牌` : c.id !== e.myTeam ? `${v} · 此前已挂牌` : v
+                }), c.id === e.myTeam) {
+                h.grievance = R((h.grievance ?? 0) + 10, 0, 100);
+                const x = `😠 ${h.ign} 对球队战绩不满（${r.w} 胜 ${r.l} 负），希望离队${g?`，被曝有意加盟 ${g.name}`:"
+",
+                    important: !0,
+                    text: x
+                })
+            } else h.listed || (h.listed = !0, h.listedOn = e.day, lt(e, h), h.overall >= (((t = e.teams[e.myTeam]) == null ? void 0 : t.rating) ?? 60) && (a == null || a.push(`📋 ${h.ign}（${c.tag} · ${h.overall}）因战绩申请转会，已被挂牌${g?`，他想去 ${g.tag}`:"
+"与俱乐部有矛盾"
+"阵容过剩"
+"合同将到期"
+"老将，不在首发"
+")}` + (l.length > 4 ? ` 等 ${l.length} 人` : "
+"触发解约金"
+", !x) {
+                a == null || a.push(`🛡 ${r.name} 想触发 ${h.ign} 的解约金，但我方会不足五人或对方名单已满，交易没成，他留下了。`);
+                continue
+            }
+            e.news.push({
+                day: e.day,
+                kind: "
+",
+                important: !0,
+                text: `${r.name} 支付了 ${h.ign} 合同中的解约金 $${g.toLocaleString()}，我们无权拒绝。`
+            }), a == null || a.push(`🚨 ${r.name} 触发了 ${h.ign} 的解约金 $${g.toLocaleString()}，我们无权拒绝，他已经离队。`)
+        } else Ee(e, "
+"等待我们答复"
+",
+            important: !0,
+            text: `${r.name} 报价 $${g.toLocaleString()} 求购 ${h.ign}，等待我们答复。`
+        }), a == null || a.push(`💼 ${r.name} 报价 $${g.toLocaleString()} 求购 ${h.ign}，7 天内答复，逾期视为拒绝。`)
+    }
+}
+const oh = e => e.offers.filter(n => n.status === "
+"这份报价已经失效。"
+", `${l.ign} 已经不在队里了，这份报价失效。`) : a ? Vn(e, l, t.id, i.fee, i.terms ?? ps(i.salary, i.years)) ? (i.status = "
+", `${l.ign} 以 $${i.fee.toLocaleString()} 转会至 ${t.name}。`) : (i.status = "
+", Fn(e, e.myTeam) ?? `这笔转会没能完成，${l.ign} 留下了。`) : (i.status = "
+", (l.grievance ?? 0) <= 30 && !l.listed && jn(l, _m), (l.grievance ?? 0) > 30 || l.listed ? (l.grievance = R((l.grievance ?? 0) + 12, 0, 100), l.morale = R(l.morale - 6, 0, 100), `已拒绝 ${t.name} 对 ${l.ign} 的报价，他本人不太高兴。`) : `已拒绝 ${t.name} 对 ${l.ign} 的报价。`)
+}
+const ma = {
+    keen: "
+"愿意谈"
+"不太情愿"
+"明确拒绝"
+"找不到这名选手。"
+"他是自由人，直接报价即可。"
+"他已经在你的队里了。"
+"名单已满（7/7），买入前要先放走一人。"
+"他的情况变了"
+"不愿意去平台更差的球队"
+"现在不想离开"
+";
+                const m = e.players[t.playerId];
+                a.push(`${(i=e.teams[t.toTeam])==null?void 0:i.name} 撤回了对 ${m==null?void 0:m.ign} 的报价。`)
+            }
+            continue
+        }
+        if (e.day < (t.respondOn ?? t.day)) continue;
+        const c = e.players[t.playerId],
+            r = e.teams[t.toTeam];
+        if (!c || !r) {
+            t.status = "
+", t.note = `${c.ign} 已经加盟了 ${((l=e.teams[c.teamId??"
+"别的俱乐部"
+"目标不存在。"
+"转会费必须是有效的非负数字。"
+"资金不足，无法支付这笔转会费。"
+", `${(m=e.teams[i.teamId])==null?void 0:m.name} 没有放人：${Fn(e,i.teamId)??"
+";
+            const f = Ze(i);
+            return `${(h=e.teams[i.teamId])==null?void 0:h.name} 拒绝了报价：出价 $${n.fee.toLocaleString()} 低于他们的要价 $${f.toLocaleString()}。`
+        }
+    }
+    const o = zn(e, i, l, t, a);
+    return o.ok ? Vn(e, i, l.id, n.fee, t) ? (n.status = "
+", `签约完成：${i.ign} 加盟 ${l.name}。`) : (n.status = "
+"对方"
+"这笔转会没能完成。"
+"选手拒绝了这份合同。"
+"雷克雅未克"
+"柏林"
+"哥本哈根"
+"东京"
+"马德里"
+"上海"
+"曼谷"
+"多伦多"
+"圣地亚哥"
+"伦敦"
+"伊斯坦布尔"
+"洛杉矶"
+"首尔"
+"巴黎"
+"圣保罗"
+"新加坡"
+"悉尼"
+"吉隆坡"
+"雅加达"
+"墨西哥城"
+"迪拜"
+"华沙"
+"慕尼黑"
+"里约热内卢"
+"这是你现在的球队"
+"这支球队没有可用阵容"
+"远高于你目前的声望，不会考虑你"
+"战绩不佳，正在考虑换人"
+"你的声望高过这个位置，有机会"
+"够得着，但需要一点运气"
+"偏高，希望不大"
+"找不到这支球队。"
+", d ? (a.push(`✅ ${t.name} 接受了你的执教申请，你可以随时上任。`), e.news.push({
+            day: e.day,
+            kind: "
+",
+            important: !0,
+            text: `📩 ${t.name} 同意与你签约，等待你确认。`
+        })) : (l.reason = l.salary > r * 1.25 ? "
+"他们留用了现在的教练组"
+"现在无法谈判。"
+"合同已更新。"
+",
+        important: !1,
+        text: `${i.name} 与经理续约 ${a} 年。`
+    }), `谈成了：年薪 ${Math.round(n/1e3)}K，${a} 年。`) : e.onNotice ? "
+"董事会拒绝了这个数字，先拿出成绩再谈。"
+"这份工作已经不在了。"
+";
+    for (const m of t) {
+        const h = e.players[m];
+        if (!h || h.teamId !== e.myTeam || !Pr(h)) continue;
+        const u = vh(c, a.mvp === m, i, r);
+        h.breakSpark = Math.round(R((h.breakSpark ?? 0) + u, 0, de.full) * 10) / 10
+    }
+}
+const ht = e => Math.max(de.feeMin, Math.round(e.salary * de.feeShare / 1e3) * 1e3);
+
+function Dr(e, n) {
+    const a = e.teams[e.myTeam],
+        i = [],
+        l = n.age <= 21 ? 15 : n.age <= 24 ? 5 : n.age <= 27 ? 0 : n.age <= 29 ? -10 : -20;
+    l && i.push({
+        label: `${n.age} 岁`,
+        v: l
+    });
+    const t = -15 * (n.breakDone ?? 0);
+    t && i.push({
+        label: `已突破 ${n.breakDone} 次`,
+        v: t
+    });
+    const c = a ? Math.round((qs(a, "
+"主教练培养"
+"训练设施"
+"士气"
+"他不是我们的人。"
+"潜力已经 99。"
+"这个赛季已经试过了，明年再来。"
+"伤还没好。"
+"资金不足。"
+",
+                important: !0,
+                text: r
+            })
+        } else {
+            a.breakSpark = de.keepOnFail, a.morale = R(a.morale - 6, 0, 100);
+            const c = `😣 ${a.ign} 突破失败，契机保留 ${de.keepOnFail}，下赛季可以再试。`;
+            n.push(c), e.news.push({
+                day: e.day,
+                kind: "
+",
+        reason: `伤还没好（还有 ${e.injuredUntil-n} 天），先休息`
+    };
+    if (e.fatigue >= gi) return {
+        focus: "
+",
+        reason: `疲劳 ${Math.round(e.fatigue)}，到 ${gi} 就该休息，练也长不动`
+    };
+    if (e.potential <= e.overall) return {
+        focus: "
+",
+        reason: `总评 ${e.overall} 已到潜力上限，再练也不涨，休息保状态`
+    };
+    const i = no(e),
+        l = Ls.filter(o => o !== "
+",
+        reason: `能练的属性都到 ${a} 了，休息保状态`
+    };
+    const c = t[0];
+    if (l[0] !== c) {
+        const o = l.filter(d => !ml(e, d, a) && i[d] >= i[c]);
+        return {
+            focus: c,
+            kind: "
+")}已到 ${a}，改练当前可提升的${ms[c]}（${e.attrs[c]}）`
+        }
+    }
+    return {
+        focus: c,
+        kind: "
+",
+        reason: `${e.role}最吃${ms[c]}，现在 ${e.attrs[c]}，还有 ${a-e.attrs[c]} 点空间`
+    }
+}
+const Mh = (e, n = Oh) => xi(e, void 0, n).focus;
+
+function _r(e, n, a) {
+    return a.id !== e.myTeam && n.teamId === a.id && n.age <= 23 && n.potential - n.overall >= 3 ? 1 + .1 * Pa(e) : 1
+}
+
+function hl(e, n, a, i) {
+    var b, w;
+    const l = e.training[n.id] ?? "
+", .006) : 1) * Zl(e) : 1,
+        N = _r(e, n, a),
+        x = to[((w = n.comeback) == null ? void 0 : w.fame) ?? 0],
+        j = i.range(7, 16) * u * f * p * (1 + m + h) * R(c / 12, .25, 1.6) * o * v * N * x;
+    if (n.xp[t] = Math.round(((n.xp[t] ?? 0) + j) * 100) / 100, n.fatigue = R(n.fatigue + i.range(5, 11), 0, 100), (n.xp[t] ?? 0) >= 100) {
+        n.xp[t] = (n.xp[t] ?? 0) - 100, n.attrs[t] = R(n.attrs[t] + 1, 20, Ps);
+        const C = n.overall;
+        if (tn(n), Gn(n), n.overall > C) return `${n.ign} 的能力值提升到 ${n.overall}。`
+    }
+    return null
+}
+
+function ls(e, n, a) {
+    return e.overall >= e.potential ? (e.xp[n] = Math.min(e.xp[n] ?? 0, 99), !1) : (e.xp[n] = Math.round(((e.xp[n] ?? 0) + a) * 100) / 100, (e.xp[n] ?? 0) < 100 ? !1 : (e.xp[n] = Math.round(((e.xp[n] ?? 0) - 100) * 100) / 100, e.attrs[n] = R(e.attrs[n] + 1, 20, Ps), tn(e), Gn(e), !0))
+}
+
+function Ih(e, n, a) {
+    const i = e.duo;
+    if (!i) return;
+    const l = (qs(n, "
+")} 四周没练也没打，熟练度开始回落（每周 −${ji}，最低 ${sn}）。`)
+}
+
+function Bh(e, n, a) {
+    e.drillLock == null || e.day < e.drillLock || (Lh(e, n, a), e.drillLock = void 0)
+}
+const Wr = 36;
+
+function Ur(e, n) {
+    const a = Yr(e),
+        i = R((90 - n.attrs.igl) / 18, .15, 1.5);
+    return Wr * a.dev * a.review * i
+}
+
+function Yr(e) {
+    const n = e.teams[e.myTeam];
+    if (!n) return {
+        dev: 1,
+        review: 1
+    };
+    const a = (qs(n, "
+") * .6,
+                d = Array.from(new Set([l.map, l.map2].filter(m => !!m)));
+            for (const m of d) {
+                const h = i.mapPrefs[m] ?? 50;
+                i.mapPrefs[m] = Math.round(R(h + r(2.35) * o, 0, 95) * 10) / 10, wa(i, m, e.day);
+                const u = dr(e, m, Hn(e, e.myTeam, m).agents, fd);
+                Math.round(i.mapPrefs[m]) > Math.round(h) ? a.push(`🗺 ${ee(m)} 熟练度提升到 ${Math.round(i.mapPrefs[m])}，这套阵容熟练度 ${Math.round(u)}。`) : h >= 94.5 && a.push(`🗺 ${ee(m)} 熟练度已到上限 95，换张图练吧。`)
+            }
+            for (const m of t) ls(m, "
+", r(3)), o.fatigue = R(o.fatigue - n.range(1, 4), 0, 100);
+            a.push(i.coach ? `🎬 ${i.coach.name} 带队复盘，全队意识提升。` : "
+"⚠️ 「练英雄」的对象已不在队中，他这一份没有效果。"
+", r(4)), m.fatigue = R(m.fatigue + n.range(3, 7), 0, 100), u ? a.push(u.newRole ? `🎓 ${m.ign} 把${je(d.agent)}练满了，现在可以兼任${u.newRole}。` : `🎓 ${m.ign} 把${je(d.agent)}练满了。`) : o.push(d)
+            }
+            e.drill = o.length ? {
+                kind: "
+", t(4)), g.fatigue = R(g.fatigue + a.range(3, 7), 0, 100)
+            }
+            break
+        }
+    }
+    const m = pl[n.tier] ?? pl[1];
+    let h = 0;
+    const u = ce(e, n.id).filter(p => p.fatigue >= Dh || p.injuredUntil > e.day && p.injuredUntil - e.day >= 7).sort((p, g) => g.fatigue - p.fatigue);
+    for (const p of u) {
+        if (h >= 2) break;
+        const g = (f = e.physioOn) == null ? void 0 : f[p.id];
+        if (!(g !== void 0 && g <= e.day && e.day - g < 7)) {
+            if (n.budget - un < m) break;
+            if (n.budget -= un, e.physioOn = {
+                    ...e.physioOn ?? {},
+                    [p.id]: e.day
+                }, p.fatigue = R(p.fatigue - 35, 0, 100), p.injuredUntil > e.day) {
+                const v = p.injuredUntil - e.day,
+                    N = Math.max(2, Math.round(v * .3));
+                p.injuredUntil = Math.max(e.day + 1, p.injuredUntil - N)
+            }
+            h++
+        }
+    }
+}
+
+function Wh(e, n) {
+    if (n.id === e.myTeam) return 0;
+    const a = fl[n.tier] ?? fl[1];
+    let i = 0;
+    for (; i < 2 && n.facilities < 90;) {
+        const l = ca(n.facilities);
+        if (n.budget - l < a) break;
+        n.budget -= l, n.facilities = R(n.facilities + 1, 0, 95), i++
+    }
+    return i
+}
+
+function Uh(e, n) {
+    var l;
+    const a = [];
+    ao(e, n, a), io(e, n, a);
+    const i = Object.entries(e.commercialDays ?? {}).filter(([, t]) => t >= 2).map(([t]) => {
+        var c;
+        return (c = e.players[t]) == null ? void 0 : c.ign
+    }).filter(Boolean);
+    i.length && a.push(`📉 本周 ${i.join("
+")} 商务占用较多，训练收益明显下降。`);
+    for (const t of Object.values(e.teams)) {
+        const c = t.id === e.myTeam;
+        for (const r of t.roster) {
+            const o = e.players[r];
+            if (!o) continue;
+            if (o.injuredUntil > e.day) {
+                o.fatigue = R(o.fatigue - 15, 0, 100), o.morale = R(o.morale - 1.5, 0, 100);
+                continue
+            }
+            if (c && ka(o, e.day)) o.fatigue = R(o.fatigue + n.range(8, 13), 0, 100);
+            else if (c) {
+                const g = hl(e, o, t, n);
+                g && a.push(g)
+            } else e.training[o.id] = Mh(o, Hi(e).aiPolishStop), hl(e, o, t, n);
+            const d = (l = o.contract) == null ? void 0 : l.promisedRole;
+            if (d) {
+                const g = t.starters.includes(o.id);
+                if ((d === "
+" ? 3 : 2), 10, 100), c && (o.grievance ?? 0) > 55 && n.chance(.25) && !o.listed && a.push(`😠 ${o.ign} 对出场时间不满，已经在考虑离队（承诺是${d==="
+"核心"
+"首发"
+", c && a.push(`⚕️ ${o.ign} ${g.note}，预计缺阵 ${v} 天。`)
+            }
+            const p = c ? es(e.manager, "
+", c && (l == null || l.push(`⚕️ ${d.ign} 赛后${f.note}，预计缺阵 ${p} 天。`))
+    }
+}
+
+function Yh(e, n) {
+    const a = [],
+        i = [];
+    Um(e);
+    for (const l of Object.values(e.players)) {
+        const t = l.age;
+        l.age += 1;
+        const c = l.season.maps >= 10 || l.season.rounds >= 200,
+            r = l.potentialRevisions ?? 0;
+        if (l.teamId && t <= 23 && c && r < 2 && l.potential - l.overall < 4 && l.potential < 97) {
+            const m = l.teamId !== e.myTeam ? Pa(e) : 0;
+            n.chance(.28 + m * .08) && (l.potential = R(l.potential + n.int(1, 2), l.potential, 99), l.potentialRevisions = r + 1)
+        }
+        const o = lo(l),
+            d = l.overall;
+        for (const m of Ls)
+            if (o > 0) l.overall < l.potential && n.chance(.55 * o) && (l.attrs[m] = R(l.attrs[m] + n.int(0, 2), 20, 99), tn(l));
+            else if (n.chance(Math.abs(o) * .5)) {
+            const h = m === "
+" ? 2 : 1;
+            l.attrs[m] = R(l.attrs[m] - n.int(0, h), 20, 99)
+        }
+        tn(l), l.age >= 25 && l.overall < l.potential && (l.attrs.awareness = R(l.attrs.awareness + (n.chance(.4) ? 1 : 0), 20, 99), l.isIgl && (l.attrs.igl = R(l.attrs.igl + (n.chance(.5) ? 1 : 0), 20, 99))), tn(l), Gn(l), l.season = {
+            maps: 0,
+            rounds: 0,
+            kills: 0,
+            deaths: 0,
+            assists: 0,
+            firstKills: 0,
+            firstDeaths: 0,
+            damage: 0,
+            clutches: 0,
+            mvps: 0
+        }, l.fatigue = R(l.fatigue - 40, 0, 100), l.injuredUntil = 0, l.injuryNote = void 0, l.teamId === e.myTeam && (l.overall - d >= 3 ? a.push(`📈 ${l.ign} 赛季间进步明显：${d} → ${l.overall}`) : d - l.overall >= 3 ? a.push(`📉 ${l.ign} 状态下滑：${d} → ${l.overall}`) : l.overall !== d && i.push(`${l.ign} ${d}→${l.overall}`))
+    }
+    return i.length && a.push(`📊 其余小幅变化：${i.join("
+", t, {
+            f: e.myTeam,
+            t: r.id,
+            c: 2
+        }), t.morale = R(t.morale + 2, 0, 100), (t.ambition ?? 60) > 70 && (t.grievance = R((t.grievance ?? 0) + 4, 0, 100)), a.push(`📰 有消息称 ${r.tag} 正在关注 ${t.ign}。`)
+    }
+}
+
+function Jh(e, n) {
+    for (const a of ce(e, e.myTeam)) {
+        const i = a.form >= 83,
+            l = a.form <= 59,
+            t = i ? "
+") && (a.formFlag = t || void 0, i && n.push(`🔥 ${a.ign} 状态正热（${Math.round(a.form)}）。`), l && n.push(`🥶 ${a.ign} 状态低迷（${Math.round(a.form)}），可以考虑轮休。`))
+    }
+}
+const pt = {
+        "
+"Kickoff 签表抽签"
+"Stage 1 分组抽签"
+"Stage 2 分组重抽"
+"瑞士轮抽签"
+"八强选择对手"
+"小组抽签"
+"八强抽签"
+"上届 Champions 的四队轮空到胜者组第二轮，其余八队抽入胜者组第一轮。"
+"首轮参赛池"
+"Champions 轮空池"
+"上"
+"下"
+")}`), c.log.push(`轮空四队：${o.map(d=>{var m;return(m=e.teams[d])==null?void 0:m.tag}).join("
+"按 Kickoff 名次分六档，每档两队：先抽出的进 Alpha 组，另一队进 Omega 组。"
+"一二三四五六"
+"同档另一队自动进入 Omega"
+"按 Stage 1 名次分三个交换池（第 1/2、3/4、5/6 名），每池抽一个名次：该名次的两队互换小组，另一名次留在原组。"
+",
+            note: `抽到第 ${f+1} 名：两组第 ${f+1} 名互换`
+        }), r.steps.push({
+            team: g,
+            pot: u,
+            slot: "
+"
+        });
+        const v = f === m ? h : m;
+        r.log.push(`第 ${m+1}/${h+1} 名池抽到第 ${f+1} 名：${(N=e.teams[p])==null?void 0:N.tag} ⇄ ${(x=e.teams[g])==null?void 0:x.tag}；第 ${v+1} 名留在原组`)
+    }), r.outcome = {
+        groups: [o, d]
+    }, r
+}
+
+function su(e, n, a, i, l, t) {
+    const c = Xs(e, n.key, `swiss-r${a}`),
+        r = a === 1 ? "
+"第二轮按战绩分池：1-0 对 1-0，0-1 对 0-1。"
+"第三轮 1-1 的队伍互相配对，交手过的不重赛。"
+", `swiss-r${a}`, r, i.map(m => ({
+            name: m.name,
+            teams: m.teams.slice()
+        })), t),
+        d = [];
+    if (a === 1) {
+        const m = c.shuffle(i[0].teams.slice()),
+            h = i[1].teams.slice(),
+            u = (g, v) => $a(e, g) !== $a(e, v),
+            f = new Map,
+            p = (g, v) => gt(g, v, f, (N, x) => u(N, x));
+        for (let g = 0; g < m.length; g++) {
+            const v = m[g];
+            o.steps.push({
+                team: v,
+                pot: 0,
+                slot: `第 ${g+1} 场 · 二号种子`
+            });
+            const N = h.filter(y => !f.has(y)),
+                x = c.shuffle(N.filter(y => u(v, y)));
+            let j, b = [];
+            for (const y of x) {
+                f.set(y, v);
+                const S = p(m.slice(g + 1), h.filter(O => !f.has(O)));
+                if (f.delete(y), S) {
+                    j = y;
+                    break
+                }
+                b.push(y)
+            }
+            j || (j = N[0], b = []), f.set(j, v);
+            const w = N.filter(y => !u(v, y)),
+                C = b.length ? `${b.map(y=>{var S;return(S=e.teams[y])==null?void 0:S.tag}).join("
+")} 若在此落位会让剩余队伍无法避开同赛区，顺延` : w.length ? `${w.map(y=>{var S;return(S=e.teams[y])==null?void 0:S.tag}).join("
+")} 同赛区，不在候选之列` : void 0;
+            o.steps.push({
+                team: j,
+                pot: 1,
+                slot: `第 ${g+1} 场 · 三号种子`,
+                note: C
+            }), d.push([v, j])
+        }
+    } else i.forEach((m, h) => {
+        const u = c.shuffle(m.teams.slice());
+        if (a === 2)
+            for (let f = 0; f + 1 < u.length; f += 2) o.steps.push({
+                team: u[f],
+                pot: h,
+                slot: `${m.name} 第 ${d.length+1} 场 上`
+            }), o.steps.push({
+                team: u[f + 1],
+                pot: h,
+                slot: `${m.name} 第 ${d.length+1} 场 下`
+            }), d.push([u[f], u[f + 1]]);
+        else {
+            const f = u.slice(),
+                p = (v, N) => `${v}|${N}`,
+                g = v => {
+                    if (!v.length) return !0;
+                    const [N, ...x] = v;
+                    for (let j = 0; j < x.length; j++)
+                        if (!l.has(p(N, x[j])) && g([...x.slice(0, j), ...x.slice(j + 1)])) return !0;
+                    return !1
+                };
+            for (; f.length >= 2;) {
+                const v = f.shift();
+                o.steps.push({
+                    team: v,
+                    pot: h,
+                    slot: `第 ${d.length+1} 场 上`
+                });
+                let N;
+                const x = [];
+                for (const j of f) {
+                    if (l.has(p(v, j))) {
+                        x.push(j);
+                        continue
+                    }
+                    const b = f.filter(w => w !== j);
+                    if (g(b)) {
+                        N = j;
+                        break
+                    }
+                    x.push(j)
+                }
+                N || (N = f[0]), f.splice(f.indexOf(N), 1), o.steps.push({
+                    team: N,
+                    pot: h,
+                    slot: `第 ${d.length+1} 场 下`,
+                    note: x.length ? `${x.map(j=>{var b;return(b=e.teams[j])==null?void 0:b.tag}).join("
+")} 已交手或会让剩余队伍无法配对，顺延` : void 0
+                }), d.push([v, N])
+            }
+        }
+    });
+    return o.outcome = {
+        pairs: d
+    }, o.log.push(...d.map(([m, h], u) => {
+        var f, p;
+        return `第 ${u+1} 场：${(f=e.teams[m])==null?void 0:f.tag} vs ${(p=e.teams[h])==null?void 0:p.tag}`
+    })), o
+}
+
+function nu(e, n = 4) {
+    const a = Array.from({
+            length: n
+        }, () => Array(n).fill(-1)),
+        i = l => {
+            if (l === n * n) return !0;
+            const t = Math.floor(l / n),
+                c = l % n;
+            for (const r of e.shuffle([...Array(n).keys()])) {
+                if (a[t].includes(r)) continue;
+                let o = !1;
+                for (let d = 0; d < t; d++)
+                    if (a[d][c] === r) {
+                        o = !0;
+                        break
+                    } if (!o) {
+                    if (a[t][c] = r, i(l + 1)) return !0;
+                    a[t][c] = -1
+                }
+            }
+            return !1
+        };
+    return i(0), a
+}
+
+function au(e, n, a, i) {
+    const l = Xs(e, n.key, "
+"四档各四队，每组从每档各抽一队，同赛区不同组。签球依次落入 A 到 D 组中第一个合法的小组。"
+"一二三四"
+"同赛区"
+"}队伍`);
+                    continue
+                }
+                h.set(f, j);
+                const b = gt(m.slice(p + 1), g.filter(w => w !== j), h, (w, C, y) => u(w, C, y));
+                if (h.delete(f), b) {
+                    v = j;
+                    break
+                }
+                N.push(`落入 ${j} 组会让本档余下队伍无处可去`)
+            }
+            v || (v = g[0]), h.set(f, v), r[t.indexOf(v)].push(f), c.steps.push({
+                team: f,
+                pot: d,
+                slot: `${v} 组`,
+                note: N.length ? `${N.join("
+")}，顺延至 ${v} 组` : void 0
+            })
+        })
+    }), c.outcome = {
+        groups: r
+    }, c.log.push(...r.map((o, d) => `${t[d]} 组：${o.map(m=>{var h;return(h=e.teams[m])==null?void 0:h.tag}).join("
+"每个小组第一抽一支别组的小组第二；同组出线的两队分在不同半区，胜者组决赛前不重赛。"
+"小组第一池"
+"小组第二池"
+")} 同组或会与同组队伍同处一个半区，顺延` : void 0
+        })
+    }), r.outcome = {
+        pairs: m
+    }, r.log.push(...m.map(([p, g], v) => {
+        var N, x;
+        return `八强第 ${v+1} 场：${(N=e.teams[p])==null?void 0:N.tag} vs ${(x=e.teams[g])==null?void 0:x.tag}`
+    })), r
+}
+
+function tu(e, n, a, i, l) {
+    const t = Xs(e, n.key, "
+"四个赛区冠军抽出选择顺序，依次从瑞士轮晋级的四队里选八强对手，最后一位拿剩下的一队。"
+"赛区冠军"
+"瑞士轮晋级队"
+")}`), c
+}
+const Wn = e => {
+    var a, i;
+    const n = ((a = e.outcome.pairs) == null ? void 0 : a.length) ?? 0;
+    return ((i = e.pickOrder) == null ? void 0 : i[n]) ?? null
+};
+
+function xl(e, n, a, i) {
+    var m;
+    const l = e.teams[a];
+    if (!l) return 0;
+    const t = i.standings[a],
+        c = t ? (t.mapW - t.mapL) * .8 + t.w * 2 : 0,
+        r = (((m = e.teams[a]) == null ? void 0 : m.rating) ?? 80) - 80,
+        o = (ke(`nerve:${e.seed}:${n}`) % 7 - 3) * .6,
+        d = e.fixtures.some(h => h.played && h.comp === i.key && (h.teamA === n && h.teamB === a || h.teamB === n && h.teamA === a));
+    return l.rating + c + r * .3 + o + (d ? 1.5 : 0)
+}
+
+function lu(e, n, a, i) {
+    var r, o, d;
+    const l = i.standings[a];
+    if (e.fixtures.some(m => m.played && m.comp === i.key && (m.teamA === n && m.teamB === a || m.teamB === n && m.teamA === a))) return `${(r=e.teams[a])==null?void 0:r.tag} 交过手，心里有底`;
+    const c = (o = e.teams[a]) == null ? void 0 : o.tag;
+    return l && l.l >= 1 ? `${c} 瑞士轮输过一场，最好打` : (((d = e.teams[a]) == null ? void 0 : d.rating) ?? 0) < 84 ? `${c} 纸面实力四队最弱` : `教练组选了 ${c}`
+}
+
+function ru(e, n, a, i = !1) {
+    for (;;) {
+        const l = Wn(n);
+        if (!l) return n.status = "
+"最后剩下的一队"
+"交给了教练组"
+"还没轮到这支队选。"
+",
+        important: i === e.myTeam || l === e.myTeam,
+        text: `${a.name} 八强抽签：${(m=e.teams[i])==null?void 0:m.name} 选了 ${(h=e.teams[l])==null?void 0:h.name}（${t}）。`
+    }), n.revealed = n.steps.length, Wn(n) || (n.status = "
+", e.pendingDrawId = void 0), `${(u=e.teams[i])==null?void 0:u.tag} 选择了 ${(f=e.teams[l])==null?void 0:f.tag}。`) : "
+"季前准备"
+"休赛期"
+"联赛"
+"送祝福"
+"送小礼物"
+"组织简短庆祝"
+"暂不处理"
+"
+        }), n.push(`🎂 ${i.ign} 今天 ${t} 岁生日，${he.WINDOW_DAYS} 天内可以在他的页面表示一下。`)
+    }
+    const a = Ge(e);
+    for (const i of e.birthdays) {
+        if (i.status !== "
+"没有这条记录。"
+"生日已经过去一周了。"
+"这个生日已经处理过了。"
+"他已经不在队里。"
+" && (((t = e.life) == null ? void 0 : t.wallet) ?? 0) < he.gift.price ? `个人余额不够：礼物要 $${he.gift.price}，钱包里只有 $${Math.round(((c=e.life)==null?void 0:c.wallet)??0)}。` : a === "
+" && e.finances.balance < he.party.cost ? `俱乐部资金不够：庆祝要 $${he.party.cost.toLocaleString("
+":
+            return t.morale = R(t.morale + he.wish.morale, 0, 100), Ha(t, he.wish.trust), c(`给 ${t.ign} 发了生日祝福，他挺高兴。士气 +${he.wish.morale}，信任 +${he.wish.trust}。`);
+        case "
+": {
+            const r = co(e, `生日礼物 · ${t.ign}`, he.gift.price);
+            return r ? {
+                ok: !1,
+                text: r
+            } : (t.morale = R(t.morale + he.gift.morale, 0, 100), Ha(t, he.gift.trust), c(`自己掏 $${he.gift.price} 给 ${t.ign} 买了份小礼物。士气 +${he.gift.morale}，信任 +${he.gift.trust}。`))
+        }
+        case "
+": {
+            const r = he.party.cost;
+            e.finances.balance -= r, e.finances.log.push({
+                day: e.day,
+                label: `生日庆祝 · ${t.ign}`,
+                amount: -r
+            });
+            const o = e.teams[e.myTeam];
+            o && (o.budget -= r), t.morale = R(t.morale + he.party.morale, 0, 100), Ha(t, he.party.trust);
+            for (const d of ce(e, e.myTeam)) d.id !== t.id && (d.morale = R(d.morale + he.party.squadMorale, 0, 100), er(e, t.id, d.id, he.party.bond));
+            return c(`训练后给 ${t.ign} 切了个蛋糕，俱乐部出 $${r.toLocaleString("
+")}。他士气 +${he.party.morale}、信任 +${he.party.trust}，全队士气 +${he.party.squadMorale}，大家和他更近了。`)
+        }
+        case "
+"这次没表示。"
+"从青训提拔"
+"签下"
+"从青训提上"
+"加盟了"
+"为新人腾位置"
+", u, {
+                f: null,
+                t: m.id,
+                w: `${n} 年真实新人，${f}`
+            }), m.starters = vs(e, m.id), t.push(`${m.tag} ${f} ${u.ign}`);
+            continue
+        }
+        c.push(u.ign)
+    }
+    t.length && e.news.push({
+        day: e.day,
+        kind: "
+",
+        text: `📋 ${n} 年的真实新人到队：${t.slice(0,10).join("
+")}${t.length>10?` 等 ${t.length} 人`:"
+",
+        text: `📤 为新人腾位置离队：${r.slice(0,10).join("
+")}${r.length>10?` 等 ${r.length} 人`:"
+",
+        text: `🆕 ${n} 年的新面孔进入自由人市场：${c.slice(0,10).join("
+")}${c.length>10?` 等 ${c.length} 人`:"
+"胜者组第一轮"
+"胜者组第二轮"
+"胜者组决赛"
+"败者组第一轮"
+"败者组第二轮"
+"败者组半决赛"
+"败者组决赛"
+"总决赛"
+"胜者组半决赛"
+"中段组第一轮"
+"中段组第二轮"
+"中段组第三轮"
+"中段组第四轮"
+"中段组半决赛"
+"中段组决赛"
+"败者组第三轮"
+"败者组第四轮"
+"败者组第五轮"
+"中段组"
+"],
+    wl = e => /^[A-D]组 /.test(e),
+    Mi = e => e.startsWith("
+"败者赛"
+"决胜赛"
+" in r ? yt(t) === i : Ua(t) === i
+    };
+    for (let r = 0; r < e.length; r++)
+        for (const o of e[r])
+            for (const d of o.slots)
+                if (c(d.a) || c(d.b)) return {
+                    wave: r + 1,
+                    name: o.name
+                };
+    return null
+}
+
+function Iu(e, n, a, i = 0) {
+    const l = xt(e, n).filter(t => Fs(t) > i);
+    return !l.length || l.some(t => !t.played) ? !1 : Math.max(...l.map(Fs)) - i >= a.length
+}
+
+function ai(e, n, a, i = 0) {
+    const l = xt(e, n).filter(r => Un(r) === a)[i],
+        t = l ? yt(l) : null,
+        c = l ? Ua(l) : null;
+    return t && c ? {
+        w: t,
+        l: c
+    } : null
+}
+const Ta = () => Cu(...Xn.map((e, n) => Tu(e, n * 4))),
+    Os = e => e >= 8 ? {
+        template: nn,
+        places: wu
+    } : {
+        template: ku,
+        places: $u
+    },
+    jt = 3,
+    Au = e => `SW:${e}:瑞士轮 第${e}轮`,
+    sc = (e, n) => e.fixtures.filter(a => a.comp === n.key && a.label.startsWith("
+"Challengers 第一赛段"
+"Challengers 第二赛段"
+"
+        } [e] ?? e
+    };
+
+function Du(e) {
+    const n = new Date(Date.UTC(e.year, 0, 1));
+    return n.setUTCDate(n.getUTCDate() + e.day), `${n.getUTCFullYear()}年${n.getUTCMonth()+1}月${n.getUTCDate()}日`
+}
+const Se = (e, n) => n ? `${e}:${n}` : e;
+
+function Be(e, n, a, i, l, t) {
+    const c = {
+        key: Se(n, l),
+        name: a,
+        region: l,
+        tier: t,
+        stage: n,
+        teams: i,
+        standings: jm(i),
+        finished: []
+    };
+    return e.comps[c.key] = c, c
+}
+const Kn = (e, n) => Object.values(e.teams).filter(a => a.region === n && a.tier === 1).sort((a, i) => i.rating - a.rating).map(a => a.id),
+    Ru = (e, n) => Object.values(e.teams).filter(a => a.region === n && a.tier === 2).map(a => a.id);
+
+function ic(e, n) {
+    e.managerContract ?? (e.managerContract = _a(e)), br(0), e.fixtures = [], e.comps = {};
+    const a = new Me(ke(`season:${e.seed}:${e.year}`));
+    Xh(0);
+    const i = as(e),
+        l = i.leagueDays;
+    for (const t of Ne) {
+        const c = Kn(e, t),
+            r = Ru(e, t);
+        if (i.lockin) {
+            const h = Be(e, "
+"中国进化赛"
+", `Challengers ${t} · 第一赛段`, r, t, 2);
+                e.fixtures.push(...ts(u, "
+", `Challengers ${t} · 第二赛段`, r, t, 2);
+                e.fixtures.push(...ts(f, "
+", `Challengers ${t} · 第一赛段`, r, t, 2);
+                e.fixtures.push(...ts(p, "
+", `Challengers ${t} · 第二赛段`, r, t, 2);
+                e.fixtures.push(...ts(g, "
+"小组赛"
+", `Challengers ${t} · 第一赛段`, r, t, 2);
+            e.fixtures.push(...ts(h, "
+", `Challengers ${t} · 第二赛段`, r, t, 2);
+            e.fixtures.push(...ts(u, "
+"冠军赛中国资格赛"
+",
+            important: i === ((a = e.teams[e.myTeam]) == null ? void 0 : a.region),
+            text: `${o.name}名单：${r.map(d=>{var m;return(m=e.teams[d])==null?void 0:m.name}).join("
+"，前三名去 Champions。"
+"，冠军拿最后一个 Champions 名额。"
+",
+        important: !0,
+        text: `${a}（${r.city}）参赛名单：${t.map(o=>{var d;return(d=e.teams[o])==null?void 0:d.name}).join("
+")} 赛区冠军直接进季后赛；${c.map(o=>{var d;return(d=e.teams[o])==null?void 0:d.name}).join("
+")} 先打瑞士轮。`
+    })
+}
+
+function Cl(e, n, a) {
+    if (e.comps.champions) return;
+    const i = Ya(e);
+    let t = nu(new Me(ke(`champions:${e.seed}:${e.year}:groups`))).map(o => o.map((d, m) => i[Ne[d]][m]).filter(d => !!d));
+    if (Ne.some(o => i[o].length !== 4)) {
+        const o = Ne.flatMap(d => i[d]).sort(ws(e)).slice(0, 16);
+        t = [
+            [],
+            [],
+            [],
+            []
+        ], o.forEach((d, m) => {
+            const h = Math.floor(m / 4) % 2 === 0 ? m % 4 : 3 - m % 4;
+            t[h].push(d)
+        }), t = t.filter(d => d.length)
+    }
+    const c = t.flat();
+    if (c.length < 8) return;
+    const r = Be(e, "
+",
+            important: !0,
+            text: `${n}（${r.city}）参赛名单：${c.map(d=>{var m;return(m=e.teams[d])==null?void 0:m.tag}).join("
+")}，分组抽签待举行。`
+        });
+        return
+    }
+    r.groups = t, e.fixtures.push(...De(e, r, Ta(), null, c, a, 3, 0)), e.news.push({
+        day: e.day,
+        kind: "
+",
+        important: !0,
+        text: `${n}（${r.city}）分组出炉：` + t.map((o, d) => `${Xn[d]}组 ${o.map(m=>{var h;return(h=e.teams[m])==null?void 0:h.name}).join("
+")}-${e.day}`;
+    if (((u = e.patch) == null ? void 0 : u.id) === t) return;
+    const c = new Me(ke(`patch:${e.seed}:${e.year}:${e.day}`)),
+        r = n ? `${e.year} 休赛期大改` : `${e.year} 赛中调整`,
+        o = i === "
+"第二赛段起"
+"冠军赛起"
+" ? `${e.year+1} 赛季起` : "
+"),
+        m = [];
+    e.patch.buffed.length && m.push(`加强 ${d(e.patch.buffed)}`), e.patch.nerfed.length && m.push(`削弱 ${d(e.patch.nerfed)}`);
+    const h = m.length ? `🔧 ${r}（${o}）：${m.join("
+")}。逆着版本排阵容要吃亏，战术页有本队建议。` : `🔧 ${r}（${o}）：只有微调，没有明显加强或削弱。`;
+    e.news.push({
+        day: e.day,
+        kind: "
+",
+        important: n,
+        text: h
+    }), a.push(h)
+}
+
+function Ku(e, n) {
+    const a = Fc(e),
+        i = _c(e);
+    if (!a.length && !i.length) return;
+    for (const c of a) {
+        const r = `🆕 新英雄 ${je(c)} 加入游戏，可以进预案和训练了。`;
+        e.news.push({
+            day: e.day,
+            kind: "
+",
+            text: r,
+            important: !0
+        }), n.push(r)
+    }
+    for (const c of i) {
+        const r = `🗺️ 新地图 ${ee(c)} 上线，之后的图池轮换里会进入比赛。`;
+        e.news.push({
+            day: e.day,
+            kind: "
+",
+            text: r,
+            important: !0
+        }), n.push(r)
+    }
+    const l = e.patch,
+        t = {
+            since: e.day,
+            year: e.year,
+            name: [...a.map(c => `新英雄 ${je(c)}`), ...i.map(c => `新地图 ${ee(c)}`)].join("
+"本赛段起"
+",
+            important: !0,
+            text: `🏆 ${l==null?void 0:l.name} 夺得 ${n.name} 冠军！`
+        }), (n.stage === "
+",
+                name: n.name,
+                teamId: e.myTeam,
+                city: n.city,
+                how: t ? `决赛击败 ${t.name}` : "
+",
+                important: !0,
+                text: `🔥 ${l==null?void 0:l.name} 拿下 ${n.name} 后，各赛区俱乐部加练备战，休赛期引援会更激进。`
+            })), e.manager) {
+            const c = n.region ? Sl.regional : Sl.international;
+            e.manager.reputation = R(e.manager.reputation + cc(e.manager.reputation, c), 5, 96)
+        }
+        a.push(`🏆 我们夺得 ${n.name} 冠军！`)
+    }
+    if (n.region && n.finished.includes(e.myTeam)) {
+        const t = e.teams[e.myTeam],
+            c = n.finished.indexOf(e.myTeam) + 1;
+        e.bestPlacing = Math.min(e.bestPlacing ?? 99, c);
+        for (const r of (t == null ? void 0 : t.sponsors) ?? []) r.bonusPaidYear === e.year || c > r.bonusPlacement || !r.bonus || (r.bonusPaidYear = e.year, e.finances.balance += r.bonus, e.finances.log.push({
+            day: e.day,
+            label: `赞助达标奖 · ${r.name}（${n.name} 第 ${c} 名）`,
+            amount: r.bonus
+        }), a.push(`💰 ${r.name} 达标奖金 $${r.bonus.toLocaleString()} 到账：${n.name} 第 ${c} 名，合同要求前 ${r.bonusPlacement}。`))
+    }
+    if (n.champion !== e.myTeam && n.teams.includes(e.myTeam)) {
+        const t = n.finished.indexOf(e.myTeam);
+        if (t >= 0) {
+            const c = `${n.name} 第 ${t+1} 名（共 ${n.finished.length} 队）`,
+                r = e.objective;
+            if (r && !r.settled && bt(e, r.stage) === n.key) a.push(`🏁 ${c}。董事会要求前 ${r.placeAtLeast}，赛段结束再评。`);
+            else {
+                const o = n.teams.slice().sort((f, p) => {
+                        var g, v;
+                        return (((g = e.teams[p]) == null ? void 0 : g.rating) ?? 0) - (((v = e.teams[f]) == null ? void 0 : v.rating) ?? 0)
+                    }),
+                    d = Math.max(0, o.indexOf(e.myTeam)),
+                    m = t / Math.max(1, n.finished.length - 1),
+                    h = t - d,
+                    u = m < .34 ? 5 : m > .7 && h >= 2 ? -7 : 0;
+                e.boardConfidence = R(e.boardConfidence + u, 0, 100), a.push(u > 0 ? `🏅 ${c}，董事会满意（信任 +${u}）。` : u < 0 ? `📉 ${c}，按实力本该在第 ${d+1} 名上下，董事会不满（信任 ${u}）。` : m > .7 ? `🏁 ${c}，符合实力，董事会没意见。` : `🏁 ${c}。`)
+            }
+        }
+    }
+}
+
+function Vs(e, n, a) {
+    if (!a && Vr(e, n)) {
+        e.pendingDrawId ?? (e.pendingDrawId = n.id), n.kind === "
+",
+                important: i(n.teams),
+                text: `${n.name} 抽签完成：${(n.byes??[]).map(d=>{var m;return(m=e.teams[d])==null?void 0:m.name}).join("
+")} 轮空至胜者组第二轮，其余八队抽入首轮。`
+            });
+            break
+        }
+        case "
+",
+                important: i(n.teams),
+                text: `${n.name} 分组抽签：Alpha ${(t=d[0])==null?void 0:t.map(f=>{var p;return(p=e.teams[f])==null?void 0:p.tag}).join("
+": {
+            const d = Number(((o = (r = a.phase) == null ? void 0 : r.match(/swiss-r(\d)/)) == null ? void 0 : o[1]) ?? 1);
+            e.fixtures.push(...(a.outcome.pairs ?? []).map(([m, h]) => Ws(a.playDay, n.stage, n.key, m, h, 3, `SW:${d}:瑞士轮 第${d}轮`))), e.news.push({
+                day: e.day,
+                kind: "
+",
+                important: i(n.teams),
+                text: `${n.name} 瑞士轮第 ${d} 轮抽签：${(a.outcome.pairs??[]).map(([m,h])=>{var u,f;return`${(u=e.teams[m])==null?void 0:u.tag} vs ${(f=e.teams[h])==null?void 0:f.tag}`}).join("
+",
+                important: i(n.seeds),
+                text: `${n.name} 八强对阵确定：${(a.outcome.pairs??[]).map(([d,m])=>{var h,u;return`${(h=e.teams[d])==null?void 0:h.tag} vs ${(u=e.teams[m])==null?void 0:u.tag}`}).join("
+",
+                important: !0,
+                text: `${n.name}（${n.city}）分组抽签：` + d.map((m, h) => `${Xn[h]}组 ${m.map(u=>{var f;return(f=e.teams[u])==null?void 0:f.name}).join("
+",
+                important: i(n.seeds),
+                text: `${n.name} 八强抽签：${(a.outcome.pairs??[]).map(([d,m])=>{var h,u;return`${(h=e.teams[d])==null?void 0:h.tag} vs ${(u=e.teams[m])==null?void 0:u.tag}`}).join("
+", n.plannedStart = Re.kickoff[0];
+    const m = Qh(e, n, o, d, Re.kickoff[0]);
+    m.log.unshift(l ? `轮空位给 2025 Champions 的参赛队：${c.map(u=>{var f;return(f=e.teams[u])==null?void 0:f.tag}).join("
+")}` : `轮空位给上届 Champions 的参赛队：${c.map(u=>{var f;return(f=e.teams[u])==null?void 0:f.tag}).join("
+")}`), c.length < 4 && m.log.unshift(`上届 Champions 只有 ${c.length} 队仍在本赛区，其余轮空位按俱乐部声望补足`), Vs(e, m, a)
+}
+
+function zu(e, n, a, i) {
+    const l = e.comps[Se("
+"二号种子"
+"三号种子"
+",
+                    important: [...h.byes ?? [], ...N].includes(e.myTeam),
+                    text: `${h.name} 瑞士轮结束，${N.map(b=>{var w;return(w=e.teams[b])==null?void 0:w.name}).join("
+")} 晋级。赛区冠军选八强对手，顺序：${(o=j.pickOrder)==null?void 0:o.map(b=>{var w;return(w=e.teams[b])==null?void 0:w.tag}).join("
+",
+                    important: h.seeds.includes(e.myTeam),
+                    text: `${h.name} 瑞士轮结束，${x.map(b=>{var w;return(w=e.teams[b])==null?void 0:w.name}).join("
+")} 晋级季后赛。`
+                });
+                continue
+            }
+            f.every(N => N.played) && (e.fixtures.push(...De(e, h, cs(e) ? on : nn, Os(8).places, h.seeds ?? [], p, 3)), h.champion && aa(e, h, n));
+            continue
+        }
+        if (h.format === "
+") {
+            const v = (h.groups ?? []).flat(),
+                N = Ta();
+            if (!h.bracketStarted) {
+                const x = De(e, h, N, null, v, p, 3, 0);
+                if (x.length) {
+                    e.fixtures.push(...x);
+                    continue
+                }
+                if (!Iu(e, h, N, 0)) continue;
+                const j = [],
+                    b = [],
+                    w = [],
+                    C = [];
+                for (const y of Xn) {
+                    const S = ai(e, h, `${y}组 胜者赛`),
+                        O = ai(e, h, `${y}组 决胜赛`),
+                        k = ai(e, h, `${y}组 败者赛`);
+                    S && j.push(S.w), O && (b.push(O.w), w.push(O.l)), k && C.push(k.l)
+                }
+                if (h.finished = [...w, ...C], cs(e)) {
+                    Vs(e, iu(e, h, j, b, S => (h.groups ?? []).findIndex(O => O.includes(S)), p), a);
+                    continue
+                }
+                h.seeds = Eu(j, b), h.bracketStarted = !0, e.fixtures.push(...De(e, h, cs(e) ? on : nn, Os(8).places, h.seeds, p, 3, N.length)), e.news.push({
+                    day: e.day,
+                    kind: "
+",
+                    important: h.seeds.includes(e.myTeam),
+                    text: `${h.name} 小组赛结束，八强：${h.seeds.map(y=>{var S;return(S=e.teams[y])==null?void 0:S.name}).join("
+",
+                text: `${h.name} 小组赛结束，季后赛八强：${x.map(j=>{var b;return(b=e.teams[j])==null?void 0:b.name}).join("
+",
+                text: `${h.name} 常规赛结束，季后赛名单：${b.map(w=>{var C;return(C=e.teams[w])==null?void 0:C.name}).join("
+"董事会要求：拿下本赛段冠军。"
+",
+        important: !0,
+        text: c
+    })
+}
+
+function ep(e, n, a) {
+    const i = e.objective;
+    if (!i || i.settled || i.stage !== n) return;
+    const l = bt(e, n),
+        t = l ? e.comps[l] : void 0;
+    if (!t) return;
+    const r = (t.finished.length ? t.finished : xn(t)).indexOf(e.myTeam) + 1;
+    if (r <= 0) return;
+    i.settled = !0, i.met = r <= i.placeAtLeast;
+    const o = i.met ? Math.min(16, 6 + (i.placeAtLeast - r) * 3) : -Math.min(18, 2 + (r - i.placeAtLeast) * 3);
+    if (e.boardConfidence = R(e.boardConfidence + o, 0, 100), e.missedStreak = i.met ? 0 : (e.missedStreak ?? 0) + 1, e.manager) {
+        const h = e.manager.growth,
+            u = i.met ? (1 + (i.placeAtLeast - r) * .5) * h : -1.5,
+            f = u > 0 ? cc(e.manager.reputation, u) : u;
+        e.manager.reputation = R(e.manager.reputation + f, 5, 96)
+    }
+    const d = e.teams[e.myTeam];
+    if (d) {
+        const h = i.met ? .5 + (i.placeAtLeast - r) * .5 : -.75;
+        d.reputation = R(d.reputation + h, 20, 99)
+    }
+    const m = i.met ? `✅ 赛段目标达成：第 ${r} 名（要求前 ${i.placeAtLeast}）。董事会满意。` : `❌ 赛段目标未达成：第 ${r} 名（要求前 ${i.placeAtLeast}）。董事会不满。`;
+    a.push(m), e.news.push({
+        day: e.day,
+        kind: "
+"达成一个赛段目标就会撤回"
+"俱乐部"
+",
+            important: !0,
+            text: e.gameOver
+        });
+        return
+    }
+    if (!e.onNotice && (e.boardConfidence <= 20 || t)) {
+        e.onNotice = !0;
+        const o = `⚠ 董事会警告：再有一个赛段交不出成绩，就换人。信任度 ${Math.round(e.boardConfidence)}%，${kt(e)}。`;
+        i.push(o), e.news.push({
+            day: e.day,
+            kind: "
+",
+            important: !0,
+            text: o
+        });
+        return
+    }
+    if (e.onNotice && a && e.boardConfidence >= Ii) {
+        e.onNotice = !1;
+        const o = `董事会撤回了警告：第 ${n} 名达成目标，信任度 ${Math.round(e.boardConfidence)}%。`;
+        i.push(o), e.news.push({
+            day: e.day,
+            kind: "
+"} 俱乐部声望 ${Math.round(o)} → ${Math.round(r.reputation)}：${m?"
+"这赛季的成绩撑不住原来的位置"
+",
+            important: !0,
+            text: `📩 ${r.name} 向你发出执教邀请（声望 ${Math.round(r.reputation)}）。`
+        }))
+    }
+}
+const lp = (e => e.end - e.start + 1)(ac.find(e => e.key === "
+"这份邀请已经失效。"
+",
+        important: !1,
+        text: `你婉拒了 ${i.name} 的执教邀请。`
+    }), `已婉拒 ${i.name}。`)
+}
+
+function mc(e, n) {
+    var l;
+    const a = (l = e.jobOffers) == null ? void 0 : l.find(t => t.id === n),
+        i = a ? e.teams[a.teamId] : null;
+    return !a || !i ? "
+"你已经在这支球队任职。"
+"他所在的俱乐部换帅"
+",
+        important: !0,
+        text: `你离开 ${i==null?void 0:i.name} 出任 ${a.name} 的经理。`
+    }), `你已就任 ${a.name} 的经理。`
+}
+const Ca = (e, n) => new Me(ke(`match:${e.seed}:${e.year}:${n.id}`)),
+    dn = e => e.comp === "
+",
+            important: !0,
+            text: E
+        }), i.push(E);
+        const M = (y ? (h = a.lineups) == null ? void 0 : h.a : (u = a.lineups) == null ? void 0 : u.b) ?? [],
+            W = M.map(E => e.players[E]).filter(E => E && E.injuredUntil > e.day);
+        for (const E of W) i.push(`⚕️ 人手不够，带伤的 ${E.ign} 还是上了场（${E.injuryNote??"
+" || !/常规赛|瑞士|小组/.test(n.label);
+            jd(e, n, E, H), bh(e, n, a, H)
+        }
+    }
+    if (dn(n)) {
+        na(e, n.teamA, a.maps.length, t, i, (f = a.lineups) == null ? void 0 : f.a), na(e, n.teamB, a.maps.length, t, i, (p = a.lineups) == null ? void 0 : p.b);
+        const C = a.mapsWonA > a.mapsWonB;
+        for (const [S, O] of [
+                [n.teamA, C],
+                [n.teamB, !C]
+            ])
+            for (const k of Ol(e, n, S, a)) {
+                const M = e.players[k];
+                M && (M.form = R(M.form + (O ? t.range(.4, 2.2) : -t.range(.4, 2.2)), 30, 99), M.morale = R(M.morale + (O ? t.range(0, 2) : -t.range(0, 1.5)), 10, 100))
+            }
+        const y = (g = n.scrim) == null ? void 0 : g.map;
+        if (y)
+            for (const S of [n.teamA, n.teamB]) {
+                const O = e.teams[S];
+                if (!O) continue;
+                const k = O.mapPrefs[y] ?? 50,
+                    M = R((rp - k) / cp, 0, 1);
+                O.mapPrefs[y] = R(k + t.range(.6, 1) * M, 0, 95), wa(O, y, e.day), S === e.myTeam && Math.round(O.mapPrefs[y]) > Math.round(k) && i.push(`🗺 ${ee(y)} 熟练度提升到 ${Math.round(O.mapPrefs[y])}。`)
+            }
+        l && e.lastResults.push(n.id), e.news.push({
+            day: e.day,
+            kind: "
+",
+            text: `训练赛｜${(v=e.teams[n.teamA])==null?void 0:v.tag} ${a.mapsWonA}-${a.mapsWonB} ${(N=e.teams[n.teamB])==null?void 0:N.tag}`
+        }), e.agentPicks = void 0;
+        return
+    }
+    Nd(e, a), na(e, n.teamA, a.maps.length, t, i, (x = a.lineups) == null ? void 0 : x.a), na(e, n.teamB, a.maps.length, t, i, (j = a.lineups) == null ? void 0 : j.b);
+    for (const C of a.maps)
+        for (const y of [n.teamA, n.teamB]) {
+            const S = e.teams[y];
+            S && wa(S, C.map, e.day)
+        }
+    e.vetoPlan = void 0, e.agentPicks = void 0;
+    const c = e.comps[n.comp];
+    c && !n.label.startsWith("
+",
+        text: `${(c==null?void 0:c.name)??n.comp}｜${(b=e.teams[n.teamA])==null?void 0:b.tag} ${a.mapsWonA}-${a.mapsWonB} ${(w=e.teams[n.teamB])==null?void 0:w.tag}`,
+        important: l
+    }), rc(e, i)
+}
+
+function op(e, n, a) {
+    const i = n.map(r => e.players[r]).filter(r => !!r).map(r => {
+        let o = 0,
+            d = 0;
+        for (const m of a.maps) {
+            const h = m.lines[r.id];
+            h && (o += h.acs, d++)
+        }
+        return {
+            p: r,
+            acs: d ? o / d : 0,
+            exp: Td(r),
+            maps: d
+        }
+    }).filter(r => r.maps > 0);
+    if (i.length < 2) return;
+    const l = i.reduce((r, o) => r + o.acs, 0),
+        t = i.reduce((r, o) => r + o.exp, 0);
+    if (l <= 0 || t <= 0) return;
+    const c = l / t;
+    for (const r of i) {
+        const o = r.acs - r.exp * c;
+        r.p.form = R(r.p.form + R(o / 30, -1.5, 1.5), 30, 99)
+    }
+}
+
+function Ml(e, n = {}) {
+    var h;
+    if (e.gameOver) return {
+        day: e.day,
+        stage: e.stage,
+        stageChanged: !1,
+        playedMine: [],
+        notes: [],
+        seasonEnded: !1
+    };
+    if (e.midReview) return {
+        day: e.day,
+        stage: e.stage,
+        stageChanged: !1,
+        playedMine: [],
+        notes: [],
+        seasonEnded: !1
+    };
+    if (e.pendingDrawId) {
+        if (n.autoResolveDrawDecisions) {
+            let u = 0;
+            for (; e.pendingDrawId && u++ < 20;) {
+                const f = (e.draws ?? []).find(p => p.id === e.pendingDrawId);
+                if (!f) {
+                    e.pendingDrawId = Jr(e);
+                    continue
+                }
+                rs(e, f, !0)
+            }
+        }
+        if (e.pendingDrawId) return {
+            day: e.day,
+            stage: e.stage,
+            stageChanged: !1,
+            playedMine: [],
+            notes: [],
+            seasonEnded: !1,
+            pendingDraw: e.pendingDrawId
+        }
+    }
+    const a = new Me(ke(`day:${e.seed}:${e.year}:${e.day}`)),
+        i = e.stage;
+    e.day++, Ju(e), Ki(e, e.myTeam);
+    const l = [],
+        t = [];
+    e.lastResults = [], vu(e, l);
+    for (const u of ((h = e.teams[e.myTeam]) == null ? void 0 : h.roster) ?? []) {
+        const f = e.players[u];
+        f && f.injuredUntil === e.day && (l.push(`⚕️ ${f.ign} 已康复，可以重新出场。`), f.injuryNote = void 0)
+    }
+    Ku(e, l), xu(e, l), uo(e, l), po(e, l), wh(e, l), e.stage = uu(e, e.day);
+    const c = e.stage !== i;
+    c && l.push(`—— 进入 ${ds(e.stage)} ——`);
+    const r = Ga(e);
+    if (r || c) {
+        const u = r ? (e.day > 1 ? Ga({
+                year: e.year,
+                day: e.day - 1
+            }) : Ga({
+                year: e.year - 1,
+                day: 364
+            })) ?? r : vd(e.seed + e.year, bd(i), e.year),
+            f = Ss(e),
+            p = u.filter(v => !f.includes(v)),
+            g = f.filter(v => !u.includes(v));
+        if (p.length || g.length) {
+            const v = `🗺️ 图池轮换：${g.map(ee).join("
+")} 加入，${p.map(ee).join("
+")} 移出。`;
+            l.push(v), e.news.push({
+                day: e.day,
+                kind: "
+"
+                    }, j.length || (e.drillLock = void 0), l.push(j.length ? `🗺️ ${b} 已轮出图池，跑图计划改为只练 ${j.map(ee).join("
+")}，可以再选一张。` : `🗺️ ${b} 已轮出图池，跑图计划清空了，去训练页重新安排。`)
+                }
+            }
+        }
+    }
+    c && (ep(e, i, l), Zu(e, l), tp(e, l), e.stage === "
+" && (jo(e, l), No(e)), qh(e, a, l), Lm(e), lh(e, a, l), Er(e, a, l), rh(e, a, l)), e.news.length > 400 && e.news.splice(0, e.news.length - 400);
+    let m = !1;
+    return e.day >= gn && (l.push(`—— ${e.year} 赛季结束 ——`), pp(e, a, l), m = !0), {
+        day: e.day,
+        stage: e.stage,
+        stageChanged: c,
+        playedMine: t,
+        notes: l,
+        seasonEnded: m,
+        pendingMine: o,
+        pendingDraw: e.pendingDrawId
+    }
+}
+
+function dp(e, n, a) {
+    var c;
+    const i = n.teamId ? e.teams[n.teamId] : null,
+        l = n.teamId === e.myTeam,
+        t = n.overall >= 80 || (((c = n.career) == null ? void 0 : c.mvps) ?? 0) >= 8;
+    return i && (i.roster = i.roster.filter(r => r !== n.id), i.starters = i.starters.filter(r => r !== n.id), Rn(e, n)), e.retireFeed ?? (e.retireFeed = []), e.retireFeed.push({
+        id: n.id,
+        ign: n.ign,
+        age: n.age,
+        year: e.year,
+        clubId: n.teamId,
+        clubName: i == null ? void 0 : i.name,
+        overall: n.overall,
+        career: {
+            ...n.career
+        },
+        star: t,
+        stints: (n.clubHist ?? []).map(r => {
+            var o;
+            return {
+                team: ((o = e.teams[r.team]) == null ? void 0 : o.name) ?? r.team,
+                from: r.from,
+                to: r.to
+            }
+        }),
+        titles: [...n.titles ?? []]
+    }), e.retireFeed.length > 24 && e.retireFeed.splice(0, e.retireFeed.length - 24), (l || t) && e.news.push({
+        day: e.day,
+        kind: "
+",
+        important: l,
+        text: `👋 ${n.ign} 正式退役，${n.age} 岁${i?`，最后一站 ${i.name}`:"
+"}。`
+    }), l && a.push(`👋 ${n.ign} 正式退役，${n.age} 岁。告别卡已备好。`), delete e.players[n.id], l || t ? "
+" : `${n.ign}（${n.age} 岁${i?`，${i.tag}`:"
+"他不是你队里的人。"
+"你已经和他谈过了，只能谈一次。"
+": {
+            const m = R(.5 + (t - 50) * .006 + (i.morale - 60) * .003, .2, .9);
+            return c < m ? (i.salary = Math.round(i.salary * 1.3), i.contract && (i.contract.salary = i.salary), i.contractYears = Math.max(1, i.contractYears), i.morale = R(i.morale + 8, 0, 100), r(`${i.ign} 收下加薪合同，再战一年，年薪 $${i.salary.toLocaleString()}。`)) : `${i.ign} 把合同推了回来："
+"赛季打完还是要走。`
+        }
+        case "
+": {
+            const m = R(.42 + (l - 50) * .007, .15, .8);
+            if (c < m) {
+                const h = e.teams[e.myTeam];
+                return h && (h.starters = h.starters.filter(u => u !== i.id), h.starters.length < 5 && (h.starters = vs(e, e.myTeam))), i.morale = R(i.morale + 3, 0, 100), r(`${i.ign} 同意退居替补，留下来带年轻人。`)
+            }
+            return `${i.ign} 苦笑："
+"他还是要退役。`
+        }
+        case "
+":
+            return i.listed = !0, i.listedOn = e.day, i.morale = R(i.morale + 4, 0, 100), r(`${i.ign} 想换个环境打最后一年，已挂牌，转会费能收一点是一点。`);
+        case "
+",
+                important: !0,
+                text: `🫡 俱乐部官宣：将在赛季末为 ${i.ign} 举办退役仪式。`
+            }), `赛季末俱乐部会为 ${i.ign} 办退役仪式。`;
+        default: {
+            const m = R(.3 + (l - 50) * .008 + (i.morale - 60) * .004, .1, .8);
+            return c < m ? (i.morale = R(i.morale + 6, 0, 100), r(`${i.ign} 被你说动了，再战一年。`)) : `${i.ign} 摇了摇头，赛季打完还是要走。`
+        }
+    }
+}
+
+function hp(e) {
+    if (!e.midReview) return;
+    e.midReview = !1, e.midReviewDone = !0, e.tally ?? (e.tally = {
+        signed: 0,
+        hired: 0,
+        earned: 0,
+        commercial: 0
+    });
+    const n = Xi(e);
+    e.finished = !0, e.gameOver = n[0] ? `${ya(e.year,Pn(e))}年之约到期，你选择功成身退——${n[0].title}` : `${ya(e.year,Pn(e))}年之约到期，你选择功成身退。`, e.news.push({
+        day: e.day,
+        kind: "
+"你留了下来，这份工作干到 2036 年。"
+"十年任期结束。"
+"💰 升入一级联赛，赞助合同重新议价，收入大幅提高。"
+"📉 降级后赞助合同重新议价，收入大幅缩水，先把薪资压下来。"
+",
+            important: !0,
+            text: `🎫 ${u.name} 通过 Ascension 升入 VCT ${m}，${g.name} 降入次级联赛。`
+        }), u.id === e.myTeam && (e.honours.push({
+            year: e.year,
+            title: `晋级 VCT ${m}`
+        }), e.titlePoster = {
+            year: e.year,
+            tier: "
+",
+            name: `Ascension ${m}`,
+            teamId: e.myTeam,
+            how: `击败 ${g.name}，升入一级联赛`
+        }), u.id === e.myTeam && a.push(`🎫 我们通过 Ascension 升入 VCT ${m}，席位保两个赛季。`), g.id === e.myTeam && a.push(`🎫 我们降入 Challengers ${m}。`)
+    }
+    const i = [],
+        l = [];
+    for (const m of Object.values(e.players)) {
+        if (!m.teamId) continue;
+        const h = m.teamId === e.myTeam;
+        if (m.contractYears -= 1, h && m.contractYears === 1 && i.push(m.ign), m.contractYears <= 0) {
+            const u = e.teams[m.teamId];
+            m.overall >= ((u == null ? void 0 : u.rating) ?? 60) - 6 && n.chance(.72) && u && u.id !== e.myTeam ? m.contractYears = Js(m, n, u.roster.map(p => e.players[p])) : u && u.id === e.myTeam ? m.expiredYear != null && m.expiredYear < e.year ? (u.roster = u.roster.filter(p => p !== m.id), u.starters = u.starters.filter(p => p !== m.id), Rn(e, m), Ee(e, "
+"合同到期未续约"
+",
+                important: !0,
+                text: `👋 ${m.ign} 合同到期一年未续约，已离队。`
+            }), a.push(`👋 ${m.ign} 合同到期一年未续，已自由转会离队。`)) : (m.expiredYear ?? (m.expiredYear = e.year), e.news.push({
+                day: e.day,
+                kind: "
+",
+                important: !0,
+                text: `⏳ ${m.ign} 合同到期，本赛季不续约，下个休赛期就走。`
+            }), a.push(`⏳ ${m.ign} 合同到期，这是最后一个赛季，不续约就走。`), m.contractYears = 0) : u && (u.roster = u.roster.filter(p => p !== m.id), u.starters = u.starters.filter(p => p !== m.id), Rn(e, m), Ee(e, "
+"合同到期"
+",
+        text: `合同到期成为自由人：${l.slice(0,8).join("
+")}` + (l.length > 8 ? ` 等 ${l.length} 人` : "
+"
+    }), i.length && a.push(`📋 合同进入最后一年：${i.slice(0,6).join("
+")}` + (i.length > 6 ? ` 等 ${i.length} 人` : "
+",
+        text: `👋 正式退役：${t.slice(0,8).join("
+")}` + (t.length > 8 ? ` 等 ${t.length} 人` : "
+",
+                important: u,
+                text: `📢 ${m.ign}（${m.age} 岁）宣布本赛季结束后退役。`
+            });
+            else if (m.teamId) {
+                const f = ((o = e.teams[m.teamId]) == null ? void 0 : o.tag) ?? "
+";
+                c.push(`${m.ign}（${f}）`)
+            }
+            u && a.push(`📢 ${m.ign} 说这是他最后一个赛季。想留他，去资料页谈。`)
+        }
+    }
+    c.length && e.news.push({
+        day: e.day,
+        kind: "
+",
+        text: `📢 宣布本赛季结束后退役：${c.slice(0,8).join("
+")}` + (c.length > 8 ? ` 等 ${c.length} 人` : "
+",
+        text: `🏗️ 休赛期升级训练设施：${r.slice(0,8).join("
+")}` + (r.length > 8 ? ` 等 ${r.length} 家` : "
+"📅 新赛季改用经典赛制：Kickoff、两站 Masters、两个联赛赛段和冠军赛。"
+"补满阵容"
+",
+                text: `${i.name} 免转会费签下自由人 ${r.ign}（${r.overall}）。`
+            })
+        }
+        i.roster.length < 5 && a.push(i.name), Ki(e, i.id), i.starters.length < 5 && (i.starters = vs(e, i.id))
+    }
+    a.length && e.news.push({
+        day: e.day,
+        kind: "
+",
+        text: `自由市场已无可签选手，以下战队人数不足：${a.slice(0,6).join("
+"对手不存在。"
+" && r.day - e.day <= 10 && (r.teamA === e.myTeam && r.teamB === n || r.teamB === e.myTeam && r.teamA === n))) return {
+        ok: !1,
+        reason: `${a.name} 很快要和我们打正赛，不想暴露战术。`
+    };
+    const t = a.rating - i.rating,
+        c = new Me(ke(`scrim:${e.seed}:${e.day}:${n}`));
+    return t >= 10 && c.chance(.55 + (t - 10) * .03) ? {
+        ok: !1,
+        reason: `${a.name} 觉得和我们打收益不大，婉拒了。`
+    } : c.chance(.12) ? {
+        ok: !1,
+        reason: `${a.name} 这几天训练排满了。`
+    } : {
+        ok: !0
+    }
+}
+
+function bp(e, n, a, i, l) {
+    const t = Ws(a, e.stage, "
+"训练赛"
+"这不是一个有效的 VCT电竞经理 存档文件。"
+"
+}
+
+function Lp(e) {
+    let n = null;
+    try {
+        n = vc()
+    } catch {
+        return null
+    }
+    if (!n || !(n.year > e.year || n.year === e.year && n.day > e.day)) return null;
+    const i = `导入前备份 ${n.year}年D${n.day}`;
+    try {
+        return Sa(i, n), {
+            slot: i
+        }
+    } catch {
+        return {
+            failed: !0,
+            year: n.year,
+            day: n.day
+        }
+    }
+}
+
+function Ep({
+    onHome: e,
+    onStart: n,
+    canContinue: a,
+    onContinue: i
+}) {
+    const [l, t] = I.useState("
+"请先选择一个出身。"
+"请先选择一支战队。"
+"那一年的世界还在加载。"
+"娱乐模式的选手名单没加载出来，请检查网络后重试。"
+"
+            }), n(J)
+        }, oe = L => {
+            const J = new FileReader;
+            J.onload = async () => {
+                try {
+                    const re = Op(String(J.result)),
+                        te = Lp(re);
+                    if (te != null && te.failed && !await Ke(`当前自动存档（${te.year} 年第 ${te.day} 天）比这份文件更新，但存储空间不足，没法先备份。
+
+继续导入会永久覆盖它。建议先到「存档」页删掉一些旧存档。
+
+仍要继续吗？`, "
+")) return;
+                    n(re), te != null && te.slot && y(`原自动存档比导入的文件更新，已备份到「${te.slot}」，可在下方读取。`)
+                } catch (re) {
+                    y(re instanceof Error ? re.message : "
+"← 返回首页"
+"电竞经理"
+"无畏契约电竞经理 · 执掌一支战队，征战 VCT 四大赛区与次级联赛"
+"继续上次存档"
+"导入存档文件"
+"手动存档"
+" 年 D"
+",
+                        onClick: () => {
+                            const J = Ct(L.slot);
+                            J ? n(J) : y(`存档「${L.slot}」已损坏，读不出来。`)
+                        },
+                        children: "
+"1 · 你是谁"
+"名字"
+"输入你的名字"
+"年龄 · "
+"2 · 出身（随机抽到 3 个，选 1 个）"
+"每个出身都是 2 强 1 弱，幅度相同；差别在强弱项和起步声望。"
+"3 · 选择战队"
+"声望 "
+"起始赛季"
+" 历史档"
+"：开档名单、能力、照片按当年真实数据，之后由引擎模拟。经典赛制，次级联赛也是当年的真实队伍。"
+" 加载中…"
+"
+                            },
+                            children: [L === 1 ? `一级联赛 · VCT ${We[m]}（${Y[L].length} 队）` : `次级联赛 · Challengers ${We[m]}（${Y[L].length} 队）`, s.jsx("
+"Kickoff → Stage 1 → Stage 2，可争夺 Masters 与 Champions"
+"两个赛段，冠军通过 Ascension 升入 VCT"
+"联赛顶尖球队，需要靠成绩解锁"
+"声望不足以接手这支球队"
+"🔒 顶级"
+"🔒 声望不足"
+"🏅 殿堂经理：你的账号有三连霸、走完十年或声望 90 的履历，任何俱乐部都愿意请你。"
+"声望决定哪些俱乐部愿意请你，每个赛区最强的三支开局锁定。 任意存档做到"
+"三连霸"
+"走完十年"
+"或"
+"声望 90"
+"， 之后的新生涯可以任选球队。"
+"先选年龄和出身，再看哪些俱乐部愿意请你。"
+"阵容强度 "
+" 岁 · "
+"天赋点 · 剩余 "
+"重置"
+"：Kickoff 抽签进十二队三败淘汰，Stage 1/2 抽 Alpha、Omega 两组， Masters 瑞士轮逐轮抽签、赛区冠军自选八强对手，Champions 抽四档小组和八强。轮到你的抽签会等你亲手抽。"
+"每点 +"
+"，上限 "
+"8 点不够样样精通"
+"： 可以把两项拉满，也可以摊平。"
+"难度"
+" 开档后只能往上调。"
+"限制外援"
+"— 每支俱乐部最多两名外区选手（按国籍，含替补），AI 俱乐部同样受限。 只限新引进，已有阵容不受影响。"
+"娱乐模式"
+"— 自由人里多出两百多位退役选手和主播（TenZ、Sacy、yay、Babyblue、tarik、TryTryz 等），只愿意为你复出， AI 俱乐部不会签他们。复出要找回状态，主播带人气、直播合同更值钱，但要价更高、训练少一些。"
+" 只能从 2026 赛季开档。"
+"加载中…"
+"开始职业生涯 →"
+"游戏内所有战队与选手均为真实人物。阵容、国籍、位置、照片、赛事名次与全部比赛数据取自"
+"；真名、生日、教练、指挥、生涯队伍履历与部分选手照片取自 "
+"（图片依 CC BY-SA 3.0 使用）；少量选手照片取自"
+"号角 HOJO"
+"（haojiao.cc）；英雄池取自真实出场记录。 八项能力值由这些真实数据按分位映射得出。合同、薪资与预算为游戏平衡的估算值。"
+"自带启动资金 "
+":
+            return n ? `十二队三败淘汰，输三场出局。胜者组、中段组、败者组各决出一个冠军，就是去 ${hn} 的三个名额：胜者组冠军直接进季后赛，另外两个先打瑞士轮。` : `小组赛前 4 进季后赛（双败淘汰）。季后赛前 3 名去 ${hn}：第 1 名直接进季后赛，第 2、3 名先打瑞士轮。`;
+        case "
+":
+            return n ? `Alpha、Omega 两组各 6 队单循环，每组前 4 进季后赛（双败淘汰，组第一轮空到胜者组第二轮）。季后赛前 3 名去 ${Hs}：第 1 名直接进季后赛，第 2、3 名先打瑞士轮。` : `常规赛前 8 进季后赛（双败淘汰）。季后赛前 3 名去 ${Hs}：第 1 名直接进季后赛，第 2、3 名先打瑞士轮。`;
+        case "
+":
+            return n ? `分组按 Stage 1 名次重抽后再打一次两组单循环，每组前 4 进季后赛。季后赛前 2 名直接去 ${zs}，赛区另外 2 个名额按全年冠军积分排。` : `常规赛前 8 进季后赛（双败淘汰）。季后赛前 2 名直接去 ${zs}，赛区另外 2 个名额按全年冠军积分排。`;
+        default:
+            return "
+"冠军积分：Kickoff 前 4 名 6/4/3/2；Stage 1、Stage 2 前 8 名 9/7/5/4/3/3/2/2；Masters 前 6 名 12/9/7/5/4/4。"
+"先打瑞士轮，只有赛区冠军直接进季后赛"
+"赛区冠军，直接进季后赛"
+"Stage 2 前 2，直接晋级"
+"全年积分名额"
+"拿到了参赛名额"
+") {
+        const x = e.comps[e.stage];
+        if (!x) return null;
+        if (!x.teams.includes(e.myTeam)) return {
+            event: x.name,
+            headline: `${x.name} 进行中，我们没打进去。`,
+            lines: [],
+            tone: "
+",
+                headline: w === 1 ? `我们是 ${x.name} 冠军！` : `${x.name} 结束：我们 ${ys(w)}。`,
+                lines: []
+            }
+        }
+        if (x.format === "
+" && !x.bracketStarted) {
+            if ((N = x.byes) != null && N.includes(e.myTeam)) return {
+                event: x.name,
+                headline: `${x.name}：赛区冠军，直接进季后赛，等瑞士轮打完。`,
+                lines: [],
+                tone: "
+",
+                headline: w.w >= 2 ? `${x.name} 瑞士轮 ${w.w}-${w.l}，已经晋级季后赛。` : w.l >= 2 ? `${x.name} 瑞士轮 ${w.w}-${w.l}，止步瑞士轮。` : `${x.name} 瑞士轮 ${w.w}-${w.l}（瑞士轮 ${C} 号种子）：再赢 ${2-w.w} 场进季后赛，再输 ${2-w.l} 场出局。`,
+                lines: []
+            }
+        }
+        if (x.format === "
+",
+                headline: `${x.name} 小组赛进行中（${"
+"} 组）：小组前 2 进八强。`,
+                lines: []
+            }
+        }
+        if (x.finished.includes(e.myTeam)) {
+            const w = x.teams.length - x.finished.length + x.finished.indexOf(e.myTeam) + 1;
+            return {
+                event: x.name,
+                headline: `${x.name}：我们止步 ${ys(w)}。`,
+                lines: [],
+                tone: "
+",
+            headline: `${x.name} 季后赛：${b?"
+"在胜者组，输一场还有败者组"
+") {
+            const w = Ya(e)[n.region],
+                C = w.indexOf(e.myTeam);
+            if (C >= 0) {
+                const S = C < 2 ? `Stage 2 ${ys(x)}，直接晋级` : `全年积分 ${n.champPoints} 分，赛区积分名额`;
+                return {
+                    event: a.event,
+                    tone: "
+",
+                    headline: `已锁定 ${a.event}（${S}）。`,
+                    lines: [l]
+                }
+            }
+            const y = w[3] ? e.teams[w[3]] : null;
+            return {
+                event: a.event,
+                tone: "
+",
+                headline: `无缘 ${a.event}：Stage 2 ${ys(x)}，积分 ${n.champPoints}${y?`，最后一个名额是 ${y.name}（${y.champPoints} 分）`:"
+",
+            headline: `已锁定 ${a.event}：赛区冠军，直接进季后赛（${j.indexOf(e.myTeam)+1} 号种子）。`,
+            lines: [l]
+        } : b.includes(e.myTeam) ? {
+            event: a.event,
+            tone: "
+",
+            headline: `已锁定 ${a.event}：${ys(x)}，从瑞士轮打起（瑞士轮 ${b.indexOf(e.myTeam)+1} 号种子）。`,
+            lines: [l]
+        } : {
+            event: a.event,
+            tone: "
+",
+            headline: `无缘 ${a.event}：本赛段 ${ys(x)}，需要前 3。`,
+            lines: [l]
+        }
+    }
+    if (i.bracketStarted) {
+        if (i.finished.includes(e.myTeam) && !(i.seeds ?? []).includes(e.myTeam)) {
+            const w = t - i.finished.length + i.finished.indexOf(e.myTeam) + 1;
+            return {
+                event: a.event,
+                tone: "
+",
+                headline: `未进季后赛（${ys(w)}），本赛段与 ${a.event} 无缘。`,
+                lines: [l]
+            }
+        }
+        const x = e.stage === "
+"前 2 名直接晋级"
+"至少第 3 名"
+",
+                headline: C ? `季后赛止步 ${ys(w)}，仍拿到 ${a.event} 资格。` : `季后赛止步 ${ys(w)}${e.stage==="
+"?`，只能看积分（现在 ${n.champPoints} 分）`:`，无缘 ${a.event}`}。`,
+                lines: [l]
+            }
+        }
+        return {
+            event: a.event,
+            tone: "
+",
+            headline: `季后赛进行中（${j?"
+"胜者组"
+") {
+        const j = Object.values(e.teams).filter(b => b.region === n.region && b.tier === 1).sort((b, w) => w.champPoints - b.champPoints || w.rating - b.rating).findIndex(b => b.id === e.myTeam) + 1;
+        u.push(`全年冠军积分：${n.champPoints} 分，赛区第 ${j}。季后赛前 2 之外，积分最高的 2 队拿积分名额。`)
+    }
+    if (!h) return {
+        event: a.event,
+        tone: "
+",
+        headline: `本赛段尚未开打。前 ${o} 进季后赛。`,
+        lines: u
+    };
+    const f = r > o ? e.teams[c[o - 1]] : null,
+        p = f ? i.standings[f.id] : null,
+        g = p && d ? p.w - d.w : 0,
+        v = r <= o ? `常规赛第 ${r}（${m}），在季后赛区内（前 ${o}）。` : `常规赛第 ${r}（${m}），距季后赛区（第 ${o} 名 ${f==null?void 0:f.name}）${g>0?`差 ${g} 场胜利`:"
+")
+        for (let d = 1; d <= 3; d++) t.push({
+            key: `${d}:瑞士轮 第${d}轮`,
+            name: `瑞士轮 第${d}轮`,
+            offset: (d - 1) * ia
+        });
+    else n.format === "
+"开局赛"
+"胜者赛 / 败者赛"
+"胜者组第二轮 / 败者组第一轮"
+"胜者组决赛 / 败者组第二轮"
+"胜者组决赛 / 败者组第一轮"
+"瑞士轮"
+"季后赛 胜者组第一轮"
+"小组赛 开局赛"
+")[2].replace(/^[A-D]组 /, "
+"胜者赛"
+") && !/^KO:\d+:[A-D]组/.test(C.label)),
+                b = Mu(x, c.seeds ?? [], j, n);
+            if (!b) continue;
+            const w = o(b.name);
+            return w ? {
+                comp: c,
+                day: w.day,
+                round: `${c.format==="
+"季后赛 "
+" || (c.seeds ?? []).length >= 8 ? {
+                胜者组第一轮: ["
+"],
+                败者组第二轮: ["
+"],
+                败者组半决赛: ["
+"],
+                败者组决赛: ["
+"]
+            } : {
+                胜者组第一轮: ["
+") && !/[A-D]组/.test(x.label)),
+            p = f[f.length - 1];
+        if (!p) {
+            const x = o("
+")[2],
+            v = (l = u[g]) == null ? void 0 : l[m(p) ? 0 : 1];
+        if (!v) continue;
+        const N = o(v);
+        return N ? {
+            comp: c,
+            day: N.day,
+            round: `季后赛 ${v}`
+        } : null
+    }
+    return null
+}
+
+function ue(e, n, a) {
+    e.activity ?? (e.activity = []), !e.activity.find(l => l.day === e.day && (l.year ?? e.year) === e.year && l.text === a) && (e.activity.push({
+        day: e.day,
+        year: e.year,
+        kind: n,
+        text: a
+    }), e.activity.length > 300 && e.activity.splice(0, e.activity.length - 300))
+}
+const _p = (e, n) => (e.activity ?? []).filter(a => a.day === n && (a.year ?? e.year) === e.year);
+
+function ti(e) {
+    if (e.day < 0) return $s[0][1] - e.day + 1;
+    const n = $s.find(([a, i]) => e.day >= a && e.day <= i);
+    return n ? n[1] - e.day + 1 : null
+}
+
+function Wp(e, n) {
+    if (e !== "
+" || ss(n.day)) return null;
+    const a = $s.map(([i]) => i).find(i => i > n.day);
+    return a ? `转会窗口关闭中，${a-n.day} 天后开启` : "
+",
+        text: `董事会警告：这个赛段没成绩就下课。${kt(e)}。`
+    });
+    for (const j of Ao(e).slice(0, 2)) {
+        const b = e.players[j.a],
+            w = e.players[j.b];
+        !b || !w || n.push({
+            key: `dispute:${j.id}`,
+            tone: "
+",
+            text: `${b.ign} 和 ${w.ign} 赛后争执${j.flareUps?`（又吵了 ${j.flareUps} 次）`:"
+"}，去更衣室处理。`
+        })
+    }
+    for (const j of Zr(e).slice(0, 2)) {
+        const b = e.players[j.playerId];
+        b && n.push({
+            key: `birthday:${j.id}`,
+            tone: "
+"今天"
+",
+        text: `阵容只有 ${i.length} 人，凑不齐首发。`
+    });
+    const t = i.filter(j => j.contractYears <= 0);
+    t.length && n.push({
+        key: "
+")} 合同到期，不续就走。`
+    }), (e.drillLock == null || e.drillLock <= e.day) && n.push({
+        key: "
+"没有在跑的团队训练，去排下一轮（七天一轮）。"
+")} 有意见，再拖就想走了。`
+    }), e.finances.balance < 0 && n.push({
+        key: "
+"账上是负的，董事会看着呢。"
+",
+            text: `首发 ${r.length} 人伤停，得调阵容。`
+        }), e.stage) {
+        case "
+",
+                    text: `转会窗口还剩 ${j} 天，补强就趁现在。`
+                })
+            }
+            n.push({
+                key: "
+"定本赛季的训练重点，中途改效果打折。"
+"定战术风格和首发五人。"
+"赛段进行中，注意轮换和体能。"
+"积分榜前 8 进季后赛。"
+",
+                text: j ? j.headline : `${ds(e.stage)} 期间没我们的比赛，可以约训练赛。`
+            }), l && n.push({
+                key: "
+",
+                text: `短期转会窗口开放中，还剩 ${ti(e)} 天。`
+            });
+            break
+        }
+        case "
+"休赛期：续约、清人。"
+",
+                text: `转会窗口还剩 ${ti(e)} 天。`
+            });
+            break
+    }
+    const o = fc(e, e.myTeam),
+        d = Nn(e),
+        m = fn(e),
+        h = Math.min(o ? o.day : 1 / 0, d ? d.day : 1 / 0, m ? m.day : 1 / 0),
+        u = Number.isFinite(h) ? h - e.day : 0;
+    u >= 4 && n.push({
+        key: "
+",
+        text: `距下一场 ${u} 天，可以约训练赛。`
+    }), _s(e, e.myTeam) > a.budget * .9 && e.finances.balance >= 0 && n.push({
+        key: "
+"薪资偏高，看着点现金流。"
+",
+        text: `${p.length} 份报价等待对方答复。`
+    });
+    const g = e.offers.filter(j => j.status === "
+",
+            text: `${g.length} 份报价要我们的人，${j<=0?"
+":`最快 ${j} 天后作废`}。`
+        })
+    }
+    const v = (e.gigs ?? []).filter(j => !j.done && (j.accepted ? j.day >= e.day : (j.windowEnd ?? j.expiresOn ?? j.day) >= e.day)),
+        N = v.filter(j => !j.accepted);
+    if (N.length) {
+        const j = N.reduce((w, C) => ra(e, w).left <= ra(e, C).left ? w : C),
+            b = ra(e, j).left;
+        n.push({
+            key: "
+",
+            text: `${N.length} 个商务邀约没排，${j.label}` + (b <= 0 ? "
+" : `还剩 ${b} 天`),
+            tone: b <= 2 ? "
+",
+        text: `今天有${x.label}（${x.partner}）`,
+        tone: "
+"今天的行动力用完了，推进一天再继续。"
+"赛季进程"
+"转会与商务"
+"训练与状态"
+"更衣室"
+"其他"
+"赛段已推进"
+"比赛"
+"胜"
+"负"
+"点击查看"
+"这"
+"一天"
+"没什么事。"
+"知道了"
+"版本之子"
+"强势"
+"小加强"
+"重削"
+"弱势"
+"小削弱"
+"持平"
+")}），去战术页看换谁。` : f.length ? `预案顺着版本：${f.map(g=>ee(g.map)).join("
+")}占便宜，其余持平。` : "
+"还没有版本调整，所有英雄按原样计算。"
+"),
+            a = [];
+        return (i = e.arrivals) != null && i.agents.length && a.push(`新英雄 ${n(e.arrivals.agents)}`), (l = e.arrivals) != null && l.maps.length && a.push(`新地图 ${e.arrivals.maps.map(ee).join("
+")}`), e.buffed.length && a.push(`加强 ${n(e.buffed)}`), e.nerfed.length && a.push(`削弱 ${n(e.nerfed)}`), a.length ? a.join("
+"只有微调"
+"当前版本"
+"新"
+"初始版本"
+" 生效 · "
+"看版本公告和本队建议"
+"预案五个英雄的版本系数平均，−100 全逆版本，+100 全版本之子"
+"顺版本"
+"逆版本"
+"阵容打法和这张图要的方向"
+"合适"
+"不合"
+"一般"
+"这套五人在这张图练过多少，50 中立"
+"不用动"
+"占便宜："
+" 的"
+"被削（"
+"，可换"
+"，熟练度 "
+"，同位置"
+"是"
+"但他只练到 "
+"%，先去训练页练"
+"，同位置没有明显更顺版本的英雄，差得不多，先这样"
+"当前版本 · 初始版本"
+"本存档内的模拟版本，不是 Riot 的真实公告"
+"生效"
+"影响"
+"的比赛（刚结束的赛事用的是上一版）"
+"幅度"
+"新内容上线，英雄强度不变"
+"休赛期大改"
+"赛中小改"
+"这一版："
+"🆕 新英雄 "
+"，已可进预案和训练"
+"🗺️ 新地图 "
+"，之后的图池轮换会加入"
+",
+                    title: `版本系数 ${an(r.coef)}`,
+                    children: ["
+" 加强，现在"
+" 削弱，现在"
+"只有微调，没有明显加强或削弱。"
+"沿用上几版："
+",
+                    title: `版本系数 ${an(r.coef)}`,
+                    children: [je(r.agent), "
+"版本、地图适配、熟练度是三件事，表里分开列：顺版本是英雄本身在这一版强，合适是打法对这张图，熟练度是这五个人练过多少。 这里只是建议，预案不会自动改，要换去上面的各图预案里换。"
+"地图"
+"预案"
+"版本"
+"地图适配"
+"熟练度"
+"本队建议"
+"首发各人练过的英雄里（熟练度 60% 以上）"
+"　受益："
+"　受损："
+"还没有版本调整。第一次调整在第一站大师赛结束后生效，冠军赛之后是休赛期大改。"
+"最近的版本（"
+"训练"
+"转会"
+"阵容"
+"战术"
+"商务"
+"), y = e.teams[e.myTeam], S = ce(e, e.myTeam), O = gc(e, e.myTeam), k = Nn(e), M = k && (!O || k.day < O.day), W = fn(e), P = !M && W && (!O || W.day < O.day), E = (A, Q) => {
+        const ie = A.map(Ae => Ae.pendingMine).filter(Boolean)[0];
+        if (n(), Zi({
+                achievements: et(e)
+            }), ie) {
+            c(ie);
+            return
+        }
+        const ge = A.map(Ae => Ae.pendingDraw).filter(Boolean)[0];
+        if (ge) {
+            o(ge);
+            return
+        }
+        const Ce = !A.some(Ae => Ae.notes.length || Ae.playedMine.length || Ae.stageChanged);
+        if (Qc(performance.now() - u.current, Ce), Ce) {
+            const Ae = e.day - Q;
+            i(Ae > 1 ? `${be(e.day,e.year)} · 平静的 ${Ae} 天` : `${be(e.day,e.year)} · 平静的一天`);
+            return
+        }
+        v({
+            reports: A,
+            fromDay: Q
+        })
+    }, H = A => {
+        m || (u.current = performance.now(), Xc(e.day, e.year, A), h(!0), window.setTimeout(() => {
+            X(A)
+        }, 10))
+    }, X = async A => {
+        if (f.current) try {
+            const Q = Ms(e),
+                ie = e.day,
+                ge = [];
+            let Ce = performance.now();
+            const Ae = async () => (performance.now() - Ce >= 50 && (p.current && (p.current.textContent = be(e.day, e.year)), await new Promise(Ye => window.setTimeout(Ye, 0)), Ce = performance.now()), f.current);
+            if (A) {
+                const Ye = ss(e.day) ? ct(e.day) : void 0,
+                    Ve = Ye != null ? Math.max(1, Ye - e.day) : 40;
+                for (let fs = 0; fs < Ve; fs++) {
+                    const vn = Ml(e, {
+                        deferMine: !0
+                    });
+                    if (a(), ge.push(vn), Np(e, vn)) break;
+                    if (fs < Ve - 1 && !await Ae()) return
+                }
+            } else
+                for (let Ye = 0; Ye < Q; Ye++) {
+                    ge.push(Ml(e, {
+                        deferMine: !0,
+                        autoScrims: Q > 1,
+                        autoResolveDrawDecisions: !!e.tutorialDay
+                    })), a();
+                    const Ve = ge[ge.length - 1];
+                    if (Ve.pendingMine || Ve.seasonEnded) break;
+                    if (Ye < Q - 1 && !await Ae()) return
+                }
+            E(ge, ie)
+        } finally {
+            f.current && h(!1)
+        }
+    }, Z = O ? O.day - e.day : 99, ae = Object.values(e.teams).filter(A => A.id !== e.myTeam && A.region === y.region).sort((A, Q) => Math.abs(A.rating - y.rating) - Math.abs(Q.rating - y.rating)).slice(0, 8), pe = Ss(e), ye = Object.values(e.comps).filter(A => A.teams.includes(e.myTeam) && !A.champion && e.fixtures.some(Q => Q.comp === A.key && !Q.played)), $ = ye.find(A => A.stage === e.stage) ?? ye[0], U = $ ? xn($) : [], F = U.indexOf(e.myTeam), T = e.teams[e.myTeam], Y = Object.values(e.teams).filter(A => A.region === (T == null ? void 0 : T.region) && A.tier === (T == null ? void 0 : T.tier)).sort((A, Q) => Q.rating - A.rating), _ = Y.findIndex(A => A.id === e.myTeam), B = e.news.slice(-9).reverse(), q = S.filter(A => A.injuredUntil > e.day), me = _s(e, e.myTeam), we = S.filter(A => A.season.maps > 0).sort((A, Q) => Ue(Q.season) - Ue(A.season)).slice(0, 5), oe = y.starters.map(A => e.players[A]).filter(Boolean), $e = Up(e), L = Jn(e).find(A => A.key === e.stage), J = L ? L.end - e.day + 1 : 0, re = (e.jobOffers ?? []).filter(A => A.expiresOn > e.day), te = async (A, Q) => {
+        var ie;
+        await Ke(`确定离开 ${(ie=e.teams[e.myTeam])==null?void 0:ie.name}，出任 ${Q} 的经理？
+阵容、资金和目标都换成新俱乐部的。`, "
+") && (i(mc(e, A)), n())
+    }, Le = A => {
+        i(dc(e, A)), n()
+    };
+    return s.jsxs(s.Fragment, {
+        children: [g && s.jsx(zp, {
+            reports: g.reports,
+            fromDay: g.fromDay,
+            onClose: () => v(null)
+        }), re.length > 0 && s.jsxs(K, {
+            title: `执教邀请 · ${re.length}`,
+            className: "
+"一级联赛"
+"次级联赛"
+" 天内答复"
+"拒绝"
+"接受"
+"拒绝不花行动力，这家俱乐部一个赛段内不会再来。也可以去"
+"经理"
+"页主动申请。"
+"前往 ›"
+"没有要处理的事，可以直接推进。"
+"联赛排名"
+"战队综合评分"
+"赛区第 "
+" 强"
+"阵容强度"
+" · 首发五人的平均能力"
+"资金"
+"赛季薪资"
+"董事会信任"
+"目标："
+"本赛段暂无目标"
+" · ⚠ 已被警告，"
+"经理声望"
+"顶级豪门也会考虑你"
+"强队愿意听你开条件"
+"在圈内有一定名气"
+"还需要成绩来证明自己"
+"模拟中… "
+"模拟中…"
+"直接推进到下一场比赛"
+"空档期：一回合 "
+" 天，行动力 4 点。"
+"这回合到赛季结束就停。"
+"遇到正式比赛会停下，训练赛自动打完。"
+"比赛期间一天一回合，行动力 2 点。"
+"转会窗开着。"
+"转会窗关着。"
+"赛事抽签 · 等你来抽"
+", pt[A.kind], ie ? ` 第 ${ie} 轮` : "
+"轮到你选八强对手"
+"抽完对阵才写进赛程"
+"，抽完前不能推进。"
+"去选择"
+"进入抽签"
+"已交给教练组。"
+"抽签完成，对阵已写进赛程。"
+"快进跳过"
+"下一场比赛"
+"待定"
+"瑞士轮 第1轮"
+"季后赛"
+"约 "
+" 天后）"
+"已锁定："
+"。对阵等四个赛区都打完再抽。"
+"日期已定，对手等上一轮打完才知道。"
+"暂无比赛。"
+"休赛期可以处理转会和续约。"
+"最近比赛 · 点击查看数据"
+"⚕ 伤停："
+"⚠ 阵容不足 5 人（现 "
+" 人），去"
+"转会市场"
+"补人。"
+"今日操作"
+" ? `团队跑图 · ${ee(ie.map)}` : ie.kind === "
+"教练复盘"
+")}`,
+                        Ce = Q && e.duo ? `双排练 · ${(Et=e.players[e.duo.a])==null?void 0:Et.ign} + ${(Pt=e.players[e.duo.b])==null?void 0:Pt.ign}` : null,
+                        Ae = y.starters.map(ve => e.players[ve]).filter(Boolean).map(ve => {
+                            const is = e.training[ve.id] ?? "
+"休息"
+"今天还没有操作。"
+"未安排团队训练"
+" · 个人："
+"已约 "
+"进行"
+"选手情况"
+"首发五人"
+"位置"
+"能力"
+"体能"
+"需要注意"
+", {
+                        children: oe.map(A => {
+                            var ie, ge, Ce;
+                            const Q = [];
+                            return A.injuredUntil > e.day && Q.push(`伤停 ${A.injuredUntil-e.day} 天`), A.fatigue >= 70 && Q.push("
+"士气低落"
+"对出场时间不满"
+"本周商务占用多"
+"真实指挥未确认，暂由他代行"
+"主指挥"
+"副指挥：主指挥不在场上时由他喊话"
+"推定 IGL"
+"副指挥"
+"状态正常"
+"积分榜"
+"战队"
+"小分"
+" 期间没有联赛。"
+"今天有正式比赛"
+"明天就是正式比赛"
+"，训练赛约在第二天打，赛后再约。"
+"空档期 · 本赛段没有比赛"
+"训练赛不计积分、不进个人数据，没有 BP。按「战术」页这张图的阵容打。"
+"每人："
+"赢 状态 +0.4~2.2"
+"输 −0.4~2.2"
+"，体能 −3.5~6.5，默契累积。 这张图熟练度 +0.6~1.0（上限 80），阵容熟练度 +6。"
+"对手"
+"选择对手…"
+"（实力 "
+"选择地图…"
+"（熟练度 "
+"赛制"
+"24 回合"
+"先到 13"
+"对方拒绝了。"
+", `约战 ${(Q=e.teams[N])==null?void 0:Q.name} @ ${j}（${w==="
+"发起约战"
+"攻防各 12 回合，练完整两个半场。"
+"先到 13 分，接近正赛节奏。"
+"快要和我们打正赛的队、实力远高于我们的队可能拒绝。"
+"赛季数据领跑"
+"选手"
+"评分"
+"场次"
+"本赛季还没有比赛数据。"
+"新闻"
+"还没有新闻。"
+"赞助商"
+",
+                    title: `赛季收入 ${G(A.perSeason)}`,
+                    children: [A.name, "
+"董事会信任度"
+":
+                return k.role.localeCompare(M.role);
+            default:
+                return M.overall - k.overall
+        }
+    }), h = k => {
+        if (oi(e, k)) {
+            a(`${k.ign} 在冷静期，先在更衣室恢复他。`);
+            return
+        }
+        if (o.starters.indexOf(k.id) >= 0) Po(k), o.starters = o.starters.filter(W => W !== k.id);
+        else {
+            if (o.starters.length >= 5) {
+                a("
+");
+                return
+            }
+            o.starters = [...o.starters, k.id]
+        }
+        n()
+    }, u = async k => {
+        const M = Fn(e, e.myTeam);
+        if (M) {
+            a(M);
+            return
+        }
+        const W = Math.round(k.salary * Math.max(0, k.contractYears) * .4),
+            P = Do(e, k),
+            E = P.length ? `
+
+更衣室反应：${P.map(H=>`${H.p.ign} 信任 −${H.hit.toFixed(0)}`).join("
+";
+        if (await Ke(`确定与 ${k.ign} 解约？需支付违约金约 ${G(W)}。${E}`, "
+", `与 ${k.ign} 解约`)
+        }
+    }, p = (o.starters.length ? o.starters.map(k => e.players[k]).filter(Boolean) : d).reduce((k, M) => {
+        var W;
+        for (const P of (W = M.roles) != null && W.length ? M.roles : [M.role]) k[P] = (k[P] ?? 0) + 1;
+        return k
+    }, {}), g = o.starters.length >= 5 ? o.starters : Da(e, e.myTeam).map(k => k.id), v = g.length > 0 && !g.some(k => {
+        const M = e.players[k];
+        return (M == null ? void 0 : M.isIgl) && M.injuredUntil <= e.day
+    }), N = d.find(k => k.isIgl && !o.starters.includes(k.id)), x = d.filter(k => k.isIgl), j = Yi(e, e.myTeam), b = d.find(k => k.isIgl && o.starters.includes(k.id) && k.injuredUntil > e.day), w = Bo(e, e.myTeam), y = Lo(e, e.myTeam)[0], S = k => {
+        const M = Math.min(1, Math.abs(k) / 70);
+        return k < 0 ? `rgba(255, 70, 85, ${.08+M*.42})` : `rgba(61, 214, 140, ${.06+M*.34})`
+    }, O = k => Math.abs(k) < 18 ? "
+",
+            title: `阵容 · ${d.length} 人（首发 ${o.starters.length}/5）`,
+            actions: s.jsxs("
+"概览"
+"数据"
+"已排出最佳首发。"
+"自动首发"
+"缺少 "
+"首发无指挥"
+"没有指挥：攻防各扣 4 分，中局决策再扣 3 分。"
+", `任命 ${k.ign} 为队内指挥`), a(M)
+                        },
+                        children: ["
+" 指挥（指挥 "
+"潜力"
+"年龄"
+"状态"
+"信任"
+"年薪"
+"合同"
+"首杀差"
+",
+                                            style: {
+                                                opacity: x.length > 1 && k.id !== (j == null ? void 0 : j.id) ? .55 : 1
+                                            },
+                                            title: x.length > 1 ? k.id === (j == null ? void 0 : j.id) ? `主指挥（指挥 ${k.attrs.igl}），队里有 ${x.length} 名指挥出身的选手` : `副指挥：${j==null?void 0:j.ign} 不在场时由他喊话，点开可任命为主指挥` : "
+",
+                                            title: `暂时替补冷静，到 ${be(pa(k.coolOffUntil).day,pa(k.coolOffUntil).year)}；更衣室里可以提前恢复`,
+                                            children: "
+"已宣布本赛季结束后退役"
+"退役"
+",
+                                            title: `不满 ${Math.round(k.grievance??0)}/100，出场承诺、薪资、被拒的转会都会积累；不满高的更容易接受别队报价。`,
+                                            children: "
+"
+                                        },
+                                        children: k.contractYears > 0 ? `${k.contractYears}年` : "
+"续约"
+"本赛季暂无出场"
+"每两名选手之间有独立的关系值。一起打得越久、同国籍、位置上要配合、年纪相仿，关系越高。 赢球拉近所有人；输球时打得差的一方会被记账，矛盾会滚雪球。"
+"双排练"
+"是最直接的修复手段。"
+"同一名选手"
+",
+                                    title: `${k.ign} 与 ${W.ign}：${E.toFixed(0)}`,
+                                    style: {
+                                        background: S(E),
+                                        color: O(E),
+                                        fontWeight: 600
+                                    },
+                                    children: [E >= 0 ? "
+"−100 结怨"
+"+100 生死之交"
+" 和 "
+" 关系很僵，拖累全队配合。"
+", `${Qn[v]}：${(w=e.players[g.a])==null?void 0:w.ign} 和 ${(C=e.players[g.b])==null?void 0:C.ign}`)
+            };
+            Va(v) ? l(v, j) : (j(), n())
+        },
+        u = g => {
+            var v;
+            return ((v = e.players[g]) == null ? void 0 : v.ign) ?? g
+        },
+        f = g => be(g.day, g.year),
+        p = {
+            open: "
+"已处理"
+"未介入"
+"过期"
+"已失效"
+" 冷静中 · 到 "
+"（还 "
+" 天）"
+"提前恢复"
+"小摩擦"
+"正面冲突"
+"更衣室站队"
+" 赛后争执"
+"又吵了 "
+" 次"
+",
+                            children: [f(g), g.opponent ? ` · 对 ${g.opponent} ${g.score??"
+" 评分 "
+" · 现在关系 "
+"这是本存档里模拟出来的一场争执，谁对谁错由你判断。谈话和暂时替补要先选人；谈话、调解各花 1 行动力，只在能生效时扣。"
+"针对："
+"看 "
+"1 行动力 · 和选中的人单独谈，成了关系回暖、他更信任你；崩了他信任掉一点"
+"1 行动力 · 两人一起谈，成了关系大幅回暖、双方都松口；崩了更僵"
+"免费 · 这周的双排练定为他们两个，随团队训练结算"
+" ? `免费 · 选中的人 ${Wt.BENCH_DAYS} 天不上首发，他会不满，但两人有了距离；要有替补` : "
+"先选一个人。"
+"最近处理过的争执（"
+"节奏"
+"慢速运营"
+"快速突破"
+"快节奏进攻更强，防守容易被拉扯。双决斗吃这个，双哨卫怕这个。"
+"道具"
+"节省"
+"全开"
+"道具全开两端都强，道具属性高的五人收益更大；双控场靠它活。"
+"侵略性"
+"保守"
+"激进"
+"激进进攻收益高，防守风险大；对面双决斗时别拉满。"
+"中局应变"
+"照战术板"
+"随机应变"
+"应变能力依赖指挥（IGL），落后时更容易翻盘。"
+" 专用"
+"改回通用设置"
+"现在用通用设置，一拖就变成"
+"专用"
+"重置为默认"
+"阵容熟练度"
+"地图熟练度"
+"对手 "
+" 这张图大概率是 "
+"英雄"
+", {
+                                            label: `${ee(d)} 职业常用`,
+                                            children: fa(k, S.filter(H => Gs(i, H))).map(H => s.jsxs("
+", [y.has(H) ? `出场 ${Math.round(y.get(H)*100)}%` : "
+"练满"
+"自由人"
+"（本职）"
+"他本来就打这个位置"
+" 职业常见："
+"这是你给"
+"定的阵容"
+"恢复默认组合"
+" 的战术"
+"各图预案 · 每张图的英雄阵容和战术"
+"训练赛和跑图都按这里练"
+"定好每张图的五个英雄和四条滑杆，赛前不用再调。同一套阵容打得越多越熟，熟练度进比赛是加分。"
+"通用战术 · 没单独设置的图用这个"
+"当前阵容评估"
+"进攻端强度"
+"防守端强度"
+"团队默契"
+"出场阵容"
+"⚠ 首发没有指挥（IGL），中局应变大减。"
+"以 "
+" 的预案计算。"
+"图池一览 · 熟练度"
+"数值"
+"这张图的预案被对手看过多少"
+"被摸透"
+"现役图池"
+"轮换出池"
+"BP 会 ban 对手熟练的图、留自己擅长的。阵容熟练度看这张图预案的五个英雄，50 是中立。"
+"对手针对"
+"难度："
+"针对度"
+"⚔️ 宿敌 "
+"：对我们的准备多四成，转会窗口每周都在买人。"
+"}`,
+                title: `被摸透 ${Math.round(r.read*100)}%`,
+                children: [ee(r.m), "
+"赢得越多，对手越研究你：每张图上数字是对手的额外备战分。 同一套英雄和滑杆连打三场就被摸透；换英雄、或把一条滑杆拨动 10 以上，他们的准备就白做一部分。 赢一场针对度 +3，输一场 −8，拿冠军涨得更多。训练赛不算。"
+", T++);
+        n(), a(T ? `已安排 ${T} 名疲劳选手休息。` : "
+" ? Y++ : _++
+        }
+        n();
+        const B = [`${T} 人练成长项`];
+        Y && B.push(`${Y} 人受伤或疲劳，休息恢复`), _ && B.push(`${_} 人没有可涨的属性，休息保状态`), a(`已按位置分配：${B.join("
+")}。每人的理由写在训练项下面。`)
+    }, P = e.drill ?? {
+        kind: "
+"
+        }, B.length ? `${B.length} 人练英雄` : "
+"不安排团队训练"
+" ? `跑图 ${[T.map,T.map2].filter(me=>!!me).map(ee).join("
+"),
+            _ = e.duo ? ` ＋ 双排 ${(B=e.players[e.duo.a])==null?void 0:B.ign}/${(q=e.players[e.duo.b])==null?void 0:q.ign}` : "
+", `确定本周训练：${ye()}｜个人：${T}`), n(), a(`本周训练已确定：${ye()}`)
+    }, U = Ss(e), F = S.filter(T => T.injuredUntil <= e.day);
+    return s.jsxs(s.Fragment, {
+        children: [s.jsxs(K, {
+            title: `团队训练 · ${E?`进行中 ${pe}/7 天`:"
+"主训练三选一，双排练可以同时安排。"
+"所有 "
+" 都是经验，"
+"攒满 100 才 +1 属性"
+"，教练和设施再乘 1.2~2 倍。"
+"主训练 · 三选一"
+"跑图"
+"一周最多两张图。每张地图熟练度 "
+"（上限 95），阵容熟练度 +12；全队协同 "
+"、意识 "
+" 经验。 四周没练也没打的图每周回落 "
+"（最低 "
+"），带 ↓ 的正在掉。"
+"
+                                        }, `跑图 ${B.map(ee).join("
+",
+                                        title: `${Math.floor(ul(O,T,e.day)/7)} 周没练也没打，正在回落`,
+                                        children: "
+"选一到两张"
+"两张一起练"
+"还能再选一张"
+"全队意识 "
+"、沟通 "
+" 经验，乘教练战术加成。指挥经验只有 IGL 拿，给得多，指挥越低涨得越快。不掉体能，还恢复 1~4。"
+"队里还没有指挥，指挥经验没人拿。去「阵容」页指定一个。"
+"指挥 "
+"已到潜力上限，再练也不会涨。"
+"一轮约 "
+" 经验，再 "
+" 轮（"
+" 天）指挥 +1。"
+"安排复盘"
+"练英雄"
+"本周 "
+" 人"
+"每人挑一个英雄，熟练度每周约 "
+"。练满 100 就能把他当本命用； 如果不是他的位置，练满还会让他兼任那个位置。"
+"一周最多 "
+" 个人一起练"
+"，不多花一周。"
+": `${T.ign} 这周练的英雄`,
+                                        disabled: _,
+                                        value: (Y == null ? void 0 : Y.agent) ?? "
+",
+                                            children: _ ? `已满 ${kn} 人` : "
+"练满可兼任"
+"改练别的英雄不会清空进度。伤停的人这周自动跳过，下周继续。"
+"加练 · 可与上面并行"
+"两人协同 "
+"、反应 "
+" 经验，关系 "
+"，体能 −5~10。修复队内矛盾主要靠它。"
+"选两人"
+"再选一人"
+"已选定"
+"清除"
+"训练中"
+"/7 天 · 第 7 天结算"
+",
+                        onClick: async () => {
+                            await Ke(`重选会荒废已练的 ${pe}/7 天，新计划从第 1 天重新数起。确定？`) && (e.drillLock = void 0, ue(e, "
+", `撤销团队训练计划（荒废 ${pe}/7 天进度）`), n(), a("
+"重选（荒废进度）"
+"确定本周训练"
+"清除主训练"
+",
+            title: `训练计划 · ${ds(e.stage)}`,
+            actions: s.jsxs("
+"让疲劳选手休息"
+"自动分配"
+"成长空间"
+"训练重点"
+"本项进度"
+",
+                                            fontSize: 12
+                                        },
+                                        disabled: T.injuredUntil > e.day,
+                                        title: `建议：${q.reason}`,
+                                        children: of.map(oe => s.jsxs("
+" 已满"
+" ◄ 建议"
+"建议："
+"保状态"
+"恢复体能"
+"已到 "
+"，练不动了"
+"总评到潜力上限，只保状态"
+"]
+                                        })]
+                                    })
+                                })]
+                            }, T.id)
+                        })
+                    })]
+                })
+            })
+        }), s.jsxs(K, {
+            title: `理疗室 · 每次 ${G(un)}`,
+            children: [s.jsx("
+"花钱不花行动力。大幅恢复体能，伤停中可提前复出，每人每 7 天一次。体能 55 以上几乎不会受伤。"
+"恢复体能并缩短伤停"
+" 体能 "
+"每一级训练收益约 +0.8%。"
+"已是顶级设施。"
+", `训练设施升级至 ${e.teams[e.myTeam].facilities}`)
+                        }),
+                        children: ["
+"资金不足"
+"教练组"
+"降为助理教练，主教练位置空出"
+", `${T.name} 降为助理教练`), n())
+                            },
+                            children: "
+"培养"
+"激励"
+"暂无主教练。本作只收录真实人物，不会编造教练；没有教练时按队伍整体水平算加成。"
+"教练组加成（合计，各项上限 "
+"已封顶，再雇人没有提升 （浪费 "
+"）。 想再变强要换更好的人，或签数据分析师，专精效果不占上限。"
+"教练组其他成员"
+"战 "
+" / 培 "
+" / 激 "
+"他贡献的培养加成（高于 55 的部分）"
+"培 +"
+",
+                                title: O.coach ? `升任主教练，${O.coach.name} 转为助理教练；薪资按主教练身价重谈，只升不降` : "
+",
+                                onClick: async () => {
+                                    const B = O.coach ? `${O.coach.name} 会转为助理教练。` : "
+";
+                                    await Ke(`确定让 ${_.name} 升任主教练？${B}`) && (a(Yd(e, _.name)), ue(e, "
+", `${_.name} 升任主教练`), n())
+                                },
+                                children: "
+",
+                                onClick: async () => {
+                                    await Ke(`确定与 ${_.name} 解约？`) && (a(Kd(e, _.name)), n())
+                                },
+                                children: "
+"等待答复"
+"/年 ·"
+"收起"
+"聘请教练 / 助教 / 分析师"
+"自由教练"
+"挖别队教练"
+"搜教练 / 俱乐部"
+"全世界只有"
+" 名"
+"在册分析师，只收录 Liquipedia 有记录的真人。 每人各管一件事，签谁看你缺什么。"
+"都是各队真实的助理教练，助教可以升任主教练。发出邀请后 "
+"1~7 天内答复"
+"， 薪资、俱乐部声望和你的履历都影响他是否接受。聘新主教练后，原主教练转为助理教练。助教加成「培养」。"
+"主教练"
+"现俱乐部"
+"参考补偿"
+"没有叫这个名字的主教练或俱乐部。"
+"已报价，等他本人答复（"
+"他已经不在这支球队了"
+"1年"
+"2年"
+"3年"
+", `向 ${B.name} 发出主教练邀请`), p(null)
+                                                                }),
+                                                                children: "
+"✅ 已获准 · 谈合同（要价 "
+"等待答复（"
+"已拒绝："
+", `就 ${B.name} 联系 ${_.name}`)
+                                                            }),
+                                                            children: "
+"助教 / 分析师"
+"合同还剩 "
+" 年 · 年薪 "
+" · 曾是你的下属"
+", `向 ${q.name} 发出${en[q.role]}邀请`), p(null)
+                                                                }),
+                                                                children: "
+", `就 ${q.name} 联系 ${B.name}`)
+                                                                }),
+                                                                children: "
+"教练"
+"要价"
+"原 "
+"分析师"
+"助教"
+", `向 ${T.name} 发出${en[r]}邀请`), p(null)
+                                                    }),
+                                                    children: "
+"先付补偿金请求接触，获准后在这一行和教练本人谈薪资，他也可能不来。"
+"「参考补偿」只是身价，不是付了就放人：你声望越低、对方越大牌，越要溢价。 新人经理付足额基本不成，"
+"1.6 倍约五成、2.2 倍九成"
+"个人专项设一次一直生效，每 7 天结算；团队训练一轮 7 天，期满后要重新安排。 疲劳超过 70 成长大减；20 岁以下成长约是 27 岁以上的三倍；到潜力上限后不再涨，要靠潜力突破。"
+"潜力突破"
+"练到潜力上限（差 "
+" 点以内）后，打正式比赛攒"
+"突破契机"
+"：赢一场 +"
+"、输一场 +"
+"MVP 再 +"
+"，淘汰赛 ×"
+"、国际赛 ×"
+"，训练赛不算。"
+"攒满 "
+" 可以花钱做 "
+" 天突破特训"
+"，期间不练别的、更累。"
+"成功潜力 +"
+"，失败契机留 "
+"。每人每赛季试一次，一生最多成功 "
+" 次。"
+"队里还没有练到潜力上限的选手。"
+"潜力 "
+" · 已突破 "
+"特训中，还有 "
+" 天（成功率 "
+"没有加减"
+"成功率 "
+",
+                            disabled: !!o,
+                            title: o ?? void 0,
+                            onClick: async () => {
+                                if (!await Ke(`${c.ign} 做 ${de.campDays} 天突破特训，花费 ${G(m)}，成功率 ${d.pct}%。期间不做个人训练。确定？`)) return;
+                                const u = kh(e, c.id);
+                                u && (ue(e, "
+"突破特训 · "
+", `${y.label}（${y.partner}）· ${c.length} 人出席`), n(), t(null), r([]), a(S)
+    }, j = y => {
+        a(id(e, y.id)), ue(e, "
+", `取消 ${y.label}`), n()
+    }, b = g.filter(y => y.accepted).reduce((y, S) => y + S.fee, 0);
+    return s.jsxs(s.Fragment, {
+        children: [s.jsxs("
+"可用资金"
+"待办活动"
+"已接活动收入"
+"俱乐部声望"
+"主动出击"
+"赞助可以自己去谈，活动可以自己办。办活动要"
+"先垫钱"
+"，能不能回本看"
+"线下训练营必亏"
+"，买的是体能和士气。"
+"拜访潜在赞助商"
+"去谈一家赞助商"
+",
+                    children: e.pitchCooldown != null && e.pitchCooldown > e.day ? `${(e.pitchCooldown??0)-e.day} 天后可以再谈` : `免费，每 10 天一次。最多 ${tr(e.teams[e.myTeam])} 家（现有 ${((C=e.teams[e.myTeam])==null?void 0:C.sponsors.length)??0} 家，俱乐部声望 ${Jo.join("
+")} 各解锁一个）。3 天后给出条件`
+                })]
+            }), (e.sponsorTalks ?? []).filter(y => y.answer === "
+"保底 "
+"/赛季"
+"前 "
+" 名另奖 "
+"要求："
+"。要求越多，保底越高。"
+"没有附加要求，保底较低。"
+", `签下赞助商 ${y.name}`), n()
+                        },
+                        children: "
+"⏳ 等赞助商回复（"
+" 人参与"
+",
+                                children: S.fatigue < 0 ? `体能 +${-S.fatigue}` : `体能 −${S.fatigue}`
+                            }), s.jsxs("
+"士气 +"
+"筹备中，"
+" 天后举办"
+"选 "
+" 人（已选 "
+", `筹备${S.label}`), h(null), f([])
+                                    }),
+                                    children: "
+"开始筹备"
+"商务邀约"
+"直播合同"
+" 2~3 个月一签，到期自动结束。直播夜消耗体能，每周 3 晚以上占掉一天训练。"
+"活动"
+"出席一天，当周训练收益少四分之一"
+"，还掉体能。比赛日不能安排，邀约过期作废。"
+"暂时没有商务邀约。"
+"就在今天"
+" 人出席"
+"体能 −"
+"士气 "
+"人气 +"
+"出席："
+"取消安排"
+"选日期："
+"天后"
+"这段时间每天都有比赛，接不了"
+"伤停中，仍可出席"
+"确认接下"
+"安排出席"
+"选手状态"
+"本周商务占用"
+"本周没有商务活动"
+"未占用"
+"占用 "
+" 天 · 本周训练 −"
+",
+                                            children: [G(y.stream.fee), y.stream.months ? ` / ${y.stream.months} 个月` : "
+"每周 "
+" 晚"
+" · 还剩 "
+" 天"
+", `终止 ${y.ign} 的直播合同`), n()
+                                            },
+                                            children: "
+" 出价 "
+" 个月 · 每周 "
+", `${y.ign} 签下直播合同`)
+                                                }),
+                                                children: "
+"暂无平台接洽"
+"这个存档没有经理档案。"
+"),
+        b = Object.values(e.teams).filter(C => C.id !== e.myTeam).map(C => ({
+            t: C,
+            ...mt(e, C)
+        })).filter(C => C.odds > 0).sort((C, y) => y.t.reputation - C.t.reputation),
+        w = async (C, y) => {
+            var O;
+            const S = (O = e.teams[C]) == null ? void 0 : O.name;
+            await Ke(`确定离开 ${t==null?void 0:t.name}，出任 ${S} 的经理？
+阵容、资金和赛段目标都会换成新俱乐部的。`) && (a(y()), n())
+        };
+    return s.jsxs(s.Fragment, {
+        children: [s.jsxs("
+"现执教"
+"冠军"
+"个人档案"
+",
+                        title: `开档时 ${l.age} 岁，每个赛季长一岁`,
+                        children: [ld(e), "
+"荣誉"
+"我的合同"
+"年薪 "
+" 年"
+" 年签订"
+"以你的声望，这个位置的合理年薪约 "
+"。 手上有别队邀请时最好谈；刚被警告过就别开口。"
+"与董事会谈合同"
+"提出续约"
+"可以立刻上任的职位"
+"俱乐部主动邀请"
+"你的申请已通过"
+"上任"
+"主动求职"
+"成绩差的球队最容易点头，要价太高会被拒。3~10 天内答复。"
+"这个位置的合理年薪约 "
+", `向 ${C.name} 投递执教申请`), r(null), d(0)
+                                }),
+                                children: "
+"球队"
+"赛区"
+"声望"
+"合理年薪"
+"机会"
+"次级"
+"已婉拒"
+"申请"
+"目前没有球队会考虑你，先做出成绩。"
+"共 "
+" 支球队，其中 "
+" 支愿意考虑你。"
+"经理生活"
+"个人钱包和俱乐部资金分开记"
+"个人余额"
+"月薪"
+"生涯累计收入"
+"状态修正"
+"饱腹 "
+"100 是吃饱，每天 −"
+"心情 "
+"每天 −"
+" 到 "
+" 为止，饿着再 −"
+"两个数只影响你自己的工作：本队训练收益和更衣室谈话的成功率，最多 ±"
+"%。不影响选手能力，也不限制比赛。"
+" 免费"
+", u.hunger ? `饱腹 +${u.hunger} ` : "
+", u.mood ? `心情 +${u.mood}` : "
+"自动补给（饱腹低于 "
+" 时自动买）："
+"关"
+"便饭"
+"好好吃"
+"每月预算 $"
+"本月已用 $"
+"；余额不够或预算用完会停，并在推进摘要里提醒。"
+"个人收支（最近 "
+" 条）"
+"日"
+" || y.champion || !y.teams.includes(d) || !y.bracketStarted && y.plannedStart == null) continue;
+            const S = ds(y.stage),
+                O = j.get(S) ?? [];
+            for (const k of Ei(e, y)) {
+                if (k.drawn) continue;
+                const M = (b == null ? void 0 : b.comp.key) === y.key && b.day === k.day;
+                O.push({
+                    key: `${y.key}:${k.name}`,
+                    day: k.day,
+                    comp: y.name,
+                    round: M ? b.round.replace(/^季后赛 /, "
+"对手待定"
+"待定 vs 待定"
+"本届没有我们。"
+"赛季日历"
+" : void 0,
+                            fontWeight: x ? 700 : 400
+                        },
+                        title: `第 ${N.start}–${N.end} 天`,
+                        children: N.name
+                    }, N.key)
+                })
+            }), s.jsx("
+"Challengers 与 VCT 并行；Challengers 第二赛段冠军经 Ascension 升入 VCT。"
+"赛程"
+"全部赛区"
+"本队"
+"近期全部"
+" ? `这十天没有${We[r]}的比赛。` : "
+"日期"
+"赛事"
+"轮次"
+"主队"
+"比分"
+"客队"
+"查看 ›"
+"季后赛 · 双败淘汰"
+"直接进入季后赛："
+"查看这场比赛"
+"轮空"
+"瑞士轮 · 两胜晋级，两负出局"
+")} 赛区冠军，直接进季后赛）` : "
+"晋级"
+"出局"
+"第 "
+" 轮"
+"小组赛 · 每组前 2 晋级"
+",
+            children: Xn.map((i, l) => {
+                var r;
+                const t = n.filter(o => js(o).startsWith(`${i}组`)),
+                    c = ((r = e.groups) == null ? void 0 : r[l]) ?? [];
+                return s.jsxs("
+" 组 · "
+"
+                            },
+                            children: js(o).replace(/^[A-D]组 /, "
+"名次"
+"小局"
+"净胜局"
+"回合差"
+"未进季后赛"
+"尚未开赛。"
+"赛段已结束，按"
+"最终名次"
+"排序；「常规赛」列是循环赛战绩。"
+"选手榜"
+",
+                title: `晋级形势 · ${u.event}`,
+                className: u.tone === "
+"该赛区暂无赛事。"
+"三败淘汰：十二队，输三场出局。胜者组、中段组、败者组三场决赛的冠军，即本赛区去 Masters 的 1、2、3 号种子。 上届 Champions 四队轮空到胜者组第二轮。"
+"签表还没抽，抽签在总览页进行。"
+" 组 · 前 4 进季后赛"
+"分组要等 "
+" 打完抽签才定。"
+"签表 · 三败淘汰"
+" · 双败淘汰"
+"}`
+                        }), s.jsx(Dl, {
+                            comp: p
+                        })]
+                    }), s.jsx(_l, {
+                        comp: p
+                    })]
+                }, p.key) : s.jsxs(K, {
+                    title: `${p.name}（国际赛事${p.city?` · ${p.city}`:"
+"}）${p.champion?` · 冠军 ${(N=e.teams[p.champion])==null?void 0:N.name}`:"
+"最终排名"
+"赛季选手排行（至少 8 张图）"
+"抽签记录（"
+",
+                        children: [pt[l.kind], t ? ` 第 ${t} 轮` : "
+"已完成"
+"等待选择"
+"未看完"
+"回看"
+"免转会费"
+"挂牌出售"
+"希望离队"
+"有意"
+"报价 "
+" 求购"
+" ? `告吹：${e.w}` : e.w
+            })]
+        })]
+    })
+}
+
+function bf() {
+    const {
+        game: e,
+        openPlayer: n,
+        go: a
+    } = ne(), i = e.transferFeed ?? [], [l, t] = I.useState("
+"全世界的转会、传闻和挂牌都在这里，按时间倒序，往年的也留着。"
+"分三档："
+"只是传言；"
+"有俱乐部在关注；"
+"是真的在谈，约一周后见分晓，成交会标「传闻成真」，谈不拢标「告吹」。 球队成绩长期不好时，队里的好球员会提出离队（"
+"），AI 球队会把他挂牌。"
+",
+            children: [s.jsx(K, {
+                title: `正在谈 · ${x.length}`,
+                flush: !0,
+                children: x.length ? x.map(({
+                    x: b,
+                    p: w
+                }) => s.jsx("
+"眼下没有俱乐部在谈。"
+"已挂牌"
+"还没有人提出离队。"
+"去转会市场"
+"赛季"
+"所有赛季"
+" 赛季"
+"所有赛区"
+" 只看我队"
+"搜选手或战队"
+"没有符合条件的新闻。"
+"转会新闻从这个版本开始记录；更早的转会可以在选手资料卡的履历里看到。"
+"再看 200 条（还有 "
+"最大阻力："
+"唯一保留："
+"条件足够了。"
+"球队围绕他建队，几乎每场首发。做不到会严重不满。"
+"常规首发。长期坐板凳会不满。"
+"轮换出场，对上场时间要求不高。"
+"替补，没有出场承诺，薪资要求也最低。"
+"年薪（期望约 "
+"月薪约 "
+"签字费（一次性）"
+"现金比同等年薪更有吸引力"
+"奖金分成"
+"从赛事奖金里分给他的比例，联盟惯例 10% 左右。"
+"承诺地位"
+"合同年限"
+"解约金（0 = 不设）"
+"别的俱乐部可以按这个价直接买走"
+"转会限制条款 "
+"未经本人同意不得出售，选手要价会更高。"
+"我们"
+"其中 "
+" 被待答复的报价占用"
+"阵容人数"
+"外援名额"
+"转会窗口"
+"开启中"
+"已关闭"
+"转会窗口已关闭：不能新报价或问价，已经在谈的照常进行。 开放时段："
+").map(F => ({
+                    e: F,
+                    p: e.players[F.playerId]
+                })).filter(F => F.p);
+            return !$.length && !U.length ? null : s.jsxs(K, {
+                title: $.length ? `问价有结果 · ${$.length} 人可以报价` : "
+"俱乐部要价"
+"本人意向"
+"已报价 · "
+" 天后答复"
+"本人不想来："
+"不想转会"
+")]
+                })]
+            })
+        })(), ye.length > 0 && s.jsxs(K, {
+            title: `收到报价 · ${ye.length} 份`,
+            className: "
+"我方选手"
+"求购方"
+"转会费"
+"对方开价"
+"身价"
+"想走"
+"/年"
+", `接受了 ${(T=e.teams[$.toTeam])==null?void 0:T.name} 对 ${U.ign} 的报价`), n(ol(e, $.id, !0))
+                                            }),
+                                            children: "
+", `拒绝了 ${(T=e.teams[$.toTeam])==null?void 0:T.name} 对 ${U.ign} 的报价`), n(ol(e, $.id, !1))
+                                            }),
+                                            children: "
+"拒绝想走的选手会加深他的不满。有解约金的，对方付到价就能直接带走。"
+"还需等待"
+",
+                                    children: [F > 0 ? `${F} 天` : "
+" · 窗口已关"
+"报价期间资金已预留，别的俱乐部也可能抢先。"
+"市场动态 · 其他俱乐部的转会"
+"全部转会新闻 →"
+"盯上了谁别等太久，别的俱乐部也在买人。传闻、挂牌、谁想走，都在「转会新闻」里。"
+"盯上了谁别等太久，别的俱乐部也在买人。"
+"问价 · 找不在市场上的人"
+"问价花 1 点行动力，不花钱。2~5 天后给出俱乐部要价和本人意向，结果显示在本页最上面，在那里报价。"
+"按位置找人…"
+"要一个"
+"要一个指挥（IGL）"
+"能力不低于"
+"选择俱乐部…"
+" · 声望 "
+" 支俱乐部"
+"全世界的"
+"指挥（IGL）"
+"（只列前 40）"
+"按能力排序 · "
+"各个位置的指挥都在内"
+"兼任这个位置的人也在内"
+"没有符合条件的人，放宽能力下限或换个赛区试试。"
+"估值"
+"问价结果"
+"本赛季结束后退役"
+"要价 "
+"问价中（"
+"未问价"
+", `就 ${$.ign} 向 ${F==null?void 0:F.name} 问价`)
+                                            }),
+                                            children: "
+"俱乐部要价 "
+"选手本人"
+"选手本人拒绝："
+", `就 ${F.ign} 向 ${$==null?void 0:$.name} 问价`)
+                                                }),
+                                                children: "
+"选一支俱乐部看他们的全部选手，或用「按位置找人」搜全世界。"
+"退役 · 主播"
+"全部位置"
+"搜索选手 / 战队"
+"能力上限 "
+"期望年薪"
+"队内指挥"
+"来自其他赛区，占用外援名额"
+"外援"
+"现实中他在这一年加入了你的俱乐部；这几天只有你能签他"
+"现实新人 · 等你 "
+"对方俱乐部的实际要价"
+"免签"
+"去上面「问价」按俱乐部找"
+"没有符合条件的选手。"
+"现在不能报价。"
+", `向 ${y.ign} 提交报价（转会费 ${G($)}，年薪 ${G(U.salary)}）`);
+                const T = (F.respondOn ?? e.day) - e.day,
+                    Y = Rs(e, e.myTeam);
+                n((ss(F.respondOn ?? e.day) ? `已向 ${y.ign} 报价，${T} 天后答复。` : `已向 ${y.ign} 报价，${T} 天后答复，那时窗口已关，被拒就不能补价了。`) + (Y ? "
+")), S(null)
+            })
+        })]
+    })
+}
+
+function Tf({
+    player: e,
+    onClose: n,
+    onSubmit: a
+}) {
+    var v, N, x, j;
+    const {
+        game: i
+    } = ne(), l = i.teams[i.myTeam], t = e.teamId ? Ze(e) : 0, c = ze(e, l.tier), [r, o] = I.useState(t), [d, m] = I.useState(() => ps(Math.round(c * 1.05), 2)), h = r + d.signingBonus, u = h <= i.finances.balance, f = (((v = e.contract) == null ? void 0 : v.releaseClause) ?? 0) > 0 && r >= e.contract.releaseClause, p = !e.teamId || r >= t || f, g = !!e.teamId && !f && r < t * .7;
+    return s.jsxs(bs, {
+        title: `向 ${e.ign} 报价`,
+        onClose: n,
+        children: [s.jsxs("
+" 岁"
+"转会费（对方要价 "
+"不到要价的七成，对方不会考虑。"
+"低于要价，差得越多越可能被拒。"
+"合同含转会限制条款，原俱乐部可直接拒绝。"
+"解约金 "
+"，出到这个价必须放人。"
+"资金不足：需立即支付 "
+"，现有 "
+"提交报价"
+"立即支付 "
+" · 合同总额 "
+"赛季奖金"
+"薪资总额 / 年"
+"年度盈亏（预估）"
+"年度收支结构"
+"联盟分成（津贴+捆绑包）"
+"赛事奖金"
+"薪资和开支每 7 天结算一次。资金为负会持续掉董事会信任。"
+"赛季收入"
+"达标名次"
+"奖金"
+",
+                                        onClick: async () => {
+                                            await Ke(`与 ${v.name} 解约？剩余保底（${G(v.perSeason)}/赛季）不再支付，栏位空出。`) && (a(dd(e, N)), n())
+                                        },
+                                        children: "
+"暂无赞助合约。"
+"每支"
+"俱乐部每赛季有"
+"津贴，随每周结算到账。年度捆绑包赛季末结算，你拿 "
+"，比例每年可以谈一次。"
+"结算方式"
+"固定：旱涝保收。销量：跟声望和成绩走。只能在 Masters I 前改，一年一次。"
+"和联盟谈分成"
+",
+                    children: m.share >= rn ? `已是最高档 ${rn}%` : m.talkedYear === e.year ? "
+"看谈判技能、声望和近期冠军。一年一次。"
+"按当前成绩估算，今年捆绑包 ≈ "
+"联盟特别企划"
+"：为你的俱乐部推出主题捆绑包。 现在买断拿 "
+"，或按销量对赌，赛季末按声望和成绩结算（按现在约 "
+"）。 还剩 "
+" 天答复。"
+"买断 "
+"按销量对赌"
+"薪资明细"
+"占比"
+",
+                                children: v.contractYears > 0 ? `${v.contractYears}年` : "
+"收支流水"
+"天"
+"项目"
+"金额"
+"还没有流水记录。"
+"), o(), n(`已保存到「${f}」。`)
+        } catch {
+            n("
+"存档已导出。"
+"界面配色"
+"黑底看着晕就换"
+"浅色"
+"米色"
+"。只记在这台设备上，不跟存档走。"
+"新手引导"
+"用"
+"模拟的一天"
+"把训练、问价、推进走一遍，期间做的事结束后全部撤销，不影响存档。"
+"重新播放引导"
+"保存进度"
+", {
+                        value: t,
+                        onChange: f => c(f.target.value),
+                        placeholder: `存档名（默认 ${(u=e.teams[e.myTeam])==null?void 0:u.name}-${e.year}）`,
+                        style: {
+                            maxWidth: 320
+                        }
+                    }), s.jsx("
+"保存"
+"导出为文件"
+"每次操作都会自动存档。导出的文件可以在开始界面导入。"
+"已有存档"
+"存档"
+"天数"
+"时间"
+"自动存档"
+"娱乐"
+",
+                                            onClick: async () => {
+                                                await Ke(`读取「${f.slot==="
+"读取"
+",
+                                            onClick: async () => {
+                                                await Ke(`删除存档「${f.slot}」？`, "
+"存档已删除。"
+"删除"
+"还没有存档。"
+"开始界面也能读取手动存档。"
+"规则"
+",
+                                disabled: p < g,
+                                onClick: async () => {
+                                    if (p <= g || !await Ke(`调到「${Is[f].label}」？${Is[f].blurb}调上去就不能再调回来。`, "
+")) return;
+                                    const v = Xd(e, f);
+                                    l(!0), n(v ?? `难度已调到「${Is[f].label}」。`)
+                                },
+                                children: Is[f].label
+                            }, f)
+                        })
+                    }), s.jsxs("
+" 只能往上调。"
+"已开启外援限制：每队最多两名外区选手，AI 同样受限，只限新引进。"
+"已关闭外援限制。"
+" — 每支俱乐部最多两名外区选手。只影响之后的签人，已有阵容不动。"
+"荣誉室"
+"还没有拿到冠军。"
+"战队与选手数据取自 vlr.gg 与 Liquipedia，均为真实人物。"
+", `与 ${r.ign} 续约 ${N.years} 年（年薪 ${G(N.salary)}）`), l(), t(y.text)
+        },
+        b = () => {
+            if (!Ka(i)) {
+                t(qa);
+                return
+            }
+            r.listed = !r.listed;
+            const y = r.loyaltyHitYear !== i.year;
+            r.listed && lt(i, r), l(), ue(i, "
+", r.listed ? `将 ${r.ign} 挂牌出售` : `取消 ${r.ign} 的挂牌`), t(r.listed ? `${r.ign} 已挂牌，等其他俱乐部来问价。${y?"
+"}` : `已取消 ${r.ign} 的挂牌。`)
+        };
+    return s.jsxs(bs, {
+        wide: !0,
+        title: s.jsxs("
+"主指挥：在场上就由他喊话"
+"已确认的队内指挥"
+",
+                        title: r.birth ? `生日 ${r.birth}` : "
+"（推算）"
+"潜力突破成功的次数"
+"已突破 "
+"📢 本赛季后退役"
+" ? `退役复出${r.comeback.lastClub?`，上一站 ${r.comeback.lastClub}（${r.comeback.lastYear}）`:"
+"}。离开赛场的几年，配合和道具丢得最多；进队后每周找回一部分状态。` : "
+", r.comeback.fame > 0 && ` ${md[r.comeback.fame]}：直播合同更值钱，在队时俱乐部声望慢慢上涨；要价更高，训练少一些。`, !r.teamId && "
+", wn.wish, `免费 · 士气 +${he.wish.morale}，信任 +${he.wish.trust}`],
+                            ["
+", wn.gift, `经理个人掏 $${he.gift.price} · 士气 +${he.gift.morale}，信任 +${he.gift.trust}`],
+                            ["
+", wn.party, `俱乐部经费 $${he.party.cost.toLocaleString("
+")} + 1 行动力 · 他士气 +${he.party.morale}、信任 +${he.party.trust}，全队士气 +${he.party.squadMorale}，和他关系 +${he.party.bond}`],
+                            ["
+"什么也不发生"
+", `${r.ign} 生日：${wn[M]}`)
+                            };
+                            M === "
+"过 "
+" 岁生日"
+"还有 "
+" 天可以表示。礼物从经理个人钱包出，庆祝走俱乐部财务并花 1 行动力，钱不够就不会扣。"
+" 已宣布本赛季结束后退役。"
+"只能谈一次，想清楚再选。"
+"你已经和他谈过了。"
+"动之以情"
+"不花钱，看交情和士气"
+"涨薪再战一年"
+"转替补带新人"
+"让出首发位，带新人"
+"成全他，挂牌转会"
+"必成，能收转会费"
+"同意退役"
+"必成，赛季末办退役仪式"
+", `与 ${r.ign} 谈退役：${S}`)
+                                }),
+                                children: [S, s.jsx("
+"英雄熟练度："
+"属性来源 · vlr.gg "
+"生涯数据"
+"表演赛数据"
+" 回合"
+"本赛季"
+"生涯"
+"本存档荣誉 · 游戏内履历"
+"2026 起在这个存档里发生的事，现实生涯在资料库"
+"还没有记录。"
+"冠军 · "
+" 座"
+"替补席"
+"（早期存档，未记俱乐部）"
+"效力经历"
+"剩余年限"
+",
+                            children: r.contractYears > 0 ? `${r.contractYears} 年` : "
+"外队报价参考"
+"忠诚 "
+"野心 "
+"月薪 "
+"奖金分成 "
+"承诺 "
+"转会限制"
+"不满 "
+"续约谈判"
+"提交"
+"续约 / 谈条件"
+"取消挂牌"
+",
+                        title: `他的指挥属性 ${r.attrs.igl}`,
+                        onClick: () => {
+                            const y = ar(i, r.id);
+                            l(), ue(i, "
+", `任命 ${r.ign} 为主指挥`), t(y)
+                        },
+                        children: r.isIgl ? "
+"任命为指挥"
+"场次 "
+"击杀 "
+"死亡 "
+"助攻 "
+"首杀差 "
+"残局 "
+"暂无出场记录。"
+"选手个人能力"
+"阵容硬实力，靠转会和训练补"
+"在训练里安排「跑图」练这张图，或在 BP 时避开它"
+"更衣室关系与协同/沟通属性，双排练和集训能改善"
+"阵容位置搭配"
+"首发里没有指挥，攻防各扣 4 分。把队里的 IGL 放进首发"
+"让指挥属性更高的人来指挥，或用「教练复盘」练 IGL 的指挥"
+"人数不足"
+"首发不满五人，每缺一人都是巨大劣势。先把阵容补到五人"
+"教练与战术素养"
+"换个战术更好的主教练，或点满「战术」天赋"
+"道具运用"
+"战术里的「道具」滑杆，以及选手的道具属性；双控场阵容从这一项拿得最多"
+"战术设置（进攻端）"
+"这张图的节奏与侵略性滑杆，双决斗阵容往右拉才吃得到"
+"战术设置（防守端）"
+"节奏与侵略性调高会削弱防守；双哨卫阵容往左拉才厚"
+"阵容风格"
+"双决斗偏攻、双哨卫偏守、双控场两头都吃。在预案里换一套五个英雄"
+"针对对手"
+"对双哨卫放慢节奏，对双决斗别把侵略性拉满，对双控场道具拉高。赛前预案里能看到对手阵容"
+"同一套五个英雄多打几场、跑图时练它；临时换阵容会从零开始"
+"对手针对准备"
+"这张图的预案被研究透了。换一两个英雄，或把滑杆拨动 10 以上"
+"这场比赛打在此功能上线前，没有强弱分解记录。"
+")}，把能打这些位置的人放进首发` : "
+"两队势均力敌，这张图靠临场发挥拿下"
+"两队势均力敌，胜负看临场发挥和运气"
+"账面上我们更强，也按实力拿下了"
+"账面上我们更强，却输了，临场没打出来"
+"账面上处于下风，这张图是硬啃下来的"
+"账面上处于下风"
+"综合实力差"
+"最吃亏的是 "
+"因素"
+"我方"
+"差值"
+"怎么调整"
+"这一项我们占优"
+"这些是模拟器判定胜负时用的数值。它们只决定每回合的胜率， 账面占优也可能输，多半是状态、体能或运气。"
+": `回合走势：共 ${e.length} 回合`,
+            style: {
+                display: "
+"进攻方拿下"
+"防守方拿下"
+" 团灭"
+" 引爆"
+" 拆包"
+" 时间"
+"全部地图"
+"胜利。"
+"失利。"
+"为什么是这个结果 · "
+"回合走势 · "
+"高光"
+"BP 过程"
+"火力"
+"输出"
+"生存"
+"突破"
+"串联"
+"残局"
+"表现对比 · "
+"队伍"
+"最多选两人对比"
+"选 1–2 名选手对比。"
+"本队选手"
+"本场"
+"发挥"
+"发挥 = 本场评分减赛季均值。点一行加入雷达对比。"
+"首杀"
+",
+                                        style: {
+                                            marginLeft: 5
+                                        },
+                                        title: `状态火热 ${Math.round(g.form)}`,
+                                        children: "
+",
+                                        style: {
+                                            marginLeft: 5
+                                        },
+                                        title: `状态低迷 ${Math.round(g.form)}`,
+                                        children: "
+"本图最佳"
+"数据统计 · "
+"} · ${pt[t.kind]}${f?` 第 ${f} 轮`:"
+"交给了教练组。"
+"对阵已写进赛程。"
+"抽签还没抽完，可以从总览页再进来。"
+"主教练亲自点的"
+" · 已完成"
+" · 点一队选它"
+" : void 0,
+                            tabIndex: k ? 0 : void 0,
+                            title: k ? `选 ${g(O)} 做八强对手` : void 0,
+                            onClick: k ? () => j(O) : void 0,
+                            onKeyDown: k ? M => {
+                                (M.key === "
+"选它 ›"
+"签球还在碗里。"
+" 选的）"
+"抽下一签"
+"关闭"
+"先关掉，稍后再抽"
+" 签 · "
+"对阵已写进赛程"
+"抽完才会写进赛程"
+"抽签记录"
+" 组"
+"胜者组第二轮（轮空位）"
+" 场胜者 vs"
+"八强对阵（按选择顺序）"
+"选择中…"
+"待选"
+"对阵"
+"轮到我们选八强对手，选定后不能反悔"
+"交手"
+",
+                            onClick: () => a(r),
+                            title: `选 ${o==null?void 0:o.tag} 做八强对手`,
+                            children: [s.jsx("
+",
+                                children: h.length ? `${u} 胜 ${h.length-u} 负` : "
+"交给教练组"
+"教练组会挑最有把握的一队。"
+"]
+            }, l))
+        })]
+    })
+}
+
+function _f({
+    mine: e,
+    theirs: n
+}) {
+    const a = e.edge.counter ?? 0,
+        i = e.edge.mapFit ?? 0,
+        l = e.edge.version ?? 0,
+        t = [];
+    if (Math.abs(a) >= .15 && t.push(a > 0 ? `你的${e.mixName}打他们的${n.mixName}占便宜` : `你的${e.mixName}被他们的${n.mixName}克制`), Math.abs(i) >= .15 && t.push(i > 0 ? "
+"这张图不太吃你们这套"
+"阵容跟着版本走"
+"阵容有点逆版本"
+"两边阵容都比较均衡，谁也不克谁——打法就按自己的强项来。"
+"顺着打"
+"需要用暂停把节奏拽回来"
+" ? `${E} ban 掉 ${ee(P)}` : `${E} 选下 ${ee(P)}`],
+            ae = f.filter(U => U !== P),
+            pe = X === "
+"图池 7 张。"
+"BO3：各 ban 一张，各选一张，再各 ban 一张，剩下的是决胜图"
+"BO5：各 ban 一张，然后轮流选图"
+"BO1：轮流 ban 到只剩一张"
+"
+                },
+                children: y ? `轮到你${S==="
+" ban 图"
+" 选图"
+"ban 掉"
+"选下"
+" 图"
+",
+                            title: `${l.tag} 熟练度 / ${c.tag} 熟练度`,
+                            style: {
+                                whiteSpace: "
+"决胜图"
+"让 "
+" 出手 ›"
+"取消，用自动 BP"
+") return;
+        const P = window.setInterval(N, Yf);
+        return () => window.clearInterval(P)
+    }, [r, N]);
+    const x = m.current,
+        j = !!h && !!x && x.canTimeout(h),
+        b = (P, E) => {
+            !h || !x || x.callTimeout(h, {
+                kind: P,
+                playerId: E
+            }) && (l(`暂停已用：${P==="
+"强攻"
+"稳守"
+"打核心"
+") return s.jsx(bs, {
+        title: `赛前 BP · BO${e.bo}`,
+        onClose: () => o("
+"地图 · "
+"手动 BP"
+",
+                    style: {
+                        margin: 0
+                    },
+                    children: a.vetoPlan ? `你亲自 BP 的结果：${t.current.vetoLog.join("
+"已按地图熟练度自动 BP。想自己 ban 图点「手动 BP」。"
+"各图预案 · 英雄与战术"
+"改了就记住，下次这张图直接用"
+"观战（可用 2 次暂停）"
+"快进到结果"
+"观战与快进结果相同。每张图 2 次暂停，加时加 1 次。"
+"换图中"
+"大比分 "
+"暂停 · 剩余 "
+"选择接下来 3 个回合的打法："
+"强攻 "
+"进攻端更强，但更容易被打穿"
+"稳守 "
+"减少伤亡与波动，适合领先或缺钱"
+"战术滑杆在赛前的「各图预案」里，一张图一套；暂停只管接下来 3 个回合。"
+"本图我方"
+"本图对手"
+"或者围绕一名选手打："
+"本图手感最好"
+"直接继续比赛"
+"只看一眼不花暂停，选了打法才用掉一次。"
+"叫暂停"
+"跳过剩余"
+"战术生效中："
+"（剩 "
+" 回合）"
+"首杀 / 首死"
+", {
+                    children: n.finished ? `结局 · ${(m==null?void 0:m.title)??"
+"任期结束"
+"王朝线 · 看战绩"
+"故事线 · 看经历"
+"这段生涯同时达成："
+"✦ 首次解锁 "
+" 种结局"
+"执教俱乐部"
+"在任年份"
+"这段任期没有冠军。"
+" 岁，"
+"。最终声望 "
+"， 账面资金 "
+"结局收藏 · "
+"王朝线"
+"故事线"
+",
+                                            title: N ? v.brief : `未解锁 · ${v.brief}`,
+                                            style: x ? {
+                                                borderColor: "
+"记在你的账号上，和开瓦包同一个，完整 ID 在「成就」页。"
+"记在这台浏览器上。创建账号 ID 后可以跨设备保存。"
+"悬停可以看未解锁结局的条件。"
+"开始新的职业生涯"
+"董事会先警告再下课，警告后的下一个赛段是最后机会。"
+"年之约 · 2026–"
+"个赛季打完了。现在收官，这段生涯就以下面的评价定格，记入账号； 继续的话一直执教到 "
+"，走完十年有单独的成就。"
+"王朝线 · 目前的评价"
+"故事线 · 目前的评价"
+"继续执教到 2036"
+"就此收官，领取结局"
+"收官不算解约，不记「完成十年」也不记「被解雇」，结局和成就照常入账。 这个选择只出现一次。"
+"👋 职业生涯谢幕 · "
+"本卡为《VCT电竞经理》游戏模拟内容"
+"游戏内容"
+"最后一站 · "
+"你的队员"
+"本档效力履历 · 2026 起"
+"本档冠军荣誉 · "
+"…以及更早的 "
+"本档生涯数据"
+"他在你的队里退役。这张卡不会再出现，想留念现在截图。"
+"这张卡不会再出现，想留念现在截图。"
+"《VCT电竞经理》· 履历、荣誉与数据均为本存档 2026 年起的游戏模拟，非真实资讯。"
+"目送他离开"
+": `${n} 晋级 ${e.name}`,
+        onClick: i,
+        children: s.jsxs("
+"确认晋级 "
+"收下"
+"升入一级联赛"
+"国际赛冠军"
+": `${n} 夺得 ${e.name} 冠军`,
+        onClick: i,
+        children: s.jsxs("
+"你是一支 VALORANT 战队的经理"
+"下面用一天试一遍"
+"接下来这一天是**模拟的**（12 月 31 日），做的事结束后全部撤销，不影响存档。跟着高亮走。"
+"行动力：今天能做几件对外的事"
+"顶栏的「行动力」是今天的额度。**报价、问价、谈商务、约训练赛、换教练、挂牌解约**各花 1 点；**首发、战术、训练安排不花**。赛季中每天 2 点，空档期每周 4 点，用完就推进时间。"
+"总览：每天从这里结束"
+"最上面是待办，红色大按钮用来推进时间。先别按。"
+"阵容：先看看你的人"
+"点开阵容页。"
+"阵容表：首发、能力、合同"
+"点一个名字即可继续"
+"选手详情：能做的三件事"
+"关闭弹窗即可继续"
+"训练：现在真的排一次"
+"点开训练页。"
+"主训练：三选一，一轮七天"
+"选好了会自动继续"
+"双排练：和主训练同时进行"
+"选两个人一起加练：协同、沟通涨经验，两人**关系 +3~6**，更衣室有矛盾靠它修。不占主训练的位置。"
+"再给一名选手定个训练重点"
+"在下面的「训练计划」表里，给任意一名选手的「训练重点」选一个能力项。不设就是休息，只恢复体能。"
+"设好任意一人即可继续"
+"转会：想要的人多半不在市场上"
+"点开转会页。"
+"试着问一个人的价"
+"「自由人」和「挂牌」是已经在市场上的；想要别人的选手就「问价」。在「问价」面板选一支俱乐部，对他们的某名选手点「问价」：花 1 点行动力、不花钱，几天后告诉你对方要价和选手愿不愿意来。"
+"问完任意一人即可继续"
+"积分榜：董事会看的就是这个"
+"点开积分榜。"
+"这个赛段通向哪里"
+"最上面这块写着本赛段**前几名去 Masters 或 Champions**、你现在差什么、去了是几号种子。董事会的赛段目标也按这里的排名算。"
+"财务：钱从哪来到哪去"
+"点开财务页。赞助和奖金是收入，薪资是支出。缺钱去「商务」页接活动或谈赞助，代价是选手的时间。"
+"最后：推进，结束这一天"
+"按下红色的「推进 一天」，会弹出这一天发生了什么。正式开局后每回合都这样收尾。"
+"按下推进即可完成"
+"模拟中 · 12月31日"
+"⤷ 点击左侧高亮的标签"
+"按提示操作后自动继续"
+"完成，开始正式的第一天"
+"下一步"
+"跳过引导"
+"赛场"
+"养成"
+"经营"
+",
+        children: [s.jsxs(K, {
+            title: `成就 · ${r.size}/${um}`,
+            children: [s.jsx("
+"记在你的账号上，跨存档累计，被解雇、开新档都不清零。"
+"按所有存档的总数算。"
+",
+                rows: Za,
+                has: r
+            })]
+        }), s.jsxs(K, {
+            title: `结局收藏 · ${o.size}/${xr}`,
+            children: [s.jsxs("
+"每段生涯结束会给两个结局："
+"看战绩，"
+"看经历。没见过的只显示条件。"
+"生涯累计"
+"执教生涯"
+" 段"
+"中途下课"
+"累计冠军"
+"世界冠军"
+"单段最多"
+"执教赛季"
+" 个"
+"执教过的俱乐部"
+" 家"
+"账号 ID"
+"尚未创建"
+"账号设置"
+"创建账号"
+"ID 和开瓦包共用，相当于密码，不要发给别人。换设备时在账号设置里填进去，成就、结局和卡牌都会跟过来。"
+"这些记录现在只在这台浏览器上。创建 ID 后可以跨设备，开瓦包共用同一个账号。"
+"赛制与晋级"
+"一年六段：Kickoff → Masters I → Stage 1 → Masters II → Stage 2 → Champions，中间是休赛期和两个短转会窗。赛区赛段先打循环赛，再打季后赛；国际赛的名额看季后赛名次和全年积分。积分榜顶上的「晋级形势」会告诉你还差什么。"
+"<b>Masters</b>（12 队）：4 支赛区冠军直接进季后赛；8 支第 2、3 名先打<b>瑞士轮</b>：三轮 BO3，两胜晋级、两负出局，出 4 队。"
+"瑞士轮每轮抽签：首轮二号种子对别的赛区的三号种子，之后按战绩分池，第三轮不重赛。瑞士轮打完，四个赛区冠军抽顺序、依次挑八强对手，轮到你的队就你来选。"
+"八强<b>双败淘汰</b>：胜者组输一场掉进败者组，败者组再输才出局；败者组决赛和总决赛 BO5，其余 BO3。"
+"<b>Champions</b>（16 队）：每赛区 4 队，分 4 个小组（GSL：开局赛、胜者赛、败者赛、决胜赛，每组前 2 出线），八强同样双败淘汰。"
+"分组按四档抽签，每组四个赛区各一队；小组赛后再抽八强，小组第一对不同组的小组第二，同组的两队分在不同半区。"
+"每一段怎么打"
+"队友关系（好感度）"
+"每两名选手之间一个数，−100 到 +100，双向相同，说的是这两个人处得怎么样。新签的人起手 30~74，看这些：一起待了多久（最多 +10，头一年最值钱）、同国籍 +4 不同 −2、年龄差 ≤2 岁 +3 ≥7 岁 −2、位置互补（决斗者↔先锋、控场↔哨卫）+3、团队配合和沟通越高越好相处。"
+"赢一场比赛"
+"上场的每一对 +0.6~1.8。"
+"每周自然回暖"
+"朝 +10 回归，速度 =（10 − 现值）×（1.2% +（教练激励 − 55）÷ 100 × 3%）× 你的更衣室技能。一场输球能扣十几点，回暖一周只有零点几。"
+"双人训练"
+"唯一能定向修一对关系的手段。"
+"团建（俱乐部活动）"
+"集训营在场的每一对 +5~9，球迷开放日和观赛派对 +1~3，拍摄 0。"
+"输球，而且一个人扛了另一个没跟上"
+"扣「评分差 × 20~34 × (1.35 − 扛的人的耐心) × 记仇系数」。耐心 =（团队配合 + (100 − 野心)）÷ 200；记仇系数 = 1 + 已有恶感 ÷ 55，本来就不对付的两个人扣得更狠。"
+"输球，但两个人都打得差"
+"只扣 0.3~2。"
+"卖掉一个大家喜欢的人"
+"和他关系 >15 的每个队友掉「(关系 − 15) × 0.16」的信任（最多 9），士气也跟着掉。"
+"积怨不管"
+"一对低于 −40 之后，每周有 18% 概率两人各掉 3 士气、+4 不满。"
+"全队默契就是所有两两关系的平均值，直接进比赛。"
+"关系还决定谁走了会伤到谁，转会页那一栏读的就是它。"
+"全队默契"
+"队内所有两两关系的平均数，就是更衣室面板顶上那个数。"
+"比赛里算的是：（全队平均团队配合 + 平均沟通）÷ 2 +（默契 − 10）× 0.18。"
+"默契每高 10 点，约等于全队团队配合和沟通各高 1.8 点。它补不了能力差距。"
+"赛后点开地图的「为什么是这个结果」，「团队默契」那一行就是它在那张图上值了多少。"
+"阵容风格与滑杆"
+"一套五个英雄有它的形状：<b>双决斗</b>（两个决斗者）、<b>双哨卫</b>、<b>双控场</b>，其余算<b>标准</b>（一决斗双先锋一控场一哨卫）。形状本身先算一笔：双决斗攻 +1.3 守 −0.9，双哨卫攻 −0.8 守 +1.4，双控场攻守各 +0.5、中局应变 +0.9。<b>四条滑杆的效果再按形状放大或缩小</b>。"
+"节奏 / 侵略性"
+"每点节奏攻 +0.035 守 −0.022，每点侵略性攻 +0.028 守 −0.015（50 为零点）。<b>双决斗进攻端乘 1.35、防守端乘 0.8</b>，往右拉划算；<b>双哨卫进攻端乘 0.5、防守端乘 2.2</b>，往左拉才厚。标准阵容不乘。"
+"每点 ±0.02，攻守同加，再乘（0.5 + 全队道具属性 ÷ 130）；<b>双控场再乘 1.2</b>。"
+"对手是双哨卫：节奏每点 −0.03 攻（慢打是加分）、道具每点 +0.015；对手是双决斗：侵略性每点 −0.03 守、中局应变每点 +0.02；对手是双控场：道具每点攻 +0.02 守 +0.01、节奏每点 +0.015。对标准阵容没有针对项。"
+"暂停"
+"双决斗喊「强攻」效果 ×1.4，双哨卫喊「稳守」×1.4；反过来喊各 ×0.7。"
+"同一支队、同一套阵容，滑杆顺着形状打和逆着打，单图胜率差 10~13 个百分点，和地图熟练度一个量级。"
+"「全部拉满」不是万能答案：双哨卫阵容全满 66%，慢打 79%。"
+"赛前预案会写出对手这张图大概率的形状和该怎么调。"
+"地图熟练度是多熟这张图；阵容熟练度是多熟<b>这张图上这五个英雄</b>。每张图一个数，0~100，<b>50 是中立</b>。别的俱乐部普通难度在 50，困难 62，职业 70。"
+"正式比赛打一张图"
+"训练赛打一张图"
+"跑图一周"
+"每张图 +12，练的是这张图预案里那套阵容。"
+"换一个英雄"
+"保留五分之四；换两个保留五分之三。"
+"五个全换"
+"从 0 开始。"
+"进比赛：（熟练度 − 50）× 0.06，攻守同加。练满是 +3，全新阵容是 −3。"
+"赛前临时拼一套没打过的五个人，起手比对面矮 3 分；在战术页定好一套不动，几周后反过来。"
+"但一套不动也最容易被研究透，见「对手针对」。"
+"对手针对与难度"
+"赢得越多，别的队越研究你的录像。<b>针对度</b> 0~100，<b>被摸透</b>按每张图算。AI 打你时多出的备战分 = 上限 × 针对度 × (35% + 65% × 被摸透)。上限：普通 6，困难 8，职业 10。"
+"赢一场正式比赛"
+"针对度 +3。"
+"拿冠军"
+"赛区冠军 +8，国际赛冠军 +15。"
+"同一张图连打同一套"
+"五个英雄和四条滑杆都没变，打三场就被摸透。"
+"输一场"
+"针对度 −8。赢球率低于七成三，它会往下走。"
+"换英雄"
+"换一个英雄，对手的功课作废五分之一。"
+"拨滑杆"
+"任意一条动 10 以上，滑杆那部分（35%）作废。"
+"过冬"
+"针对度剩六成，被摸透减半。训练赛不算。"
+"<b>宿敌</b>：赛季末针对度 ≥50 时，本季被你赢得最多的一级联赛队会盯上你：下赛季对你的备战 ×1.4，多 150 万预算，转会窗口每周买人。"
+"<b>困难 / 职业</b>：个人能力（加权后）超过 88 / 86 的部分只算一半 / 四成；AI 练到 99，阵容熟练度更高，冠军引起的反弹更大。普通难度超过 90 的部分算六成。"
+"难度开档时选，之后在「存档」页只能往上调。"
+"找你加薪的人，没涨到身价八成以上，之后每周不满 +2（困难 +3，职业 +4）、士气 −1。"
+"对你的信任"
+"球员对你本人的长期评价，从 62 起步。士气是这周的情绪，信任是几个月攒出来的判断，动得慢、恢复得更慢。82 以上「完全信任」，66「信任」，48「中立」，30「有保留」，以下「已失去信任」。"
+"赢球"
+"上场的每人 +0.35。"
+"兑现承诺"
+"签约时承诺了核心或首发，并且真的在首发里：每周 +0.4。"
+"让人休息"
+"疲劳 ≤35 每周 +0.3。"
+"更衣室技能"
+"正向的部分乘以它，负向的部分除以它。"
+"往死里用"
+"疲劳 ≥85 每周 −2.2，≥70 −1.0。"
+"商务活动排太满"
+"一周 3 场以上 −2.6，2 场 −1.2。直播一周 4 晚以上只 −0.6。"
+"承诺了核心却坐板凳"
+"每周 −2.4，单项里最重。"
+"伤着还不让休息"
+"每周 −0.8。"
+"输球"
+"上场的每人 −0.5。"
+"状态正好的时候把人换下"
+"一次 −4.5（状态 ≥68 或能力 ≥78）；本来就该轮换的只 −1.2。"
+"续约时加分：(信任 − 62) × 0.55，信任 85 比信任 40 少要一大截钱。"
+"跌破 40 会有提示；跌破 25 时额外 +12 不满，续约基本谈不成。"
+"涨幅随信任变高而缩小，且一直朝 62 回归 2%：不犯错大约停在「信任」，「完全信任」得一直做对。"
+"忠诚度（归属感）"
+"他对<b>这家俱乐部</b>的归属感。<b>换一个经理，忠诚还在，信任清零</b>：忠诚记俱乐部的账（待了多久、一起拿过什么、有没有被挂牌），信任记你的账。出场时间不算在这里，那已经在信任和不满里算过了。"
+"在这里多待一个赛季"
+"涨 (78 − 现值) × 0.16，最少 0.4 最多 7，越高涨得越慢。新签的人从 38 起步，四个赛季大约到 58。"
+"在这儿拿冠军"
+"赛区冠军 +2.5，国际冠军 +5，当时在队里的每个人都算。"
+"帮他挡掉别队的报价"
+"+4。前提是他自己没想走；他想走你硬留，扣的是不满。"
+"被挂牌"
+"−14，<b>一个赛季只扣一次</b>，取消挂牌也收不回来。"
+"换队"
+"到新东家<b>重置成 38</b>；回老东家能保住一部分。"
+"续约时 (忠诚 − 50) × 0.35 是加分，别的队来挖他时同样的数是阻力。<b>「对这支球队没有太深的归属感」说的就是这一条。</b>"
+"你问价别队球员时，他的态度再扣一次 (忠诚 − 50) × 0.5，比合同分量更重。忠诚 75 以上的人光靠加钱很难谈。"
+"留人的办法只有三个：让他待着、带他拿冠军、别轻易挂牌。"
+"不满"
+"和信任分开：信任是对你的评价，不满是眼下的怨气。超过 40 他就开始想走，别队报价时接受度直接加「不满 × 0.25」。"
+"承诺了核心/首发却不上"
+"每周 +7（首发承诺 +4.5），更衣室技能能减缓。"
+"合同配不上身价"
+"身价超过现薪 1.3 倍时，每周 28% 概率来找你谈，一次 +8 不满、−3 信任，谈过之后 120 天内不再提。"
+"被别队盯上而且他有野心"
+"野心 >70 的人听到传闻 +4。"
+"信任跌破 25"
+"一次性 +12。"
+"长期不和"
+"和某人关系低于 −40，每周有概率 +4。"
+"承诺了首发并且真的首发，每周 −3。"
+"签下新合同直接清零。"
+"别的俱乐部挂牌不满 >40 的人的概率 +30%，想挖人先看不满值。"
+"你问价别队球员时也算这个：不满 >35、士气 <45 或合同只剩一年，接受度 +25。"
+"队内有人不满 >45，首页待办会点名提醒。"
+"你自己的名气，5~96。它决定更好的球员愿不愿意来、更好的俱乐部愿不愿意找你。"
+"夺冠"
+"赛区冠军 +2.5，国际冠军 +6。"
+"赛段超额完成"
+"(1 + (要求名次 − 实际名次) × 0.5) × 你的成长系数。要求前 8 你拿了第 2，就是 4 倍。"
+"赛段没达标"
+"−1.5，不打折。"
+"所有增长乘「(96 − 现在的声望) ÷ 42」（最低 12%），越高涨得越慢；扣分不打折。80 以上，一个赛区冠军只值零点几。"
+"挖人：(你的声望 − 对方俱乐部声望) × 0.55 直接加到球员的接受分。"
+"求职：比目标俱乐部低 14 以上不考虑；成功率 ≈ 0.1 + 差值 × 0.011 + 冠军数 × 0.03，对方战绩差再 +0.16。"
+"你的薪水、能招到什么水平的教练，看的也是它。"
+"俱乐部自己的名气，和经理声望是两个数。只有<b>商务活动和俱乐部活动带来的粉丝</b>能涨它，每个粉丝 +0.05；成绩不直接涨。"
+"粉丝见面会"
+"涨粉 3~6，选手也喜欢，钱少。"
+"校园行"
+"涨粉 4~8，钱最少。"
+"品牌活动"
+"钱最多，涨粉 1~3，最耗选手。"
+"俱乐部活动"
+"涨粉再乘出席率：0.35 +（声望 − 55）× 0.018，名气小时办活动收效差。"
+"赞助保底的锚：一级联赛 32 万 / 次级 7.2 万，再乘 (1 + 声望 ÷ 160)。"
+"赞助栏位：5 个起，声望到 65、70、80 各多一个，最多 8 个。"
+"商务邀约的频率：0.07 +（声望 − 50）× 0.004，最低 4% 最高 20%。出场费也乘 (0.6 + 声望 ÷ 100)。"
+"找赞助时对方答应的概率：0.32 +（声望 − 55）× 0.012 + 冠军数 × 0.03。"
+"赞助合同好坏怎么看"
+"一份赞助分三部分：保底、名次奖金、附加条件。<b>条件越多，保底越高</b>：两个条件 ×1.25，一个 ×1.0，没有 ×0.8。"
+"保底"
+"俱乐部声望的基准 × 0.55~1.0 × 你的商务技能 × 条件系数，同一声望两次谈的数字可以差近一倍。"
+"名次奖金"
+"基准 × 0.2~0.5，要求赛段进前 2~6 名，一个赛季只发一次。"
+"条件是真的会查的"
+"赛季末结算，任何一条没做到，<b>合同当场终止</b>。"
+"每赛季至少 3 次商务活动"
+"整个赛季的商务场次少于 3 就算违约。"
+"至少一名选手签直播"
+"赛季末队里没有人有直播合同就算违约。"
+"赛段排名进前 N"
+"看的是本赛季最好的一次赛区赛段名次。"
+"同行业独家"
+"同时持有两家同行业的赞助，两边都可能违约。签之前先看行业栏。"
+"能稳定做到的条件就接，做不到的宁可要低保底；被终止的合同收益是零，还占一个赛季的栏位。"
+"方案摆三周不答复会自动作废。"
+"忠诚、默契、信任、声望、赞助是怎么算的"
+"机制说明"
+"这些数字是怎么来的"
+"关闭 ✕"
+"这里写的是引擎里实际使用的规则和系数。"
+"往上走"
+"往下走"
+"它影响什么"
+"成就"
+"结局"
+"解锁结局"
+"成就解锁"
+" · 稀有"
+",
+                onClick: n,
+                children: e.length > 1 ? `知道了（还有 ${e.length-1}）` : "
+"全部知道了"
+"总览"
+"转会新闻"
+"财务"
+"资料库"
+"系统"
+"), U(), le.length && F(`指挥名单按最新数据更新：${le.slice(0,3).join("
+")}${le.length>3?` 等 ${le.length} 处`:"
+"}。`)
+        }, [U, F]),
+        Y = I.useMemo(() => ({
+            game: a.current,
+            commit: U,
+            markUnsaved: () => {
+                pe.current = !0
+            },
+            toast: F,
+            openPlayer: (D, le = !1) => {
+                N(le), f(D)
+            },
+            loadSlot: D => {
+                const le = Ct(D);
+                le ? (T(le), F(`已读取「${D==="
+"没有找到自动存档。"
+"跳到主内容"
+",
+                    title: `回到首页 · 猪之家出品 · 小红书/抖音 @点点点点点点点点${n?"
+"猪之家出品"
+"所属俱乐部"
+"娱乐模式：退役选手和主播在自由人里，只为你复出"
+"娱乐模式 "
+"}`,
+                    title: `本回合 ${Ia(B)} 点行动力（赛季中每天 2 点，空档期每周 4 点）。
+报价、商务、约战等对外事务各花 1 点；首发、战术、训练不花。`,
+                    children: [s.jsx("
+" 行动力"
+"对手针对度：赢得越多，对手越研究你。详情看战术页。"
+"对手针对度"
+" 针对 "
+"已约训练赛"
+",
+                    title: `${oe.name}：${oe.how}。四个赛区打完后抽签。`,
+                    children: ["
+" · 约"
+"天后 · 对手待定"
+",
+                    title: `${L.comp.name} ${L.round}，对手待定`,
+                    children: ["
+" · 对手待定"
+"下一场正式比赛"
+"下一场："
+"关闭提示"
+"⚠ 存储空间满了，已精简存档"
+"⚠ 进度没有被保存"
+"另一个标签页里有更靠后的存档，这一页暂时不写入。关掉其它游戏标签页，再刷新这一页。"
+"浏览器存储空间满了，旧比赛的计分板和回合记录已清掉，生涯本身没少。可以去「存档」页删掉用不上的手动存档。"
+"浏览器拒绝写入，多半是存储空间满了。当前进度只在这个页面里，请去「存档」页导出文件，并删掉用不上的手动存档。写入恢复后这条提示会自动消失。"

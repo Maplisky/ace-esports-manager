@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "mimosa-finding-ledger-batch/v1",
+  "batchId": "stop-20261013T110245123Z-29324-c66ea79faf51",
+  "runId": "20261013T110245123Z-29324-c66ea79faf51",
+  "runStatus": "completed",
+  "coverage": {
+    "status": "complete",
+    "reasons": []
+  },
+  "source": {
+    "component": "zcode-hook",
+    "operationId": "Stop"
+  },
+  "revision": null,
+  "diffHash": "c6e4c902ae464456642837dd7ab4c44f7caea8530b73ac7d446db40c101467fd",
+  "rulesVersion": "unavailable",
+  "sessionHash": "b360dcfa0d79b363ea4ef7b6c71d734e397f264a8f80b0c74cf1600802380e7a",
+  "reportRef": ".mimosa/reports/task-review-sess_5488cb30-3613-4a9e-b77d-65e936fca663-20261013T110245123Z-29324-c66ea79faf51.json",
+  "events": [],
+  "observedFindingIds": [],
+  "verifiedFiles": [
+    {
+      "file": "src/core/sim/strength.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/core/sim/match.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/core/sim/day.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "tests/worldgen.test.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/core/types.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/app/components/MatchPlayer.tsx",
+      "direct": "complete",
+      "projectContext": "partial"
+    }
+  ],
+  "recordedAt": "2026-10-13T11:02:45.500Z"
+}

@@ -1,0 +1,8214 @@
+const __vite__mapDeps = (i, m = __vite__mapDeps, d = (m.f || (m.f = ["./Champions-DCqTJmkG.js", "./vendor-DH-k1TvH.js", "./cardid-Gm1djOTv.js", "./useDialogFocus-CcqilB6b.js", "./Champions-d6SRQ1XQ.css", "./Minigames-DIg2mtE7.js", "./Dossier-BxMVkHtS.js", "./cards-Cmwwaaa1.js", "./roster-DhYuV0hG.js", "./index-B2cSJmZl.js", "./index-iVmZYab-.css", "./world-CgWPRlRK.js", "./dossier-D02h_H8S.js", "./ThemeToggle-DqVcvr0E.js", "./account-6f7K7jcb.js", "./Card-sR3-EjAu.js", "./positionPackDesign-NZ4h5dkv.js", "./positionPackDesign-COXXqPO0.css", "./coachCrest-ksi6UPV7.js", "./SeoulPackDisplay-DTS3CG27.js", "./bangkokPackTexture-DEwuleRU.js", "./Ladder-BvxaDR-o.js", "./Report-7c7bE4rc.js", "./Friends-B9XSY5V7.js", "./Picker-BEF32Bjf.js", "./Market-3nc1Q9CY.js", "./Cup-BR7reR3q.js", "./Predict-CO4L9I78.js", "./Predict-DxU6RBim.css", "./BangkokRoute-CtPHYFVt.js", "./HistoryTeams-CgfwhsTV.js", "./Evolve-BtPnI2o5.js"]))) => i.map(i => d[i]);
+import {
+    t as Ye,
+    _ as me
+} from "./index-B2cSJmZl.js";
+import {
+    r as x,
+    j as s
+} from "./vendor-DH-k1TvH.js";
+import {
+    u as Ie
+} from "./useDialogFocus-CcqilB6b.js";
+import {
+    S as Qe,
+    s as Xa,
+    b as Ya,
+    l as Qa,
+    P as ne,
+    M as Ke,
+    r as et,
+    c as va,
+    a as Ja,
+    f as Za,
+    d as en,
+    p as Fe,
+    e as sn,
+    C as Ts,
+    Q as tn,
+    D as an,
+    R as be,
+    g as nn,
+    h as wa,
+    i as ln,
+    H as fe,
+    j as Re,
+    k as Ct,
+    F as ss,
+    m as rn,
+    n as on,
+    o as Tt,
+    q as cn,
+    B as dn,
+    t as hn,
+    u as Ne,
+    v as de,
+    w as un,
+    x as mn,
+    y as fn,
+    z as pn,
+    A as $t,
+    E as $s,
+    G as Ms,
+    I as gn,
+    J as yn,
+    K as xn,
+    L as jn,
+    N as bn,
+    O as vn,
+    T as Mt,
+    U as wn,
+    V as Sn,
+    W as As,
+    X as kn,
+    Y as es,
+    Z as Nn,
+    _ as Je,
+    $ as Cn,
+    a0 as Is,
+    a1 as Tn,
+    a2 as $n,
+    a3 as st,
+    a4 as Mn,
+    a5 as Rs,
+    a6 as An,
+    a7 as In,
+    a8 as Rn,
+    a9 as En,
+    aa as Ln,
+    ab as _n,
+    ac as Pn,
+    ad as On,
+    ae as Es,
+    af as Dn,
+    ag as Bn,
+    ah as At,
+    ai as Fn,
+    aj as tt,
+    ak as zn,
+    al as qn,
+    am as Gn,
+    an as Hn,
+    ao as Un,
+    ap as Wn,
+    aq as Sa,
+    ar as It,
+    as as Kn,
+    at as Vn,
+    au as Xn,
+    av as Yn,
+    aw as Ls,
+    ax as _s,
+    ay as Qn,
+    az as Rt,
+    aA as Ps,
+    aB as Jn,
+    aC as Zn,
+    aD as el,
+    aE as sl
+} from "./account-6f7K7jcb.js";
+import {
+    m as tl,
+    a as ys,
+    r as ka
+} from "./cardid-Gm1djOTv.js";
+import {
+    C as xs,
+    a as Me,
+    F as al,
+    b as Et
+} from "./Card-sR3-EjAu.js";
+import {
+    P as le,
+    s as nl,
+    M as ze,
+    T as ll,
+    D as rl,
+    C as Na
+} from "./Dossier-BxMVkHtS.js";
+import {
+    d as te,
+    R as ge,
+    e as il,
+    i as Q,
+    f as js,
+    B as Lt,
+    g as bs,
+    S as ol,
+    r as ts,
+    h as cl,
+    W as Ns,
+    A as mt,
+    p as Ve,
+    M as ie,
+    C as dl,
+    D as hl,
+    L as ul,
+    l as _t,
+    n as at,
+    j as Ca,
+    k as ft,
+    b as ml,
+    m as fl,
+    o as Ta,
+    q as Pt,
+    P as pl,
+    s as pt,
+    t as gt,
+    u as gl,
+    v as nt,
+    w as pe,
+    x as yl,
+    y as yt,
+    z as Ot,
+    E as xl,
+    F as jl,
+    G as bl,
+    H as Te,
+    I as re,
+    J as vl,
+    K as wl,
+    N as Sl,
+    O as vs,
+    Q as kl,
+    T as Nl,
+    U as xt,
+    V as Cl,
+    X as Tl
+} from "./cards-Cmwwaaa1.js";
+import {
+    P as jt,
+    S as $l
+} from "./SeoulPackDisplay-DTS3CG27.js";
+import {
+    a as Ml,
+    P as Al,
+    p as Il
+} from "./positionPackDesign-NZ4h5dkv.js";
+import {
+    C as Os,
+    S as Ds,
+    T as Rl
+} from "./ThemeToggle-DqVcvr0E.js";
+const _e = [{
+        key: "packs",
+        label: "抽卡",
+        group: "卡牌",
+        description: "领取每日奖励，开启你的下一张收藏。",
+        icon: "pack"
+    }, {
+        key: "collection",
+        label: "收藏",
+        group: "卡牌",
+        description: "寻找选手、收集系列，管理重复卡。",
+        icon: "cards"
+    }, {
+        key: "squad",
+        label: "卡组",
+        group: "卡牌",
+        description: "安排五人阵容，让选手之间产生默契。",
+        icon: "squad"
+    }, {
+        key: "evolve",
+        label: "进修",
+        group: "卡牌",
+        description: "满级卡继续成长：选一项能力，喂五张重复卡。",
+        icon: "evolve",
+        beta: !0
+    }, {
+        key: "market",
+        label: "交易",
+        group: "卡牌",
+        description: "寻找心仪卡牌，查看交易与市场行情。",
+        icon: "market"
+    }, {
+        key: "challenge",
+        label: "挑战",
+        group: "赛事",
+        description: "挑战职业战队，赢取阵容成长奖励。",
+        icon: "target"
+    }, {
+        key: "ladder",
+        label: "天梯",
+        group: "赛事",
+        description: "检验你的阵容，向更高段位进发。",
+        icon: "rank"
+    }, {
+        key: "cup",
+        label: "杯赛",
+        group: "赛事",
+        description: "报名赛事，带领你的卡组争夺冠军。",
+        icon: "cup"
+    }, {
+        key: "bangkok",
+        label: "曼谷征途",
+        group: "赛事",
+        description: "重走曼谷 2025 大师赛的晋级之路。",
+        icon: "route"
+    }, {
+        key: "history",
+        label: "历代强队",
+        group: "赛事",
+        description: "带五名退役选手，挑战拿过世界冠军的队伍。",
+        icon: "cup"
+    }, {
+        key: "minigames",
+        label: "小游戏",
+        group: "发现",
+        description: "来一场小挑战，赢取位置奖励包。",
+        icon: "game",
+        beta: !0
+    }, {
+        key: "predict",
+        label: "预测",
+        group: "发现",
+        description: "做出你的赛事预测，关注比赛进展。",
+        icon: "predict",
+        beta: !0
+    }, {
+        key: "friends",
+        label: "好友",
+        group: "发现",
+        description: "找到好友，交流阵容与比赛。",
+        icon: "friends"
+    }, {
+        key: "dossier",
+        label: "资料库",
+        group: "发现",
+        description: "查阅职业选手与战队资料。",
+        icon: "book"
+    }, {
+        key: "champions",
+        label: "上海应援",
+        group: "发现",
+        description: "查看今日赛程，为你支持的选手留言。",
+        icon: "cheer"
+    }, {
+        key: "account",
+        label: "账号",
+        group: "发现",
+        description: "管理账号、保存 ID，查看你的游戏记录。",
+        icon: "user"
+    }],
+    Dt = {
+        pack: "M5 3h14v18H5z M5 7h14 M5 17h14 M9 11l3-2 3 2-3 3z",
+        cards: "M8 5h12v16H8z M4 17V2h12 M12 10h4 M12 14h4",
+        squad: "M4 4h6v7H4z M14 4h6v7h-6z M9 15h6v6H9z M7 11v3h10v-3 M12 14v1",
+        market: "M3 8h18l-2-5H5z M5 8v13h14V8 M9 21v-7h6v7",
+        target: "M12 3a9 9 0 1 0 9 9 M12 7a5 5 0 1 0 5 5 M12 12l9-9 M16 3h5v5",
+        rank: "M4 20V13h4v7 M10 20V8h4v12 M16 20V3h4v17",
+        cup: "M8 3h8v7a4 4 0 0 1-8 0z M8 5H4v3a4 4 0 0 0 4 4 M16 5h4v3a4 4 0 0 1-4 4 M12 14v5 M8 21h8",
+        route: "M5 4h14v5H5z M5 15h14v5H5z M12 9v6",
+        game: "M7 7h10l4 11-3 2-4-4h-4l-4 4-3-2z M6 11h5 M8.5 8.5v5 M16 11h1 M18 14h1",
+        friends: "M9 3a3 3 0 1 0 0 6 3 3 0 0 0 0-6 M3 21v-6a6 6 0 0 1 12 0v6 M17 4a3 3 0 0 1 0 6 M18 13a4 4 0 0 1 3 4v4",
+        book: "M12 5Q7 2 3 4v16q4-2 9 1 5-3 9-1V4q-4-2-9 1v16",
+        user: "M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8 M4 21v-2a8 8 0 0 1 16 0v2",
+        evolve: "M7 4h10v16H7z M12 16V9 M9 11.5 12 8.5l3 3",
+        cheer: "M4 10v4h3l5 4V6l-5 4z M16 9a4 4 0 0 1 0 6 M18.5 6.5a8 8 0 0 1 0 11",
+        predict: "M4 20h16 M6 16l4-5 3 3 5-7 M15 7h3v3",
+        more: "M4 4h5v5H4z M15 4h5v5h-5z M4 15h5v5H4z M15 15h5v5h-5z"
+    };
+
+function Bt({
+    name: e
+}) {
+    return s.jsx("svg", {
+        width: "20",
+        height: "20",
+        viewBox: "0 0 24 24",
+        fill: "none",
+        stroke: "currentColor",
+        strokeWidth: "1.6",
+        strokeLinecap: "round",
+        strokeLinejoin: "round",
+        "aria-hidden": "true",
+        children: s.jsx("path", {
+            d: Dt[e] ?? Dt.pack
+        })
+    })
+}
+const Bs = ["packs", "collection", "squad", "ladder"],
+    Ft = () => {
+        var e;
+        return ((e = _e.find(t => `#${t.key}` === (window.location.hash === "#seoul" ? "#bangkok" : window.location.hash))) == null ? void 0 : e.key) ?? "packs"
+    };
+
+function El({
+    current: e,
+    onNavigate: t,
+    onExit: a
+}) {
+    const [n, r] = x.useState(!1), i = x.useRef(null);
+    x.useEffect(() => {
+        const d = i.current;
+        d && (typeof d.showModal == "function" ? n ? d.showModal() : d.open && d.close() : (d.setAttribute("data-fallback", ""), n ? d.setAttribute("open", "") : d.removeAttribute("open")))
+    }, [n]);
+    const l = Ie(() => r(!1), n);
+    x.useEffect(() => {
+        r(!1)
+    }, [e]);
+    const c = d => s.jsxs("a", {
+            href: `#${d.key}`,
+            className: `cm-nav-link${e===d.key?" active":""}`,
+            "aria-current": e === d.key ? "page" : void 0,
+            onClick: h => {
+                h.metaKey || h.ctrlKey || h.shiftKey || h.altKey || (h.preventDefault(), t(d.key), r(!1))
+            },
+            children: [s.jsx(Bt, {
+                name: d.icon
+            }), s.jsx("span", {
+                children: d.label
+            }), "beta" in d && s.jsx("small", {
+                children: "测试"
+            })]
+        }, d.key),
+        o = (d = []) => ["卡牌", "赛事", "发现"].map(h => {
+            const g = _e.filter(y => y.group === h && !d.includes(y.key));
+            return g.length ? s.jsxs("section", {
+                className: "cm-nav-group",
+                children: [s.jsx("h2", {
+                    children: h
+                }), g.map(c)]
+            }, h) : null
+        });
+    return s.jsxs(s.Fragment, {
+        children: [s.jsxs("nav", {
+            className: "cm-rail",
+            "aria-label": "开瓦包导航",
+            children: [o(), s.jsx("button", {
+                className: "cm-rail-home ghost",
+                onClick: a,
+                children: "返回游戏首页"
+            }), s.jsxs("div", {
+                className: "cm-rail-note",
+                children: ["真实选手 · 自由组队", s.jsx("br", {}), "你的 VCT 卡牌收藏"]
+            })]
+        }), s.jsxs("nav", {
+            className: "cm-dock",
+            "aria-label": "常用导航",
+            children: [Bs.map(d => c(_e.find(h => h.key === d))), s.jsxs("button", {
+                className: `cm-nav-link${Bs.includes(e)?"":" active"}`,
+                "aria-haspopup": "dialog",
+                "aria-expanded": n,
+                onClick: () => r(!0),
+                children: [s.jsx(Bt, {
+                    name: "more"
+                }), s.jsx("span", {
+                    children: "更多"
+                })]
+            })]
+        }), s.jsx("dialog", {
+            className: "cm-nav-dialog",
+            ref: i,
+            onCancel: () => r(!1),
+            onClose: () => r(!1),
+            onClick: d => {
+                d.target === d.currentTarget && r(!1)
+            },
+            "aria-labelledby": "cm-nav-title",
+            children: s.jsxs("div", {
+                className: "cm-nav-sheet",
+                ref: l,
+                tabIndex: -1,
+                children: [s.jsxs("header", {
+                    children: [s.jsx("h2", {
+                        id: "cm-nav-title",
+                        children: "更多玩法"
+                    }), s.jsx("button", {
+                        className: "ghost",
+                        onClick: () => r(!1),
+                        "aria-label": "关闭更多玩法",
+                        children: "关闭 ×"
+                    })]
+                }), s.jsx("nav", {
+                    "aria-label": "更多玩法",
+                    children: o(Bs)
+                }), s.jsx("button", {
+                    className: "cm-exit ghost",
+                    onClick: a,
+                    children: "返回游戏首页"
+                })]
+            })
+        })]
+    })
+}
+const bt = 4,
+    Ll = {
+        s0: .36,
+        s1: 1.48,
+        k: 2.9,
+        w: .5
+    },
+    _l = {
+        s0: .82,
+        s1: 2.08,
+        k: 4.5,
+        w: 1
+    },
+    Pl = {
+        s0: 1.34,
+        s1: 2.12,
+        k: 6.4,
+        w: 1.5
+    },
+    zt = e => e > 30 ? e : Math.log1p(Math.exp(e)),
+    Fs = ({
+        s0: e,
+        s1: t,
+        k: a,
+        w: n
+    }) => r => e * r + (t - e) * n * (zt((r - a) / n) - zt(-a / n)),
+    Ol = {
+        1: e => .35 * e + .65 * Math.max(0, e - 3),
+        2: Fs(Ll),
+        3: Fs(_l),
+        4: Fs(Pl)
+    };
+
+function Dl(e, t, a = bt) {
+    const n = e - t;
+    if (a === 1) {
+        const c = Math.sign(n) * .65 * Math.max(0, Math.abs(n) - 3);
+        return [80 + (e - 80) * .35 + c / 2, 80 + (t - 80) * .35 - c / 2]
+    }
+    const r = Ol[a];
+    if (!r) throw new Error(`没有这个数值版本：${a}`);
+    const i = 80 + ((e + t) / 2 - 80) * .35,
+        l = Math.sign(n) * r(Math.abs(n)) / 2;
+    return [i + l, i - l]
+}
+
+function vt({
+    id: e,
+    onBound: t,
+    onSignOut: a,
+    backLabel: n = "换一个 ID",
+    embedded: r = !1
+}) {
+    const [i, l] = x.useState(e ? "bind" : "login"), [c, o] = x.useState(""), [d, h] = x.useState(""), [g, y] = x.useState(0), [u, f] = x.useState(!1), [p, b] = x.useState(null), [w, N] = x.useState(!1);
+    x.useEffect(() => {
+        if (g <= 0) return;
+        const m = window.setTimeout(() => y(T => T - 1), 1e3);
+        return () => window.clearTimeout(m)
+    }, [g]);
+    const I = async () => {
+        f(!0), b(null);
+        const m = await Xa(c, {
+            for: i,
+            id: i === "bind" ? e : void 0
+        });
+        if (f(!1), !m.ok) {
+            b(m.why ?? "没发出去。"), m.wait && y(m.wait), m.taken && e && l("login");
+            return
+        }
+        y(m.wait ?? 60), N(!!m.dev), b(m.dev ? "验证码已生成（服务器还没接短信，作者能在后台看到，找作者要）。" : "验证码已发送。")
+    }, k = async () => {
+        if (f(!0), b(null), i === "bind" && e) {
+            const m = await Ya(e, c, d);
+            if (f(!1), !m.ok) {
+                b(m.why ?? "没绑上。"), m.taken && l("login");
+                return
+            }
+            t(m.phone ?? c.slice(-4))
+        } else {
+            const m = await Qa(c, d);
+            if (f(!1), !m.ok || !m.id) {
+                b(m.why ?? "没进去。");
+                return
+            }
+            ys(m.id), location.reload()
+        }
+    }, C = /^1[3-9]\d{9}$/.test(c.replace(/\D/g, "").replace(/^86/, ""));
+    return s.jsxs("div", {
+        className: r ? "phone-gate" : "wrap phone-gate",
+        style: r ? void 0 : {
+            maxWidth: 420,
+            margin: "40px auto",
+            padding: 20
+        },
+        children: [!r && s.jsx("h2", {
+            style: {
+                marginTop: 0
+            },
+            children: i === "bind" ? "先绑一个手机号" : "用手机号进入"
+        }), s.jsxs("p", {
+            className: "small muted",
+            style: {
+                lineHeight: 1.7
+            },
+            children: [i === "bind" ? s.jsxs(s.Fragment, {
+                children: ["一个手机号只能有一个账号，绑上就是你的了。当前账号 ", s.jsx("span", {
+                    className: "mono",
+                    children: tl(e ?? "")
+                }), "。"]
+            }) : s.jsxs(s.Fragment, {
+                children: ["收一条验证码，就回到这个手机号绑过的账号。", s.jsxs("b", {
+                    style: {
+                        color: "var(--warn)"
+                    },
+                    children: ["每次进入扣 ", Qe, " 点体力"]
+                }), "，有 ID 请用 ID 登录。"]
+            }), i === "login" && s.jsxs(s.Fragment, {
+                children: [s.jsx("br", {}), s.jsx("b", {
+                    style: {
+                        color: "var(--warn)"
+                    },
+                    children: "⚠️发短信验证码每条都要作者花钱的，请大家多用自己的账号登录，谢谢配合。"
+                })]
+            }), s.jsx("br", {}), "不存你的号码，只存能对上号的摘要和尾号四位。海外号码收不到大陆短信，请到抖音私信作者人工处理。"]
+        }), s.jsxs("div", {
+            className: "row",
+            style: {
+                gap: 8,
+                marginBottom: 8
+            },
+            children: [s.jsx("input", {
+                type: "tel",
+                name: "phone",
+                autoComplete: "tel",
+                "aria-label": "中国大陆手机号",
+                inputMode: "tel",
+                placeholder: "中国大陆手机号",
+                value: c,
+                maxLength: 14,
+                onChange: m => o(m.target.value),
+                style: {
+                    flex: 1
+                }
+            }), s.jsx("button", {
+                className: "sm",
+                disabled: u || g > 0 || !C,
+                onClick: () => void I(),
+                children: g > 0 ? `${g} 秒` : "发验证码"
+            })]
+        }), s.jsxs("div", {
+            className: "row",
+            style: {
+                gap: 8,
+                marginBottom: 12
+            },
+            children: [s.jsx("input", {
+                name: "code",
+                autoComplete: "one-time-code",
+                "aria-label": "短信验证码",
+                inputMode: "numeric",
+                placeholder: "6 位验证码",
+                value: d,
+                maxLength: 6,
+                onChange: m => h(m.target.value.replace(/\D/g, "")),
+                style: {
+                    flex: 1
+                }
+            }), s.jsx("button", {
+                className: "primary sm",
+                disabled: u || d.length !== 6 || !C,
+                onClick: () => void k(),
+                children: i === "bind" ? "绑定" : `进入 −${Qe} 体力`
+            })]
+        }), p && s.jsx("p", {
+            role: "status",
+            className: `small ${w?"muted":""}`,
+            style: {
+                color: p.includes("已") ? "var(--good)" : "var(--warn)"
+            },
+            children: p
+        }), s.jsxs("div", {
+            className: "row wrap",
+            style: {
+                gap: 12,
+                marginTop: 16
+            },
+            children: [e && s.jsx("button", {
+                className: "ghost sm",
+                onClick: () => {
+                    l(i === "bind" ? "login" : "bind"), b(null), h("")
+                },
+                children: i === "bind" ? "已经绑过手机？用手机号进入" : "给当前账号绑手机"
+            }), n && s.jsx("button", {
+                className: "ghost sm",
+                onClick: a,
+                children: n
+            })]
+        })]
+    })
+}
+const $a = x.createContext(null);
+
+function oe() {
+    const e = x.useContext($a);
+    if (!e) throw new Error("useCards must be used inside CardCtx");
+    return e
+}
+const Bl = "vm-evo-target",
+    Ma = "valmgr.sfx";
+let zs = null,
+    qs = null;
+
+function Aa() {
+    try {
+        const e = localStorage.getItem(Ma);
+        return !e || JSON.parse(e).on !== !1
+    } catch {
+        return !0
+    }
+}
+
+function Fl(e) {
+    try {
+        localStorage.setItem(Ma, JSON.stringify({
+            on: e
+        }))
+    } catch {}
+    Ia = e
+}
+let Ia = null;
+const zl = () => Ia ?? Aa();
+
+function ql() {
+    if (!zl()) return null;
+    try {
+        if (!zs) {
+            const t = window.AudioContext ?? window.webkitAudioContext;
+            if (!t) return null;
+            zs = new t
+        }
+        const e = zs;
+        if (e.state === "suspended" && e.resume(), !qs) {
+            const t = e.createDynamicsCompressor();
+            t.threshold.value = -16, t.knee.value = 10, t.ratio.value = 4, t.attack.value = .004, t.release.value = .2, t.connect(e.destination);
+            const a = e.createGain();
+            a.gain.value = .8, a.connect(t);
+            const n = e.createConvolver(),
+                r = Math.ceil(e.sampleRate * 1.6),
+                i = e.createBuffer(2, r, e.sampleRate);
+            for (let c = 0; c < 2; c++) {
+                const o = i.getChannelData(c);
+                for (let d = 0; d < r; d++) o[d] = (Math.random() * 2 - 1) * Math.pow(1 - d / r, 2.6)
+            }
+            n.buffer = i;
+            const l = e.createGain();
+            l.gain.value = .32, l.connect(n).connect(a), qs = {
+                master: a,
+                wet: l
+            }
+        }
+        return {
+            ctx: e,
+            ...qs
+        }
+    } catch {
+        return null
+    }
+}
+
+function wt(e, t, a, n, r) {
+    const i = e.createGain();
+    return i.gain.setValueAtTime(0, t), i.gain.linearRampToValueAtTime(a, t + n), i.gain.exponentialRampToValueAtTime(1e-4, t + n + r), i
+}
+
+function ue(e, t, a, n, r, i, l = "sine", c = .004) {
+    const {
+        ctx: o,
+        master: d
+    } = e, h = o.createOscillator();
+    h.type = l, h.frequency.setValueAtTime(a, t), h.frequency.exponentialRampToValueAtTime(Math.max(20, n), t + r);
+    const g = wt(o, t, i, c, r);
+    h.connect(g).connect(d), h.start(t), h.stop(t + c + r + .02)
+}
+
+function ve(e, t, a, n, r) {
+    const {
+        ctx: i,
+        master: l,
+        wet: c
+    } = e, o = [
+        [1, 1, 1],
+        [2, .42, .7],
+        [2.76, .28, .5],
+        [4.07, .14, .35],
+        [5.4, .07, .25]
+    ];
+    for (const [d, h, g] of o) {
+        const y = a * d;
+        if (y > 16e3) continue;
+        const u = i.createOscillator();
+        u.type = "sine", u.frequency.setValueAtTime(y, t);
+        const f = wt(i, t, r * h, .003, n * g);
+        u.connect(f), f.connect(l), f.connect(c), u.start(t), u.stop(t + n * g + .05)
+    }
+}
+let qe = null;
+
+function we(e, t, a, n, r, i, l, c = .8, o = .005) {
+    const {
+        ctx: d,
+        master: h
+    } = e;
+    if (!qe || qe.sampleRate !== d.sampleRate) {
+        qe = d.createBuffer(1, d.sampleRate * 2, d.sampleRate);
+        const f = qe.getChannelData(0);
+        for (let p = 0; p < f.length; p++) f[p] = Math.random() * 2 - 1
+    }
+    const g = d.createBufferSource();
+    g.buffer = qe;
+    const y = d.createBiquadFilter();
+    y.type = r, y.Q.value = c, y.frequency.setValueAtTime(i, t), y.frequency.exponentialRampToValueAtTime(l, t + a);
+    const u = wt(d, t, n, o, a);
+    g.connect(y).connect(u).connect(h), g.start(t, Math.random() * 1.5), g.stop(t + o + a + .02)
+}
+const lt = 523.25,
+    fs = 659.25,
+    qt = 783.99,
+    Gl = 987.77,
+    Gt = 1046.5,
+    Hl = 1318.5,
+    Ul = 1568,
+    Wl = 261.63,
+    Ra = 392;
+
+function Kl(e, t, a, n) {
+    for (let r = 0; r < a; r++) we(e, t + r * (.018 + Math.random() * .02), .018 + Math.random() * .02, n * (.6 + Math.random() * .4), "highpass", 3500 + Math.random() * 2500, 5e3, .7, .001)
+}
+
+function ws(e, t, a, n, r) {
+    for (let i = 0; i < a; i++) {
+        const l = t + i / a * n + Math.random() * .03;
+        ve(e, l, 2200 + Math.random() * 2600, .5, r * (1 - i / (a * 1.4)))
+    }
+}
+
+function Ht(e, t, a) {
+    we(e, t, .09, a === "bronze" ? .1 : .16, "bandpass", 1400, 4200, 1.1, .006);
+    const n = t + .05;
+    switch (a) {
+        case "bronze":
+            ue(e, n, 820, 610, .07, .12, "sine", .002), ue(e, n, 230, 180, .12, .09, "triangle", .002);
+            return;
+        case "silver":
+            ve(e, n, fs, .9, .16), ve(e, n + .09, Gl, 1.1, .14);
+            return;
+        case "gold":
+            ue(e, n, 140, 60, .25, .3, "sine", .004), [lt, fs, qt, Gt].forEach((r, i) => ve(e, n + i * .065, r, 1.3, .15)), ws(e, n + .28, 5, .5, .05);
+            return;
+        case "mythic":
+            ue(e, n, 110, 38, .9, .5, "sine", .006), we(e, n, .7, .22, "lowpass", 900, 120, .6, .01), [Wl, Ra, lt, fs, qt, Gt].forEach((r, i) => ve(e, n + .02 + i * .045, r, 2.2, .13)), ve(e, n + .34, Hl, 1.6, .09), ve(e, n + .42, Ul, 1.6, .08), ws(e, n + .35, 14, 1.3, .07)
+    }
+}
+
+function Ae(e, t = "bronze", a = 0) {
+    const n = ql();
+    if (!n) return;
+    const r = n.ctx.currentTime + .01;
+    switch (e) {
+        case "grab":
+            Kl(n, r, 3, .09);
+            return;
+        case "tear": {
+            ue(n, r, 120, 50, .18, .22, "sine", .003), we(n, r, .34, .2, "bandpass", 1600, 5200, .9, .01);
+            for (let i = 0; i < 14; i++) we(n, r + .01 + i * .022 + Math.random() * .008, .016, .12 + Math.random() * .1, "highpass", 2500 + i * 180, 4e3 + i * 200, .8, .001);
+            return
+        }
+        case "burst":
+            we(n, r, .5, .2, "bandpass", 380, 2600, .9, .12), ue(n, r + .05, 90, 55, .4, .2, "sine", .01), [Ra, lt, fs].forEach((i, l) => ve(n, r + .1 + l * .03, i, .9, .06));
+            return;
+        case "back":
+            we(n, r, .16, .07, "bandpass", 700, 1800, 1, .03), t === "gold" ? (ue(n, r + .05, 330, 660, .7, .05, "sine", .25), ws(n, r + .2, 3, .5, .025)) : t === "mythic" && (we(n, r, 1.1, .12, "bandpass", 500, 6e3, 2.5, .8), ue(n, r, 180, 720, 1.1, .08, "sawtooth", .9), ue(n, r, 270, 1080, 1.1, .05, "sine", .9), ws(n, r + .5, 6, .7, .035));
+            return;
+        case "reveal":
+            Ht(n, r, t);
+            return;
+        case "summary": {
+            const i = Math.max(1, Math.min(10, a));
+            for (let l = 0; l < i; l++) ue(n, r + l * .04, 900 + l * 60, 700 + l * 50, .05, .09, "triangle", .002);
+            (t === "gold" || t === "mythic") && Ht(n, r + i * .04 + .08, t)
+        }
+    }
+}
+
+function Vl({
+    children: e
+}) {
+    const t = x.useRef(null),
+        a = x.useRef(null),
+        n = x.useRef({
+            x: 0,
+            y: 0
+        }),
+        r = x.useRef({
+            x: 0,
+            y: 0
+        }),
+        i = x.useRef(null),
+        l = x.useRef(!1),
+        c = x.useRef(0),
+        o = g => {
+            var N;
+            const y = Math.min(50, g - (c.current || g - 16));
+            c.current = g;
+            const u = 1 - Math.exp(-y / 85);
+            n.current.x += (r.current.x - n.current.x) * u, n.current.y += (r.current.y - n.current.y) * u;
+            const f = Math.abs(r.current.x - n.current.x) + Math.abs(r.current.y - n.current.y) < .002;
+            f && (n.current = {
+                ...r.current
+            });
+            const {
+                x: p,
+                y: b
+            } = n.current, w = (N = t.current) == null ? void 0 : N.style;
+            w == null || w.setProperty("--card-rx", `${-b*10}deg`), w == null || w.setProperty("--card-ry", `${p*14}deg`), w == null || w.setProperty("--card-light-x", `${50+p*42}%`), w == null || w.setProperty("--card-light-y", `${50+b*42}%`), w == null || w.setProperty("--card-light-opacity", `${Math.min(1,Math.abs(p)+Math.abs(b))*.32}`), i.current = f ? null : requestAnimationFrame(o), f && (c.current = 0)
+        },
+        d = (g, y) => {
+            l.current || (r.current = {
+                x: g,
+                y
+            }, i.current === null && (i.current = requestAnimationFrame(o)))
+        };
+    x.useEffect(() => {
+        const g = matchMedia("(prefers-reduced-motion: reduce)"),
+            y = () => {
+                var u;
+                l.current = g.matches, g.matches && (i.current !== null && cancelAnimationFrame(i.current), i.current = null, c.current = 0, n.current = r.current = {
+                    x: 0,
+                    y: 0
+                }, (u = t.current) == null || u.removeAttribute("style"))
+            };
+        return y(), g.addEventListener("change", y), () => {
+            g.removeEventListener("change", y), i.current !== null && cancelAnimationFrame(i.current)
+        }
+    }, []);
+    const h = g => {
+        if (g.pointerType !== "mouse" || l.current || !a.current) return;
+        const y = a.current,
+            u = f => Math.max(-1, Math.min(1, f));
+        d(u((g.clientX - y.left) / y.width * 2 - 1), u((g.clientY - y.top) / y.height * 2 - 1))
+    };
+    return s.jsx("div", {
+        className: "card-tilt",
+        ref: t,
+        onPointerEnter: g => {
+            a.current = g.currentTarget.getBoundingClientRect(), h(g)
+        },
+        onPointerMove: h,
+        onPointerLeave: () => d(0, 0),
+        onPointerCancel: () => d(0, 0),
+        children: s.jsx("div", {
+            className: "card-tilt-plane",
+            children: e
+        })
+    })
+}
+
+function St({
+    ask: e,
+    busy: t,
+    onClose: a
+}) {
+    const n = Ie(() => {
+            t || a()
+        }),
+        r = e.lines.map(c => ({
+            ...c,
+            card: te(c.cardId)
+        })).filter(c => c.card && c.count > 0),
+        i = r.reduce((c, o) => c + o.count, 0),
+        l = r.reduce((c, o) => c + o.coins, 0);
+    return s.jsx("div", {
+        className: "modal-bg",
+        style: {
+            zIndex: 70
+        },
+        onClick: a,
+        children: s.jsxs("div", {
+            ref: n,
+            role: "dialog",
+            "aria-modal": "true",
+            "aria-label": "确认分解卡片",
+            tabIndex: -1,
+            className: "modal",
+            style: {
+                maxWidth: 460
+            },
+            onClick: c => c.stopPropagation(),
+            children: [s.jsxs("div", {
+                className: "modal-head",
+                children: [s.jsx("h2", {
+                    children: "确认分解以下卡片"
+                }), s.jsx("div", {
+                    className: "spacer"
+                }), s.jsx("button", {
+                    className: "ghost sm",
+                    onClick: a,
+                    children: "关闭"
+                })]
+            }), s.jsxs("div", {
+                className: "modal-body",
+                children: [s.jsx("p", {
+                    className: "tiny faint",
+                    style: {
+                        marginTop: 0
+                    },
+                    children: "只分解重复的那几张，收藏里的卡和等级都不动。分解了就换不回来。"
+                }), s.jsx("div", {
+                    className: "table-wrap",
+                    style: {
+                        maxHeight: 320,
+                        overflowY: "auto"
+                    },
+                    children: s.jsx("table", {
+                        children: s.jsx("tbody", {
+                            children: r.map(c => {
+                                const o = c.card;
+                                return s.jsxs("tr", {
+                                    children: [s.jsx("td", {
+                                        children: s.jsx("span", {
+                                            className: `tag r-${o.rarity}`,
+                                            children: ge[o.rarity]
+                                        })
+                                    }), s.jsxs("td", {
+                                        children: [s.jsx("b", {
+                                            children: il(o)
+                                        }), Q(o) && o.legend ? s.jsxs("span", {
+                                            className: "tiny muted",
+                                            children: [" ", o.legend.title]
+                                        }) : o.clubTag ? s.jsxs("span", {
+                                            className: "tiny muted",
+                                            children: [" ", o.clubTag]
+                                        }) : null]
+                                    }), s.jsxs("td", {
+                                        className: "right mono",
+                                        children: ["×", c.count]
+                                    }), s.jsxs("td", {
+                                        className: "right mono",
+                                        children: ["+", c.coins.toLocaleString()]
+                                    })]
+                                }, c.cardId)
+                            })
+                        })
+                    })
+                }), s.jsxs("div", {
+                    className: "row",
+                    style: {
+                        gap: 8,
+                        marginTop: 12,
+                        alignItems: "center"
+                    },
+                    children: [s.jsxs("span", {
+                        className: "small",
+                        children: ["共 ", i, " 张，+", l.toLocaleString(), " 金币"]
+                    }), s.jsx("div", {
+                        className: "spacer"
+                    }), s.jsx("button", {
+                        className: "sm",
+                        onClick: a,
+                        disabled: t,
+                        children: "取消"
+                    }), s.jsx("button", {
+                        className: "primary sm",
+                        onClick: e.onConfirm,
+                        disabled: t || !i,
+                        children: t ? "分解中…" : "确认分解"
+                    })]
+                })]
+            })]
+        })
+    })
+}
+const as = {
+    x: 5,
+    y: -22
+};
+
+function Xl() {
+    const [e, t] = x.useState(as);
+    return s.jsx("div", {
+        className: "pack-pouch-object",
+        role: "img",
+        "aria-label": "余晖退役选手包，可移动指针查看包装反光",
+        onPointerMove: a => {
+            if (a.pointerType !== "mouse" || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+            const n = a.currentTarget.getBoundingClientRect();
+            t({
+                x: as.x - ((a.clientY - n.top) / n.height - .5) * 16,
+                y: as.y + ((a.clientX - n.left) / n.width - .5) * 48
+            })
+        },
+        onPointerLeave: () => t(as),
+        children: s.jsx(jt, {
+            retired: !0,
+            count: 3,
+            kind: "player",
+            progress: 0,
+            torn: !1,
+            pose: e
+        })
+    })
+}
+const ns = {
+    x: 5,
+    y: -22
+};
+
+function Yl() {
+    const [e, t] = x.useState(ns);
+    return s.jsx("div", {
+        className: "pack-pouch-object",
+        role: "img",
+        "aria-label": "曼谷 2025 立体铝箔卡包，可移动指针查看包装反光",
+        onPointerMove: a => {
+            if (a.pointerType !== "mouse" || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+            const n = a.currentTarget.getBoundingClientRect();
+            t({
+                x: ns.x - ((a.clientY - n.top) / n.height - .5) * 16,
+                y: ns.y + ((a.clientX - n.left) / n.width - .5) * 48
+            })
+        },
+        onPointerLeave: () => t(ns),
+        children: s.jsx(jt, {
+            bangkok: !0,
+            count: 3,
+            kind: "player",
+            progress: 0,
+            torn: !1,
+            pose: e
+        })
+    })
+}
+
+function Ql({
+    kind: e,
+    own: t,
+    coins: a,
+    price: n,
+    buyable: r,
+    busy: i,
+    onOpen: l,
+    onClose: c
+}) {
+    const o = Ie(() => {
+            i || c()
+        }),
+        d = ne[e],
+        h = r ? Math.floor(a / n) : 0,
+        g = Math.min(Ke, t + h),
+        [y, u] = x.useState(() => Math.max(1, t >= 2 ? Math.min(t, Ke) : g)),
+        [f, p] = x.useState(!1),
+        b = Math.max(1, Math.min(y, g)),
+        w = Math.min(t, b),
+        N = b - w,
+        I = n * N,
+        k = [...new Set([2, 5, t, Ke])].filter(m => m >= 2 && m <= g).sort((m, T) => m - T),
+        C = () => {
+            N > 0 && t > 0 ? p(!0) : l(b)
+        };
+    return s.jsx("div", {
+        className: "modal-bg",
+        onClick: () => {
+            i || c()
+        },
+        children: s.jsxs("div", {
+            ref: o,
+            role: "dialog",
+            "aria-modal": "true",
+            "aria-label": `连开${d.name}`,
+            tabIndex: -1,
+            className: "modal",
+            style: {
+                maxWidth: 420
+            },
+            onClick: m => m.stopPropagation(),
+            children: [s.jsxs("div", {
+                className: "modal-head",
+                children: [s.jsxs("h2", {
+                    children: ["连开 · ", d.name]
+                }), s.jsx("div", {
+                    className: "spacer"
+                }), s.jsx("button", {
+                    className: "ghost sm",
+                    onClick: c,
+                    disabled: i,
+                    children: "关闭"
+                })]
+            }), f ? s.jsxs("div", {
+                className: "modal-body",
+                children: [s.jsxs("p", {
+                    style: {
+                        marginTop: 0
+                    },
+                    children: ["库存只有 ", s.jsx("b", {
+                        children: t
+                    }), " 个", d.name, "，另外 ", s.jsx("b", {
+                        children: N
+                    }), " 包要花金币买。"]
+                }), s.jsxs("p", {
+                    className: "small",
+                    style: {
+                        margin: "8px 0 0"
+                    },
+                    children: [N, " × ", n.toLocaleString(), " = ", s.jsx("b", {
+                        children: I.toLocaleString()
+                    }), " 金币，开完剩 ", (a - I).toLocaleString(), "。"]
+                }), s.jsxs("div", {
+                    className: "row",
+                    style: {
+                        gap: 8,
+                        marginTop: 14,
+                        alignItems: "center"
+                    },
+                    children: [s.jsx("div", {
+                        className: "spacer"
+                    }), s.jsx("button", {
+                        className: "sm",
+                        onClick: () => p(!1),
+                        disabled: i,
+                        children: "返回"
+                    }), s.jsx("button", {
+                        className: "primary sm",
+                        onClick: () => l(b),
+                        disabled: i,
+                        children: i ? "开包中…" : `花 ${I.toLocaleString()} 金币，连开 ${b} 包`
+                    })]
+                })]
+            }) : s.jsxs("div", {
+                className: "modal-body",
+                children: [s.jsxs("p", {
+                    className: "tiny faint",
+                    style: {
+                        marginTop: 0
+                    },
+                    children: ["一次最多 ", Ke, " 包，先用库存，不够的花金币买", r ? `（${n}/包）` : "", "。每包的出卡和保底跟一包一包开完全一样。"]
+                }), g < 1 ? s.jsx("p", {
+                    className: "small",
+                    children: r ? `库存里没有这种卡包，金币也不够，一包要 ${n}。` : "库存里没有这种卡包。"
+                }) : s.jsxs(s.Fragment, {
+                    children: [s.jsxs("div", {
+                        className: "row",
+                        style: {
+                            gap: 8,
+                            alignItems: "center",
+                            justifyContent: "center"
+                        },
+                        children: [s.jsx("button", {
+                            className: "sm",
+                            "aria-label": "少开一包",
+                            disabled: i || b <= 1,
+                            onClick: () => u(b - 1),
+                            children: "−"
+                        }), s.jsx("b", {
+                            style: {
+                                fontSize: 28,
+                                minWidth: 48,
+                                textAlign: "center"
+                            },
+                            "aria-live": "polite",
+                            children: b
+                        }), s.jsx("button", {
+                            className: "sm",
+                            "aria-label": "多开一包",
+                            disabled: i || b >= g,
+                            onClick: () => u(b + 1),
+                            children: "＋"
+                        })]
+                    }), k.length > 1 && s.jsx("div", {
+                        className: "row wrap",
+                        style: {
+                            gap: 6,
+                            justifyContent: "center",
+                            marginTop: 8
+                        },
+                        children: k.map(m => s.jsx("button", {
+                            className: `sm${m===b?" primary":""}`,
+                            disabled: i,
+                            onClick: () => u(m),
+                            children: m === t ? `${m} 包（库存）` : `${m} 包`
+                        }, m))
+                    }), s.jsxs("p", {
+                        className: "small",
+                        style: {
+                            textAlign: "center",
+                            margin: "12px 0 0"
+                        },
+                        children: ["共 ", b * d.draws, " 张", w > 0 && ` · 用库存 ${w} 个，剩 ${t-w} 个`, N > 0 && ` · 买 ${N} 包花 ${I.toLocaleString()} 金币，剩 ${(a-I).toLocaleString()}`]
+                    })]
+                }), s.jsxs("div", {
+                    className: "row",
+                    style: {
+                        gap: 8,
+                        marginTop: 14,
+                        alignItems: "center"
+                    },
+                    children: [s.jsx("div", {
+                        className: "spacer"
+                    }), s.jsx("button", {
+                        className: "sm",
+                        onClick: c,
+                        disabled: i,
+                        children: "取消"
+                    }), s.jsx("button", {
+                        className: "primary sm",
+                        onClick: C,
+                        disabled: i || g < 1,
+                        children: i ? "开包中…" : `连开 ${b} 包`
+                    })]
+                })]
+            })]
+        })
+    })
+}
+const rt = js.filter(e => e.rarity !== "mythic").length,
+    Ut = js.length - rt;
+
+function Wt() {
+    const {
+        g: e,
+        today: t,
+        act: a,
+        toast: n
+    } = oe(), [r, i] = x.useState(null), [l, c] = x.useState(null), [o, d] = x.useState(1), [h, g] = x.useState(null), [y, u] = x.useState(0), [f, p] = x.useState(!1), [b, w] = x.useState(null), [N, I] = x.useState(null);
+    et(e, t);
+    const k = va(e),
+        C = Ja(e),
+        m = on(t),
+        T = Za(e),
+        _ = en(e),
+        A = async (j, E, P = 1) => {
+            var U;
+            if (f) return;
+            const ee = e.packs[j] ?? 0,
+                Z = E !== "auto" ? E : P <= ee ? "pack" : ee > 0 ? "mixed" : "coins";
+            p(!0);
+            const xe = await a("open", P > 1 ? {
+                kind: j,
+                payWith: E,
+                count: P
+            } : {
+                kind: j,
+                payWith: E
+            });
+            if (p(!1), !xe.ok) {
+                n(xe.why);
+                return
+            }
+            g(null);
+            const Be = ((U = xe.result) == null ? void 0 : U.pulled) ?? [],
+                $ = Be.map(q => {
+                    const se = te(q.cardId);
+                    return se ? {
+                        card: se,
+                        dupe: q.dupe,
+                        salvage: q.salvage
+                    } : null
+                }).filter(q => !!q);
+            if (!$.length) {
+                n("没读到开出的卡，刷新看看收藏。");
+                return
+            }
+            $.length < Be.length && n(`这一包有 ${Be.length-$.length} 张是刚加进游戏的新选手，这个页面还是旧版本画不出来。卡已经在账号里，刷新后在收藏里能看到。`), Ye("card_pull", {
+                kind: j,
+                paid: Z,
+                packs: P,
+                gold: $.filter(q => q.card.rarity === "gold").length,
+                dupes: $.filter(q => q.dupe).length,
+                cards: $.map(q => q.card.id).join(",")
+            }), i($), c(j), d(P), u(1)
+        }, v = j => ne[j].shop !== !1 && !Tt(j, t), M = j => (e.packs[j] ?? 0) + (v(j) ? Math.floor(e.coins / Fe(j, t)) : 0) >= 2, O = (j, E = "sm") => M(j) && s.jsx("button", {
+            className: E,
+            disabled: f,
+            onClick: () => g(j),
+            title: `一次最多 ${Ke} 包`,
+            children: "连开"
+        }), K = Fe("bangkok2025", t), G = cn(t), S = Tt("seoul2024", t), F = j => `${Number(j.slice(5,7))} 月 ${Number(j.slice(8,10))} 日`, L = Fe("retired", t), D = sn(t), H = j => `${Math.round((1-j)*100)%10===0?(1-j)*10:Math.round((1-j)*100)} 折`, W = () => {
+            i(null), u(0)
+        }, R = async () => {
+            if (b) return;
+            w("checkin");
+            const j = await a("checkin").finally(() => w(null));
+            if (!j.ok) {
+                n(j.why);
+                return
+            }
+            const E = j.result;
+            E.already || Ye("card_signin", {
+                streak: E.streak
+            }), n(E.already ? "今天已经签过到了。" : `签到第 ${E.streak} 天：+${E.coins} 金币，卡包已入库。`)
+        }, X = async j => {
+            if (b) return;
+            w(j);
+            const E = await a("quest", {
+                key: j
+            }).finally(() => w(null));
+            if (!E.ok) {
+                n(E.why);
+                return
+            }
+            n(`任务完成，+${E.result.coins} 金币。`)
+        }, Y = async j => {
+            const E = await a("series", {
+                region: j
+            });
+            if (!E.ok) {
+                n(E.why);
+                return
+            }
+            n(`系列奖励已领取：${E.result.got}`)
+        }, z = async j => {
+            const E = await a("collect", {
+                series: j
+            });
+            if (!E.ok) {
+                n(E.why);
+                return
+            }
+            n(`收集奖励已领取：${E.result.got}`)
+        }, V = async () => {
+            const j = await a("fullset", {});
+            if (!j.ok) {
+                n(j.why);
+                return
+            }
+            n(`全图鉴奖励已领取：${j.result.got}`)
+        }, J = e.daily.claimed === t;
+    return s.jsxs(s.Fragment, {
+        children: [s.jsxs("div", {
+            className: "cm-pack-overview",
+            children: [s.jsxs("div", {
+                children: [s.jsx("strong", {
+                    children: Object.values(e.packs).reduce((j, E) => j + (E ?? 0), 0)
+                }), s.jsx("span", {
+                    children: "个卡包待开启"
+                })]
+            }), s.jsxs("div", {
+                children: [s.jsxs("strong", {
+                    children: [k.owned, s.jsxs("small", {
+                        children: [" / ", k.total]
+                    })]
+                }), s.jsx("span", {
+                    children: "已收藏卡牌"
+                })]
+            }), s.jsx("a", {
+                href: "#pack-shop",
+                onClick: j => {
+                    var E;
+                    j.preventDefault(), (E = document.getElementById("pack-shop")) == null || E.scrollIntoView({
+                        block: "start"
+                    })
+                },
+                children: "挑选卡包 ↓"
+            })]
+        }), s.jsxs("div", {
+            className: "grid c2 cm-daily",
+            style: {
+                alignItems: "start"
+            },
+            children: [s.jsxs(le, {
+                title: "每日签到",
+                actions: s.jsxs("span", {
+                    className: "tiny muted",
+                    children: ["连续 ", e.daily.streak, " 天"]
+                }),
+                children: [s.jsxs("p", {
+                    className: "small muted",
+                    style: {
+                        marginTop: 0,
+                        lineHeight: 1.7
+                    },
+                    children: ["每天送 ", Ts, " 金币和 1 个试训包；每轮第 3、6 天加送选拔包，第 7 天加送十连包。日期以服务器（北京时间）为准。"]
+                }), s.jsx("div", {
+                    className: "cm-checkin-week",
+                    "aria-label": "七日签到奖励",
+                    children: Array.from({
+                        length: 7
+                    }, (j, E) => {
+                        const P = E + 1,
+                            ee = e.daily.streak > 0 ? (e.daily.streak - 1) % 7 + 1 : 0,
+                            Z = P <= ee;
+                        return s.jsxs("div", {
+                            className: `cm-checkin-day${Z?" claimed":""}`,
+                            title: `第 ${P} 天：${Ts} 金币 + 试训包${P===7?" + 十连包":P%3===0?" + 选拔包":""}`,
+                            children: [s.jsxs("span", {
+                                children: ["第 ", P, " 天"]
+                            }), s.jsx("b", {
+                                children: P === 7 ? "十连" : P % 3 === 0 ? "选拔" : "试训"
+                            }), s.jsx("span", {
+                                children: Z ? "✓ 已签到" : `+${Ts}`
+                            })]
+                        }, E)
+                    })
+                }), s.jsx("button", {
+                    className: "primary",
+                    onClick: () => void R(),
+                    disabled: J || b !== null,
+                    children: J ? "今天已签到" : b === "checkin" ? "领取中…" : "领取今日奖励"
+                })]
+            }), s.jsxs(le, {
+                title: "今日任务",
+                actions: s.jsxs("span", {
+                    className: "tiny muted",
+                    children: [e.daily.taken.length, "/", e.daily.picked.length]
+                }),
+                children: [e.daily.picked.map(j => {
+                    const E = tn[j],
+                        P = e.daily.progress[j] ?? 0,
+                        ee = P >= E.target,
+                        Z = e.daily.taken.includes(j);
+                    return s.jsxs("div", {
+                        className: "cm-quest",
+                        children: [s.jsxs("div", {
+                            className: "cm-quest-info",
+                            children: [s.jsx("div", {
+                                className: "small",
+                                children: E.label
+                            }), s.jsxs("div", {
+                                className: "tiny faint mono",
+                                children: [Math.min(P, E.target), "/", E.target, " · +", E.reward, " 金币"]
+                            }), s.jsx("progress", {
+                                className: "cm-quest-progress",
+                                value: Math.min(P, E.target),
+                                max: E.target,
+                                "aria-label": E.label
+                            })]
+                        }), s.jsx("button", {
+                            className: "sm",
+                            onClick: () => void X(j),
+                            disabled: !ee || Z || b !== null,
+                            children: Z ? "已领取" : b === j ? "领取中…" : ee ? "领取" : "进行中"
+                        })]
+                    }, j)
+                }), s.jsxs("p", {
+                    className: "tiny faint",
+                    style: {
+                        marginBottom: 0
+                    },
+                    children: ["全部完成加送 ", an, " 个试训包。"]
+                })]
+            })]
+        }), s.jsxs("section", {
+            className: "ag-shelf",
+            "aria-label": "退役选手系列",
+            children: [s.jsxs("div", {
+                className: "ag-shelf-art",
+                children: [s.jsx(Xl, {}), s.jsx("div", {
+                    className: "ag-shelf-back",
+                    children: s.jsx(xs, {
+                        retired: !0
+                    })
+                })]
+            }), s.jsxs("div", {
+                className: "ag-shelf-copy",
+                children: [s.jsx("span", {
+                    className: "ag-eyebrow",
+                    children: "AFTERGLOW / 退役选手系列"
+                }), s.jsxs("h3", {
+                    children: [s.jsx("span", {
+                        children: "余晖 ·"
+                    }), " ", s.jsx("span", {
+                        children: "退役选手"
+                    }), D && s.jsxs("span", {
+                        className: "ag-sale",
+                        children: ["上线 ", H(D.off)]
+                    })]
+                }), s.jsxs("p", {
+                    children: [rt, " 位退役选手 · ", Ut, " 张退役彩卡 · 余晖卡背", s.jsx("br", {}), "每包 3 张退役卡，至少一张银卡，可能出退役彩卡。", s.jsx("br", {}), "退役彩卡单独保底：连续 ", be, " 抽没出，下一抽必出。", D && s.jsxs(s.Fragment, {
+                        children: [s.jsx("br", {}), nn.filter(j => j.last >= D.last).map(j => `${H(j.off)}到 ${F(j.last)}`).join("，"), "。"]
+                    })]
+                }), s.jsxs("p", {
+                    children: ["已收藏 ", js.filter(j => j.rarity !== "mythic" && e.cards[j.id]).length, " / ", rt, " · 彩卡 ", js.filter(j => j.rarity === "mythic" && e.cards[j.id]).length, " / ", Ut]
+                }), s.jsxs("div", {
+                    className: "row",
+                    children: [s.jsxs("button", {
+                        disabled: f || e.coins < L,
+                        onClick: () => void A("retired", "coins"),
+                        children: [L, " 金币", D && s.jsx("s", {
+                            children: ne.retired.cost
+                        }), " · 开启退役选手包"]
+                    }), (e.packs.retired ?? 0) > 0 && s.jsxs("button", {
+                        className: "ag-shelf-secondary",
+                        disabled: f,
+                        onClick: () => void A("retired", "pack"),
+                        children: ["打开库存（", e.packs.retired, "）"]
+                    }), O("retired", "ag-shelf-secondary")]
+                })]
+            })]
+        }), s.jsxs("section", {
+            className: "bk25-shelf",
+            "aria-label": "曼谷 2025 大师赛系列",
+            children: [s.jsxs("div", {
+                className: "bk25-shelf-art",
+                children: [s.jsx(Yl, {}), s.jsx("div", {
+                    className: "bk25-shelf-back",
+                    children: s.jsx(xs, {
+                        bangkok: !0
+                    })
+                })]
+            }), s.jsxs("div", {
+                className: "bk25-shelf-copy",
+                children: [s.jsx("span", {
+                    className: "bk25-eyebrow",
+                    children: "MASTERS BANGKOK / 2025 COLLECTION"
+                }), s.jsxs("h3", {
+                    children: ["曼谷 2025 大师赛", G && s.jsx("span", {
+                        className: "bk25-sale",
+                        children: "上线 85 折"
+                    })]
+                }), s.jsxs("p", {
+                    children: ["8 支战队 · 41 位登场选手 · 专属莲花卡背", s.jsx("br", {}), "每包 3 张赛事卡，至少一张银卡，不出彩卡。", G && s.jsxs(s.Fragment, {
+                        children: [s.jsx("br", {}), "85 折到 ", F(dn), "。"]
+                    })]
+                }), s.jsx("a", {
+                    href: "/bangkok-2025",
+                    children: "浏览完整系列 ↗"
+                }), s.jsxs("p", {
+                    children: ["已收藏 ", Lt.filter(j => e.cards[j.id]).length, " / ", Lt.length]
+                }), s.jsxs("div", {
+                    className: "row",
+                    children: [s.jsxs("button", {
+                        disabled: f || e.coins < K,
+                        onClick: () => void A("bangkok2025", "coins"),
+                        children: [K, " 金币", G && s.jsx("s", {
+                            children: ne.bangkok2025.cost
+                        }), " · 开启曼谷包"]
+                    }), (e.packs.bangkok2025 ?? 0) > 0 && s.jsxs("button", {
+                        className: "bk25-shelf-secondary",
+                        disabled: f,
+                        onClick: () => void A("bangkok2025", "pack"),
+                        children: ["打开库存（", e.packs.bangkok2025, "）"]
+                    }), O("bangkok2025", "bk25-shelf-secondary")]
+                })]
+            })]
+        }), s.jsx("div", {
+            id: "pack-shop",
+            className: "cm-section-anchor"
+        }), s.jsxs(le, {
+            title: "卡包",
+            actions: s.jsxs("span", {
+                className: "tiny muted",
+                children: ["收集 ", k.owned, "/", k.total, " · 距保底 ", Math.max(0, fe - e.pity), " 抽", e.pity >= Re ? "（概率递增中）" : ""]
+            }),
+            children: [s.jsx("p", {
+                className: "tiny faint",
+                style: {
+                    marginTop: 0,
+                    lineHeight: 1.7
+                },
+                children: "用金币随时买，不限次数。十连包不卖，可通过升段、夺冠、连签、挑战和赛事预测等玩法获得。"
+            }), s.jsxs("div", {
+                className: "pack-shelf",
+                children: [(e.packs.legend ?? 0) > 0 && s.jsxs("div", {
+                    className: "pack-box",
+                    style: {
+                        borderColor: "var(--mythic, var(--warn))"
+                    },
+                    children: [s.jsxs("h4", {
+                        children: [ne.legend.name, s.jsxs("span", {
+                            className: "pack-own",
+                            children: [" ×", e.packs.legend]
+                        })]
+                    }), s.jsx("p", {
+                        children: ne.legend.blurb
+                    }), s.jsxs("div", {
+                        className: "row",
+                        style: {
+                            gap: 6
+                        },
+                        children: [s.jsxs("button", {
+                            className: "primary sm",
+                            onClick: () => void A("legend", "pack"),
+                            disabled: f,
+                            children: ["打开（", e.packs.legend, "）"]
+                        }), O("legend"), s.jsx("span", {
+                            className: "tiny faint",
+                            style: {
+                                alignSelf: "center"
+                            },
+                            children: "非卖品"
+                        })]
+                    })]
+                }), wa.filter(j => !ln(j) && j !== "seoul2024" && j !== "bangkok2025" && j !== "retired").map(j => {
+                    const E = ne[j],
+                        P = e.packs[j] ?? 0;
+                    return s.jsxs("div", {
+                        className: "pack-box",
+                        children: [s.jsxs("h4", {
+                            children: [E.name, P > 0 && s.jsxs("span", {
+                                className: "pack-own",
+                                children: [" ×", P]
+                            })]
+                        }), s.jsx("p", {
+                            children: E.blurb
+                        }), s.jsxs("div", {
+                            className: "row",
+                            style: {
+                                gap: 6
+                            },
+                            children: [s.jsxs("button", {
+                                className: "primary sm",
+                                onClick: () => void A(j, "pack"),
+                                disabled: f || P < 1,
+                                children: ["打开（", P, "）"]
+                            }), E.shop === !1 ? s.jsx("span", {
+                                className: "tiny faint",
+                                style: {
+                                    alignSelf: "center"
+                                },
+                                children: "非卖品"
+                            }) : s.jsxs("button", {
+                                className: "sm",
+                                onClick: () => void A(j, "coins"),
+                                disabled: f || e.coins < E.cost,
+                                children: ["花 ", E.cost, " 金币"]
+                            }), O(j)]
+                        })]
+                    }, j)
+                })]
+            })]
+        }), Ct.some(j => (e.packs[j] ?? 0) > 0) && s.jsxs(le, {
+            title: "位置奖励包",
+            actions: s.jsx("span", {
+                className: "tiny muted",
+                children: "小游戏打出来的"
+            }),
+            children: [s.jsx("p", {
+                className: "tiny faint",
+                style: {
+                    marginTop: 0,
+                    lineHeight: 1.7
+                },
+                children: "开出一张该位置的选手卡，只能在「小游戏」里赢得。"
+            }), s.jsx("div", {
+                className: "pack-shelf",
+                children: Ct.filter(j => (e.packs[j] ?? 0) > 0).map(j => {
+                    const E = ne[j],
+                        P = e.packs[j] ?? 0;
+                    return s.jsxs("div", {
+                        className: "pack-box",
+                        children: [s.jsxs("h4", {
+                            children: [E.name, s.jsxs("span", {
+                                className: "pack-own",
+                                children: [" ×", P]
+                            })]
+                        }), s.jsx("p", {
+                            children: E.blurb
+                        }), s.jsxs("div", {
+                            className: "row",
+                            style: {
+                                gap: 6
+                            },
+                            children: [s.jsxs("button", {
+                                className: "primary sm",
+                                onClick: () => void A(j, "pack"),
+                                disabled: f || P < 1,
+                                children: ["打开（", P, "）"]
+                            }), O(j)]
+                        })]
+                    }, j)
+                })
+            })]
+        }), s.jsxs(le, {
+            title: "赛区系列",
+            actions: s.jsx("span", {
+                className: "tiny muted",
+                children: "四个赛区，分开收集"
+            }),
+            children: [s.jsxs("p", {
+                className: "tiny faint",
+                style: {
+                    marginTop: 0,
+                    lineHeight: 1.7
+                },
+                children: ["赛区包只出该赛区的选手，出金率和选拔包相同，贵 200 金币。", "　", "每个赛区收到 25% / 50% / 75% / 90% / 100% 各有一档奖励，收齐送十连包。彩卡不计入进度。", "　", "每周轮一个主打赛区，本周是", bs[m], "，便宜两成。"]
+            }), s.jsx("div", {
+                className: "pack-shelf",
+                children: C.map(j => {
+                    const E = ne[j.pack],
+                        P = e.packs[j.pack] ?? 0,
+                        ee = j.total ? Math.round(j.owned / j.total * 100) : 0,
+                        Z = j.region === m,
+                        xe = Fe(j.pack, t);
+                    return s.jsxs("div", {
+                        className: "pack-box",
+                        style: Z ? {
+                            borderColor: "var(--warn)"
+                        } : void 0,
+                        children: [s.jsxs("h4", {
+                            children: [bs[j.region], Z && s.jsx("span", {
+                                className: "tag warn",
+                                style: {
+                                    marginLeft: 6
+                                },
+                                children: "本周主打"
+                            }), P > 0 && s.jsxs("span", {
+                                className: "pack-own",
+                                children: [" ×", P]
+                            })]
+                        }), s.jsxs("div", {
+                            className: "tiny mono faint",
+                            style: {
+                                margin: "2px 0 5px"
+                            },
+                            children: ["选手卡 ", j.owned, "/", j.total, "（", ee, "%）· 彩卡 ", j.legends, "/", j.legendsTotal]
+                        }), s.jsx("div", {
+                            style: {
+                                height: 5,
+                                borderRadius: 3,
+                                background: "var(--panel-2)",
+                                border: "1px solid var(--line)",
+                                overflow: "hidden",
+                                marginBottom: 9
+                            },
+                            children: s.jsx("div", {
+                                style: {
+                                    width: `${ee}%`,
+                                    height: "100%",
+                                    background: j.owned >= j.total ? "var(--good)" : "var(--accent)"
+                                }
+                            })
+                        }), s.jsxs("div", {
+                            className: "row",
+                            style: {
+                                gap: 6,
+                                marginBottom: 8,
+                                minHeight: 22
+                            },
+                            children: [s.jsx("span", {
+                                className: "tiny faint",
+                                style: {
+                                    lineHeight: 1.6
+                                },
+                                children: j.ready.length ? `有 ${j.ready.length} 档奖励可以领` : j.next ? `再收 ${j.next.need} 张到 ${Math.round(j.next.at*100)}%：${j.next.label}` : "全部收齐了"
+                            }), j.ready.length > 0 && s.jsx("button", {
+                                className: "sm warn",
+                                style: {
+                                    marginLeft: "auto",
+                                    whiteSpace: "nowrap"
+                                },
+                                onClick: () => void Y(j.region),
+                                children: "领奖"
+                            })]
+                        }), s.jsxs("div", {
+                            className: "row wrap",
+                            style: {
+                                gap: 6
+                            },
+                            children: [s.jsxs("button", {
+                                className: "primary sm",
+                                onClick: () => void A(j.pack, "pack"),
+                                disabled: f || P < 1,
+                                children: ["打开（", P, "）"]
+                            }), s.jsxs("button", {
+                                className: "sm",
+                                style: {
+                                    whiteSpace: "nowrap"
+                                },
+                                onClick: () => void A(j.pack, "coins"),
+                                disabled: f || e.coins < xe,
+                                children: ["花 ", xe, " 金币", Z && s.jsx("s", {
+                                    className: "faint",
+                                    style: {
+                                        marginLeft: 4
+                                    },
+                                    children: E.cost
+                                })]
+                            }), O(j.pack)]
+                        })]
+                    }, j.region)
+                })
+            }), s.jsxs("div", {
+                className: "row wrap",
+                style: {
+                    gap: 10,
+                    alignItems: "center",
+                    marginTop: 10,
+                    padding: "8px 10px",
+                    border: "1px solid var(--line)",
+                    borderRadius: 8,
+                    borderColor: T.ready ? "var(--warn)" : void 0
+                },
+                children: [s.jsxs("div", {
+                    style: {
+                        flex: "1 1 220px",
+                        minWidth: 0
+                    },
+                    children: [s.jsxs("div", {
+                        className: "row",
+                        style: {
+                            gap: 8,
+                            alignItems: "baseline"
+                        },
+                        children: [s.jsx("b", {
+                            style: {
+                                fontSize: 13
+                            },
+                            children: "全图鉴"
+                        }), s.jsxs("span", {
+                            className: "tiny mono faint",
+                            children: [T.owned, "/", T.total, "（", Math.floor(T.owned / Math.max(1, T.total) * 100), "%）"]
+                        })]
+                    }), s.jsx("div", {
+                        style: {
+                            height: 5,
+                            borderRadius: 3,
+                            background: "var(--panel-2)",
+                            border: "1px solid var(--line)",
+                            overflow: "hidden",
+                            margin: "5px 0"
+                        },
+                        children: s.jsx("div", {
+                            style: {
+                                width: `${T.owned/Math.max(1,T.total)*100}%`,
+                                height: "100%",
+                                background: T.owned >= T.total ? "var(--good)" : "var(--accent)"
+                            }
+                        })
+                    }), s.jsx("span", {
+                        className: "tiny faint",
+                        style: {
+                            lineHeight: 1.6
+                        },
+                        children: T.claimed ? "全部收齐，彩卡包已领。" : T.ready ? `全部收齐了：${ne[ss.pack].name} ×${ss.count} 可以领` : `收齐全部选手卡和教练卡（彩卡、首尔卡、曼谷卡不计），送${ne[ss.pack].name} ×${ss.count}——只出彩卡的包。还差 ${T.total-T.owned} 张。`
+                    })]
+                }), T.ready && s.jsx("button", {
+                    className: "sm warn",
+                    style: {
+                        whiteSpace: "nowrap"
+                    },
+                    onClick: () => void V(),
+                    children: "领奖"
+                })]
+            }), _.map(j => {
+                const E = Math.floor(j.owned / Math.max(1, j.total) * 100);
+                return s.jsxs("div", {
+                    className: "row wrap",
+                    style: {
+                        gap: 10,
+                        alignItems: "center",
+                        marginTop: 8,
+                        padding: "8px 10px",
+                        border: "1px solid var(--line)",
+                        borderRadius: 8,
+                        borderColor: j.ready.length ? "var(--warn)" : void 0
+                    },
+                    children: [s.jsxs("div", {
+                        style: {
+                            flex: "1 1 220px",
+                            minWidth: 0
+                        },
+                        children: [s.jsxs("div", {
+                            className: "row",
+                            style: {
+                                gap: 8,
+                                alignItems: "baseline"
+                            },
+                            children: [s.jsx("b", {
+                                style: {
+                                    fontSize: 13
+                                },
+                                children: j.name
+                            }), s.jsxs("span", {
+                                className: "tiny mono faint",
+                                children: [j.owned, "/", j.total, "（", E, "%）"]
+                            })]
+                        }), s.jsx("div", {
+                            style: {
+                                height: 5,
+                                borderRadius: 3,
+                                background: "var(--panel-2)",
+                                border: "1px solid var(--line)",
+                                overflow: "hidden",
+                                margin: "5px 0"
+                            },
+                            children: s.jsx("div", {
+                                style: {
+                                    width: `${E}%`,
+                                    height: "100%",
+                                    background: j.owned >= j.total ? "var(--good)" : "var(--accent)"
+                                }
+                            })
+                        }), s.jsx("span", {
+                            className: "tiny faint",
+                            style: {
+                                lineHeight: 1.6
+                            },
+                            children: j.ready.length ? `有 ${j.ready.length} 档奖励可以领` : j.next ? `再收 ${j.next.need} 张到 ${Math.round(j.next.at*100)}%：${j.next.label}` : "全部收齐了"
+                        })]
+                    }), j.ready.length > 0 && s.jsx("button", {
+                        className: "sm warn",
+                        style: {
+                            whiteSpace: "nowrap"
+                        },
+                        onClick: () => void z(j.series),
+                        children: "领奖"
+                    })]
+                }, j.series)
+            })]
+        }), s.jsxs("section", {
+            className: "seoul-shelf seoul-shelf-last",
+            "aria-label": "首尔 2024 冠军赛系列",
+            children: [s.jsxs("div", {
+                className: "seoul-shelf-art",
+                children: [s.jsx($l, {}), s.jsx(Ml, {})]
+            }), s.jsxs("div", {
+                className: "seoul-shelf-copy",
+                children: [s.jsx("span", {
+                    className: "seoul-eyebrow",
+                    children: "CHAMPIONS SEOUL / 2024 COLLECTION"
+                }), s.jsx("h3", {
+                    children: "首尔 2024 冠军赛"
+                }), s.jsxs("p", {
+                    children: ["16 支战队 · 80 位登场选手 · 专属黑金卡背", s.jsx("br", {}), "每包 3 张赛事卡，至少一张银卡，不出彩卡。", s.jsx("br", {}), S ? "首尔包已下线，库存里的仍可打开。" : `首尔包 ${F(hn)}后下线，库存里的仍可打开。`]
+                }), s.jsx("a", {
+                    href: "/seoul-2024",
+                    children: "浏览完整系列 ↗"
+                }), s.jsxs("p", {
+                    children: ["已收藏 ", ol.filter(j => e.cards[j.id]).length, " / 80"]
+                }), s.jsxs("div", {
+                    className: "row",
+                    children: [!S && s.jsxs("button", {
+                        disabled: f || e.coins < ne.seoul2024.cost,
+                        onClick: () => void A("seoul2024", "coins"),
+                        children: [ne.seoul2024.cost, " 金币 · 开启首尔包"]
+                    }), (e.packs.seoul2024 ?? 0) > 0 && s.jsxs("button", {
+                        className: "seoul-shelf-secondary",
+                        disabled: f,
+                        onClick: () => void A("seoul2024", "pack"),
+                        children: ["打开库存（", e.packs.seoul2024, "）"]
+                    }), O("seoul2024", "seoul-shelf-secondary")]
+                })]
+            })]
+        }), r && s.jsx(Zl, {
+            pulled: r,
+            packs: o,
+            shown: y,
+            position: l ? rn(l) ?? void 0 : void 0,
+            onNext: () => u(j => Math.min(j + 1, r.length + 1)),
+            onDone: W,
+            onSellAll: () => {
+                const j = new Set,
+                    E = r.filter(P => P.dupe && !j.has(P.card.id) && j.add(P.card.id)).map(P => ({
+                        cardId: P.card.id,
+                        count: 1,
+                        coins: P.salvage
+                    }));
+                if (!E.length) {
+                    n("这一包没有重复卡。");
+                    return
+                }
+                I({
+                    lines: E,
+                    onConfirm: async () => {
+                        p(!0);
+                        const P = await a("salvage_dupes", {
+                            cardIds: E.map(Z => Z.cardId)
+                        });
+                        if (p(!1), I(null), !P.ok) {
+                            n(P.why);
+                            return
+                        }
+                        const ee = P.result.coins;
+                        n(ee ? `重复卡已分解，+${ee} 金币。` : "这一包的重复卡已经分解过了。")
+                    }
+                })
+            }
+        }), N && s.jsx(St, {
+            ask: N,
+            busy: f,
+            onClose: () => {
+                f || I(null)
+            }
+        }), h && s.jsx(Ql, {
+            kind: h,
+            own: e.packs[h] ?? 0,
+            coins: e.coins,
+            price: Fe(h, t),
+            buyable: v(h),
+            busy: f,
+            onOpen: j => void A(h, "auto", j),
+            onClose: () => {
+                f || g(null)
+            }
+        })]
+    })
+}
+
+function Jl({
+    children: e,
+    revealed: t,
+    kind: a,
+    position: n,
+    seoul: r,
+    bangkok: i,
+    retired: l
+}) {
+    return s.jsx("div", {
+        className: `flip${t?" revealed":""}`,
+        children: s.jsxs("div", {
+            className: "flip-inner",
+            children: [s.jsxs("div", {
+                className: "flip-face flip-back",
+                "aria-hidden": t,
+                children: [s.jsx(xs, {
+                    kind: a,
+                    position: n,
+                    seoul: r,
+                    bangkok: i,
+                    retired: l
+                }), s.jsx("span", {
+                    className: "card-specular"
+                })]
+            }), s.jsxs("div", {
+                className: "flip-face flip-front",
+                "aria-hidden": !t,
+                children: [e, s.jsx("span", {
+                    className: "card-specular"
+                })]
+            })]
+        })
+    })
+}
+
+function Zl({
+    pulled: e,
+    shown: t,
+    onNext: a,
+    onDone: n,
+    onSellAll: r,
+    position: i,
+    packs: l = 1
+}) {
+    const [c, o] = x.useState(!1), [d, h] = x.useState(!1), g = e.length && e.every(v => v.card.kind === "coach") ? "coach" : "player", y = e.length > 0 && e.every(v => Q(v.card) && v.card.event === "seoul-2024"), u = e.length > 0 && e.every(v => Q(v.card) && v.card.event === "bangkok-2025"), f = e.length > 0 && e.every(v => Q(v.card) && v.card.event === "retired"), p = l > 1 ? e.map((v, M) => ({
+        p: v,
+        i: M
+    })).sort((v, M) => ts(M.p.card.rarity) - ts(v.p.card.rarity) || Number(v.p.dupe) - Number(M.p.dupe) || v.i - M.i).map(v => v.p) : e, b = e.length === 1, [w, N] = x.useState(!1), I = Ie(n), k = w || t > e.length, C = e[Math.min(t, e.length) - 1], m = e.filter(v => v.dupe).length, T = t === e.length;
+    x.useEffect(() => {
+        c && !k && C && !d && Ae("back", C.card.rarity)
+    }, [c, t]), x.useEffect(() => {
+        if (!c || !k) return;
+        const v = w ? e.reduce((M, O) => ts(O.card.rarity) > ts(M) ? O.card.rarity : M, "bronze") : "bronze";
+        Ae("summary", v, e.length)
+    }, [k, c]);
+    const _ = () => {
+            if (!(!c || k || !C)) {
+                if (!d) {
+                    h(!0), Ae("reveal", C.card.rarity);
+                    return
+                }
+                b && T || (h(!1), a())
+            }
+        },
+        A = s.jsxs("div", {
+            className: "pack-actions",
+            children: [m > 0 && s.jsxs("button", {
+                onClick: v => {
+                    v.stopPropagation(), r()
+                },
+                children: ["分解 ", m, " 张重复卡"]
+            }), s.jsx("button", {
+                className: "primary",
+                onClick: v => {
+                    v.stopPropagation(), n()
+                },
+                children: "收下"
+            })]
+        });
+    return s.jsxs("div", {
+        className: "pack-stage",
+        ref: I,
+        role: "dialog",
+        "aria-modal": "true",
+        "aria-label": "开启卡包",
+        tabIndex: -1,
+        onClick: _,
+        children: [s.jsx(tr, {}), !k && s.jsx("button", {
+            className: "pack-skip",
+            onClick: v => {
+                v.stopPropagation(), o(!0), N(!0)
+            },
+            children: "查看全部 · 跳过动画"
+        }), !c && s.jsx(sr, {
+            seoul: y,
+            bangkok: u,
+            retired: f,
+            packs: l,
+            position: g === "player" ? i : void 0,
+            kind: g,
+            count: Math.max(1, Math.round(e.length / l)),
+            onOpen: () => o(!0)
+        }), c && s.jsxs("div", {
+            className: "pack-reveal",
+            children: [!k && C && s.jsxs(s.Fragment, {
+                children: [s.jsxs("div", {
+                    className: `pack-card-focus rarity-${C.card.rarity}${d?" revealed":""}`,
+                    role: "button",
+                    tabIndex: 0,
+                    "aria-label": d ? T ? "当前卡已翻开" : "查看下一张卡背" : `翻开第 ${t} 张卡`,
+                    onKeyDown: v => {
+                        (v.key === "Enter" || v.key === " ") && (v.preventDefault(), v.stopPropagation(), _())
+                    },
+                    children: [s.jsx("span", {
+                        className: "pack-rarity-motes",
+                        "aria-hidden": "true",
+                        children: Array.from({
+                            length: 12
+                        }, (v, M) => s.jsx("i", {}, M))
+                    }), s.jsx(Vl, {
+                        children: s.jsx(Jl, {
+                            seoul: y,
+                            bangkok: u,
+                            retired: f,
+                            position: i,
+                            kind: C.card.kind,
+                            revealed: d,
+                            children: s.jsx(Me, {
+                                card: C.card,
+                                size: "lg"
+                            })
+                        })
+                    })]
+                }, `${C.card.id}-${t}`), s.jsx("div", {
+                    className: "pack-card-meta-slot",
+                    children: d && s.jsxs("div", {
+                        className: "pack-card-meta row",
+                        style: {
+                            gap: 8,
+                            flexDirection: "column"
+                        },
+                        children: [s.jsx("span", {
+                            className: `tag ${C.card.rarity==="mythic"?"holo":C.card.rarity==="gold"?"t1":"t2"}`,
+                            children: ge[C.card.rarity]
+                        }), C.card.legend && s.jsxs("span", {
+                            className: "small",
+                            style: {
+                                color: "#e9dcff",
+                                textAlign: "center"
+                            },
+                            children: [s.jsx("b", {
+                                children: C.card.legend.title
+                            }), s.jsx("br", {}), s.jsx("span", {
+                                className: "tiny muted",
+                                children: C.card.legend.note
+                            })]
+                        }), C.dupe && s.jsxs("span", {
+                            className: "tiny muted",
+                            children: ["重复 · 可分解 ", C.salvage, " 金币"]
+                        })]
+                    })
+                }), b && d ? A : s.jsxs("div", {
+                    className: "pack-hint",
+                    "aria-live": "polite",
+                    children: [t, "/", e.length, " · ", d ? T ? "再点一次看全部" : "再点一次看下一张" : "点击卡背翻开"]
+                })]
+            }), k && s.jsxs(s.Fragment, {
+                children: [s.jsxs("div", {
+                    className: "pack-strip-head tiny",
+                    children: [l > 1 ? s.jsxs(s.Fragment, {
+                        children: ["连开 ", s.jsx("b", {
+                            children: l
+                        }), " 包 · 共 ", s.jsx("b", {
+                            children: e.length
+                        }), " 张"]
+                    }) : s.jsxs(s.Fragment, {
+                        children: ["这一包 ", s.jsx("b", {
+                            children: e.length
+                        }), " 张"]
+                    }), m > 0 ? ` · 重复 ${m} 张` : "", l > 1 && ` · 新卡 ${e.length-m} 张`]
+                }), s.jsx("div", {
+                    className: `pack-strip${e.length>10?" pack-strip-many":""}`,
+                    style: er(e.length),
+                    children: p.map((v, M) => s.jsx("div", {
+                        className: "pack-card",
+                        style: {
+                            animationDelay: `${M*40}ms`
+                        },
+                        children: s.jsx(Me, {
+                            card: v.card,
+                            size: "sm",
+                            footer: v.dupe ? "重复" : "新卡"
+                        })
+                    }, `${v.card.id}-${M}`))
+                }), A]
+            })]
+        })]
+    })
+}
+
+function er(e) {
+    if (e > 10) return {
+        "--cols-d": 6,
+        "--rows-d": 3,
+        "--cols-m": 4,
+        "--rows-m": 4,
+        "--card-max": "120px"
+    };
+    const [t, a, n] = e <= 1 ? [1, 1, 220] : e <= 3 ? [e, e, 170] : e <= 5 ? [e, 3, 150] : [5, 4, 140];
+    return {
+        "--cols-d": t,
+        "--rows-d": Math.ceil(e / t),
+        "--cols-m": a,
+        "--rows-m": Math.ceil(e / a),
+        "--card-max": `${n}px`
+    }
+}
+const Ge = {
+    x: 4,
+    y: -20
+};
+
+function sr({
+    count: e,
+    kind: t,
+    position: a,
+    onOpen: n,
+    seoul: r,
+    bangkok: i,
+    retired: l,
+    packs: c = 1
+}) {
+    const [o, d] = x.useState(0), [h, g] = x.useState(!1), [y, u] = x.useState(!1), [f, p] = x.useState(Ge), b = x.useRef(0), w = x.useRef(0), N = x.useRef(1), I = x.useRef(null), k = x.useRef(0), C = x.useRef(!1), m = x.useRef(null);
+    x.useEffect(() => () => {
+        m.current !== null && window.clearTimeout(m.current)
+    }, []), x.useEffect(() => (document.documentElement.classList.add("pack-open"), () => document.documentElement.classList.remove("pack-open")), []);
+    const T = () => {
+            if (C.current) return;
+            C.current = !0, k.current = 1, d(1), g(!1), u(!0), p({
+                x: 0,
+                y: 0
+            }), Ae("tear"), "vibrate" in navigator && navigator.vibrate([18, 28, 35]);
+            const G = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+            m.current = window.setTimeout(() => {
+                Ae("burst"), n()
+            }, G ? 80 : 1450)
+        },
+        _ = G => {
+            if (y) return;
+            G.stopPropagation();
+            try {
+                G.currentTarget.setPointerCapture(G.pointerId)
+            } catch {}
+            b.current = G.clientX, w.current = o;
+            const S = G.currentTarget.getBoundingClientRect();
+            I.current = S, N.current = S.width, g(!0), Ae("grab")
+        },
+        A = (G, S) => {
+            const F = I.current;
+            if (!F) return;
+            const L = Math.max(-1, Math.min(1, (G - F.left) / F.width * 2 - 1)),
+                D = Math.max(-1, Math.min(1, (S - F.top) / F.height * 2 - 1));
+            window.matchMedia("(prefers-reduced-motion: reduce)").matches || p({
+                x: Ge.x - D * 5,
+                y: Ge.y + L * 10
+            })
+        },
+        v = G => {
+            if (y || (A(G.clientX, G.clientY), !h)) return;
+            G.stopPropagation();
+            const S = Math.max(0, Math.min(1, w.current + (G.clientX - b.current) / (N.current * .55)));
+            k.current = S, d(S), S >= .9 && T()
+        },
+        M = () => {
+            k.current >= .45 ? T() : (k.current = 0, d(0), p(Ge))
+        },
+        O = G => {
+            G.stopPropagation(), !(!h || y) && (g(!1), M())
+        },
+        K = G => {
+            G.stopPropagation(), !y && (g(!1), M())
+        };
+    return s.jsxs("div", {
+        className: `pack-tear-scene pack-tear-${t}${r?" pack-tear-seoul":""}${i?" pack-tear-bangkok":""}${a?" pack-tear-position":""}${y?" torn":""}`,
+        style: Il(a),
+        children: [s.jsx("div", {
+            className: "pack-tear-aura",
+            "aria-hidden": "true"
+        }), s.jsxs("div", {
+            className: "pack-tear-kicker",
+            children: [i ? "MASTERS BANGKOK · 2025" : r ? "CHAMPIONS SEOUL · 2024" : l ? "AFTERGLOW · 余晖" : a ? `${Al[a].label}奖励已送达` : "新卡包已送达", c > 1 ? ` · 连开 ${c} 包` : ""]
+        }), s.jsxs("div", {
+            className: `pack-wrapper${h?" dragging":""}`,
+            style: {
+                "--tear": o
+            },
+            role: "button",
+            tabIndex: 0,
+            "aria-label": "向右划开卡包",
+            onPointerDown: _,
+            onPointerMove: v,
+            onPointerUp: O,
+            onPointerCancel: K,
+            onPointerEnter: G => {
+                I.current = G.currentTarget.getBoundingClientRect()
+            },
+            onPointerLeave: () => {
+                !h && !y && p(Ge)
+            },
+            onKeyDown: G => {
+                (G.key === "Enter" || G.key === " ") && (G.preventDefault(), T())
+            },
+            children: [s.jsx(jt, {
+                seoul: r,
+                bangkok: i,
+                retired: l,
+                position: a,
+                kind: t,
+                count: e,
+                progress: o,
+                torn: y,
+                pose: f
+            }), s.jsxs("div", {
+                className: "pack-card-emerge",
+                "aria-hidden": "true",
+                children: [Array.from({
+                    length: Math.min(e - 1, 9)
+                }, (G, S) => s.jsx("span", {
+                    className: "pack-stack-card",
+                    style: {
+                        "--stack-index": S + 1
+                    }
+                }, S)), s.jsx(xs, {
+                    kind: t,
+                    position: a,
+                    seoul: r,
+                    bangkok: i,
+                    retired: l
+                })]
+            }), s.jsxs("div", {
+                className: "pack-tear-track",
+                "aria-hidden": "true",
+                children: [s.jsx("span", {
+                    className: "pack-tear-cut"
+                }), s.jsx("span", {
+                    className: "pack-tear-tab",
+                    children: "→"
+                })]
+            })]
+        }), s.jsx("div", {
+            className: "pack-tear-instruction",
+            "aria-live": "polite",
+            children: y ? "即将揭晓" : o > 0 ? "继续向右划" : "按住封条，向右划开"
+        }), s.jsx("div", {
+            className: "pack-tear-sub",
+            children: "鼠标或触屏拖动 · 也可按 Enter"
+        })]
+    })
+}
+
+function tr() {
+    const [e, t] = x.useState(Aa);
+    return s.jsxs("button", {
+        className: "pack-sound",
+        "aria-pressed": e,
+        "aria-label": e ? "关闭音效" : "打开音效",
+        onClick: a => {
+            a.stopPropagation(), Fl(!e), t(!e), e || Ae("grab")
+        },
+        children: [s.jsxs("svg", {
+            width: "18",
+            height: "18",
+            viewBox: "0 0 24 24",
+            fill: "none",
+            stroke: "currentColor",
+            strokeWidth: "1.8",
+            strokeLinecap: "round",
+            strokeLinejoin: "round",
+            "aria-hidden": "true",
+            children: [s.jsx("path", {
+                d: "M4 10v4h3l5 4V6l-5 4z"
+            }), e ? s.jsx("path", {
+                d: "M16 9a4 4 0 0 1 0 6 M18.5 6.5a8 8 0 0 1 0 11"
+            }) : s.jsx("path", {
+                d: "M16 9l5 6 M21 9l-5 6"
+            })]
+        }), s.jsxs("span", {
+            children: ["音效", e ? "" : "关"]
+        })]
+    })
+}
+const Gs = {
+        display: "flex",
+        flexDirection: "column",
+        gap: 6
+    },
+    Hs = {
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "baseline",
+        gap: 10,
+        flexWrap: "wrap"
+    },
+    Us = {
+        position: "relative",
+        height: 8,
+        minWidth: 0,
+        flex: "none",
+        width: "100%"
+    },
+    ar = {
+        position: "absolute",
+        top: -3,
+        width: 2,
+        height: 14,
+        background: "var(--text)",
+        opacity: .35,
+        borderRadius: 1
+    },
+    Kt = e => e > 0 ? s.jsxs(s.Fragment, {
+        children: ["再 ", s.jsx("b", {
+            children: e.toLocaleString()
+        }), " 抽没出，下一抽必出"]
+    }) : s.jsx("b", {
+        children: "下一抽必出"
+    });
+
+function nr() {
+    const {
+        g: e
+    } = oe(), t = Math.min(fe, e.pity ?? 0), a = Math.min(Ne, e.mythicDry ?? 0), n = Math.min(be, e.retiredDry ?? 0), r = t >= Re;
+    return s.jsx(le, {
+        title: "保底进度",
+        actions: s.jsx("span", {
+            className: "tiny muted",
+            children: "换包不重置 · 首尔包不计入彩卡保底"
+        }),
+        children: s.jsxs("div", {
+            style: {
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))",
+                gap: "14px 28px"
+            },
+            children: [s.jsxs("div", {
+                style: Gs,
+                children: [s.jsxs("div", {
+                    style: Hs,
+                    children: [s.jsx("b", {
+                        children: "金卡"
+                    }), s.jsxs("span", {
+                        className: "tiny muted",
+                        children: [t, "/", fe, " · 还差 ", s.jsx("b", {
+                            children: fe - t
+                        }), " 抽必出", r ? "，概率递增中" : `，第 ${Re} 抽起概率递增`]
+                    })]
+                }), s.jsxs("div", {
+                    className: "bar",
+                    role: "progressbar",
+                    "aria-label": "金卡保底进度",
+                    "aria-valuemin": 0,
+                    "aria-valuemax": fe,
+                    "aria-valuenow": t,
+                    style: Us,
+                    title: `第 ${Re} 抽起概率递增，第 ${fe} 抽必出`,
+                    children: [s.jsx("i", {
+                        style: {
+                            width: `${t/fe*100}%`,
+                            background: r ? "var(--warn)" : "#d4a53a"
+                        }
+                    }), s.jsx("span", {
+                        style: {
+                            ...ar,
+                            left: `${Re/fe*100}%`
+                        },
+                        "aria-hidden": !0
+                    })]
+                })]
+            }), s.jsxs("div", {
+                style: Gs,
+                children: [s.jsxs("div", {
+                    style: Hs,
+                    children: [s.jsx("b", {
+                        children: "彩卡"
+                    }), s.jsxs("span", {
+                        className: "tiny muted",
+                        children: [a.toLocaleString(), "/", Ne.toLocaleString(), " · ", Kt(Ne - a)]
+                    })]
+                }), s.jsx("div", {
+                    className: "bar",
+                    role: "progressbar",
+                    "aria-label": "彩卡保底进度",
+                    "aria-valuemin": 0,
+                    "aria-valuemax": Ne,
+                    "aria-valuenow": a,
+                    style: Us,
+                    title: `连续 ${Ne.toLocaleString()} 抽没出彩卡就必出一张`,
+                    children: s.jsx("i", {
+                        style: {
+                            width: `${a/Ne*100}%`,
+                            background: "#c26bff"
+                        }
+                    })
+                })]
+            }), s.jsxs("div", {
+                style: Gs,
+                children: [s.jsxs("div", {
+                    style: Hs,
+                    children: [s.jsx("b", {
+                        children: "退役彩卡"
+                    }), s.jsxs("span", {
+                        className: "tiny muted",
+                        children: [n, "/", be, " · ", Kt(be - n), " · 只算退役选手包"]
+                    })]
+                }), s.jsx("div", {
+                    className: "bar",
+                    role: "progressbar",
+                    "aria-label": "退役彩卡保底进度",
+                    "aria-valuemin": 0,
+                    "aria-valuemax": be,
+                    "aria-valuenow": n,
+                    style: Us,
+                    title: `退役选手包连续 ${be} 抽没出退役彩卡就必出一张`,
+                    children: s.jsx("i", {
+                        style: {
+                            width: `${n/be*100}%`,
+                            background: "#d8b77e"
+                        }
+                    })
+                })]
+            })]
+        })
+    })
+}
+const $e = (e, t) => {
+    const a = document.createElement("canvas");
+    a.width = Math.max(1, Math.round(e)), a.height = Math.max(1, Math.round(t));
+    const n = a.getContext("2d");
+    return n.imageSmoothingEnabled = !0, n.imageSmoothingQuality = "high", [a, n]
+};
+
+function Vt(e, t) {
+    const a = e.width,
+        n = e.height;
+    if (!Number.isFinite(t) || t >= a) return e;
+    const r = Math.max(1, Math.round(t)),
+        i = Math.max(1, Math.round(t * n / a));
+    let l = e;
+    for (; l.width / 2 > r;) {
+        const [g, y] = $e(Math.ceil(l.width / 2), Math.ceil(l.height / 2));
+        y.drawImage(l, 0, 0, g.width, g.height), l = g
+    }
+    const [c, o] = $e(r, i);
+    for (o.drawImage(l, 0, 0, r, i), l = c; l.width * 2 < a;) {
+        const [g, y] = $e(l.width * 2, l.height * 2);
+        y.drawImage(l, 0, 0, g.width, g.height), l = g
+    }
+    const [d, h] = $e(a, n);
+    return h.drawImage(l, 0, 0, a, n), d
+}
+const He = [16, 10],
+    Xt = 480;
+
+function lr(e) {
+    const [, a] = $e(16, 16);
+    a.drawImage(e, 0, 0, 16, 16);
+    const n = a.getImageData(0, 0, 16, 16).data;
+    let r = 0,
+        i = 0,
+        l = 0,
+        c = 0;
+    for (let w = 0; w < n.length; w += 4) {
+        const N = n[w + 3];
+        r += n[w] * N, i += n[w + 1] * N, l += n[w + 2] * N, c += N
+    }
+    if (!c) return {
+        colour: "#6b7078",
+        flat: 0
+    };
+    r /= c, i /= c, l /= c;
+    let o = 0;
+    for (let w = 0; w < n.length; w += 4) Math.hypot(n[w] - r, n[w + 1] - i, n[w + 2] - l) < 45 && (o += n[w + 3]);
+    const d = o / c,
+        h = c / (4080 * 16),
+        g = Math.min(1, Math.max(0, (h - .9) / .08)),
+        y = Math.min(1, Math.max(0, (d - .5) / .4)) * (1 - g),
+        f = .2126 * r + .7152 * i + .0722 * l < 128 ? 235 : 25,
+        p = .5 * y,
+        b = w => Math.round(w + (f - w) * p);
+    return {
+        colour: `rgb(${b(r)}, ${b(i)}, ${b(l)})`,
+        flat: y
+    }
+}
+const Yt = .3,
+    rr = e => (e ^= e >>> 16, e = Math.imul(e, 2246822507), e ^= e >>> 13, e = Math.imul(e, 3266489909), e ^= e >>> 16, e >>> 0),
+    ir = e => {
+        const t = rr(e);
+        return [(t & 65535) / 65535 * 2 - 1, (t >>> 16 & 65535) / 65535 * 2 - 1]
+    };
+
+function Qt(e, t, a, n, r, i = [0, 0]) {
+    const l = e * r,
+        c = t * r,
+        o = Math.max(0, l - a) / 2,
+        d = Math.max(0, c - n) / 2;
+    return {
+        x: (a - l) / 2 + o * Yt * i[0],
+        y: (n - c) / 2 + d * Yt * i[1],
+        dw: l,
+        dh: c
+    }
+}
+
+function or(e, t, a, n, r, i, l = [0, 0]) {
+    const [c, o] = $e(a, n), d = lr(t);
+    o.fillStyle = d.colour, o.fillRect(0, 0, a, n);
+    const h = .75 * (1 - d.flat);
+    if (h > .01) {
+        const u = Math.max(a / t.width, n / t.height) * (r + .4),
+            [f, p] = $e(a, n),
+            b = Qt(t.width, t.height, a, n, u, l);
+        p.drawImage(t, b.x, b.y, b.dw, b.dh), o.globalAlpha = h, o.drawImage(Vt(f, 8), 0, 0), o.globalAlpha = 1
+    }
+    const g = Math.min(a / t.width, n / t.height) * r,
+        y = Qt(t.width, t.height, a, n, g, l);
+    o.drawImage(t, y.x, y.y, y.dw, y.dh), e.clearRect(0, 0, a, n), e.drawImage(Vt(c, i), 0, 0)
+}
+const cr = {},
+    dr = {
+        hit: {
+            bg: "var(--win-wash)",
+            fg: "var(--win)"
+        },
+        near: {
+            bg: "var(--warn-wash)",
+            fg: "var(--warn)"
+        },
+        miss: {
+            bg: "var(--panel-2)",
+            fg: "var(--faint)"
+        },
+        up: {
+            bg: "var(--panel-2)",
+            fg: "var(--muted)",
+            suffix: " ↑"
+        },
+        down: {
+            bg: "var(--panel-2)",
+            fg: "var(--muted)",
+            suffix: " ↓"
+        }
+    },
+    ls = e => `${String(e).padStart(2,"0")}:00`,
+    hr = () => "./",
+    rs = e => e.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fff]/g, "");
+
+function ur(e, t) {
+    const a = rs(t);
+    if (!a) return [];
+    const n = [];
+    for (const r of e) {
+        const i = rs(r.name),
+            l = /^P\d+$/.test(r.id) ? "" : rs(r.hint.split("·")[0]);
+        let c = 0;
+        i === a || l === a ? c = 4 : i.startsWith(a) || l.startsWith(a) ? c = 3 : i.includes(a) ? c = 2 : rs(r.hint).includes(a) && (c = 1), c && n.push([c, r])
+    }
+    return n.sort((r, i) => i[0] - r[0]).map(([, r]) => r).slice(0, 8)
+}
+
+function mr() {
+    const {
+        g: e,
+        act: t,
+        toast: a
+    } = oe(), [n, r] = x.useState(""), [i, l] = x.useState(!1), [c, o] = x.useState(() => de());
+    x.useEffect(() => {
+        const z = window.setInterval(() => o(de()), 3e4);
+        return () => window.clearInterval(z)
+    }, []);
+    const d = un(e.challenge, c),
+        {
+            kind: h,
+            answer: g,
+            state: y,
+            rows: u
+        } = mn(e, d),
+        f = x.useMemo(() => fn(), []),
+        p = y.guesses.length,
+        b = pn(y),
+        w = $t(e, d),
+        N = new Set(y.guesses),
+        I = n.trim() ? ur(f.filter(z => !N.has(z.id)), n) : [],
+        k = async z => {
+            var E;
+            const V = $t(e, d);
+            if (V) {
+                a(V);
+                return
+            }
+            if (i) return;
+            l(!0);
+            const J = await t("challenge", {
+                guessId: z,
+                sig: Mt()
+            });
+            if (l(!1), !J.ok) {
+                a(J.why);
+                return
+            }
+            const j = J.result.turn;
+            if (r(""), j.finished) {
+                const P = e.challenge,
+                    ee = (P == null ? void 0 : P.guesses.length) ?? 0;
+                if (Ye("card_challenge", {
+                        kind: h,
+                        solved: j.solved ? 1 : 0,
+                        tries: ee,
+                        streak: (P == null ? void 0 : P.streak) ?? 0
+                    }), j.solved) {
+                    const Z = j.reward;
+                    a(`猜中了！第 ${ee} 次 · +${(Z==null?void 0:Z.coins)??0} 金币` + (Z != null && Z.pack ? ` + ${Z.pack==="ten"?"十连包":Z.pack==="elite"?"选拔包":"试训包"}` : "") + (Z != null && Z.streakPack ? " + 连签七天的十连包" : ""))
+                } else a(`没猜中，答案是 ${O.name}。退回 ${((E=j.reward)==null?void 0:E.coins)??0} 金币，明天再来。`)
+            }
+        }, C = async z => {
+            if (i) return;
+            l(!0);
+            const V = await t("challenge_hour", {
+                hour: z
+            });
+            l(!1), a(V.ok ? `明天起每天 ${ls(z)} 换题` : V.why)
+        }, m = $s(c), T = Ms(e.challenge, m), _ = Ms(e.challenge, "9999-12-31"), A = gn(e.challenge, c), v = yn(e.challenge, m), M = `${$s(A)===m?"今天":"明天"} ${ls(Ms(e.challenge,$s(A)))}`, O = xn(h, g, g), G = 1 + (1 - (y.done ? 1 : jn(p))) * 1.6, S = y.done ? 1 / 0 : bn(p), F = x.useMemo(() => ir(cl(`puzzle:${d}:${e.id}`)), [d, e.id]), L = x.useRef(null), [D, H] = x.useState(null), [W, R] = x.useState(!1), [X, Y] = x.useState(!1);
+    return x.useEffect(() => {
+        let z = !0,
+            V = "";
+        return H(null), R(!1), fetch(vn("puzzle"), {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                id: e.id
+            })
+        }).then(J => {
+            const j = J.headers.get("X-Puzzle-Sig");
+            return z && j && j !== Mt() && Y(!0), J.ok ? J.blob() : Promise.reject(new Error(String(J.status)))
+        }).then(J => new Promise((j, E) => {
+            V = URL.createObjectURL(J);
+            const P = new Image;
+            P.onload = () => j(P), P.onerror = () => E(new Error("decode")), P.src = V
+        })).then(J => {
+            z && H(J)
+        }).catch(() => {
+            z && R(!0)
+        }), () => {
+            z = !1, V && URL.revokeObjectURL(V)
+        }
+    }, [e.id, d, g]), x.useEffect(() => {
+        const z = L.current;
+        if (!z || !D) return;
+        const V = Math.min(2, window.devicePixelRatio || 1),
+            [J, j] = He,
+            E = Math.max(J, Math.round((z.clientWidth || Xt) * V / J) * J);
+        z.width = E, z.height = E / J * j;
+        const P = z.getContext("2d");
+        P && or(P, D, z.width, z.height, G, S, F)
+    }, [D, G, S, F]), s.jsxs(s.Fragment, {
+        children: [s.jsxs(le, {
+            title: "每日挑战",
+            actions: s.jsxs("span", {
+                className: "tiny muted",
+                children: [y.streak > 0 && s.jsxs("b", {
+                    style: {
+                        color: "var(--warn)"
+                    },
+                    children: ["连续 ", y.streak, " 天 · "]
+                }), "累计解开 ", y.total]
+            }),
+            children: [s.jsxs("p", {
+                className: "small muted",
+                style: {
+                    marginTop: 0,
+                    lineHeight: 1.7
+                },
+                children: ["答案可能是", s.jsx("b", {
+                    children: "选手、战队、地图或英雄"
+                }), "，不告诉你是哪一类。每猜错一次图片清楚一点。", s.jsx("br", {}), "每天一题，", s.jsx("b", {
+                    children: "每个账号题目不同"
+                }), "，入场 ", s.jsxs("b", {
+                    children: [wn, " 金币"]
+                }), "。 猜中按次数给卡包（", s.jsx("b", {
+                    children: "一次猜中给十连包"
+                }), "），没猜中退一半。"]
+            }), s.jsxs("p", {
+                className: "small muted",
+                style: {
+                    display: "flex",
+                    flexWrap: "wrap",
+                    alignItems: "center",
+                    gap: 6
+                },
+                children: ["每天", s.jsx("select", {
+                    value: _,
+                    disabled: i || !!v,
+                    style: {
+                        width: "auto"
+                    },
+                    onChange: z => C(Number(z.target.value)),
+                    children: Array.from({
+                        length: 24
+                    }, (z, V) => s.jsx("option", {
+                        value: V,
+                        children: ls(V)
+                    }, V))
+                }), "换题，改了明天起生效，", Sn, " 天可改一次。", s.jsxs("span", {
+                    className: "faint",
+                    children: [v ? `${v.slice(5)} 起可再改，` : "", _ !== T ? `今天还是 ${ls(T)}，` : "", "下一题 ", M]
+                })]
+            }), X && s.jsxs("p", {
+                className: "small warn",
+                style: {
+                    lineHeight: 1.7
+                },
+                children: ["游戏数据更新了，这个页面还是旧的，提示会对不上。", s.jsx("button", {
+                    className: "sm primary",
+                    style: {
+                        marginLeft: 8
+                    },
+                    onClick: () => location.reload(),
+                    children: "刷新页面"
+                })]
+            }), s.jsxs("div", {
+                className: "ar-fallback",
+                style: {
+                    position: "relative",
+                    width: `min(100%, ${Xt}px)`,
+                    aspectRatio: `${He[0]} / ${He[1]}`,
+                    "--ar-pad": `${He[1]/He[0]*100}%`,
+                    borderRadius: 4,
+                    overflow: "hidden",
+                    background: "var(--panel-2)",
+                    margin: "0 auto 12px",
+                    display: O.img ? void 0 : "grid",
+                    placeItems: "center"
+                },
+                children: [(!O.img || W) && s.jsx("span", {
+                    className: "faint small",
+                    children: W ? "（图片没加载出来，刷新试试）" : "（这一题没有图）"
+                }), O.img && !W && s.jsx("canvas", {
+                    ref: L,
+                    "aria-hidden": !0,
+                    draggable: !1,
+                    onDragStart: z => z.preventDefault(),
+                    style: {
+                        position: "absolute",
+                        inset: 0,
+                        width: "100%",
+                        height: "100%",
+                        display: D ? "block" : "none"
+                    }
+                }), s.jsx("div", {
+                    className: "tiny",
+                    style: {
+                        position: "absolute",
+                        right: 8,
+                        bottom: 8,
+                        padding: "2px 8px",
+                        borderRadius: 999,
+                        background: "rgba(8,12,18,.72)",
+                        color: "var(--muted)"
+                    },
+                    children: y.done ? `${As[h]} · ${O.name}` : `还剩 ${b} 次`
+                })]
+            }), !y.done && s.jsxs("form", {
+                style: {
+                    position: "relative",
+                    marginBottom: 10
+                },
+                onSubmit: z => {
+                    z.preventDefault(), I[0] && k(I[0].id)
+                },
+                children: [s.jsxs("div", {
+                    className: "row",
+                    style: {
+                        gap: 8
+                    },
+                    children: [s.jsx("input", {
+                        value: n,
+                        onChange: z => r(z.target.value),
+                        placeholder: w ?? `输入名字（还剩 ${b} 次）`,
+                        disabled: !!w || X,
+                        enterKeyHint: "go"
+                    }), s.jsx("button", {
+                        className: "primary",
+                        type: "submit",
+                        disabled: !!w || X || !I[0] || i,
+                        children: "猜"
+                    })]
+                }), I.length > 0 && s.jsx("div", {
+                    style: {
+                        position: "absolute",
+                        top: "100%",
+                        left: 0,
+                        right: 0,
+                        zIndex: 5,
+                        background: "var(--panel)",
+                        border: "1px solid var(--line)",
+                        borderRadius: 3,
+                        marginTop: 3,
+                        overflow: "hidden",
+                        boxShadow: "var(--shadow-card)"
+                    },
+                    children: I.map(z => s.jsxs("button", {
+                        type: "button",
+                        className: "ghost",
+                        style: {
+                            display: "block",
+                            width: "100%",
+                            textAlign: "left",
+                            border: 0,
+                            borderRadius: 0,
+                            padding: "8px 11px"
+                        },
+                        onClick: () => void k(z.id),
+                        children: [s.jsx("b", {
+                            children: z.name
+                        }), " ", s.jsx("span", {
+                            className: "tag",
+                            style: {
+                                marginLeft: 2
+                            },
+                            children: As[z.kind]
+                        }), " ", s.jsx("span", {
+                            className: "tiny faint",
+                            children: z.hint
+                        })]
+                    }, z.id))
+                })]
+            }), w && !y.done && s.jsx("p", {
+                className: "tiny",
+                style: {
+                    color: "var(--warn)",
+                    margin: "0 0 8px"
+                },
+                children: w
+            }), u.length > 0 && (() => {
+                const z = u.reduce((V, J) => J.cells.length > V.length ? J.cells : V, []);
+                return s.jsx("div", {
+                    className: "table-wrap",
+                    style: {
+                        marginTop: 4
+                    },
+                    children: s.jsxs("table", {
+                        children: [z.length > 0 && s.jsx("thead", {
+                            children: s.jsxs("tr", {
+                                children: [s.jsx("th", {
+                                    children: "猜的"
+                                }), z.map(V => s.jsx("th", {
+                                    className: "center",
+                                    children: V.label
+                                }, V.label))]
+                            })
+                        }), s.jsx("tbody", {
+                            children: u.slice().reverse().map((V, J) => s.jsxs("tr", {
+                                children: [s.jsx("td", {
+                                    children: s.jsxs("span", {
+                                        className: "row",
+                                        style: {
+                                            gap: 6
+                                        },
+                                        children: [V.img && s.jsx("img", {
+                                            src: `${hr()}${V.img}`,
+                                            alt: "",
+                                            style: {
+                                                width: 22,
+                                                height: 22,
+                                                borderRadius: 2,
+                                                objectFit: "cover",
+                                                objectPosition: "top center",
+                                                background: "var(--panel-2)"
+                                            }
+                                        }), s.jsx("b", {
+                                            children: V.name
+                                        }), V.id === g && s.jsx("span", {
+                                            className: "tag t1",
+                                            children: "正解"
+                                        })]
+                                    })
+                                }), z.map((j, E) => {
+                                    const P = V.cells[E];
+                                    if (!P) return s.jsx("td", {
+                                        className: "center faint",
+                                        children: "—"
+                                    }, j.label);
+                                    const ee = dr[P.mark];
+                                    return s.jsx("td", {
+                                        className: "center",
+                                        children: s.jsxs("span", {
+                                            style: {
+                                                display: "inline-block",
+                                                minWidth: 44,
+                                                padding: "2px 7px",
+                                                borderRadius: 3,
+                                                background: ee.bg,
+                                                color: ee.fg,
+                                                fontSize: "var(--t-tiny)",
+                                                fontWeight: 700
+                                            },
+                                            children: [P.value, ee.suffix ?? ""]
+                                        })
+                                    }, P.label)
+                                })]
+                            }, `${V.id}-${J}`))
+                        })]
+                    })
+                })
+            })(), y.done && s.jsxs(s.Fragment, {
+                children: [s.jsxs("p", {
+                    className: "small",
+                    style: {
+                        marginTop: 12,
+                        marginBottom: 6,
+                        color: y.solved ? "var(--win)" : "var(--muted)"
+                    },
+                    children: [y.solved ? `第 ${p} 次猜中，连续第 ${y.streak} 天。` : "今天没猜出来，连胜清零了。", "答案是", s.jsxs("b", {
+                        style: {
+                            color: "var(--text)"
+                        },
+                        children: [As[h], "「", O.name, "」"]
+                    }), "。下一题 ", M, "。"]
+                }), s.jsxs("div", {
+                    style: {
+                        display: "flex",
+                        gap: 10,
+                        alignItems: "flex-start",
+                        margin: "12px 0 0",
+                        padding: "11px 13px",
+                        borderRadius: 3,
+                        background: "var(--warn-wash)",
+                        border: "1px solid var(--warn)",
+                        borderLeftWidth: 3
+                    },
+                    children: [s.jsx("span", {
+                        style: {
+                            fontSize: 19,
+                            lineHeight: 1.2
+                        },
+                        children: "🤐"
+                    }), s.jsxs("div", {
+                        children: [s.jsx("b", {
+                            style: {
+                                color: "var(--warn)",
+                                fontSize: "var(--t-body)"
+                            },
+                            children: "别把答案发出去"
+                        }), s.jsxs("div", {
+                            className: "small muted",
+                            style: {
+                                marginTop: 3,
+                                lineHeight: 1.7
+                            },
+                            children: [s.jsx("b", {
+                                children: "每个人的题目不一样"
+                            }), "，发出去帮不上别人。想晒就晒猜中次数和连胜天数。"]
+                        })]
+                    })]
+                })]
+            })]
+        }), s.jsxs(le, {
+            title: "怎么算分",
+            children: [s.jsx("div", {
+                className: "table-wrap",
+                children: s.jsxs("table", {
+                    children: [s.jsx("thead", {
+                        children: s.jsxs("tr", {
+                            children: [s.jsx("th", {
+                                children: "几次猜中"
+                            }), s.jsx("th", {
+                                children: "奖励"
+                            })]
+                        })
+                    }), s.jsxs("tbody", {
+                        children: [s.jsxs("tr", {
+                            children: [s.jsx("td", {
+                                children: "第 1 次"
+                            }), s.jsxs("td", {
+                                children: [s.jsx("b", {
+                                    style: {
+                                        color: "var(--warn)"
+                                    },
+                                    children: "十连包"
+                                }), "（商店买不到）"]
+                            })]
+                        }), s.jsxs("tr", {
+                            children: [s.jsx("td", {
+                                children: "2~3 次"
+                            }), s.jsx("td", {
+                                children: "选拔包"
+                            })]
+                        }), s.jsxs("tr", {
+                            children: [s.jsxs("td", {
+                                children: ["4~", kn, " 次"]
+                            }), s.jsx("td", {
+                                children: "试训包"
+                            })]
+                        }), s.jsxs("tr", {
+                            children: [s.jsx("td", {
+                                children: "没猜中"
+                            }), s.jsx("td", {
+                                className: "muted",
+                                children: "退一半入场费"
+                            })]
+                        }), s.jsxs("tr", {
+                            children: [s.jsx("td", {
+                                children: "连续第 7 天"
+                            }), s.jsx("td", {
+                                children: s.jsx("b", {
+                                    style: {
+                                        color: "var(--warn)"
+                                    },
+                                    children: "额外一个十连包"
+                                })
+                            })]
+                        })]
+                    })]
+                })
+            }), s.jsx("p", {
+                className: "tiny faint",
+                style: {
+                    marginTop: 10,
+                    marginBottom: 0
+                },
+                children: "猜中另按连胜天数加金币。题型每天轮换，选手题最多。"
+            })]
+        })]
+    })
+}
+const fr = (() => {
+        const e = new Map;
+        for (const t of mt) {
+            if (!Q(t) || t.rarity === "mythic" || t.event || !t.clubId) continue;
+            const a = e.get(t.clubId) ?? [];
+            a.push(t), e.set(t.clubId, a)
+        }
+        for (const t of e.values()) t.sort((a, n) => n.rating - a.rating);
+        return e
+    })(),
+    pr = (() => {
+        const e = new Map;
+        for (const t of mt) {
+            if (!Q(t)) continue;
+            const a = Ve(t);
+            e.set(a, [...e.get(a) ?? [], t.id])
+        }
+        return e
+    })(),
+    gr = (e, t) => (pr.get(Ve(t)) ?? [t.id]).some(a => !!e.cards[a]);
+
+function yr(e) {
+    const t = [];
+    for (const a of Ns) {
+        const n = fr.get(a.id);
+        if (!n || n.length < 5) continue;
+        const r = n.filter(i => !gr(e, i)).map(i => i.ign);
+        t.push({
+            clubId: a.id,
+            tag: a.tag,
+            name: a.name,
+            region: a.region,
+            tier: a.tier,
+            total: n.length,
+            owned: n.length - r.length,
+            done: r.length === 0,
+            missing: r
+        })
+    }
+    return t.sort((a, n) => Number(n.done) - Number(a.done) || n.owned / n.total - a.owned / a.total || a.tier - n.tier || a.tag.localeCompare(n.tag))
+}
+const Ze = e => (Array.isArray(e.spares) ? e.spares : []).map(t => Math.trunc(Number(t) || 0)).filter(t => t >= 1 && t <= ie).sort((t, a) => t - a);
+
+function Jt(e, t) {
+    t.length ? e.spares = [...t].sort((a, n) => a - n) : delete e.spares
+}
+const Ss = (e, t) => {
+        const a = te(e);
+        return t && Q(a) ? Nn(a, t) : 0
+    },
+    ks = (e, t) => (Array.isArray(t.evoSpares) ? t.evoSpares : []).map(a => es(a)).filter(a => !!a).sort((a, n) => Ss(e, a) - Ss(e, n));
+
+function xr(e, t, a) {
+    a.length ? t.evoSpares = [...a].sort((n, r) => Ss(e, n) - Ss(e, r)) : delete t.evoSpares
+}
+
+function jr(e, t, a) {
+    const n = e.cards[t];
+    if (!n) return {
+        ok: !1,
+        level: 0
+    };
+    const r = n.dupes ?? 0,
+        i = Ze(n),
+        l = Math.max(0, Math.trunc(Number(n.level) || 0)),
+        c = u => (u === 0 ? r > 0 : i.includes(u)) || u === l,
+        o = a != null && c(a) ? a : r > 0 ? 0 : i.length ? i[0] : l;
+    if (o === 0 && r > 0) return n.dupes = r - 1, {
+        ok: !0,
+        level: 0
+    };
+    const d = i.indexOf(o);
+    if (o > 0 && d >= 0) return i.splice(d, 1), Jt(n, i), {
+        ok: !0,
+        level: o
+    };
+    const h = ks(t, n);
+    if (h.length) {
+        const u = h.shift();
+        return xr(t, n, h), {
+            ok: !0,
+            level: ie,
+            evo: u
+        }
+    }
+    const g = l >= ie ? es(n.evo) : void 0,
+        y = g ? {
+            ok: !0,
+            level: l,
+            evo: g
+        } : {
+            ok: !0,
+            level: l
+        };
+    if (i.length) return n.level = i.pop(), Jt(n, i), delete n.evo, y;
+    delete e.cards[t], e.squad = {
+        slots: e.squad.slots.map(u => u === t ? null : u),
+        coach: e.squad.coach === t ? null : e.squad.coach
+    };
+    for (const u of e.presets ?? []) u && (u.squad = {
+        slots: u.squad.slots.map(f => f === t ? null : f),
+        coach: u.squad.coach === t ? null : u.squad.coach
+    });
+    return y
+}
+
+function ro(e, t) {
+    if (!t) return {
+        level: 0
+    };
+    const a = {
+            cards: {
+                [e]: JSON.parse(JSON.stringify(t))
+            },
+            squad: {
+                slots: [],
+                coach: null
+            },
+            presets: []
+        },
+        n = jr(a, e);
+    return n.evo ? {
+        level: n.level,
+        evo: n.evo
+    } : {
+        level: n.level
+    }
+}
+const io = (e, t) => `+${e}${e>=ie&&es(t)?"（进修过）":""}`,
+    he = e => {
+        const t = te(e);
+        return t ? Q(t) ? t.ign : t.name : "一张卡"
+    },
+    je = (e, t, a) => `${he(e)}${t>0?` +${t}`:""}${t>=ie&&es(a)?"（进修过）":""}`;
+
+function Ea(e) {
+    var a, n, r, i, l, c, o, d, h, g, y, u, f, p, b, w, N, I, k, C, m, T, _, A, v, M, O, K, G, S, F, L;
+    const t = String(((a = e.body) == null ? void 0 : a.who) ?? "");
+    switch (e.kind) {
+        case "sold":
+            return `${he(String(((n=e.body)==null?void 0:n.cardId)??""))} 卖给了 ${t}，到账 ${e.coins} 金币`;
+        case "bought":
+            return `${(r=e.body)!=null&&r.draw?"抽签抽中，":""}买到 ${je(e.cardId??"",e.level,(i=e.body)==null?void 0:i.evo)}，花了 ${(l=e.body)==null?void 0:l.price} 金币`;
+        case "outbid":
+            return (c = e.body) != null && c.draw ? `${he(String(((o=e.body)==null?void 0:o.cardId)??""))} 的抽签没中（${e.body.draw} 人报名），你的 ${e.coins} 金币退回` : `${he(String(((d=e.body)==null?void 0:d.cardId)??""))} 被别人买走了，你的 ${e.coins} 金币退回`;
+        case "overbid":
+            return `你对 ${he(String(((h=e.body)==null?void 0:h.cardId)??""))} 的出价被超过了（现在 ${(g=e.body)==null?void 0:g.by}），${e.coins} 金币退回`;
+        case "unsold":
+            return `${je(e.cardId??"",e.level,(y=e.body)==null?void 0:y.evo)} 到时没人出价，已退回`;
+        case "listing_retired":
+            return `交易区改成竞拍了，改版前挂的 ${je(e.cardId??"",e.level,(u=e.body)==null?void 0:u.evo)} 已退回，可以重新挂`;
+        case "offer_declined":
+            return `对方拒绝了你的报价，${e.coins} 金币退回`;
+        case "offer_expired":
+            return `报价过期或挂牌撤回，${e.coins} 金币退回`;
+        case "offer_withdrawn":
+            return `你撤回了对 ${he(String(((f=e.body)==null?void 0:f.cardId)??""))} 的报价，${e.coins} 金币退回`;
+        case "offer_made":
+            return `${t} 对你的 ${he(String(((p=e.body)==null?void 0:p.cardId)??""))} 出价 ${(b=e.body)==null?void 0:b.price}（起拍 ${(w=e.body)==null?void 0:w.ask}）`;
+        case "listing_pulled":
+            return `${je(e.cardId??"",e.level,(N=e.body)==null?void 0:N.evo)} 已撤回`;
+        case "listing_expired":
+            return `${je(e.cardId??"",e.level,(I=e.body)==null?void 0:I.evo)} 连续三次没回复报价，已自动下架并退回`;
+        case "gift":
+            return `收到 ${t} 送的 ${je(e.cardId??"",e.level,(k=e.body)==null?void 0:k.evo)}`;
+        case "swap_offer":
+            return `${t} 想用 ${he(String(((C=e.body)==null?void 0:C.give)??""))} 换你的 ${he(String(((m=e.body)==null?void 0:m.want)??""))}，去好友页答复`;
+        case "swap_in":
+            return `换到了 ${je(e.cardId??"",e.level,(T=e.body)==null?void 0:T.evo)}（和 ${t} 的交换成交）`;
+        case "swap_back":
+            return `${je(e.cardId??"",e.level,(_=e.body)==null?void 0:_.evo)} 退回来了（${String(((A=e.body)==null?void 0:A.reason)??"交换没成")}）`;
+        case "open_cup": {
+            const D = Number((v = e.body) == null ? void 0 : v.place) || 0,
+                H = D === 1 ? "全服杯冠军" : D === 2 ? "全服杯亚军" : D === 4 ? "全服杯四强" : `全服杯赢了 ${Number((M=e.body)==null?void 0:M.wins)||0} 场`,
+                W = [];
+            return e.coins && W.push(`${e.coins} 金币`), e.pack && W.push(`${((O=ne[e.pack])==null?void 0:O.name)??e.pack} ×${e.count}`), `${H}：${W.join("，")}`
+        }
+        case "team_cup": {
+            const D = Number((K = e.body) == null ? void 0 : K.place) || 0,
+                H = D === 1 ? "组队杯冠军" : D === 2 ? "组队杯亚军" : D === 4 ? "组队杯四强" : D === 8 ? "组队杯八强" : "组队杯",
+                W = [];
+            e.pack && W.push(`${((G=ne[e.pack])==null?void 0:G.name)??e.pack} ×${e.count}`), e.coins && W.push(`${e.coins} 金币`);
+            const R = Number((S = e.body) == null ? void 0 : S.duelWins) || 0;
+            return `${H}：${W.join("，")}${R?`（单挑赢了 ${R} 场）`:""}`
+        }
+        case "grant": {
+            const D = [];
+            e.pack && D.push(`${((F=ne[e.pack])==null?void 0:F.name)??e.pack} ×${e.count}`), e.coins && D.push(`${e.coins} 金币`), e.cardId && D.push(he(e.cardId));
+            const H = String(((L = e.body) == null ? void 0 : L.note) ?? "");
+            return `收到官方发放：${D.join("，")}${H?`（${H}）`:""}`
+        }
+        default:
+            return "有一条新消息"
+    }
+}
+const Zt = e => (e.mail ?? []).filter(t => !t.seen).length,
+    br = .2,
+    La = e => e.reduce((t, a) => t + a, 0),
+    Ws = e => Math.round(La(dl.slice(0, e)) * br / 10) * 10,
+    ea = e => 1 + La(hl.slice(0, e)),
+    vr = e => `/api/market/${e}`,
+    oo = e => e === "timeout" ? "请求超时，稍后再试。" : e === "rate" ? "操作太快了，等一下。" : e === "server" ? "服务器出错了，稍后再试。" : e === "aborted" ? "已取消。" : "连不上服务器，请检查网络。",
+    wr = 12e3,
+    sa = 2e4,
+    Sr = 1200;
+async function Se(e, t, a = {}) {
+    var c, o, d, h;
+    const n = typeof AbortController < "u" ? new AbortController : null;
+    let r = !1;
+    const i = n ? setTimeout(() => {
+            r = !0, n.abort()
+        }, a.timeoutMs ?? wr) : null,
+        l = () => n == null ? void 0 : n.abort();
+    (c = a.signal) == null || c.addEventListener("abort", l);
+    try {
+        if ((o = a.signal) != null && o.aborted) return {
+            fail: "aborted"
+        };
+        const g = await fetch(vr(e), {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                id: ka(),
+                ...t
+            }),
+            signal: n == null ? void 0 : n.signal
+        });
+        if (g.status === 429) return {
+            fail: "rate",
+            status: 429
+        };
+        if (g.status >= 500) return {
+            fail: "server",
+            status: g.status
+        };
+        const y = await g.json().catch(() => null);
+        return y ? {
+            data: y
+        } : {
+            fail: "server",
+            status: g.status
+        }
+    } catch {
+        return {
+            fail: (d = a.signal) != null && d.aborted ? "aborted" : r ? "timeout" : "offline"
+        }
+    } finally {
+        i && clearTimeout(i), (h = a.signal) == null || h.removeEventListener("abort", l)
+    }
+}
+async function De(e, t) {
+    return (await Se(e, t)).data ?? null
+}
+
+function kr() {
+    const e = new Uint8Array(16);
+    try {
+        crypto.getRandomValues(e)
+    } catch {
+        for (let a = 0; a < 16; a++) e[a] = Math.floor(Math.random() * 256)
+    }
+    let t = "";
+    for (let a = 0; a < 16; a++) t += (e[a] < 16 ? "0" : "") + e[a].toString(16);
+    return t
+}
+async function kt(e, t) {
+    const a = kr();
+    let n = await Se(e, {
+        ...t,
+        requestId: a
+    }, {
+        timeoutMs: sa
+    });
+    return n.fail && n.fail !== "rate" && (await new Promise(r => setTimeout(r, Sr)), n = await Se(e, {
+        ...t,
+        requestId: a
+    }, {
+        timeoutMs: sa
+    })), n
+}
+
+function ta(e) {
+    const t = Math.ceil(e / 60);
+    if (t < 60) return `${Math.max(1,t)} 分钟`;
+    const a = Math.ceil(e / 3600);
+    if (a < 24) return `${a} 小时`;
+    const n = Math.floor(a / 24);
+    return a % 24 ? `${n} 天 ${a%24} 小时` : `${n} 天`
+}
+
+function co(e) {
+    const t = e,
+        a = Number(t.need) || 0,
+        n = Math.max(0, a - (Number(t.have) || 0)),
+        r = Number(t.days) || 3,
+        i = Math.max(0, Number(t.wait) || 0);
+    return n && i ? `新账号要建满 ${r} 天、开够 ${a} 抽才能交易：还差 ${n} 抽，还要等 ${ta(i)}。` : i ? `新账号要建满 ${r} 天才能交易，还要等 ${ta(i)}。` : `开够 ${a} 抽才能交易，还差 ${n} 抽。`
+}
+const ho = 60,
+    uo = (e = {}, t) => Se("browse", {
+        ...e
+    }, {
+        signal: t
+    }),
+    Nr = (e, t, a, n) => Se("history", {
+        cardId: e,
+        level: t,
+        listing: a
+    }, {
+        signal: n
+    }),
+    mo = (e, t) => Se("peek", {
+        ids: e
+    }, {
+        signal: t
+    }),
+    fo = (e, t) => Se("participating", {
+        cursor: e
+    }, {
+        signal: t
+    }),
+    po = e => Se("offers", {}, {
+        signal: e
+    }),
+    go = (e, t, a, n, r = null, i = Cr) => kt("list", {
+        cardId: e,
+        ask: t,
+        level: a,
+        rarity: n,
+        buyout: r,
+        hours: i
+    }),
+    yo = 3,
+    Cr = 24,
+    xo = [2, 4, 6, 8, 12, 24],
+    Tr = .05,
+    jo = 10,
+    bo = 1.2,
+    $r = 5e5,
+    _a = 1e6,
+    vo = e => e == null ? $r : _a,
+    wo = (e, t) => t == null ? e : Math.min(_a, Math.max(e, Math.ceil(t * (1 + Tr)))),
+    So = e => ({
+        mythic: 4e3,
+        gold: 700,
+        silver: 200,
+        bronze: 60
+    })[e] ?? 50,
+    ko = e => De("unlist", {
+        listing: e
+    }),
+    No = (e, t, a) => kt("swap", {
+        code: e,
+        giveId: t,
+        wantId: a
+    }).then(n => n.data ?? null),
+    Co = () => De("swaps", {}),
+    To = (e, t) => De("swap_answer", {
+        swap: e,
+        accept: t
+    }),
+    $o = e => De("swap_cancel", {
+        swap: e
+    }),
+    Mo = (e, t) => kt("offer", {
+        listing: e,
+        price: t
+    }),
+    Ao = (e, t) => De("answer", {
+        offer: e,
+        accept: t
+    }),
+    Io = e => De("withdraw", {
+        offer: e
+    }),
+    Ue = e => e.toLocaleString("en-US");
+
+function Mr({
+    cardId: e,
+    level: t,
+    listing: a,
+    wide: n
+}) {
+    const [r, i] = x.useState(null), [l, c] = x.useState(null);
+    x.useEffect(() => {
+        const h = typeof AbortController < "u" ? new AbortController : void 0;
+        return i(null), c(null), Nr(e, t, a, h == null ? void 0 : h.signal).then(g => {
+            var y;
+            (y = g.data) != null && y.ok ? i(g.data) : g.fail !== "aborted" && c(g.fail ?? "server")
+        }), () => h == null ? void 0 : h.abort()
+    }, [e, t, a]);
+    const o = {
+        marginTop: 6,
+        lineHeight: 1.6,
+        textAlign: "left",
+        ...n ? {} : {
+            fontSize: 11
+        }
+    };
+    if (l) return s.jsx("div", {
+        className: "tiny faint",
+        style: o,
+        children: "成交记录没读到"
+    });
+    if (!r) return s.jsx("div", {
+        className: "tiny faint",
+        style: o,
+        children: "成交记录…"
+    });
+    if (!r.sold) return s.jsxs("div", {
+        className: "tiny faint",
+        style: o,
+        children: ["还没有成交记录", r.hands ? " · 第 1 手" : ""]
+    });
+    const d = r.level && r.level.sold > 0 && r.level.sold < r.sold ? r.level : null;
+    return s.jsxs("div", {
+        className: "tiny faint",
+        style: o,
+        "data-key": "price-history",
+        children: [s.jsxs("div", {
+            children: ["成交 ", s.jsx("b", {
+                children: r.sold
+            }), " 次 · 均价 ", s.jsx("b", {
+                children: Ue(r.avg ?? 0)
+            })]
+        }), d && s.jsxs("div", {
+            children: ["+", d.level, " 均价 ", s.jsx("b", {
+                children: Ue(d.avg ?? 0)
+            }), "（", d.sold, " 次）"]
+        }), r.week.sold > 0 && s.jsxs("div", {
+            children: ["近 7 天均价 ", s.jsx("b", {
+                children: Ue(r.week.avg ?? 0)
+            }), "（", r.week.sold, " 次）"]
+        }), s.jsxs("div", {
+            children: ["最近 ", r.recent.slice(0, n ? 8 : 3).map(h => Ue(h.price) + (h.level ? `(+${h.level})` : "")).join(" · ")]
+        }), r.hands && s.jsxs("div", {
+            children: ["这张是", s.jsxs("b", {
+                children: ["第 ", r.hands.count, " 手"]
+            }), r.hands.trail.length > 0 && s.jsxs(s.Fragment, {
+                children: [" · 上一手 ", Ue(r.hands.trail[0].price)]
+            })]
+        })]
+    })
+}
+const Pa = e => e.toLocaleString("en-US");
+
+function Oa({
+    cardId: e,
+    onClose: t,
+    actions: a
+}) {
+    var w, N;
+    const {
+        g: n,
+        act: r,
+        toast: i,
+        openDossier: l,
+        go: c
+    } = oe(), [o, d] = x.useState(null), [h, g] = x.useState(!1), y = Ie(t), u = te(e), f = n.cards[e];
+    if (!u || !f) return null;
+    const p = es(f.evo),
+        b = Je(n, e);
+    return s.jsxs(s.Fragment, {
+        children: [s.jsx("div", {
+            className: "modal-bg",
+            onClick: t,
+            children: s.jsxs("div", {
+                ref: y,
+                role: "dialog",
+                "aria-modal": "true",
+                "aria-label": "卡牌详情",
+                tabIndex: -1,
+                className: "modal",
+                style: {
+                    maxWidth: 620
+                },
+                onClick: I => I.stopPropagation(),
+                children: [s.jsxs("div", {
+                    className: "modal-head",
+                    children: [s.jsx("h2", {
+                        children: u.kind === "player" ? u.ign : u.name
+                    }), s.jsx("div", {
+                        className: "spacer"
+                    }), s.jsx("button", {
+                        className: "ghost sm",
+                        onClick: t,
+                        children: "关闭"
+                    })]
+                }), s.jsxs("div", {
+                    className: "modal-body",
+                    children: [s.jsxs("div", {
+                        className: "row cm-card-intro",
+                        style: {
+                            gap: 18,
+                            alignItems: "flex-start",
+                            flexWrap: "wrap"
+                        },
+                        children: [s.jsx(Me, {
+                            card: u,
+                            level: b,
+                            size: "lg"
+                        }), s.jsxs("div", {
+                            style: {
+                                flex: 1,
+                                minWidth: 0
+                            },
+                            children: [u.legend && s.jsxs("div", {
+                                className: "small",
+                                style: {
+                                    marginBottom: 10,
+                                    padding: "9px 11px",
+                                    borderRadius: 4,
+                                    lineHeight: 1.7,
+                                    background: "rgba(180,120,255,.10)",
+                                    border: "1px solid rgba(180,120,255,.35)"
+                                },
+                                children: [s.jsxs("b", {
+                                    children: ["★ ", u.legend.title]
+                                }), s.jsxs("span", {
+                                    className: "tiny faint",
+                                    style: {
+                                        marginLeft: 6
+                                    },
+                                    children: [ul[u.legend.kind], " · ", u.legend.year, " · ", u.legend.clubTag]
+                                }), s.jsx("div", {
+                                    className: "tiny muted",
+                                    style: {
+                                        marginTop: 4
+                                    },
+                                    children: u.legend.note
+                                }), ((w = _t(u.legend.id)) == null ? void 0 : w.page) && s.jsxs("div", {
+                                    className: "tiny faint",
+                                    style: {
+                                        marginTop: 6
+                                    },
+                                    children: ["照片：", s.jsx("a", {
+                                        href: _t(u.legend.id).page,
+                                        target: "_blank",
+                                        rel: "noreferrer noopener",
+                                        children: "Liquipedia"
+                                    }), " ", "· CC BY-SA"]
+                                })]
+                            }), Q(u) ? s.jsxs(s.Fragment, {
+                                children: [s.jsxs("div", {
+                                    className: "small muted",
+                                    style: {
+                                        marginBottom: 8,
+                                        lineHeight: 1.8
+                                    },
+                                    children: [u.realName ?? "真名未公开", " · ", s.jsx(al, {
+                                        nat: u.nat
+                                    }), " ", at(u.nat), !u.seoul && !u.bangkok && !u.retired && ` · ${u.age} 岁`, s.jsx("br", {}), bs[u.region], " · ", u.clubTag ?? "自由人", " · ", u.roles.join(" / "), u.isIgl && " · 指挥"]
+                                }), s.jsx("div", {
+                                    className: "grid",
+                                    style: {
+                                        gridTemplateColumns: "repeat(4, 1fr)",
+                                        gap: "4px 10px"
+                                    },
+                                    children: Ca.map(I => s.jsxs("div", {
+                                        className: "tiny",
+                                        children: [s.jsx("span", {
+                                            className: "faint",
+                                            children: ft[I]
+                                        }), " ", s.jsx("b", {
+                                            className: "mono",
+                                            children: Math.min(99, Cn(u, p)[I] + f.level)
+                                        }), !!(p != null && p.add[I]) && s.jsxs("span", {
+                                            className: "mono",
+                                            style: {
+                                                color: "var(--win)"
+                                            },
+                                            children: [" ↑", p.add[I]]
+                                        })]
+                                    }, I))
+                                }), u.seoul ? s.jsxs("div", {
+                                    className: "small muted",
+                                    style: {
+                                        marginTop: 12,
+                                        lineHeight: 1.8
+                                    },
+                                    children: [s.jsxs("b", {
+                                        children: ["首尔 2024 · ", String(u.seoul.number).padStart(3, "0"), "/080"]
+                                    }), s.jsx("br", {}), "当届数据：ACS ", u.seoul.acs, " · K/D ", u.seoul.kd.toFixed(2), " · ", u.seoul.maps, " 张地图", s.jsx("br", {}), s.jsx("span", {
+                                        className: "tiny",
+                                        children: "能力值由赛事数据换算；头像摄于首尔冠军赛。"
+                                    }), s.jsx("br", {}), s.jsx("a", {
+                                        href: u.seoul.profile,
+                                        target: "_blank",
+                                        rel: "noreferrer",
+                                        children: "查看选手主页 ↗"
+                                    }), " · ", s.jsx("a", {
+                                        href: "/seoul-2024",
+                                        children: "浏览赛事图鉴 ↗"
+                                    })]
+                                }) : u.bangkok ? s.jsxs("div", {
+                                    className: "small muted",
+                                    style: {
+                                        marginTop: 12,
+                                        lineHeight: 1.8
+                                    },
+                                    children: [s.jsxs("b", {
+                                        children: ["曼谷 2025 · ", String(u.bangkok.number).padStart(3, "0"), "/", String(ml).padStart(3, "0")]
+                                    }), s.jsx("br", {}), "当届数据：ACS ", u.bangkok.acs, " · K/D ", u.bangkok.kd.toFixed(2), " · ", u.bangkok.maps, " 张地图", s.jsx("br", {}), s.jsx("span", {
+                                        className: "tiny",
+                                        children: "能力值由赛事数据换算；头像摄于曼谷大师赛。"
+                                    }), s.jsx("br", {}), s.jsx("a", {
+                                        href: u.bangkok.profile,
+                                        target: "_blank",
+                                        rel: "noreferrer",
+                                        children: "查看选手主页 ↗"
+                                    }), " · ", s.jsx("a", {
+                                        href: "/bangkok-2025",
+                                        children: "浏览赛事图鉴 ↗"
+                                    })]
+                                }) : u.afterglow ? s.jsxs("div", {
+                                    className: "small muted",
+                                    style: {
+                                        marginTop: 12,
+                                        lineHeight: 1.8
+                                    },
+                                    children: [s.jsxs("b", {
+                                        children: ["余晖 · ", u.afterglow.number.replace("余晖 / ", "")]
+                                    }), u.legend ? ` · ${u.legend.title}` : "", s.jsx("br", {}), "生涯 ", u.afterglow.span, " · 最后效力 ", u.clubTag, s.jsx("br", {}), s.jsx("span", {
+                                        className: "tiny",
+                                        children: u.legend ? "彩卡分数按那一届的表现排位算；头像是 Riot 官方赛事照片。" : "分数用现役同一套算法，按整个职业生涯平均。"
+                                    }), !!((N = fl.hist) != null && N[u.playerId]) && s.jsxs(s.Fragment, {
+                                        children: [s.jsx("br", {}), s.jsx("button", {
+                                            className: "sm",
+                                            style: {
+                                                marginTop: 8
+                                            },
+                                            onClick: () => l(u.playerId),
+                                            children: "查看选手资料 →"
+                                        })]
+                                    })]
+                                }) : s.jsx("button", {
+                                    className: "sm",
+                                    style: {
+                                        marginTop: 12
+                                    },
+                                    onClick: () => l(u.playerId),
+                                    children: "查看选手资料 →"
+                                })]
+                            }) : s.jsxs("div", {
+                                className: "small muted",
+                                style: {
+                                    lineHeight: 1.9
+                                },
+                                children: [u.clubTag ?? "自由身", " 的教练", u.spec ? "组分析师" : "", s.jsx("br", {}), "战术 ", u.tactics, " · 培养 ", u.development, " · 激励 ", u.motivation, s.jsx("br", {}), s.jsx("span", {
+                                    className: "tiny",
+                                    children: "带同队或同赛区的选手时默契更高。"
+                                })]
+                            })]
+                        })]
+                    }), s.jsxs("div", {
+                        style: {
+                            marginTop: 16,
+                            borderTop: "1px solid var(--line-soft)",
+                            paddingTop: 14
+                        },
+                        children: [s.jsx("div", {
+                            className: "row",
+                            style: {
+                                justifyContent: "space-between",
+                                marginBottom: 10
+                            },
+                            children: s.jsxs("div", {
+                                children: [s.jsxs("div", {
+                                    className: "small",
+                                    children: ["等级 ", s.jsxs("b", {
+                                        children: ["+", f.level]
+                                    }), " / +", ie, s.jsxs("span", {
+                                        className: "faint",
+                                        children: [" · 评分 ", u.rating]
+                                    }), " ", "· 战力 ", s.jsx("b", {
+                                        children: Pa(Math.round(Ta(u, b)))
+                                    }), p && s.jsxs("span", {
+                                        className: "faint",
+                                        children: [" · 进修 ", p.n, "/", Is]
+                                    })]
+                                }), s.jsxs("div", {
+                                    className: "tiny faint",
+                                    children: ["重复卡 ", f.dupes, " 张", Ze(f).length > 0 && ` · 备用卡 ${Ze(f).map(I=>`+${I}`).join("、")}`, ks(u.id, f).length > 0 && ` · 进修过的备用卡 ${ks(u.id,f).length} 张`, " ", "· 累计抽到 ", f.seen, " 次"]
+                                })]
+                            })
+                        }), s.jsx(Ar, {
+                            cardId: u.id
+                        }), Q(u) && f.level >= ie && s.jsx("button", {
+                            className: ((p == null ? void 0 : p.n) ?? 0) < Is ? "primary sm" : "sm",
+                            style: {
+                                marginLeft: 8
+                            },
+                            onClick: () => {
+                                try {
+                                    sessionStorage.setItem(Bl, u.id)
+                                } catch {}
+                                t(), c("evolve")
+                            },
+                            children: ((p == null ? void 0 : p.n) ?? 0) < Is ? "去进修" : "进修已满 · 可洗掉"
+                        }), f.dupes > 0 && s.jsxs("button", {
+                            className: "sm",
+                            style: {
+                                marginLeft: 8
+                            },
+                            disabled: h,
+                            onClick: () => {
+                                const I = f.dupes;
+                                d({
+                                    lines: [{
+                                        cardId: u.id,
+                                        count: I,
+                                        coins: Pt[u.rarity] * I
+                                    }],
+                                    onConfirm: async () => {
+                                        g(!0);
+                                        const k = await r("salvage", {
+                                            cardId: u.id,
+                                            count: I
+                                        });
+                                        g(!1), d(null), i(k.ok ? `分解 ${I} 张，+${k.result.coins} 金币。` : k.why)
+                                    }
+                                })
+                            },
+                            children: ["全部分解（+", Pt[u.rarity] * f.dupes, " 金币）"]
+                        }), s.jsx(Ir, {
+                            cardId: u.id
+                        }), s.jsxs("div", {
+                            className: "small",
+                            style: {
+                                marginTop: 14
+                            },
+                            children: [s.jsx("b", {
+                                children: "交易区"
+                            }), s.jsx(Mr, {
+                                cardId: u.id,
+                                level: f.dupes > 0 ? 0 : f.level,
+                                wide: !0
+                            })]
+                        })]
+                    }), a && s.jsx("div", {
+                        className: "row wrap",
+                        style: {
+                            gap: 8,
+                            marginTop: 16,
+                            borderTop: "1px solid var(--line-soft)",
+                            paddingTop: 14
+                        },
+                        children: a
+                    })]
+                })]
+            })
+        }), o && s.jsx(St, {
+            ask: o,
+            busy: h,
+            onClose: () => {
+                h || d(null)
+            }
+        })]
+    })
+}
+
+function Ar({
+    cardId: e
+}) {
+    const {
+        g: t,
+        act: a,
+        toast: n
+    } = oe(), r = Tn(t, e), i = te(e);
+    if (r.to == null) return s.jsx("span", {
+        className: "tiny faint",
+        children: r.why
+    });
+    const l = !!i;
+    return s.jsxs("button", {
+        className: "primary sm",
+        disabled: !r.can,
+        title: r.why,
+        onClick: async () => {
+            var d;
+            const c = await a("upgrade", {
+                cardId: e
+            });
+            if (!c.ok) {
+                n(c.why);
+                return
+            }
+            const o = ((d = c.result) == null ? void 0 : d.level) ?? r.to ?? 0;
+            n(l && i ? `升级成功，+${o}，战力 ${Pa(Ta(i,o))}。` : `升级成功，现在是 +${o}。`)
+        },
+        children: ["升到 +", r.to, "（", l ? `战力 +${pl} · ` : "", r.dupes, " 张重复 + ", r.coins, " 金币）"]
+    })
+}
+
+function Ir({
+    cardId: e
+}) {
+    const {
+        g: t,
+        act: a,
+        toast: n
+    } = oe(), [r, i] = x.useState(null), l = t.cards[e], c = l ? Ze(l) : [], o = l ? ks(e, l) : [];
+    return !c.length && !o.length ? null : s.jsxs("div", {
+        style: {
+            marginTop: 12
+        },
+        children: [o.length > 0 && s.jsxs("div", {
+            style: {
+                marginBottom: 10
+            },
+            children: [s.jsxs("div", {
+                className: "tiny faint",
+                style: {
+                    marginBottom: 6
+                },
+                children: ["进修过的备用卡：比上场那张弱，进修原样留着。挂市场、交换时先出它。洗掉进修后变成普通 +", ie, " 备用卡，可以拆解。"]
+            }), o.map((d, h) => s.jsxs("div", {
+                className: "row wrap",
+                style: {
+                    gap: 6,
+                    alignItems: "center",
+                    marginBottom: 4
+                },
+                children: [s.jsxs("span", {
+                    className: "small mono",
+                    children: ["+", ie, " · 进修 ", d.n, " 次（", Ca.filter(g => d.add[g]).map(g => `${ft[g]} +${d.add[g]}`).join("，"), "）"]
+                }), r === h ? s.jsxs(s.Fragment, {
+                    children: [s.jsx("span", {
+                        className: "tiny",
+                        style: {
+                            color: "var(--loss)"
+                        },
+                        children: "洗掉后进修清空，吃掉的卡不退"
+                    }), s.jsx("button", {
+                        className: "sm primary",
+                        onClick: async () => {
+                            const g = await a("evo_wash", {
+                                cardId: e,
+                                spare: h
+                            });
+                            i(null), n(g.ok ? `已洗掉，多了一张 +${ie} 备用卡。` : g.why)
+                        },
+                        children: "确认洗掉"
+                    }), s.jsx("button", {
+                        className: "sm ghost",
+                        onClick: () => i(null),
+                        children: "取消"
+                    })]
+                }) : s.jsx("button", {
+                    className: "sm",
+                    onClick: () => i(h),
+                    children: "洗掉进修"
+                })]
+            }, h))]
+        }), c.length > 0 && s.jsx("div", {
+            className: "tiny faint",
+            style: {
+                marginBottom: 6
+            },
+            children: "备用卡是同一张卡多出来的升级版。拆解后变成重复卡，可以拿去升级。"
+        }), s.jsx("div", {
+            className: "row wrap",
+            style: {
+                gap: 6
+            },
+            children: c.map((d, h) => s.jsxs("button", {
+                className: "sm",
+                disabled: t.coins < Ws(d),
+                title: t.coins < Ws(d) ? "金币不够" : void 0,
+                onClick: async () => {
+                    const g = await a("dismantle", {
+                        cardId: e,
+                        level: d
+                    });
+                    n(g.ok ? `拆了一张 +${d}，多了 ${ea(d)} 张重复卡。` : g.why)
+                },
+                children: ["拆解 +", d, "（", Ws(d), " 金币，得 ", ea(d), " 张重复卡）"]
+            }, h))
+        })]
+    })
+}
+const aa = {
+        base: "常规卡",
+        "seoul-2024": "24 首尔冠军赛",
+        "bangkok-2025": "25 曼谷大师赛",
+        retired: "退役选手"
+    },
+    Rr = e => Q(e) && e.event ? e.event : "base",
+    Pe = {
+        rarity: "all",
+        region: "all",
+        role: "all",
+        club: "all",
+        series: "all",
+        nat: "all"
+    },
+    na = e => e.rarity !== "all" || e.region !== "all" || e.role !== "all" || e.club !== "all" || (e.series ?? "all") !== "all" || (e.nat ?? "all") !== "all",
+    Da = e => pt(e.nat ?? null);
+
+function Oe(e, t) {
+    if (t.rarity === "coach") {
+        if (e.kind !== "coach") return !1
+    } else if (t.rarity !== "all" && e.rarity !== t.rarity) return !1;
+    if (t.region !== "all" && e.region !== t.region) return !1;
+    if (t.role === "igl") {
+        if (!(Q(e) && e.isIgl)) return !1
+    } else if (t.role !== "all" && !(Q(e) && e.roles.includes(t.role))) return !1;
+    return !(t.club !== "all" && (e.clubTag ?? "") !== t.club || (t.series ?? "all") !== "all" && Rr(e) !== t.series || (t.nat ?? "all") !== "all" && Da(e) !== t.nat)
+}
+const Ro = (e, t) => {
+        const a = t.trim().toLowerCase();
+        return a ? (Q(e) ? e.ign : e.name).toLowerCase().includes(a) || (e.clubTag ?? "").toLowerCase().includes(a) : !0
+    },
+    Er = ["决斗者", "先锋", "控场", "哨卫"];
+
+function Lr(e) {
+    const t = new Map;
+    for (const a of e) a.clubTag && t.set(a.clubTag, (t.get(a.clubTag) ?? 0) + 1);
+    return [...t].map(([a, n]) => ({
+        tag: a,
+        n
+    })).sort((a, n) => n.n - a.n || a.tag.localeCompare(n.tag))
+}
+
+function _r(e) {
+    const t = new Map;
+    for (const a of e) {
+        const n = Da(a);
+        n && t.set(n, (t.get(n) ?? 0) + 1)
+    }
+    return [...t].map(([a, n]) => ({
+        nat: a,
+        n
+    })).sort((a, n) => n.n - a.n || a.nat.localeCompare(n.nat))
+}
+const Pr = [{
+    key: "all",
+    label: "全部"
+}, {
+    key: "mythic",
+    label: ge.mythic
+}, {
+    key: "gold",
+    label: ge.gold
+}, {
+    key: "silver",
+    label: ge.silver
+}, {
+    key: "bronze",
+    label: ge.bronze
+}, {
+    key: "coach",
+    label: "教练"
+}];
+
+function Ba({
+    value: e,
+    onChange: t,
+    pool: a,
+    extra: n
+}) {
+    const [r, i] = x.useState(!1), l = Lr(a.filter(d => Oe(d, {
+        ...e,
+        club: "all"
+    }))), c = _r(a.filter(d => Oe(d, {
+        ...e,
+        nat: "all"
+    }))), o = d => {
+        const h = {
+            ...e,
+            ...d
+        };
+        h.club !== "all" && !a.some(g => g.clubTag === h.club && Oe(g, {
+            ...h,
+            club: "all"
+        })) && (h.club = "all"), t(h)
+    };
+    return s.jsxs("div", {
+        className: "row wrap card-filters",
+        style: {
+            gap: 8,
+            marginBottom: 12,
+            alignItems: "center"
+        },
+        children: [s.jsx("div", {
+            className: "seg",
+            children: Pr.map(d => s.jsx("button", {
+                "aria-pressed": e.rarity === d.key,
+                className: e.rarity === d.key ? "on" : "",
+                onClick: () => o({
+                    rarity: d.key
+                }),
+                children: d.label
+            }, d.key))
+        }), s.jsxs("button", {
+            className: "cm-filter-toggle",
+            "aria-expanded": r,
+            onClick: () => i(d => !d),
+            children: [r ? "收起筛选" : "赛区 / 位置 / 国家 / 系列筛选", na(e) ? " · 已筛选" : ""]
+        }), s.jsxs("div", {
+            className: `card-filter-advanced${r?" expanded":""}`,
+            children: [s.jsxs("div", {
+                className: "seg",
+                children: [s.jsx("button", {
+                    "aria-pressed": e.region === "all",
+                    className: e.region === "all" ? "on" : "",
+                    onClick: () => o({
+                        region: "all"
+                    }),
+                    children: "全部赛区"
+                }), $n.map(d => s.jsx("button", {
+                    "aria-pressed": e.region === d,
+                    className: e.region === d ? "on" : "",
+                    onClick: () => o({
+                        region: d
+                    }),
+                    children: bs[d]
+                }, d))]
+            }), s.jsxs("select", {
+                className: "sm",
+                style: {
+                    width: "auto",
+                    padding: "4px 7px"
+                },
+                "aria-label": "选手位置",
+                value: e.role,
+                onChange: d => o({
+                    role: d.target.value
+                }),
+                children: [s.jsx("option", {
+                    value: "all",
+                    children: "全部位置"
+                }), Er.map(d => s.jsx("option", {
+                    value: d,
+                    children: d
+                }, d)), s.jsx("option", {
+                    value: "igl",
+                    children: "指挥（IGL）"
+                })]
+            }), s.jsxs("select", {
+                className: "sm",
+                style: {
+                    width: "auto",
+                    padding: "4px 7px",
+                    maxWidth: 170
+                },
+                "aria-label": "国家",
+                "data-key": "nat",
+                value: e.nat ?? "all",
+                onChange: d => o({
+                    nat: d.target.value
+                }),
+                children: [s.jsx("option", {
+                    value: "all",
+                    children: "全部国家"
+                }), c.map(d => s.jsxs("option", {
+                    value: d.nat,
+                    children: [at(d.nat), "（", d.n, "）"]
+                }, d.nat)), (e.nat ?? "all") !== "all" && !c.some(d => d.nat === e.nat) && s.jsxs("option", {
+                    value: e.nat,
+                    children: [at(e.nat), "（0）"]
+                })]
+            }), s.jsxs("select", {
+                className: "sm",
+                style: {
+                    width: "auto",
+                    padding: "4px 7px"
+                },
+                "aria-label": "系列",
+                "data-key": "series",
+                value: e.series ?? "all",
+                onChange: d => o({
+                    series: d.target.value
+                }),
+                children: [s.jsx("option", {
+                    value: "all",
+                    children: "全部系列"
+                }), Object.keys(aa).map(d => s.jsx("option", {
+                    value: d,
+                    children: aa[d]
+                }, d))]
+            }), s.jsxs("select", {
+                className: "sm",
+                style: {
+                    width: "auto",
+                    padding: "4px 7px",
+                    maxWidth: 170
+                },
+                "aria-label": "所属战队",
+                value: e.club,
+                onChange: d => o({
+                    club: d.target.value
+                }),
+                children: [s.jsx("option", {
+                    value: "all",
+                    children: "全部战队"
+                }), l.map(d => s.jsxs("option", {
+                    value: d.tag,
+                    children: [d.tag, "（", d.n, "）"]
+                }, d.tag)), e.club !== "all" && !l.some(d => d.tag === e.club) && s.jsxs("option", {
+                    "aria-label": "所属战队",
+                    value: e.club,
+                    children: [e.club, "（0）"]
+                })]
+            })]
+        }), n, na(e) && s.jsx("button", {
+            className: "sm ghost",
+            onClick: () => t(Pe),
+            children: "清除筛选"
+        })]
+    })
+}
+const Ks = e => e.toLocaleString("en-US"),
+    la = "valmanager:card:setsOpen";
+
+function Or() {
+    const {
+        g: e,
+        version: t,
+        act: a,
+        toast: n
+    } = oe(), [r, i] = x.useState(Pe), [l, c] = x.useState(!1), [o, d] = x.useState(""), h = x.useDeferredValue(o), [g, y] = x.useState(1), u = x.useRef(null), f = $ => {
+        y($), requestAnimationFrame(() => {
+            var U, q;
+            (U = u.current) == null || U.focus({
+                preventScroll: !0
+            }), (q = u.current) == null || q.scrollIntoView({
+                block: "start"
+            })
+        })
+    }, [p, b] = x.useState("rating"), w = 60, [N, I] = x.useState(null), [k, C] = x.useState(!1), [m, T] = x.useState(!1), [_, A] = x.useState(new Set), [v, M] = x.useState(!0), [O, K] = x.useState(!1), G = x.useMemo(() => st(e), [e, t]), S = x.useMemo(() => k ? mt.filter($ => !e.cards[$.id]) : G.map($ => $.card), [k, G, e.cards, t]), F = x.useMemo(() => {
+        const $ = h.trim().toLowerCase(),
+            U = q => $ ? (q.kind === "player" ? `${q.ign} ${q.realName??""} ${q.clubTag??""}` : `${q.name} ${q.clubTag??""}`).toLowerCase().includes($) : !0;
+        return k ? S.filter(q => U(q) && Oe(q, r)).sort((q, se) => se.rating - q.rating).map(q => ({
+            card: q,
+            owned: null,
+            rating: q.rating
+        })) : G.filter(({
+            card: q,
+            owned: se
+        }) => (!l || se.dupes > 0) && (!m || se.dupes > 0) && U(q) && Oe(q, r))
+    }, [G, S, r, l, h, k, m]), L = x.useMemo(() => [...F].sort(($, U) => {
+        var q, se;
+        return p === "name" ? ($.card.kind === "player" ? $.card.ign : $.card.name).localeCompare(U.card.kind === "player" ? U.card.ign : U.card.name) : p === "duplicates" && (((q = U.owned) == null ? void 0 : q.dupes) ?? 0) - (((se = $.owned) == null ? void 0 : se.dupes) ?? 0) || U.rating - $.rating
+    }), [F, p]), D = Math.max(1, Math.ceil(F.length / w)), H = Math.min(g, D), W = () => {
+        i(Pe), d(""), c(!1), y(1)
+    }, R = x.useMemo(() => Mn.map($ => {
+        const U = Rs(e, {
+            rarities: [$],
+            keepForUpgrade: v
+        });
+        return {
+            rarity: $,
+            dupes: U.reduce((q, se) => q + se.count, 0),
+            coins: U.reduce((q, se) => q + se.coins, 0)
+        }
+    }), [e, t, v]), X = x.useMemo(() => {
+        const $ = Rs(e, {
+            cardIds: [..._],
+            keepForUpgrade: v
+        });
+        return {
+            dupes: $.reduce((U, q) => U + q.count, 0),
+            coins: $.reduce((U, q) => U + q.coins, 0)
+        }
+    }, [e, t, _, v]), Y = $ => A(U => {
+        const q = new Set(U);
+        if (q.has($)) q.delete($);
+        else {
+            if (q.size >= 300) return n("一次最多选 300 张，先分一批。"), U;
+            q.add($)
+        }
+        return q
+    }), [z, V] = x.useState(null), J = ($, U) => {
+        if (O) return;
+        const q = Rs(e, {
+            ...$,
+            keepForUpgrade: v
+        });
+        if (!q.length) {
+            n("没有可分解的重复卡。");
+            return
+        }
+        V({
+            lines: q,
+            onConfirm: async () => {
+                K(!0);
+                const se = await a("salvage_bulk", {
+                    ...$,
+                    keepForUpgrade: v
+                });
+                if (K(!1), V(null), !se.ok) {
+                    n(se.why);
+                    return
+                }
+                const Nt = se.result;
+                n(`分解 ${Nt.dupes} 张，+${Ks(Nt.coins)} 金币。`), U == null || U()
+            }
+        })
+    }, j = x.useMemo(() => yr(e), [e, t]), E = j.filter($ => $.done), [P, ee] = x.useState(!1), [Z, xe] = x.useState(() => {
+        try {
+            return localStorage.getItem(la) === "1"
+        } catch {
+            return !1
+        }
+    }), Be = () => xe($ => {
+        try {
+            localStorage.setItem(la, $ ? "0" : "1")
+        } catch {}
+        return !$
+    });
+    return s.jsxs(s.Fragment, {
+        children: [s.jsx(le, {
+            title: "全队收藏",
+            actions: s.jsxs("div", {
+                className: "row",
+                style: {
+                    gap: 8
+                },
+                children: [s.jsxs("span", {
+                    className: "tiny muted mono",
+                    children: ["集齐 ", E.length, "/", j.length, " 支"]
+                }), Z && s.jsx("button", {
+                    className: "sm",
+                    onClick: () => ee($ => !$),
+                    children: P ? "只看快齐的" : "看全部"
+                }), s.jsx("button", {
+                    className: "sm",
+                    "aria-expanded": Z,
+                    "aria-controls": "club-sets-body",
+                    onClick: Be,
+                    children: Z ? "收起 ▲" : "展开 ▼"
+                })]
+            }),
+            children: Z ? s.jsxs("div", {
+                id: "club-sets-body",
+                children: [s.jsx("p", {
+                    className: "tiny muted",
+                    style: {
+                        marginTop: 0
+                    },
+                    children: "集齐一支俱乐部在卡池里的所有选手卡（5–7 张）即可。彩卡算作同一个人。"
+                }), s.jsx("div", {
+                    className: "club-sets",
+                    children: (P ? j : j.filter($ => $.done || $.owned >= Math.max(3, $.total - 2)).slice(0, 24)).map($ => {
+                        const U = gt($.clubId);
+                        return s.jsxs("div", {
+                            className: `club-set${$.done?" done":""}`,
+                            title: $.done ? `${$.name}：已集齐` : `${$.name}：还缺 ${$.missing.join("、")}`,
+                            children: [U ? s.jsx("span", {
+                                className: "club-set-crest",
+                                style: {
+                                    backgroundImage: `url(${U})`
+                                }
+                            }) : s.jsx("span", {
+                                className: "club-set-crest"
+                            }), s.jsx("b", {
+                                children: $.tag
+                            }), s.jsxs("span", {
+                                className: "mono tiny",
+                                children: [$.owned, "/", $.total]
+                            }), $.done ? s.jsx("span", {
+                                className: "club-set-mark",
+                                children: "✓ 全队"
+                            }) : s.jsxs("span", {
+                                className: "tiny faint",
+                                children: ["缺 ", $.missing.slice(0, 2).join("、"), $.missing.length > 2 ? "…" : ""]
+                            })]
+                        }, $.clubId)
+                    })
+                }), !P && j.filter($ => $.done || $.owned >= Math.max(3, $.total - 2)).length === 0 && s.jsx("p", {
+                    className: "empty",
+                    children: "还没有快集齐的队，点「看全部」查看。"
+                })]
+            }) : s.jsxs("p", {
+                className: "tiny muted",
+                style: {
+                    margin: 0
+                },
+                children: [E.length ? s.jsxs(s.Fragment, {
+                    children: ["已集齐 ", s.jsx("b", {
+                        children: E.slice(0, 6).map($ => $.tag).join("、")
+                    }), E.length > 6 ? ` 等 ${E.length} 支` : "", "。"]
+                }) : "还没有集齐的队伍。", " ", "点「展开」看进度。"]
+            })
+        }), s.jsxs(le, {
+            title: k ? "还没抽到的卡" : "我的收藏",
+            actions: s.jsxs("div", {
+                className: "row",
+                style: {
+                    gap: 8
+                },
+                children: [s.jsxs("span", {
+                    className: "tiny muted mono",
+                    children: [F.length, " 张"]
+                }), !k && s.jsx("button", {
+                    className: `sm${m?" primary":""}`,
+                    "aria-pressed": m,
+                    onClick: () => {
+                        T($ => !$), A(new Set), y(1)
+                    },
+                    children: m ? "退出批量分解" : "批量分解"
+                }), s.jsx("button", {
+                    className: "sm",
+                    "aria-pressed": k,
+                    onClick: () => {
+                        C($ => !$), T(!1), y(1)
+                    },
+                    children: k ? "看我有的" : "看还缺什么"
+                })]
+            }),
+            children: [s.jsx(Ba, {
+                value: r,
+                onChange: $ => {
+                    i($), y(1)
+                },
+                pool: S,
+                extra: s.jsxs(s.Fragment, {
+                    children: [s.jsxs("select", {
+                        "aria-label": "收藏排序",
+                        value: p,
+                        onChange: $ => {
+                            b($.target.value), y(1)
+                        },
+                        children: [s.jsx("option", {
+                            value: "rating",
+                            children: "能力从高到低"
+                        }), s.jsx("option", {
+                            value: "name",
+                            children: "按选手名字"
+                        }), s.jsx("option", {
+                            value: "duplicates",
+                            children: "重复卡优先"
+                        })]
+                    }), s.jsx("a", {
+                        className: "tiny",
+                        href: "/seoul-2024",
+                        children: "首尔系列图鉴 ↗"
+                    }), s.jsx("a", {
+                        className: "tiny",
+                        href: "/bangkok-2025",
+                        children: "曼谷系列图鉴 ↗"
+                    }), s.jsx("a", {
+                        className: "tiny",
+                        href: "/cards/stats",
+                        title: "对哪位选手的评分有疑问，这里能查到每位选手的分是怎么算的",
+                        children: "评分是怎么算的 ↗"
+                    }), s.jsx("a", {
+                        className: "tiny",
+                        href: "/cards/retired/stats",
+                        title: "退役选手的分是怎么算的，每个人用了哪些比赛",
+                        children: "退役评分 ↗"
+                    }), !k && s.jsx("button", {
+                        className: `sm${l?" primary":""}`,
+                        "aria-pressed": l,
+                        onClick: () => {
+                            c($ => !$), y(1)
+                        },
+                        children: "有重复"
+                    }), s.jsx("input", {
+                        style: {
+                            width: 180
+                        },
+                        type: "search",
+                        "aria-label": "搜索选手、真名或战队",
+                        placeholder: "搜 ID / 真名 / 战队",
+                        value: o,
+                        onChange: $ => {
+                            d($.target.value), y(1)
+                        }
+                    })]
+                })
+            }), m && s.jsxs("div", {
+                className: "salvage-bar",
+                children: [s.jsxs("div", {
+                    className: "row",
+                    style: {
+                        gap: 8,
+                        flexWrap: "wrap",
+                        alignItems: "center"
+                    },
+                    children: [s.jsx("b", {
+                        className: "small",
+                        children: "一键分解"
+                    }), R.map($ => s.jsxs("button", {
+                        className: "sm",
+                        disabled: O || !$.dupes,
+                        onClick: () => J({
+                            rarities: [$.rarity]
+                        }),
+                        children: [ge[$.rarity], " ", $.dupes, " 张 · +", Ks($.coins)]
+                    }, $.rarity)), s.jsxs("label", {
+                        className: "tiny row",
+                        style: {
+                            gap: 5,
+                            alignItems: "center",
+                            marginLeft: "auto"
+                        },
+                        children: [s.jsx("input", {
+                            type: "checkbox",
+                            checked: v,
+                            onChange: $ => M($.target.checked)
+                        }), "留够升级用的"]
+                    })]
+                }), s.jsxs("div", {
+                    className: "row",
+                    style: {
+                        gap: 8,
+                        flexWrap: "wrap",
+                        alignItems: "center",
+                        marginTop: 9
+                    },
+                    children: [s.jsxs("span", {
+                        className: "tiny muted",
+                        children: ["点卡片挑：选中 ", _.size, " 张，可分解 ", X.dupes, " 张", X.dupes > 0 && ` · +${Ks(X.coins)}`]
+                    }), s.jsx("button", {
+                        className: "primary sm",
+                        disabled: O || !X.dupes,
+                        onClick: () => J({
+                            cardIds: [..._]
+                        }, () => A(new Set)),
+                        children: "分解选中"
+                    }), _.size > 0 && s.jsx("button", {
+                        className: "sm",
+                        disabled: O,
+                        onClick: () => A(new Set),
+                        children: "清空选择"
+                    })]
+                }), s.jsx("p", {
+                    className: "tiny faint",
+                    style: {
+                        margin: "9px 0 0"
+                    },
+                    children: "只卖重复的那几张，收藏里的卡和等级都不动。一键不含彩卡，彩卡要自己点中再分解。"
+                })]
+            }), F.length === 0 ? s.jsxs("div", {
+                className: "cm-empty",
+                role: "status",
+                children: [s.jsx("p", {
+                    children: m ? "没有可分解的重复卡。" : "没有符合条件的卡，试试其他筛选或选手名字。"
+                }), s.jsx("button", {
+                    onClick: W,
+                    children: "清除筛选与搜索"
+                })]
+            }) : s.jsx("div", {
+                className: "cm-grid",
+                ref: u,
+                tabIndex: -1,
+                "aria-label": `收藏第 ${H} 页`,
+                "aria-busy": h !== o,
+                children: L.slice((H - 1) * w, H * w).map(({
+                    card: $,
+                    owned: U,
+                    rating: q
+                }) => {
+                    var se;
+                    return s.jsx(Me, {
+                        card: $,
+                        level: U ? An($.id, U) : 0,
+                        dupes: ((U == null ? void 0 : U.dupes) ?? 0) + (U ? Ze(U).length + (((se = U.evoSpares) == null ? void 0 : se.length) ?? 0) : 0),
+                        dimmed: k,
+                        selected: m && _.has($.id),
+                        onClick: k ? void 0 : m ? () => Y($.id) : () => I($.id),
+                        footer: k ? `${ge[$.rarity]} ${q}` : m ? `重复 ${(U==null?void 0:U.dupes)??0} 张` : void 0
+                    }, $.id)
+                })
+            }), F.length > w && s.jsxs("nav", {
+                className: "cm-pagination",
+                "aria-label": "收藏分页",
+                children: [s.jsx("button", {
+                    disabled: H === 1,
+                    onClick: () => f(H - 1),
+                    children: "上一页"
+                }), s.jsxs("span", {
+                    role: "status",
+                    children: ["第 ", H, " / ", D, " 页 · 共 ", F.length, " 张"]
+                }), s.jsx("button", {
+                    disabled: H === D,
+                    onClick: () => f(H + 1),
+                    children: "下一页"
+                })]
+            }), F.length > 0 && s.jsx("div", {
+                className: "cm-pagination",
+                children: s.jsx("button", {
+                    type: "button",
+                    onClick: $ => {
+                        const U = $.currentTarget.closest("main");
+                        U == null || U.focus({
+                            preventScroll: !0
+                        }), U == null || U.scrollTo({
+                            top: 0,
+                            behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth"
+                        })
+                    },
+                    children: "↑ 返回顶部"
+                })
+            })]
+        }), z && s.jsx(St, {
+            ask: z,
+            busy: O,
+            onClose: () => {
+                O || V(null)
+            }
+        }), N && e.cards[N] && s.jsx(Oa, {
+            cardId: N,
+            onClose: () => I(null)
+        })]
+    })
+}
+
+function Dr(e) {
+    var a;
+    const t = (a = e.legend) == null ? void 0 : a.person;
+    if (t) return {
+        id: t.id,
+        ign: e.ign,
+        realName: t.realName,
+        nat: t.nat,
+        teamId: e.clubId,
+        region: t.region,
+        role: e.role,
+        roles: [...e.roles],
+        age: t.age,
+        ageEstimated: !1,
+        isIgl: e.isIgl,
+        attrs: {
+            ...e.attrs
+        },
+        overall: e.rating,
+        potential: e.rating,
+        form: 76,
+        morale: 84,
+        fatigue: 0,
+        salary: 0,
+        value: 0,
+        contractYears: 0,
+        loyalty: 70,
+        ambition: 70,
+        agentPool: [...t.agents],
+        season: vs(),
+        career: vs(),
+        injuredUntil: 0,
+        xp: {}
+    }
+}
+
+function ra(e) {
+    return {
+        id: e.playerId,
+        ign: e.ign,
+        realName: e.realName ?? void 0,
+        nat: e.nat ?? void 0,
+        teamId: e.clubId,
+        region: e.region,
+        role: e.role,
+        roles: [...e.roles],
+        age: e.age,
+        ageEstimated: !0,
+        isIgl: e.isIgl,
+        attrs: {
+            ...e.attrs
+        },
+        overall: e.rating,
+        potential: e.rating,
+        form: 76,
+        morale: 84,
+        fatigue: 0,
+        salary: 0,
+        value: 0,
+        contractYears: 0,
+        loyalty: 70,
+        ambition: 70,
+        agentPool: kl(e.agents ?? []),
+        season: vs(),
+        career: vs(),
+        injuredUntil: 0,
+        xp: {}
+    }
+}
+const is = "ARENA",
+    Br = .12,
+    it = .5,
+    ps = .6,
+    ot = 70,
+    Fr = 80,
+    ia = (e, t, a = it) => re(Math.round(t + (e - t) * a), 1, 99),
+    Vs = (e, t) => re(ot + (e + t - ot) * ps, 1, 99);
+
+function zr(e, t, a) {
+    const n = {
+        ...t.attrs
+    };
+    for (const r of Object.keys(n)) n[r] = re(Math.round(n[r]), 1, 99);
+    return {
+        ...e,
+        attrs: n,
+        overall: re(t.rating - (a ? 5 : 0), 1, 99),
+        traits: e.traits ? [...e.traits] : e.traits,
+        form: 76,
+        morale: 84,
+        fatigue: 0,
+        injuredUntil: 0,
+        season: {
+            maps: 0,
+            rounds: 0,
+            kills: 0,
+            deaths: 0,
+            assists: 0,
+            firstKills: 0,
+            firstDeaths: 0,
+            damage: 0,
+            clutches: 0,
+            mvps: 0
+        },
+        career: {
+            maps: 0,
+            rounds: 0,
+            kills: 0,
+            deaths: 0,
+            assists: 0,
+            firstKills: 0,
+            firstDeaths: 0,
+            damage: 0,
+            clutches: 0,
+            mvps: 0
+        },
+        xp: {}
+    }
+}
+const Xs = "ARENAB";
+
+function oa(e, t, a, n, r, i) {
+    const l = new Set(t.slots.map(b => b ? te(b) : void 0).filter(Q).map(Ve)),
+        c = t.coach ? te(t.coach) : void 0;
+    pe(c) && l.has(yl(c) ?? "") && (t = {
+        ...t,
+        coach: null
+    });
+    const o = yt(t),
+        d = [],
+        h = new Set,
+        g = t.coach ? te(t.coach) : void 0,
+        y = pe(g) ? Ot(a(g.id)) : 0,
+        u = pe(g) ? {
+            lift: xl(g, y),
+            nerve: (g.motivation + y - 70) * .35
+        } : {
+            lift: 0,
+            nerve: 0
+        };
+    if (t.slots.forEach((b, w) => {
+            if (!b) return;
+            const N = te(b);
+            if (!Q(N) || h.has(Ve(N))) return;
+            h.add(Ve(N));
+            const I = jl(N) ?? bl(N) ?? Dr(N) ?? (N.agents ? ra(N) : void 0) ?? e.players[N.playerId] ?? ra(N),
+                k = `${r}${w}`,
+                C = !N.roles.includes(Te[w]) && Te[w] !== "自由人",
+                m = zr(I, N, C),
+                T = Math.round((o.score - 50) * .14);
+            m.attrs = {
+                ...m.attrs,
+                teamwork: re(m.attrs.teamwork + T, 1, 99),
+                communication: re(m.attrs.communication + T, 1, 99)
+            }, m.overall = re(Math.round(m.overall + (o.score - 50) * Br), 1, 99);
+            for (const A of Object.keys(m.attrs)) m.attrs[A] = ia(m.attrs[A], ot, ps);
+            m.overall = ia(m.overall, Fr);
+            const _ = Ot(a(b)) * vl;
+            if (_ > 0) {
+                for (const A of Object.keys(m.attrs)) m.attrs[A] = re(m.attrs[A] + _ * ps, 1, 99);
+                m.overall = re(m.overall + _ * it, 1, 99)
+            }
+            if (pe(g)) {
+                for (const A of Object.keys(m.attrs)) {
+                    const v = A === "clutch" ? u.nerve : 0;
+                    m.attrs[A] = re(m.attrs[A] + (u.lift + v) * ps, 1, 99)
+                }
+                m.overall = re(m.overall + u.lift * it, 1, 99)
+            }
+            e.players[k] = {
+                ...m,
+                id: k,
+                teamId: n
+            }, i[k] = b, d.push(k)
+        }), d.length && !d.some(b => e.players[b].isIgl)) {
+        const b = d.slice().sort((w, N) => e.players[N].attrs.igl - e.players[w].attrs.igl)[0];
+        e.players[b] = {
+            ...e.players[b],
+            isIgl: !0,
+            iglSource: "inferred"
+        }
+    }
+    const f = {};
+    for (const b of Object.keys(e.teams[Ns[0].id].mapPrefs)) f[b] = 50;
+    e.teams[n] = {
+        id: n,
+        name: t.name ?? "我的卡组",
+        tag: t.tag ?? "MINE",
+        region: "Americas",
+        tier: 1,
+        league: "开瓦包",
+        rating: 70,
+        budget: 0,
+        reputation: 60,
+        roster: d,
+        coach: pe(g) ? {
+            name: g.name,
+            tactics: Vs(g.tactics, y),
+            development: Vs(g.development, y),
+            motivation: Vs(g.motivation, y)
+        } : null,
+        facilities: 60,
+        starters: d.slice(0, 5),
+        tactics: wl(),
+        sponsors: [],
+        mapPrefs: f,
+        seasonPrize: 0,
+        champPoints: 0
+    }, e.bonds ?? (e.bonds = {});
+    const p = Math.round(Nl + (o.score - 50) * .5);
+    for (let b = 0; b < d.length; b++)
+        for (let w = b + 1; w < d.length; w++) {
+            const N = d[b],
+                I = d[w];
+            e.bonds[N < I ? `${N}|${I}` : `${I}|${N}`] = re(p, -60, 70)
+        }
+}
+
+function qr(e, t, a, n, r, i = bt) {
+    const [l, c] = Dl(n, r, i);
+    e.cardMatchStrength = {
+        [t]: l,
+        [a]: c
+    }
+}
+
+function Fa(e, t) {
+    const a = {};
+    for (const n of e.maps)
+        for (const [r, i] of Object.entries(n.lines)) {
+            const l = t[r];
+            if (!l) continue;
+            const c = a[l] ?? (a[l] = {
+                kills: 0,
+                deaths: 0,
+                assists: 0,
+                acs: 0,
+                maps: 0,
+                firstKills: 0,
+                clutches: 0,
+                rounds: 0
+            });
+            c.kills += i.kills, c.deaths += i.deaths, c.assists += i.assists, c.acs += i.acs, c.maps++, c.firstKills += i.firstKills, c.clutches += i.clutches, c.rounds += i.rounds
+        }
+    return {
+        lines: Object.entries(a).map(([n, r]) => ({
+            cardId: n,
+            ...r,
+            acs: r.maps ? Math.round(r.acs / r.maps) : 0
+        })).sort((n, r) => r.acs - n.acs),
+        mvpCard: e.mvp ? t[e.mvp] ?? null : null
+    }
+}
+
+function Gr(e, t) {
+    return {
+        win: e.mapsWonA > e.mapsWonB,
+        mapsWon: e.mapsWonA,
+        mapsLost: e.mapsWonB,
+        ...Fa(e, t)
+    }
+}
+
+function Eo(e, t, a, n, r, i, l = !1, c) {
+    const o = gl(Ns[0].id, "卡组", r, void 0, {
+            cards: !0
+        }),
+        d = {},
+        h = {};
+    oa(o, e, t, is, "A", d), oa(o, {
+        slots: a.slots,
+        coach: a.coach,
+        name: a.name,
+        tag: a.tag
+    }, f => a.levels[f] ?? 0, Xs, "B", h), o.myTeam = is;
+    const g = l === !0 ? bt : l || void 0;
+    g && qr(o, is, Xs, nt(e, t).score, nt(a, f => a.levels[f] ?? 0).score, g);
+    const y = new Sl(r ^ 23325),
+        u = nl(o, is, Xs, n, y);
+    return {
+        ...Gr(u, d),
+        bo: n,
+        balance: g,
+        result: u,
+        opp: {
+            name: a.name,
+            tag: a.tag,
+            slots: a.slots,
+            coach: a.coach,
+            levels: a.levels,
+            ...Fa(u, h)
+        }
+    }
+}
+
+function Hr(e) {
+    const t = new Set;
+    for (const a of e.slots) {
+        const n = a ? te(a) : void 0;
+        if (Q(n))
+            for (const r of n.roles) t.add(r)
+    }
+    return ["决斗者", "先锋", "控场", "哨卫"].filter(a => !t.has(a))
+}
+
+function za(e) {
+    var o;
+    if (e.slots.length !== 5 || !e.coach || e.slots.some(d => !d)) return null;
+    const t = e.slots.map(d => te(d)),
+        a = te(e.coach);
+    if (!a || !pe(a) || !a.clubId) return null;
+    const n = (o = a.clubTag) == null ? void 0 : o.toUpperCase(),
+        r = d => {
+            var h;
+            return d.clubId === a.clubId || !!d.retired && !!n && ((h = d.clubTag) == null ? void 0 : h.toUpperCase()) === n
+        };
+    if (t.some(d => !d || !Q(d) || !r(d)) || new Set(t.map(d => d && Q(d) ? d.playerId : "")).size !== 5) return null;
+    const i = Ns.find(d => d.id === a.clubId),
+        l = (i == null ? void 0 : i.tag) ?? a.clubTag ?? "TEAM",
+        c = {
+            EDG: "#e63a48",
+            PRX: "#f24b9a",
+            GEN: "#cfab56",
+            FNC: "#ff792b",
+            BLG: "#4098ef",
+            FPX: "#ef5734",
+            DRG: "#7c69ed",
+            XLG: "#f2a442",
+            T1: "#ef394c",
+            G2: "#c6d0df",
+            NRG: "#fa6558",
+            SEN: "#ed364a"
+        };
+    return {
+        id: a.clubId,
+        tag: l,
+        name: (i == null ? void 0 : i.name) ?? l,
+        crest: gt(a.clubId),
+        color: c[l] ?? "#54a9d8"
+    }
+}
+
+function qa(e) {
+    return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900"><defs><radialGradient id="g"><stop stop-color="${e}" stop-opacity=".46"/><stop offset="1" stop-color="#080e18" stop-opacity="0"/></radialGradient><linearGradient id="b" x2="1" y2="1"><stop stop-color="#121e30"/><stop offset="1" stop-color="#070b13"/></linearGradient><pattern id="p" width="28" height="28" patternUnits="userSpaceOnUse"><path d="M0 28L28 0" stroke="#fff" stroke-opacity=".025"/></pattern></defs><path fill="url(#b)" d="M0 0h1600v900H0z"/><ellipse cx="1160" cy="380" rx="900" ry="700" fill="url(#g)"/><path d="M940 0h170L480 900H310zM1300 0h25L695 900h-25z" fill="${e}" opacity=".08"/><path fill="url(#p)" d="M0 0h1600v900H0z"/><path d="M0 16h520l110 80h970M0 882h940l90-65h570" fill="none" stroke="${e}" stroke-opacity=".55" stroke-width="2"/><path d="M24 16h95M1477 882h99" stroke="${e}" stroke-width="6"/></svg>`)
+}
+const Ee = {
+        L: [
+            [0, []],
+            [7, [
+                [1, 19]
+            ]],
+            [10, [
+                [1, 34]
+            ]],
+            [15, [
+                [1, 55]
+            ]],
+            [20, [
+                [1, 80]
+            ]],
+            [26, [
+                [1, 108]
+            ]],
+            [18, [
+                [2, 68]
+            ]],
+            [20, [
+                [2, 78]
+            ]],
+            [24, [
+                [2, 97]
+            ]],
+            [30, [
+                [2, 116]
+            ]],
+            [18, [
+                [2, 68],
+                [2, 69]
+            ]]
+        ],
+        M: [
+            [0, []],
+            [10, [
+                [1, 16]
+            ]],
+            [16, [
+                [1, 28]
+            ]],
+            [26, [
+                [1, 44]
+            ]],
+            [18, [
+                [2, 32]
+            ]],
+            [24, [
+                [2, 43]
+            ]],
+            [16, [
+                [4, 27]
+            ]],
+            [18, [
+                [4, 31]
+            ]],
+            [22, [
+                [2, 38],
+                [2, 39]
+            ]],
+            [22, [
+                [3, 36],
+                [2, 37]
+            ]],
+            [26, [
+                [4, 43],
+                [1, 44]
+            ]]
+        ],
+        Q: [
+            [0, []],
+            [13, [
+                [1, 13]
+            ]],
+            [22, [
+                [1, 22]
+            ]],
+            [18, [
+                [2, 17]
+            ]],
+            [26, [
+                [2, 24]
+            ]],
+            [18, [
+                [2, 15],
+                [2, 16]
+            ]],
+            [24, [
+                [4, 19]
+            ]],
+            [18, [
+                [2, 14],
+                [4, 15]
+            ]],
+            [22, [
+                [4, 18],
+                [2, 19]
+            ]],
+            [20, [
+                [4, 16],
+                [4, 17]
+            ]],
+            [24, [
+                [6, 19],
+                [2, 20]
+            ]]
+        ],
+        H: [
+            [0, []],
+            [17, [
+                [1, 9]
+            ]],
+            [28, [
+                [1, 16]
+            ]],
+            [22, [
+                [2, 13]
+            ]],
+            [16, [
+                [4, 9]
+            ]],
+            [22, [
+                [2, 11],
+                [2, 12]
+            ]],
+            [28, [
+                [4, 15]
+            ]],
+            [26, [
+                [4, 13],
+                [1, 14]
+            ]],
+            [26, [
+                [4, 14],
+                [2, 15]
+            ]],
+            [24, [
+                [4, 12],
+                [4, 13]
+            ]],
+            [28, [
+                [6, 15],
+                [2, 16]
+            ]]
+        ]
+    },
+    ca = [
+        [],
+        [],
+        [6, 18],
+        [6, 22],
+        [6, 26],
+        [6, 30],
+        [6, 34],
+        [6, 22, 38],
+        [6, 24, 42],
+        [6, 26, 46],
+        [6, 28, 50]
+    ],
+    Ur = {
+        L: 1,
+        M: 0,
+        Q: 3,
+        H: 2
+    },
+    Xe = new Uint8Array(512),
+    ct = new Uint8Array(256);
+{
+    let e = 1;
+    for (let t = 0; t < 255; t++) Xe[t] = e, ct[e] = t, e <<= 1, e & 256 && (e ^= 285);
+    for (let t = 255; t < 512; t++) Xe[t] = Xe[t - 255]
+}
+const Ga = (e, t) => e === 0 || t === 0 ? 0 : Xe[ct[e] + ct[t]];
+
+function Wr(e) {
+    let t = [1];
+    for (let a = 0; a < e; a++) {
+        const n = new Array(t.length + 1).fill(0);
+        for (let r = 0; r < t.length; r++) n[r] ^= t[r], n[r + 1] ^= Ga(t[r], Xe[a]);
+        t = n
+    }
+    return t
+}
+
+function Kr(e, t) {
+    const a = Wr(t),
+        n = new Array(t).fill(0);
+    for (const r of e) {
+        const i = r ^ n[0];
+        if (n.shift(), n.push(0), i !== 0)
+            for (let l = 0; l < t; l++) n[l] ^= Ga(a[l + 1], i)
+    }
+    return n
+}
+const Ha = e => [...new TextEncoder().encode(e)],
+    Le = (e, t) => Ee[t][e][1].reduce((a, [n, r]) => a + n * r, 0);
+
+function Vr(e, t) {
+    for (let a = 1; a <= 10; a++)
+        if (4 + (a < 10 ? 8 : 16) + e * 8 <= Le(a, t) * 8) return a;
+    return 0
+}
+
+function Xr(e, t, a) {
+    const n = Ha(e),
+        r = Le(t, a),
+        i = [],
+        l = (f, p) => {
+            for (let b = p - 1; b >= 0; b--) i.push(f >> b & 1)
+        };
+    l(4, 4), l(n.length, t < 10 ? 8 : 16);
+    for (const f of n) l(f, 8);
+    for (let f = 0; f < 4 && i.length < r * 8; f++) i.push(0);
+    for (; i.length % 8;) i.push(0);
+    const c = [];
+    for (let f = 0; f < i.length; f += 8) c.push(i.slice(f, f + 8).reduce((p, b) => p << 1 | b, 0));
+    for (let f = 0; c.length < r; f++) c.push(f % 2 === 0 ? 236 : 17);
+    const [o, d] = Ee[a][t], h = [];
+    let g = 0;
+    for (const [f, p] of d)
+        for (let b = 0; b < f; b++) {
+            const w = c.slice(g, g + p);
+            g += p, h.push({
+                data: w,
+                ec: Kr(w, o)
+            })
+        }
+    const y = [],
+        u = Math.max(...h.map(f => f.data.length));
+    for (let f = 0; f < u; f++)
+        for (const p of h) f < p.data.length && y.push(p.data[f]);
+    for (let f = 0; f < o; f++)
+        for (const p of h) y.push(p.ec[f]);
+    return y
+}
+
+function Yr(e) {
+    return Array.from({
+        length: e
+    }, () => Array.from({
+        length: e
+    }, () => ({
+        on: !1,
+        fixed: !1
+    })))
+}
+
+function Ce(e, t, a, n, r = !0) {
+    a < 0 || t < 0 || a >= e.length || t >= e.length || (e[a][t] = {
+        on: n,
+        fixed: r
+    })
+}
+
+function Ys(e, t, a) {
+    for (let n = -1; n <= 7; n++)
+        for (let r = -1; r <= 7; r++) {
+            const i = r >= 0 && r <= 6 && n >= 0 && n <= 6 && (r === 0 || r === 6 || n === 0 || n === 6 || r >= 2 && r <= 4 && n >= 2 && n <= 4);
+            Ce(e, t + r, a + n, i)
+        }
+}
+
+function da(e, t) {
+    const a = t < 6 ? [t, 8] : t === 6 ? [7, 8] : t === 7 ? [8, 8] : t === 8 ? [8, 7] : [8, 14 - t],
+        n = t < 7 ? [8, e - 1 - t] : [e - 15 + t, 8];
+    return [a, n]
+}
+
+function Qr(e, t) {
+    const a = Ur[e] << 3 | t;
+    let n = a << 10;
+    for (let r = 14; r >= 10; r--) n & 1 << r && (n ^= 1335 << r - 10);
+    return (a << 10 | n) ^ 21522
+}
+
+function Jr(e) {
+    let t = e << 12;
+    for (let a = 17; a >= 12; a--) t & 1 << a && (t ^= 7973 << a - 12);
+    return e << 12 | t
+}
+const Zr = [(e, t) => (e + t) % 2 === 0, (e, t) => t % 2 === 0, e => e % 3 === 0, (e, t) => (e + t) % 3 === 0, (e, t) => (Math.floor(t / 2) + Math.floor(e / 3)) % 2 === 0, (e, t) => e * t % 2 + e * t % 3 === 0, (e, t) => (e * t % 2 + e * t % 3) % 2 === 0, (e, t) => ((e + t) % 2 + e * t % 3) % 2 === 0],
+    ei = [1, 0, 1, 1, 1, 0, 1];
+
+function ha(e) {
+    const t = e.length;
+    let a = 0,
+        n = 0;
+    for (;;) {
+        let r = -1;
+        for (let c = n; c + 7 <= t; c++)
+            if (ei.every((o, d) => e[c + d] === o)) {
+                r = c;
+                break
+            } if (r < 0) break;
+        let i = r + 7;
+        const l = (c, o) => !e.slice(Math.max(c, 0), Math.min(o, t)).some(Boolean);
+        r === 0 || r === t - 7 || l(r - 4, r) || l(i, i + 4) ? a += 40 : i = r + 4, n = i
+    }
+    return a
+}
+
+function si(e) {
+    const t = e.length;
+    let a = 0;
+    const n = i => {
+        for (let l = 0; l < t; l++) {
+            let c = 1;
+            for (let o = 1; o < t; o++) {
+                if (i(l, o) === i(l, o - 1)) {
+                    c++;
+                    continue
+                }
+                c >= 5 && (a += c - 2), c = 1
+            }
+            c >= 5 && (a += c - 2)
+        }
+    };
+    n((i, l) => e[i][l]), n((i, l) => e[l][i]);
+    for (let i = 0; i < t - 1; i++)
+        for (let l = 0; l < t - 1; l++) {
+            const c = e[i][l];
+            c === e[i][l + 1] && c === e[i + 1][l] && c === e[i + 1][l + 1] && (a += 3)
+        }
+    for (let i = 0; i < t; i++) a += ha(e[i].map(l => l ? 1 : 0)), a += ha(e.map(l => l[i] ? 1 : 0));
+    const r = e.flat().filter(Boolean).length;
+    return a += Math.floor(Math.abs(r * 100 / (t * t) - 50) / 5) * 10, a
+}
+
+function ti(e, t = "M", a) {
+    const n = Ha(e).length,
+        r = Vr(n, t);
+    if (!r) throw new Error(`qr: ${n} bytes will not fit a version-10 ${t} symbol`);
+    const i = r * 4 + 17,
+        l = Yr(i);
+    Ys(l, 0, 0), Ys(l, i - 7, 0), Ys(l, 0, i - 7);
+    for (let p = 8; p < i - 8; p++) Ce(l, p, 6, p % 2 === 0), Ce(l, 6, p, p % 2 === 0);
+    for (const p of ca[r])
+        for (const b of ca[r])
+            if (!(b <= 8 && p <= 8 || b <= 8 && p >= i - 9 || b >= i - 9 && p <= 8))
+                for (let w = -2; w <= 2; w++)
+                    for (let N = -2; N <= 2; N++) Ce(l, b + N, p + w, Math.max(Math.abs(N), Math.abs(w)) !== 1);
+    Ce(l, 8, i - 8, !1);
+    for (let p = 0; p < 15; p++)
+        for (const [b, w] of da(i, p)) Ce(l, b, w, !1);
+    const c = [];
+    if (r >= 7)
+        for (let p = 0; p < 18; p++)
+            for (const [b, w] of [
+                    [p % 3 + i - 11, Math.floor(p / 3)],
+                    [Math.floor(p / 3), p % 3 + i - 11]
+                ]) Ce(l, b, w, !1), c.push([b, w]);
+    const o = Xr(e, r, t);
+    let d = 0,
+        h = !0;
+    for (let p = i - 1; p > 0; p -= 2) {
+        p === 6 && (p = 5);
+        for (let b = 0; b < i; b++) {
+            const w = h ? i - 1 - b : b;
+            for (const N of [p, p - 1]) {
+                if (l[w][N].fixed) continue;
+                const I = o[d >> 3] ?? 0;
+                l[w][N] = {
+                    on: (I >> 7 - (d & 7) & 1) === 1,
+                    fixed: !1
+                }, d++
+            }
+        }
+        h = !h
+    }
+    let g = null,
+        y = 0,
+        u = 1 / 0;
+    for (let p = 0; p < 8; p++) {
+        const b = l.map((N, I) => N.map((k, C) => k.on !== (!k.fixed && Zr[p](C, I)))),
+            w = si(b);
+        w < u && (u = w, g = b, y = p)
+    }
+    const f = Qr(t, y);
+    for (let p = 0; p < 15; p++) {
+        const b = (f >> 14 - p & 1) === 1;
+        for (const [w, N] of da(i, p)) g[N][w] = b
+    }
+    if (r >= 7) {
+        const p = Jr(r);
+        for (let b = 0; b < 18; b++) {
+            const w = (p >> b & 1) === 1;
+            g[c[b * 2][1]][c[b * 2][0]] = w, g[c[b * 2 + 1][1]][c[b * 2 + 1][0]] = w
+        }
+    }
+    return g[i - 8][8] = !0, g
+}
+Ee.L.map((e, t) => t ? Le(t, "L") : 0), Ee.M.map((e, t) => t ? Le(t, "M") : 0), Ee.Q.map((e, t) => t ? Le(t, "Q") : 0), Ee.H.map((e, t) => t ? Le(t, "H") : 0);
+const Ua = "https://vctgames.com",
+    ai = 1080;
+
+function Wa(e = ai) {
+    const a = e - 112;
+    let n = 18;
+    for (; n > 6 && (a - n * 4) % 5 !== 0;) n--;
+    const r = (a - n * 4) / 5,
+        i = Math.round(r * (212 / 132)),
+        l = 372,
+        c = Array.from({
+            length: 5
+        }, (p, b) => ({
+            x: 56 + b * (r + n),
+            y: l,
+            w: r,
+            h: i
+        })),
+        o = l + i + 64,
+        d = 224,
+        h = r + 32,
+        g = 48 + i + 16,
+        y = d + 80,
+        u = Math.max(g, y),
+        f = o + u + 46;
+    return {
+        width: e,
+        height: f + 76,
+        seats: c,
+        coach: {
+            x: 56,
+            y: o,
+            w: h,
+            h: g
+        },
+        stats: {
+            x: 56 + h + 32,
+            y: o,
+            w: a - h - 32 - d - 32,
+            h: u
+        },
+        qr: {
+            x: e - 56 - d,
+            y: o,
+            w: d,
+            h: d
+        },
+        header: {
+            x: 56,
+            y: 76,
+            w: a,
+            h: 240
+        },
+        footer: {
+            x: 56,
+            y: f,
+            w: a,
+            h: 60
+        }
+    }
+}
+const ni = 8,
+    li = 1;
+Wa().height;
+const Qs = "#f2f5f9",
+    ce = "rgba(242,245,249,.55)",
+    ri = "#141a24",
+    ua = {
+        mythic: {
+            a: "#6d2a86",
+            b: "#2b4fa8",
+            edge: "rgba(255,255,255,.7)",
+            ink: "#f4f2ff"
+        },
+        gold: {
+            a: "#f6d878",
+            b: "#9d6f1c",
+            edge: "#ffe9a3",
+            ink: "#241a04"
+        },
+        silver: {
+            a: "#e6ecf3",
+            b: "#7d8b9b",
+            edge: "#f2f6fa",
+            ink: "#151c25"
+        },
+        bronze: {
+            a: "#d8a274",
+            b: "#74451f",
+            edge: "#eec5a1",
+            ink: "#1c1206"
+        }
+    },
+    ae = (e, t, a) => {
+        e.beginPath(), e.moveTo(t.x + a, t.y), e.arcTo(t.x + t.w, t.y, t.x + t.w, t.y + t.h, a), e.arcTo(t.x + t.w, t.y + t.h, t.x, t.y + t.h, a), e.arcTo(t.x, t.y + t.h, t.x, t.y, a), e.arcTo(t.x, t.y, t.x + t.w, t.y, a), e.closePath()
+    },
+    B = (e, t) => `${e} ${t}px "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif`;
+
+function gs(e, t, a, n, r) {
+    let i = r;
+    for (; i > 8;) {
+        if (e.font = B(n, i), e.measureText(t).width <= a) return i;
+        i -= 1
+    }
+    return i
+}
+
+function Ka(e, t, a, n) {
+    const r = e.font;
+    e.font = B(a, n);
+    const i = e.measureText(t).width;
+    return e.font = r, i
+}
+const ke = e => new Promise(t => {
+        if (!e) {
+            t(null);
+            return
+        }
+        const a = new Image;
+        a.crossOrigin = "anonymous", a.onload = () => t(a), a.onerror = () => t(null), a.src = e
+    }),
+    Cs = e => {
+        const t = Math.max(0, Math.min(ie, Math.floor(e)));
+        return t > 0 ? `+${t}${e>ie?"↑":""}` : ""
+    };
+
+function ma(e, t, a) {
+    const n = Math.max(a.w / t.width, a.h / t.height),
+        r = t.width * n,
+        i = t.height * n;
+    e.drawImage(t, a.x + (a.w - r) / 2, a.y, r, i)
+}
+
+function fa(e, t, a, n, r, i, l, c = null, o = null, d = null) {
+    if (a && dt(a)) {
+        ci(e, t, a, r, i, c);
+        return
+    }
+    if (a && ht(a)) {
+        mi(e, t, a, r, i, o);
+        return
+    }
+    if (a && ut(a)) {
+        gi(e, t, a, r, i, d);
+        return
+    }
+    if (!a) {
+        e.save(), ae(e, t, 10), e.fillStyle = "rgba(255,255,255,.04)", e.fill(), e.setLineDash([7, 6]), e.strokeStyle = "rgba(255,255,255,.22)", e.lineWidth = 2, e.stroke(), e.restore(), e.fillStyle = ce, e.font = B(600, Math.round(t.w * .12)), e.textAlign = "center", e.textBaseline = "middle", e.fillText(n, t.x + t.w / 2, t.y + t.h / 2), e.textBaseline = "alphabetic";
+        return
+    }
+    const h = t.w / 132,
+        g = Q(a) ? ua[a.rarity] : {
+            ...ua[a.rarity],
+            a: "#233346",
+            b: "#0d1724",
+            ink: "#eef3f8"
+        },
+        y = Q(a) ? a : null,
+        u = !!a.legend,
+        f = a.rarity === "mythic" && !!i,
+        p = f ? "#f4f2ff" : g.ink;
+    e.save(), ae(e, t, 7 * h), e.clip();
+    const b = e.createLinearGradient(t.x, t.y, t.x + t.w * .4, t.y + t.h);
+    if (b.addColorStop(0, g.a), b.addColorStop(1, g.b), e.fillStyle = b, e.fillRect(t.x, t.y, t.w, t.h), f && i) {
+        ma(e, i, t);
+        const W = e.createLinearGradient(0, t.y, 0, t.y + t.h);
+        W.addColorStop(0, "rgba(10,7,24,.45)"), W.addColorStop(.45, "rgba(10,7,24,.18)"), W.addColorStop(1, "rgba(10,7,24,.86)"), e.fillStyle = W, e.fillRect(t.x, t.y, t.w, t.h)
+    }
+    const w = e.createLinearGradient(t.x, t.y + t.h, t.x + t.w, t.y);
+    w.addColorStop(.34, "rgba(255,255,255,0)"), w.addColorStop(.47, "rgba(255,255,255,.18)"), w.addColorStop(.6, "rgba(255,255,255,0)"), e.fillStyle = w, e.fillRect(t.x, t.y, t.w, t.h), e.restore(), e.textBaseline = "top", e.textAlign = "left", e.fillStyle = p;
+    const N = 21 * h;
+    e.font = B(800, N);
+    const I = String(a.rating);
+    e.fillText(I, t.x + 9 * h, t.y + 7 * h), r > 0 && (e.fillStyle = f ? "rgba(255,220,220,.95)" : "#7a2018", e.font = B(800, 9.5 * h), e.fillText(Cs(r), t.x + 9 * h + Ka(e, I, 800, N) + 3 * h, t.y + 7 * h + N - 10 * h)), e.fillStyle = p, e.globalAlpha = .72, e.font = B(700, 9 * h), (y ? y.roles.slice(0, 2).map((W, R) => W.slice(0, 2) + (R === 1 && y.roles.length > 2 ? "+" : "")) : [a.spec ? "分析" : "教练"]).forEach((W, R) => {
+        e.fillText(W, t.x + 9 * h, t.y + 7 * h + N + 3 * h + R * 11 * h)
+    }), e.globalAlpha = 1, u ? (e.textAlign = "right", e.fillStyle = p, e.font = B(700, 17 * h), e.fillText("★", t.x + t.w - 8 * h, t.y + 6 * h)) : l && (e.globalAlpha = .92, e.drawImage(l, t.x + t.w - 8 * h - 30 * h, t.y + 7 * h, 30 * h, 30 * h), e.globalAlpha = 1);
+    const C = 74 * h,
+        m = t.x + t.w / 2,
+        T = t.y + 8 * h + 31 * h;
+    f || (e.save(), e.beginPath(), e.arc(m, T + C / 2, C / 2, 0, Math.PI * 2), e.clip(), e.fillStyle = "rgba(255,255,255,.22)", e.fillRect(m - C / 2, T, C, C), i && ma(e, i, {
+        x: m - C / 2,
+        y: T,
+        w: C,
+        h: C
+    }), e.restore(), e.beginPath(), e.arc(m, T + C / 2, C / 2, 0, Math.PI * 2), e.strokeStyle = "rgba(255,255,255,.5)", e.lineWidth = Math.max(1, h), e.stroke());
+    const _ = W => {
+            e.fillStyle = f ? "rgba(255,255,255,.28)" : "rgba(23,20,13,.28)", e.fillRect(t.x + 8 * h, W, t.w - 16 * h, Math.max(1, h * .8))
+        },
+        A = y ? [
+            ["aim", "枪法"],
+            ["reaction", "反应"],
+            ["awareness", "意识"],
+            ["utility", "道具"],
+            ["clutch", "残局"],
+            ["igl", "指挥"]
+        ].map(([W, R]) => [R, y.attrs[W]]) : [
+            ["战术", a.tactics],
+            ["培养", a.development],
+            ["激励", a.motivation]
+        ],
+        M = Math.ceil(A.length / 3) * 12 * h + 1 * h,
+        K = t.y + t.h - 7 * h - M;
+    _(K - 5 * h);
+    const G = K - 5 * h - 6 * h - 12 * h,
+        S = G - 1 * h - 16 * h;
+    _(S - 5 * h), e.textAlign = "center", e.fillStyle = p;
+    const F = y ? y.ign : a.name;
+    e.font = B(800, gs(e, F, t.w - 14 * h, 800, 13 * h)), e.fillText(F, m, S), e.globalAlpha = .84, e.font = B(700, 10 * h);
+    const L = a.clubTag ?? (y ? "自由人" : "自由身"),
+        D = y != null && y.isIgl ? " IGL" : "";
+    e.fillText(L + D, m, G), e.globalAlpha = 1;
+    const H = (t.w - 16 * h) / 3;
+    A.forEach(([W, R], X) => {
+        const Y = X % 3,
+            z = K + Math.floor(X / 3) * 12 * h,
+            V = t.x + 8 * h + Y * H;
+        e.textAlign = "left", e.globalAlpha = .66, e.font = B(500, 9.5 * h), e.fillText(W, V, z), e.globalAlpha = 1, e.textAlign = "right", e.font = B(800, 9.5 * h), e.fillText(String(R), V + H - 4 * h, z)
+    }), e.textBaseline = "alphabetic", ae(e, t, 7 * h), e.strokeStyle = g.edge, e.lineWidth = Math.max(1, h), e.stroke()
+}
+const dt = e => Q(e) && e.event === "seoul-2024" && !!e.seoul,
+    ii = "/events/seoul-2024/champions.png",
+    oi = {
+        mythic: "#c7b477",
+        gold: "#c7b477",
+        silver: "#a5b7cf",
+        bronze: "#b7977d"
+    },
+    os = (e, t) => `${e} ${t}px ui-monospace, Menlo, Consolas, monospace`,
+    ye = e => `700 ${e}px Impact, "Arial Narrow", "Helvetica Neue", sans-serif`;
+
+function ci(e, t, a, n, r, i) {
+    const l = t.w / 132,
+        c = _ => t.x + _ * l,
+        o = _ => t.y + _ * l,
+        d = oi[a.rarity],
+        h = a.seoul;
+    e.save(), ae(e, t, 8 * l), e.clip(), e.fillStyle = "#0c1017", e.fillRect(t.x, t.y, t.w, t.h);
+    const g = e.createRadialGradient(c(99), o(32), 0, c(99), o(32), t.w * .75);
+    g.addColorStop(0, "rgba(75,84,130,.29)"), g.addColorStop(1, "rgba(75,84,130,0)"), e.fillStyle = g, e.fillRect(t.x, t.y, t.w, t.h);
+    const y = t.x + t.w / 2,
+        u = t.y + t.h * .42,
+        f = t.h * .62;
+    for (let _ = 12; _ < 372; _ += 20) {
+        const A = (_ + 10.2 - 90) * Math.PI / 180,
+            v = (_ + 10.6 - 90) * Math.PI / 180,
+            M = e.createRadialGradient(y, u, 0, y, u, f);
+        M.addColorStop(0, "rgba(200,180,119,.17)"), M.addColorStop(1, "rgba(200,180,119,0)"), e.fillStyle = M, e.beginPath(), e.moveTo(y, u), e.arc(y, u, f, A, v), e.closePath(), e.fill()
+    }
+    const p = {
+        x: c(23.1),
+        y: o(30.4),
+        w: 85.8 * l,
+        h: 79.8 * l
+    };
+    if (r) {
+        const _ = document.createElement("canvas");
+        _.width = Math.ceil(p.w), _.height = Math.ceil(p.h);
+        const A = _.getContext("2d");
+        A.filter = "saturate(.65) contrast(1.06)";
+        const v = Math.max(p.w / r.width, p.h / r.height);
+        A.drawImage(r, (p.w - r.width * v) / 2, 0, r.width * v, r.height * v), A.filter = "none", A.globalCompositeOperation = "destination-in";
+        const M = A.createLinearGradient(0, 0, p.w, 0);
+        M.addColorStop(0, "rgba(0,0,0,0)"), M.addColorStop(.22, "#000"), M.addColorStop(.78, "#000"), M.addColorStop(1, "rgba(0,0,0,0)"), A.fillStyle = M, A.fillRect(0, 0, p.w, p.h);
+        const O = A.createLinearGradient(0, 0, 0, p.h);
+        O.addColorStop(0, "rgba(0,0,0,0)"), O.addColorStop(.16, "#000"), O.addColorStop(.74, "#000"), O.addColorStop(1, "rgba(0,0,0,0)"), A.fillStyle = O, A.fillRect(0, 0, p.w, p.h), e.drawImage(_, p.x, p.y, p.w, p.h)
+    } else e.fillStyle = "rgba(199,180,119,.33)", e.font = ye(48 * l), e.textAlign = "center", e.textBaseline = "middle", e.fillText(a.ign.slice(0, 2), p.x + p.w / 2, p.y + p.h / 2);
+    e.textBaseline = "top", e.textAlign = "left", e.fillStyle = d, e.letterSpacing = `${.72*l}px`, e.font = B(400, 6 * l), e.fillText("CHAMPIONS", c(12.7), o(16.5)), e.font = B(700, 8 * l), e.letterSpacing = `${.96*l}px`, e.fillText("SEOUL 2024", c(12.7), o(26)), e.letterSpacing = "0px", i && e.drawImage(i, c(95.3), o(15.7), 24 * l, 24 * l);
+    const b = `${a.clubTag??""} / ${(pt(h.nat)??"").toUpperCase()} / `;
+    e.save(), e.translate(c(116), o(59.8)), e.rotate(Math.PI / 2), e.font = os(400, 6 * l), e.letterSpacing = `${1.2*l}px`, e.fillStyle = d, e.textBaseline = "middle", e.fillText(b, 0, 0);
+    const w = e.measureText(b).width;
+    e.restore(), e.letterSpacing = "0px", e.fillStyle = d, e.font = B(400, 6 * l), e.textAlign = "center", e.textBaseline = "top", Array.from(ge[a.rarity]).forEach((_, A) => {
+        e.fillText(_, c(116), o(59.8) + w + A * 7.2 * l)
+    }), e.textAlign = "left";
+    const N = (a.isIgl ? 52 : 41.5) * l;
+    if (e.fillStyle = "rgba(11,16,22,.65)", e.fillRect(c(11.4), o(51.4), 33.8 * l, N), e.fillStyle = d, e.fillRect(c(11.4), o(51.4), Math.max(1, l), N), e.shadowColor = "#000", e.shadowBlur = 6 * l, e.fillStyle = "#f6edda", e.font = B(700, 21 * l), e.fillText(String(a.rating), c(16.4), o(55)), e.shadowBlur = 0, e.fillStyle = d, e.font = B(400, 7 * l), e.fillText(`${a.role.slice(0,2)}${n>0?` ${Cs(n)}`:""}`, c(16.4), o(80.5)), a.isIgl) {
+        e.font = B(800, 6 * l);
+        const _ = e.measureText("IGL").width + 6 * l;
+        e.fillRect(c(16.4), o(80.5) + 10 * l, _, 8 * l), e.fillStyle = "#0c1017", e.fillText("IGL", c(16.4) + 3 * l, o(80.5) + 11 * l), e.fillStyle = d
+    }
+    const I = e.createLinearGradient(0, o(115.1), 0, t.y + t.h);
+    I.addColorStop(0, "rgba(10,12,19,0)"), I.addColorStop(.3, "rgba(10,12,19,.91)"), I.addColorStop(.65, "#0a0c13"), e.fillStyle = I, e.fillRect(t.x, o(115.1), t.w, t.y + t.h - o(115.1)), e.fillStyle = "#fff9e9";
+    let k = 21 * l;
+    for (e.font = ye(k); k > 8 && e.measureText(a.ign).width > 106.6 * l;) k -= .5, e.font = ye(k);
+    e.textBaseline = "alphabetic", e.fillText(a.ign, c(12.7), o(147)), e.textBaseline = "top", e.fillStyle = "rgba(199,180,119,.33)", e.fillRect(c(12.7), o(156), 106.6 * l, Math.max(1, l));
+    const C = [
+        [String(h.acs), "ACS"],
+        [h.kd.toFixed(2), "K/D"],
+        [String(h.maps), "MAPS"]
+    ];
+    let m = c(12.7);
+    C.forEach(([_, A]) => {
+        e.font = os(700, 10 * l);
+        const v = e.measureText(_).width;
+        e.fillStyle = "#e4d5ad", e.fillText(_, m, o(162.3)), e.font = os(400, 5 * l);
+        const M = e.measureText(A).width;
+        e.fillStyle = "#a8a7a3", e.fillText(A, m, o(176)), m += Math.max(v, M) + 106.6 * l * .14
+    }), e.fillStyle = "rgba(199,180,119,.19)", e.fillRect(c(12.7), o(189.3), 106.6 * l, Math.max(1, l)), e.font = os(400, 4.5 * l), e.fillStyle = "#a6a497", e.fillText("01—25 AUG · 2024", c(12.7), o(195)), e.textAlign = "right", e.fillStyle = d, e.fillText(`${String(h.number).padStart(3,"0")} / 080`, c(119.3), o(195)), e.textAlign = "left";
+    const T = e.createLinearGradient(t.x, t.y, t.x + t.w * .57, t.y + t.h * .82);
+    T.addColorStop(.3, "rgba(255,255,255,0)"), T.addColorStop(.47, "rgba(255,255,255,.07)"), T.addColorStop(.6, "rgba(255,255,255,0)"), e.fillStyle = T, e.fillRect(t.x, t.y, t.w, t.h), e.restore(), e.textBaseline = "alphabetic", ae(e, {
+        x: t.x + 4 * l,
+        y: t.y + 4 * l,
+        w: t.w - 8 * l,
+        h: t.h - 8 * l
+    }, 4 * l), e.strokeStyle = "rgba(199,180,119,.33)", e.lineWidth = Math.max(1, l), e.stroke(), ae(e, t, 8 * l), e.strokeStyle = d, e.lineWidth = Math.max(1, l), e.stroke()
+}
+const ht = e => Q(e) && e.event === "bangkok-2025" && !!e.bangkok,
+    di = "/events/bangkok-2025/lotus-art.webp",
+    hi = {
+        mythic: "#dcc48e",
+        gold: "#dcc48e",
+        silver: "#c5d8eb",
+        bronze: "#d69e81"
+    },
+    ui = {
+        mythic: "金卡",
+        gold: "金卡",
+        silver: "银卡",
+        bronze: "铜卡"
+    };
+
+function mi(e, t, a, n, r, i) {
+    const l = C => t.x + C / 100 * t.w,
+        c = C => t.y + C / 100 * t.h,
+        o = C => C / 100 * t.w,
+        d = C => C / 100 * t.h,
+        h = hi[a.rarity],
+        g = a.bangkok,
+        y = Math.max(1, t.w / 480);
+    e.save(), ae(e, t, o(3.2)), e.clip();
+    const u = e.createLinearGradient(t.x, t.y, t.x + t.w * .75, t.y + t.h);
+    u.addColorStop(0, "#20152f"), u.addColorStop(.62, "#161024"), e.fillStyle = u, e.fillRect(t.x, t.y, t.w, t.h);
+    const f = e.createRadialGradient(l(80), c(22), 0, l(80), c(22), t.w * .9);
+    f.addColorStop(0, "#38254b"), f.addColorStop(.56, "rgba(56,37,75,0)"), e.fillStyle = f, e.fillRect(t.x, t.y, t.w, t.h);
+    const p = {
+        x: l(4.19),
+        y: c(13.11),
+        w: o(91.62),
+        h: d(63.81)
+    };
+    if (r) {
+        const C = document.createElement("canvas");
+        C.width = Math.ceil(p.w), C.height = Math.ceil(p.h);
+        const m = C.getContext("2d");
+        m.filter = "saturate(.68) contrast(1.06)";
+        const T = Math.max(p.w / r.width, p.h / r.height),
+            _ = r.width * T,
+            A = r.height * T;
+        m.drawImage(r, (p.w - _) / 2, (p.h - A) * .3, _, A), m.filter = "none", m.globalCompositeOperation = "multiply", m.globalAlpha = .65;
+        const v = m.createLinearGradient(0, 0, p.w, 0);
+        v.addColorStop(0, "#715591"), v.addColorStop(.4, "#c1b2cf"), v.addColorStop(.65, "#c1b2cf"), v.addColorStop(1, "#715591"), m.fillStyle = v, m.fillRect(0, 0, p.w, p.h), m.globalAlpha = 1, m.globalCompositeOperation = "source-over";
+        const M = m.createLinearGradient(0, p.h, 0, 0);
+        M.addColorStop(0, "#161024"), M.addColorStop(.23, "rgba(36,20,50,.4)"), M.addColorStop(.53, "rgba(36,20,50,0)"), m.fillStyle = M, m.fillRect(0, 0, p.w, p.h), m.globalCompositeOperation = "destination-in";
+        const O = m.createLinearGradient(0, 0, 0, p.h);
+        O.addColorStop(0, "rgba(0,0,0,0)"), O.addColorStop(.13, "#000"), O.addColorStop(.62, "#000"), O.addColorStop(.97, "rgba(0,0,0,0)"), m.fillStyle = O, m.fillRect(0, 0, p.w, p.h);
+        for (const [K, G] of [
+                [.2, .8],
+                [.14, .78]
+            ]) {
+            const S = m.createLinearGradient(0, 0, p.w, 0);
+            S.addColorStop(0, "rgba(0,0,0,0)"), S.addColorStop(K, "#000"), S.addColorStop(G, "#000"), S.addColorStop(1, "rgba(0,0,0,0)"), m.fillStyle = S, m.fillRect(0, 0, p.w, p.h)
+        }
+        e.drawImage(C, p.x, p.y, p.w, p.h)
+    } else e.fillStyle = "rgba(205,185,245,.25)", e.font = ye(o(30)), e.textAlign = "center", e.textBaseline = "middle", e.fillText(a.ign.slice(0, 2), p.x + p.w / 2, p.y + p.h * .45);
+    const b = e.createLinearGradient(0, t.y + t.h, 0, t.y);
+    if (b.addColorStop(.09, "#161024"), b.addColorStop(.22, "rgba(22,16,36,.94)"), b.addColorStop(.33, "rgba(22,16,36,.5)"), b.addColorStop(.48, "rgba(22,16,36,0)"), e.fillStyle = b, e.fillRect(t.x, t.y, t.w, t.h), i) {
+        const C = {
+                x: l(76.89),
+                y: c(76.98),
+                w: o(15.93),
+                h: d(11.41)
+            },
+            m = document.createElement("canvas");
+        m.width = Math.ceil(C.w), m.height = Math.ceil(C.h);
+        const T = m.getContext("2d"),
+            _ = C.w * (i.height / i.width);
+        T.drawImage(i, 0, (C.h - _) * .54, C.w, _), T.globalCompositeOperation = "destination-in";
+        const A = T.createRadialGradient(C.w / 2, C.h / 2, 0, C.w / 2, C.h / 2, Math.max(C.w, C.h) / 2);
+        A.addColorStop(.4, "#000"), A.addColorStop(.73, "rgba(0,0,0,0)"), T.fillStyle = A, T.fillRect(0, 0, C.w, C.h), e.drawImage(m, C.x, C.y)
+    }
+    e.textBaseline = "top", e.textAlign = "left", e.fillStyle = "#f3efff", e.letterSpacing = `${o(3.78)*.025}px`, e.font = B(700, o(3.78)), e.fillText("MASTERS", l(7.18), c(5.83) + o(.4)), e.font = B(700, o(5.18)), e.fillText("BANGKOK ", l(7.18), c(9.08));
+    const w = e.measureText("BANGKOK ").width;
+    if (e.fillStyle = h, e.fillText("25", l(7.18) + w, c(9.08)), e.letterSpacing = "0px", e.textAlign = "right", e.font = B(400, o(2.49)), e.fillText(ui[a.rarity], l(92.83), c(5.83) + o(.4)), e.fillText("赛事系列", l(92.83), c(5.83) + o(.4) + o(2.49) * 1.65), e.textAlign = "left", e.save(), e.translate(l(91.68) + o(3.14) / 2, c(23.08)), e.rotate(Math.PI / 2), e.font = B(400, o(2.09)), e.letterSpacing = `${o(2.09)*.17}px`, e.fillStyle = "#c9bddc", e.textBaseline = "middle", e.fillText("DAWN OF THE DUELIST", 0, 0), e.restore(), e.letterSpacing = "0px", e.fillStyle = "rgba(24,17,37,.87)", e.fillRect(l(6.18), c(21.09), o(21.7), d(18.28)), e.fillStyle = h, e.fillRect(l(6.18), c(21.09), Math.max(1, o(.42)), d(18.28)), e.font = B(700, o(13.94)), e.fillText(String(a.rating), l(9.38), c(22.94)), e.font = B(400, o(3.49)), e.fillText(`${a.role.slice(0,2)}${n>0?` ${Cs(n)}`:""}`, l(9.38), c(33.78)), e.font = B(700, o(4.28)), e.fillText(a.clubTag ?? "", l(8.17), c(57.86)), a.isIgl) {
+        const C = l(8.17) + e.measureText(a.clubTag ?? "").width + o(1.4);
+        e.font = B(800, o(3));
+        const m = e.measureText("IGL").width + o(2.4);
+        e.fillStyle = h, e.fillRect(C, c(57.86), m, o(4.2)), e.fillStyle = "#170f24", e.fillText("IGL", C + o(1.2), c(57.86) + o(.6)), e.fillStyle = h
+    }
+    e.textAlign = "right", e.font = B(400, o(2.69)), e.letterSpacing = `${o(2.69)*.07}px`, e.fillText(`${(pt(a.nat)??"").toUpperCase()} / 2025`, l(91.82), c(58.72)), e.letterSpacing = "0px", e.textAlign = "left", e.fillStyle = "#f3efff";
+    let N = o(14.94);
+    for (e.font = ye(N); N > 6 && e.measureText(a.ign).width > o(83.65);) N -= .5, e.font = ye(N);
+    e.textBaseline = "middle", e.fillText(a.ign, l(8.17), c(63.53) + d(11.76) / 2), e.textBaseline = "top", e.fillStyle = "rgba(202,191,227,.24)", e.fillRect(l(8.17), c(77.42), o(83.65), y);
+    const I = [
+        [String(g.acs), "ACS", 8.17],
+        [g.kd.toFixed(2), "K/D", 33.08],
+        [String(g.maps), "MAPS", 59.65]
+    ];
+    for (const [C, m, T] of I) e.fillStyle = "#f1e9ff", e.font = B(500, o(5.97)), e.fillText(C, l(T), c(79.71)), e.fillStyle = "#bdb0d3", e.font = B(400, o(2.29)), e.fillText(m, l(T), c(79.71) + d(7.45) - o(2.29) * 1.15);
+    e.fillStyle = "rgba(202,191,227,.13)", e.fillRect(l(8.17), c(89.59), o(83.65), y), e.font = B(400, o(3.19)), e.fillStyle = "#d6cbe9", e.fillText("20 FEB — 02 MAR", l(8.17), c(91.44)), e.textAlign = "right", e.font = B(400, o(2.19)), e.fillStyle = h, e.fillText(`${String(g.number).padStart(3,"0")} / 041`, l(91.82), c(92.19)), e.textAlign = "left";
+    const k = e.createLinearGradient(t.x, t.y + t.h, t.x + t.w, t.y);
+    k.addColorStop(.24, "rgba(199,255,248,0)"), k.addColorStop(.38, "rgba(199,255,248,.07)"), k.addColorStop(.49, "rgba(199,255,248,0)"), e.fillStyle = k, e.fillRect(t.x, t.y, t.w, t.h), e.restore(), e.textBaseline = "alphabetic", ae(e, {
+        x: l(2.2),
+        y: c(2.14),
+        w: o(95.6),
+        h: d(95.71)
+    }, o(2)), e.strokeStyle = h + "80", e.lineWidth = y, e.stroke(), ae(e, t, o(3.2)), e.strokeStyle = h, e.lineWidth = y, e.stroke()
+}
+const ut = e => Q(e) && e.event === "retired" && !!e.afterglow,
+    fi = "/events/afterglow/ember-art.webp",
+    pi = {
+        gold: {
+            foil: "#d8b77e",
+            paper: "#fff2da",
+            base: "#240e19",
+            cn: "金卡"
+        },
+        silver: {
+            foil: "#c7d1dd",
+            paper: "#f4f3f7",
+            base: "#211d29",
+            cn: "银卡"
+        },
+        bronze: {
+            foil: "#c38d70",
+            paper: "#f4ddd0",
+            base: "#2c181b",
+            cn: "铜卡"
+        }
+    };
+
+function pa(e, t, a, n, r) {
+    const i = e.createLinearGradient(t, a, t + n * .7, a + r);
+    for (const [l, c] of [
+            [0, "#2b1b53"],
+            [.18, "#6d2a86"],
+            [.34, "#b0316f"],
+            [.5, "#d9553f"],
+            [.64, "#b8912a"],
+            [.78, "#2f8f74"],
+            [.92, "#2b4fa8"],
+            [1, "#35206b"]
+        ]) i.addColorStop(l, c);
+    return i
+}
+const We = (e, t) => `${e} ${t}px Georgia, "Times New Roman", serif`;
+
+function ga(e, t, a) {
+    const n = document.createElement("canvas");
+    n.width = Math.ceil(a.w), n.height = Math.ceil(a.h);
+    const r = n.getContext("2d");
+    r.drawImage(t, 0, 0, a.w, a.h), r.globalCompositeOperation = "destination-in";
+    const i = r.createRadialGradient(a.w / 2, a.h / 2, 0, a.w / 2, a.h / 2, a.w / 2);
+    i.addColorStop(.45, "#000"), i.addColorStop(1, "rgba(0,0,0,0)"), r.fillStyle = i, r.fillRect(0, 0, a.w, a.h), e.save(), e.globalCompositeOperation = "screen", e.drawImage(n, a.x, a.y), e.restore()
+}
+
+function ya(e, t, a, n, r, i, l, c) {
+    const o = document.createElement("canvas");
+    o.width = Math.ceil(a.w), o.height = Math.ceil(a.h);
+    const d = o.getContext("2d");
+    d.filter = c;
+    const h = n === "cover" ? Math.max(a.w / t.width, a.h / t.height) : Math.min(a.w / t.width, a.h / t.height),
+        g = t.width * h,
+        y = t.height * h;
+    d.drawImage(t, (a.w - g) * r, (a.h - y) * i, g, y), d.filter = "none", d.globalCompositeOperation = "destination-in";
+    const u = d.createLinearGradient(0, 0, 0, a.h);
+    u.addColorStop(l, "#000"), u.addColorStop(1, "rgba(0,0,0,0)"), d.fillStyle = u, d.fillRect(0, 0, a.w, a.h), e.drawImage(o, a.x, a.y, a.w, a.h)
+}
+
+function gi(e, t, a, n, r, i) {
+    var N, I;
+    const l = k => t.x + k / 100 * t.w,
+        c = k => t.y + k / 100 * t.h,
+        o = k => k / 100 * t.w,
+        d = k => k / 100 * t.h,
+        h = Math.max(1, t.w / 480),
+        g = a.afterglow,
+        y = `${a.role}${a.isIgl?" · 指挥":""}${n>0?` ${Cs(n)}`:""}`;
+    if (e.save(), ae(e, t, o(3)), e.clip(), e.textBaseline = "top", e.textAlign = "left", a.rarity === "mythic") {
+        const k = g.accent ?? "#f2b6ad",
+            C = g.tint ?? "#501c2b",
+            m = e.createRadialGradient(l(70), c(33), 0, l(70), c(33), t.w * .95);
+        if (m.addColorStop(0, C), m.addColorStop(.73, "#1b1233"), e.fillStyle = m, e.fillRect(t.x, t.y, t.w, t.h), r) {
+            const [L, D] = (g.crop ?? "50% 50%").split(" ").map(H => parseFloat(H) / 100);
+            ya(e, r, {
+                x: l(3),
+                y: c(12),
+                w: o(94),
+                h: d(65)
+            }, "cover", L, D, .69, "saturate(1.08) contrast(1.04)")
+        } {
+            const L = {
+                    x: t.x,
+                    y: c(52),
+                    w: t.w,
+                    h: t.y + t.h - c(52)
+                },
+                D = document.createElement("canvas");
+            D.width = Math.ceil(L.w), D.height = Math.ceil(L.h);
+            const H = D.getContext("2d");
+            H.fillStyle = pa(H, 0, 0, L.w, L.h), H.fillRect(0, 0, L.w, L.h);
+            const W = H.createLinearGradient(0, 0, 0, L.h);
+            W.addColorStop(0, "rgba(22,14,44,0)"), W.addColorStop(.23, "rgba(22,14,44,.78)"), W.addColorStop(.55, "rgba(22,14,44,.9)"), W.addColorStop(1, "rgba(22,14,44,.9)"), H.fillStyle = W, H.fillRect(0, 0, L.w, L.h), H.globalCompositeOperation = "destination-in";
+            const R = H.createLinearGradient(0, 0, 0, L.h);
+            R.addColorStop(0, "rgba(0,0,0,0)"), R.addColorStop(.26, "#000"), H.fillStyle = R, H.fillRect(0, 0, L.w, L.h), e.drawImage(D, L.x, L.y)
+        }
+        e.fillStyle = "#e7cfaa", e.font = B(700, o(4)), e.letterSpacing = `${o(4)*.075}px`, e.fillText("AFTERGLOW", l(7), c(4.8)), e.letterSpacing = "0px";
+        {
+            e.font = B(700, o(2.5)), e.letterSpacing = `${o(2.5)*.12}px`;
+            const L = e.measureText("退役彩卡").width + o(4),
+                D = o(2.5) * 1.35 + o(1),
+                H = c(4.8) + o(4) * 1.1 + o(1.5),
+                W = e.createLinearGradient(l(7), 0, l(7) + L, 0);
+            ["#ffd9a0", "#ff9ec4", "#c8a6ff", "#8fd3ff", "#9ff0c8"].forEach((R, X) => W.addColorStop(X / 4, R)), ae(e, {
+                x: l(7),
+                y: H,
+                w: L,
+                h: D
+            }, D / 2), e.fillStyle = W, e.fill(), e.fillStyle = "#1b1030", e.fillText("退役彩卡", l(7) + o(2), H + o(.5) + o(.1)), e.letterSpacing = "0px"
+        }
+        i && ga(e, i, {
+            x: l(81),
+            y: c(3.2),
+            w: o(14),
+            h: o(14)
+        }), e.textAlign = "right", e.fillStyle = "#fff", e.font = B(500, o(3)), e.letterSpacing = `${o(3)*.15}px`, e.fillText(String(((N = a.legend) == null ? void 0 : N.year) ?? ""), l(93), c(13.5)), e.letterSpacing = "0px", e.textAlign = "left";
+        const T = o(26),
+            _ = o(16) * .95 + o(3) * 1.3 + o(2.15) * 1.3 + o(7),
+            A = e.createLinearGradient(l(7), c(17), l(7) + T, c(17) + _);
+        A.addColorStop(0, "rgba(17,19,36,.7)"), A.addColorStop(1, "rgba(17,19,36,.12)"), e.fillStyle = A, e.fillRect(l(7), c(17), T, _), e.fillStyle = k, e.fillRect(l(7), c(17), Math.max(1, o(.42)), _), e.fillStyle = "#fff8ed", e.font = ye(o(16)), e.fillText(String(a.rating), l(7) + o(2.5), c(17) + o(2)), e.fillStyle = k, e.font = B(400, o(3)), e.fillText(y, l(7) + o(2.5), c(17) + o(2) + o(16) * .95 + o(2)), e.fillStyle = "#e4d8ce", e.font = B(400, o(2.15)), e.fillText("已退役", l(7) + o(2.5), c(17) + o(2) + o(16) * .95 + o(2) + o(3) * 1.3 + o(1));
+        const v = `${g.result??""} / ${a.clubTag??""}`;
+        e.font = B(400, o(2.5));
+        const M = e.measureText(v).width + o(4),
+            O = o(2.5) * 1.3 + o(2.6);
+        e.fillStyle = "rgba(17,19,36,.67)", e.fillRect(l(93) - M, c(61) - O, M, O), e.fillStyle = "#fff2d8", e.fillText(v, l(93) - M + o(2), c(61) - O + o(1.3));
+        let K = c(94.7);
+        e.font = B(400, o(1.9)), e.fillStyle = "#d8cbe9", K -= o(1.9) * 1.2, e.fillText("生涯珍藏 / 彩卡", l(8), K), e.textAlign = "right", e.fillText(g.number, l(92), K), e.textAlign = "left", K -= o(2.3), e.fillStyle = "rgba(255,255,255,.3)", e.fillRect(l(8), K, o(84), h);
+        const G = ["aim", "reaction", "awareness", "utility", "clutch", "teamwork"].map(L => [L, ft[L]]);
+        K -= o(2.6) + o(2) + o(1.2) + o(5.1);
+        const S = o(84) / 6;
+        G.forEach(([L, D], H) => {
+            const W = H === 0 ? l(8) : l(8) + S * H + S / 2;
+            e.textAlign = H === 0 ? "left" : "center", e.fillStyle = "#f5dfbc", e.font = We(400, o(5.1)), e.fillText(String(a.attrs[L]), W, K), e.fillStyle = "#b9a28e", e.font = B(400, o(2)), e.fillText(D, W, K + o(5.1) + o(1.2))
+        }), e.textAlign = "left", K -= o(3), e.fillStyle = "rgba(255,255,255,.35)", e.fillRect(l(8), K, o(84), h), K -= o(3) + o(2.45) * 1.6, e.fillStyle = "#cfbca5", e.font = B(400, o(2.45)), e.fillText(((I = a.legend) == null ? void 0 : I.title) ?? "", l(8), K);
+        let F = o(16);
+        for (e.font = ye(F); F > 6 && e.measureText(a.ign).width > o(84);) F -= .5, e.font = ye(F);
+        K -= o(2) + F * 1.06, e.fillStyle = "#fff7e8", e.fillText(a.ign, l(8), K), K -= o(1.7) + o(3.1) * 1.2, e.fillStyle = k, e.font = B(600, o(3.1)), e.letterSpacing = `${o(3.1)*.1}px`, e.fillText(g.city ?? "", l(8), K), e.letterSpacing = "0px", e.textAlign = "right", e.fillText(a.clubTag ?? "", l(92), K), e.textAlign = "left", e.restore(), e.textBaseline = "alphabetic", ae(e, {
+            x: t.x + o(1.4),
+            y: t.y + o(1.4),
+            w: t.w - o(2.8),
+            h: t.h - o(2.8)
+        }, o(2.2)), e.strokeStyle = pa(e, t.x, t.y, t.w, t.h), e.lineWidth = o(2.8), e.stroke(), ae(e, t, o(3)), e.strokeStyle = "rgba(255,255,255,.6)", e.lineWidth = h, e.stroke();
+        return
+    }
+    const u = pi[a.rarity === "gold" || a.rarity === "silver" ? a.rarity : "bronze"];
+    e.fillStyle = u.base, e.fillRect(t.x, t.y, t.w, t.h);
+    const f = e.createRadialGradient(l(50), c(22) + d(58) * .35, 0, l(50), c(22) + d(58) * .35, o(46));
+    f.addColorStop(0, u.foil + "38"), f.addColorStop(1, u.foil + "00"), e.fillStyle = f, e.fillRect(l(12), c(22), o(76), d(58)), e.beginPath(), e.moveTo(l(12), c(80)), e.lineTo(l(12), c(22) + o(36)), e.arcTo(l(12), c(22), l(50), c(22), o(36)), e.arcTo(l(88), c(22), l(88), c(22) + o(36), o(36)), e.lineTo(l(88), c(80)), e.strokeStyle = u.foil + "52", e.lineWidth = h, e.stroke(), r ? ya(e, r, {
+        x: l(15),
+        y: c(24),
+        w: o(70),
+        h: d(57)
+    }, "contain", .5, 1, .6, "saturate(.7) contrast(1.06)") : (e.fillStyle = u.foil, e.font = B(400, o(20)), e.textAlign = "center", e.fillText("◇", l(50), c(38)), e.textAlign = "left"), e.fillStyle = u.foil, e.font = We(600, o(4.8)), e.letterSpacing = `${o(4.8)*.05}px`, e.fillText("AFTERGLOW", l(7), c(5.2)), e.letterSpacing = `${o(2.7)*.12}px`, e.fillStyle = u.paper, e.font = B(400, o(2.7)), e.fillText("余晖 · 生涯典藏", l(7), c(5.2) + o(4.8) * 1.2 + o(1.8)), e.letterSpacing = "0px", i && ga(e, i, {
+        x: l(76),
+        y: c(3),
+        w: o(18),
+        h: o(18)
+    }), e.fillStyle = u.paper, e.font = We(400, o(17)), e.letterSpacing = `${-o(17)*.08}px`, e.fillText(String(a.rating), l(7.5), c(23)), e.letterSpacing = "0px", e.fillStyle = u.foil, e.font = B(400, o(3)), e.fillText(y, l(7.5), c(23) + o(17) * .95 + o(2)), e.save(), e.translate(l(94) - o(1), c(25)), e.rotate(Math.PI / 2), e.globalAlpha = .7, e.fillStyle = u.foil, e.font = B(400, o(2)), e.letterSpacing = `${o(2)*.18}px`, e.fillText("THE LIGHT STAYS WITH US", 0, 0), e.restore();
+    let p = c(94.2) - o(2.7) * 1.2;
+    e.font = B(400, o(2.7)), e.fillStyle = u.foil, e.fillText(`生涯珍藏  ${u.cn}`, l(8), p), e.textAlign = "right", e.font = B(400, o(2.5)), e.fillText(g.number, l(92), p), e.textAlign = "left", p -= o(3);
+    const b = e.createLinearGradient(l(8), 0, l(92), 0);
+    b.addColorStop(0, u.foil), b.addColorStop(1, u.foil + "33"), e.fillStyle = b, e.fillRect(l(8), p, o(84), h);
+    let w = o(17);
+    for (e.font = We(400, w); w > 6 && e.measureText(a.ign).width > o(84);) w -= .5, e.font = We(400, w);
+    p -= o(3.2) + w * 1.12, e.fillStyle = u.paper, e.letterSpacing = `${-w*.045}px`, e.fillText(a.ign, l(8), p), e.letterSpacing = "0px", p -= o(1) + o(4) * 1.2, e.fillStyle = u.foil, e.font = B(600, o(4)), e.fillText(a.clubTag ?? "", l(8), p), e.textAlign = "right", e.font = B(400, o(3)), e.fillText(g.span, l(92), p + o(.8)), e.textAlign = "left", e.restore(), e.textBaseline = "alphabetic", ae(e, {
+        x: l(2.2),
+        y: c(2.2),
+        w: o(95.6),
+        h: d(95.6)
+    }, o(1.8)), e.strokeStyle = u.foil + "73", e.lineWidth = h, e.stroke(), ae(e, t, o(3)), e.strokeStyle = u.foil, e.lineWidth = h, e.stroke()
+}
+
+function yi(e, t, a) {
+    e.fillStyle = "#fff", ae(e, t, 14), e.fill();
+    const n = ti(a, "Q"),
+        r = li,
+        i = Math.floor((t.w - ni) / (n.length + r * 2)),
+        l = i * (n.length + r * 2),
+        c = t.x + (t.w - l) / 2 + i * r,
+        o = t.y + (t.h - l) / 2 + i * r;
+    e.fillStyle = "#0d1117";
+    for (let d = 0; d < n.length; d++)
+        for (let h = 0; h < n.length; h++) n[d][h] && e.fillRect(c + h * i, o + d * i, i, i)
+}
+async function xi(e, t) {
+    const a = Wa();
+    e.width = a.width, e.height = a.height;
+    const n = e.getContext("2d"),
+        r = t.url ?? Ua,
+        i = t.squad.slots.map(m => m ? xa(m) : null),
+        l = t.squad.coach ? xa(t.squad.coach) : null,
+        c = [...i, l],
+        o = await Promise.all(c.map(m => ke((m == null ? void 0 : m.face) ?? null))),
+        d = await Promise.all(c.map(m => ke(m != null && m.clubId && !dt(m) && !ht(m) && !ut(m) ? gt(m.clubId) : null))),
+        h = await ke(c.some(m => m && dt(m)) ? ii : null),
+        g = await ke(c.some(m => m && ht(m)) ? di : null),
+        y = await ke(c.some(m => m && ut(m)) ? fi : null),
+        u = n.createLinearGradient(0, 0, a.width, a.height);
+    u.addColorStop(0, "#0b1017"), u.addColorStop(.55, "#101826"), u.addColorStop(1, "#0a0e15"), n.fillStyle = u, n.fillRect(0, 0, a.width, a.height);
+    const f = n.createRadialGradient(a.width / 2, 300, 40, a.width / 2, 300, 900);
+    f.addColorStop(0, "rgba(255,70,85,.20)"), f.addColorStop(1, "rgba(255,70,85,0)"), n.fillStyle = f, n.fillRect(0, 0, a.width, 900);
+    const p = za(t.squad);
+    if (p) {
+        const m = await ke(qa(p.color));
+        m && n.drawImage(m, 0, 0, a.width, a.height);
+        const T = await ke(p.crest);
+        T && (n.save(), n.globalAlpha = .14, n.drawImage(T, a.width * .42, 160, a.width * .6, a.width * .6), n.restore(), n.drawImage(T, a.width - 170, a.header.y + 20, 90, 90))
+    }
+    n.textAlign = "left", n.fillStyle = "#ff4655", n.font = B(800, 40), n.fillText("开瓦包", a.header.x, a.header.y + 40), n.fillStyle = ce, n.font = B(600, 20), n.letterSpacing = "6px", n.fillText("VAL CARDS", a.header.x, a.header.y + 74), n.letterSpacing = "0px", n.fillStyle = Qs;
+    const b = gs(n, t.who.name, a.header.w - 260, 800, 76);
+    n.font = B(800, b), n.fillText(t.who.name, a.header.x, a.header.y + 176), t.who.tag && (n.fillStyle = ce, n.font = B(600, 30), n.fillText(`#${t.who.tag}`, a.header.x + Ka(n, t.who.name, 800, b) + 14, a.header.y + 176)), n.fillStyle = ce, n.font = B(500, 26), n.fillText(p ? `${p.tag} · 完整战队阵容 6/6` : "我的首发五人", a.header.x, a.header.y + 226);
+    const w = ["决斗者", "先锋", "控场", "哨卫", "自由人"];
+    if (a.seats.forEach((m, T) => {
+            fa(n, m, i[T], w[T], i[T] ? t.level(i[T].id) : 0, o[T], d[T], h, g, y)
+        }), n.fillStyle = "rgba(255,255,255,.05)", ae(n, a.coach, 14), n.fill(), n.textAlign = "left", n.fillStyle = ce, n.font = B(600, 20), n.fillText("教练组", a.coach.x + 16, a.coach.y + 32), l) {
+        const m = {
+            x: a.coach.x + 16,
+            y: a.coach.y + 48,
+            w: a.coach.w - 32,
+            h: a.coach.h - 64
+        };
+        fa(n, m, l, "教练", t.level(l.id), o[5], d[5])
+    } else n.fillStyle = ce, n.font = B(500, 22), n.fillText("没有教练", a.coach.x + 16, a.coach.y + 150);
+    n.fillStyle = ri, ae(n, a.stats, 14), n.fill();
+    const N = a.stats.x + a.stats.w / 2,
+        I = a.stats.w - 56,
+        k = t.chem >= 60 ? "#4ade80" : t.chem >= 35 ? "#fbbf24" : "#f87171",
+        C = t.rating.toLocaleString("en-US");
+    n.textAlign = "center", n.fillStyle = ce, n.font = B(600, 24), n.fillText("阵容战力", N, a.stats.y + 58), n.fillStyle = Qs, n.font = B(800, gs(n, C, I, 800, 84)), n.fillText(C, N, a.stats.y + 146), n.fillStyle = "rgba(255,255,255,.08)", n.fillRect(a.stats.x + 28, a.stats.y + 180, a.stats.w - 56, 2), n.fillStyle = ce, n.font = B(600, 24), n.fillText("默契", N, a.stats.y + 226), n.fillStyle = k, n.font = B(800, 64), n.fillText(String(t.chem), N, a.stats.y + 294), n.fillStyle = ce, n.font = B(500, gs(n, "默契来自同队、同国籍、同赛区", I, 500, 20)), n.fillText("默契来自同队、同国籍、同赛区", N, a.stats.y + 332), yi(n, a.qr, r), n.textAlign = "center", n.fillStyle = Qs, n.font = B(700, 24), n.fillText("扫码开一局", a.qr.x + a.qr.w / 2, a.qr.y + a.qr.h + 38), n.fillStyle = ce, n.font = B(500, 21), n.fillText(r.replace(/^https?:\/\//, ""), a.qr.x + a.qr.w / 2, a.qr.y + a.qr.h + 68), n.textAlign = "left", n.fillStyle = ce, n.font = B(500, 22), n.fillText("猪之家出品 · VCT电竞经理 · 开瓦包", a.footer.x, a.footer.y + 30)
+}
+const xa = e => te(e) ?? null;
+
+function ji({
+    onClose: e
+}) {
+    const {
+        g: t,
+        toast: a
+    } = oe(), n = x.useRef(null), [r, i] = x.useState(null), [l, c] = x.useState(!1), o = t.squad.slots.filter(Boolean).length;
+    x.useEffect(() => {
+        let y = !0;
+        const u = n.current;
+        if (u) return xi(u, {
+            squad: t.squad,
+            level: f => Je(t, f),
+            who: {
+                name: t.name || "无名经理",
+                tag: (In() ?? "").slice(0, 4).toUpperCase() || void 0
+            },
+            rating: xt(t.squad, f => Je(t, f)),
+            chem: yt(t.squad).score
+        }).then(() => {
+            y && i(u.toDataURL("image/png"))
+        }).catch(() => {
+            y && c(!0)
+        }), () => {
+            y = !1
+        }
+    }, [t]);
+    const d = async () => {
+        const y = n.current;
+        return !y || !r ? null : new Promise(u => y.toBlob(f => u(f), "image/png"))
+    }, h = async () => {
+        const y = await d();
+        if (!y) {
+            a("图片还没画好，稍等一下。");
+            return
+        }
+        const u = URL.createObjectURL(y),
+            f = document.createElement("a");
+        f.href = u, f.download = `开瓦包-${t.name||"阵容"}.png`, f.click(), setTimeout(() => URL.revokeObjectURL(u), 4e3)
+    }, g = async () => {
+        var p;
+        const y = await d();
+        if (!y) {
+            a("图片还没画好，稍等一下。");
+            return
+        }
+        const u = new File([y], "开瓦包阵容.png", {
+                type: "image/png"
+            }),
+            f = navigator;
+        if ((p = f.canShare) != null && p.call(f, {
+                files: [u]
+            })) try {
+            await navigator.share({
+                files: [u],
+                text: "我的开瓦包阵容",
+                url: Ua
+            });
+            return
+        } catch {}
+        h()
+    };
+    return s.jsx("div", {
+        className: "modal-bg",
+        onClick: e,
+        children: s.jsxs("div", {
+            className: "modal share-modal",
+            onClick: y => y.stopPropagation(),
+            children: [s.jsxs("div", {
+                className: "modal-head",
+                children: [s.jsx("h2", {
+                    children: "分享阵容"
+                }), s.jsx("div", {
+                    className: "spacer"
+                }), s.jsx("button", {
+                    className: "ghost sm",
+                    onClick: e,
+                    children: "关闭"
+                })]
+            }), s.jsxs("div", {
+                className: "modal-body",
+                children: [o < 5 && s.jsxs("p", {
+                    className: "small warn",
+                    style: {
+                        marginTop: 0
+                    },
+                    children: ["还差 ", 5 - o, " 个人，空位也会画进去。"]
+                }), s.jsx("canvas", {
+                    ref: n,
+                    style: {
+                        display: "none"
+                    }
+                }), l ? s.jsx("p", {
+                    className: "empty",
+                    children: "图片没画出来，刷新一下再试。"
+                }) : r ? s.jsx("img", {
+                    className: "share-png",
+                    src: r,
+                    alt: "我的阵容"
+                }) : s.jsx("p", {
+                    className: "empty",
+                    children: "正在画…"
+                }), s.jsxs("div", {
+                    className: "row wrap",
+                    style: {
+                        gap: 8,
+                        marginTop: 12
+                    },
+                    children: [s.jsx("button", {
+                        className: "primary",
+                        onClick: g,
+                        disabled: !r,
+                        children: "分享"
+                    }), s.jsx("button", {
+                        onClick: h,
+                        disabled: !r,
+                        children: "保存图片"
+                    })]
+                }), s.jsx("p", {
+                    className: "tiny faint",
+                    style: {
+                        marginBottom: 0,
+                        marginTop: 8
+                    },
+                    children: "手机长按图片即可保存到相册。图上的二维码扫开就是 vctgames.com。"
+                })]
+            })]
+        })
+    })
+}
+const cs = e => JSON.stringify([e.slots, e.coach ?? null]);
+
+function bi() {
+    var A;
+    const {
+        g: e,
+        commit: t,
+        toast: a
+    } = oe(), n = Rn(e), r = `valmanager:card:editing-preset:${e.id}`, [i, l] = x.useState(() => {
+        try {
+            const M = sessionStorage.getItem(r),
+                O = M === null ? -1 : Number(M);
+            if (Number.isInteger(O) && O >= 0 && n[O]) return O
+        } catch {}
+        const v = n.findIndex(M => M && cs(M.squad) === cs(e.squad));
+        return v < 0 ? null : v
+    });
+    x.useEffect(() => {
+        try {
+            i === null ? sessionStorage.removeItem(r) : sessionStorage.setItem(r, String(i))
+        } catch {}
+    }, [i, r]);
+    const c = i === null ? null : n[i],
+        o = c ? cs(c.squad) !== cs(e.squad) : e.squad.slots.some(Boolean) || !!e.squad.coach,
+        [d, h] = x.useState(null),
+        [g, y] = x.useState(null),
+        [u, f] = x.useState(""),
+        [p, b] = x.useState(!1),
+        [w, N] = x.useState(!1),
+        [I, k] = x.useState(!1),
+        C = n.findIndex(v => !v),
+        m = (v, M) => {
+            const O = _n(e, v, (M == null ? void 0 : M.trim()) || void 0);
+            l(v), t(!0), a(`当前阵容已保存到「${O.name}」。`)
+        },
+        T = v => {
+            const M = Pn(e, v);
+            M.ok && (l(v), h(null), t(!0), a(M.missing ? `已切换，${M.missing} 张卡不可用，请补齐空位。` : `已切换到「${n[v].name}」。`))
+        },
+        _ = v => {
+            if (!n[v]) {
+                y(v), f(`配置 ${v+1}`);
+                return
+            }
+            v !== i && (o ? h(v) : T(v))
+        };
+    return s.jsxs("section", {
+        className: "cm-deck-manager",
+        "aria-label": "卡组配置",
+        children: [s.jsx("div", {
+            className: "cm-deck-slots",
+            role: "group",
+            "aria-label": "切换卡组配置",
+            children: n.map((v, M) => s.jsxs("button", {
+                title: (v == null ? void 0 : v.name) ?? `空配置 ${M+1}`,
+                className: `cm-deck-slot${i===M?" active":""}`,
+                "aria-pressed": i === M,
+                onClick: () => _(M),
+                "aria-label": v ? `切换到配置 ${M+1}：${v.name}` : `保存到空配置 ${M+1}`,
+                children: [s.jsx("span", {
+                    className: "cm-deck-number",
+                    children: M + 1
+                }), s.jsx("b", {
+                    children: (v == null ? void 0 : v.name) ?? "空配置"
+                }), s.jsx("small", {
+                    children: v ? `${v.squad.slots.filter(Boolean).length}/5 人${v.squad.coach?" · 教练":""}` : "＋ 保存当前"
+                }), v && s.jsxs("small", {
+                    className: "cm-deck-power mono",
+                    children: ["战力 ", xt(v.squad, O => Je(e, O)).toLocaleString("en-US")]
+                })]
+            }, M))
+        }), s.jsxs("div", {
+            className: "cm-deck-toolbar",
+            children: [s.jsxs("div", {
+                className: "cm-deck-status",
+                role: "status",
+                children: [s.jsx("strong", {
+                    children: (c == null ? void 0 : c.name) ?? "当前阵容"
+                }), s.jsx("span", {
+                    children: c ? o ? "有修改，尚未保存到配置" : "与已保存配置一致" : "尚未关联保存配置"
+                })]
+            }), s.jsxs("div", {
+                className: "row wrap",
+                style: {
+                    gap: 8
+                },
+                children: [s.jsx("button", {
+                    className: "primary sm",
+                    disabled: !!c && !o,
+                    onClick: () => {
+                        i !== null && c ? m(i) : (k(!0), f(""))
+                    },
+                    children: c ? "保存修改" : "保存阵容"
+                }), s.jsx("button", {
+                    className: "sm",
+                    onClick: () => {
+                        k(!0), f("")
+                    },
+                    children: "另存为…"
+                }), c && s.jsxs("details", {
+                    className: "cm-deck-manage",
+                    children: [s.jsx("summary", {
+                        children: "管理"
+                    }), s.jsxs("div", {
+                        className: "row wrap",
+                        style: {
+                            gap: 8
+                        },
+                        children: [s.jsx("button", {
+                            className: "sm",
+                            onClick: () => {
+                                f(c.name), b(!0)
+                            },
+                            children: "重命名"
+                        }), s.jsx("button", {
+                            className: "sm",
+                            onClick: () => N(!0),
+                            children: "删除配置"
+                        })]
+                    })]
+                })]
+            })]
+        }), d !== null && s.jsxs(ze, {
+            title: "切换前保存修改？",
+            onClose: () => h(null),
+            children: [s.jsxs("p", {
+                children: ["当前阵容有尚未保存到配置的修改。即将切换到「", (A = n[d]) == null ? void 0 : A.name, "」。"]
+            }), s.jsxs("div", {
+                className: "row wrap",
+                style: {
+                    gap: 10
+                },
+                children: [(c || C >= 0) && s.jsx("button", {
+                    className: "primary",
+                    onClick: () => {
+                        const v = d;
+                        m(c && i !== null ? i : C), T(v)
+                    },
+                    children: "保存后切换"
+                }), s.jsx("button", {
+                    onClick: () => T(d),
+                    children: "放弃修改并切换"
+                }), s.jsx("button", {
+                    onClick: () => h(null),
+                    children: "继续编辑"
+                })]
+            }), !c && C < 0 && s.jsx("p", {
+                className: "small muted",
+                children: "配置都已占用。如需保留当前阵容，请继续编辑并使用“另存为”选择覆盖位置。"
+            })]
+        }), I && s.jsxs(ze, {
+            title: "保存阵容到配置",
+            onClose: () => k(!1),
+            children: [s.jsx("p", {
+                className: "small muted",
+                children: "选择保存位置。当前五人阵容和教练都会一起保存。"
+            }), s.jsx("div", {
+                className: "cm-save-destinations",
+                children: n.map((v, M) => s.jsxs("button", {
+                    onClick: () => {
+                        k(!1), y(M), f((v == null ? void 0 : v.name) ?? `配置 ${M+1}`)
+                    },
+                    children: [s.jsxs("b", {
+                        children: [M + 1, " · ", (v == null ? void 0 : v.name) ?? "空配置"]
+                    }), s.jsx("span", {
+                        children: v ? "选择后确认覆盖" : "保存为新配置"
+                    })]
+                }, M))
+            })]
+        }), g !== null && s.jsx(ze, {
+            title: n[g] ? "确认覆盖配置" : "保存新配置",
+            onClose: () => y(null),
+            children: s.jsxs("form", {
+                onSubmit: v => {
+                    v.preventDefault(), m(g, u), y(null)
+                },
+                children: [n[g] && s.jsxs("p", {
+                    children: ["将用当前阵容替换「", n[g].name, "」中保存的五人和教练。"]
+                }), s.jsx("label", {
+                    className: "cm-field-label",
+                    htmlFor: "deck-name",
+                    children: "配置名称"
+                }), s.jsx("input", {
+                    id: "deck-name",
+                    value: u,
+                    onChange: v => f(v.target.value),
+                    maxLength: 12,
+                    required: !0,
+                    placeholder: "例如：公开赛主力"
+                }), s.jsxs("div", {
+                    className: "row wrap",
+                    style: {
+                        gap: 10,
+                        marginTop: 20
+                    },
+                    children: [s.jsx("button", {
+                        className: "primary",
+                        type: "submit",
+                        children: n[g] ? "确认覆盖并保存" : "保存配置"
+                    }), s.jsx("button", {
+                        type: "button",
+                        onClick: () => y(null),
+                        children: "取消"
+                    })]
+                })]
+            })
+        }), p && c && i !== null && s.jsx(ze, {
+            title: "重命名配置",
+            onClose: () => b(!1),
+            children: s.jsxs("form", {
+                onSubmit: v => {
+                    v.preventDefault(), En(e, i, u.trim()), t(!0), b(!1)
+                },
+                children: [s.jsx("label", {
+                    className: "cm-field-label",
+                    htmlFor: "rename-deck",
+                    children: "配置名称"
+                }), s.jsx("input", {
+                    id: "rename-deck",
+                    maxLength: 12,
+                    required: !0,
+                    value: u,
+                    onChange: v => f(v.target.value)
+                }), s.jsx("button", {
+                    className: "primary",
+                    style: {
+                        marginLeft: 8
+                    },
+                    type: "submit",
+                    children: "保存名称"
+                })]
+            })
+        }), w && c && i !== null && s.jsxs(ze, {
+            title: "删除保存配置？",
+            onClose: () => N(!1),
+            children: [s.jsxs("p", {
+                children: ["删除「", c.name, "」的保存记录。当前上阵选手和收藏里的卡牌都会保留。"]
+            }), s.jsxs("div", {
+                className: "row wrap",
+                style: {
+                    gap: 10
+                },
+                children: [s.jsx("button", {
+                    onClick: () => {
+                        Ln(e, i), l(null), t(!0), N(!1), a("保存配置已删除，当前阵容保留。")
+                    },
+                    children: "确认删除配置"
+                }), s.jsx("button", {
+                    className: "primary",
+                    onClick: () => N(!1),
+                    children: "保留配置"
+                })]
+            })]
+        })]
+    })
+}
+
+function vi({
+    squad: e,
+    children: t
+}) {
+    const a = za(e);
+    return a ? s.jsxs("section", {
+        className: "team-board",
+        style: {
+            "--team-color": a.color,
+            backgroundImage: `url("${qa(a.color)}")`
+        },
+        "aria-label": `${a.name} 完整战队阵容`,
+        children: [a.crest && s.jsx("img", {
+            className: "team-board-watermark",
+            src: a.crest,
+            alt: "",
+            "aria-hidden": "true"
+        }), s.jsxs("header", {
+            className: "team-board-title",
+            children: [a.crest && s.jsx("img", {
+                src: a.crest,
+                alt: `${a.tag} 队标`
+            }), s.jsxs("div", {
+                children: [s.jsx("span", {
+                    children: "完整战队阵容 · 6/6"
+                }), s.jsx("h3", {
+                    children: a.name
+                }), s.jsx("p", {
+                    children: "五位选手，一位教练，同一面旗帜。"
+                })]
+            }), s.jsx("b", {
+                children: a.tag
+            })]
+        }), s.jsx("div", {
+            className: "team-board-content",
+            children: t
+        })]
+    }) : s.jsx(s.Fragment, {
+        children: t
+    })
+}
+const Js = [{
+    gap: 1,
+    bo3: 56,
+    bo5: 58
+}, {
+    gap: 2,
+    bo3: 61,
+    bo5: 65
+}, {
+    gap: 3,
+    bo3: 67,
+    bo5: 71
+}, {
+    gap: 5,
+    bo3: 76,
+    bo5: 82
+}, {
+    gap: 8,
+    bo3: 90,
+    bo5: 95
+}, {
+    gap: 10,
+    bo3: 95,
+    bo5: 98
+}];
+
+function wi({
+    open: e = !1
+}) {
+    return s.jsxs("details", {
+        className: "tiny muted",
+        open: e,
+        style: {
+            lineHeight: 1.75
+        },
+        children: [s.jsx("summary", {
+            children: "阵容分怎么来，差几分是多少胜率"
+        }), s.jsxs("p", {
+            style: {
+                margin: "6px 0"
+            },
+            children: ["天梯、好友房、杯赛", s.jsx("b", {
+                children: "只比双方阵容分"
+            }), "，不看卡的颜色。高分一方更容易赢，分差越大越稳；低分一方始终有机会。"]
+        }), s.jsxs("table", {
+            className: "gap-odds",
+            children: [s.jsx("thead", {
+                children: s.jsxs("tr", {
+                    children: [s.jsx("th", {
+                        children: "高出"
+                    }), Js.map(t => s.jsxs("th", {
+                        children: [t.gap, " 分"]
+                    }, t.gap))]
+                })
+            }), s.jsxs("tbody", {
+                children: [s.jsxs("tr", {
+                    children: [s.jsx("td", {
+                        children: "BO3"
+                    }), Js.map(t => s.jsxs("td", {
+                        children: [t.bo3, "%"]
+                    }, t.gap))]
+                }), s.jsxs("tr", {
+                    children: [s.jsx("td", {
+                        children: "BO5"
+                    }), Js.map(t => s.jsxs("td", {
+                        children: [t.bo5, "%"]
+                    }, t.gap))]
+                })]
+            })]
+        }), s.jsxs("p", {
+            style: {
+                margin: "6px 0"
+            },
+            children: [s.jsx("b", {
+                children: "选手升级"
+            }), "：每级这张卡评分 +1.5，阵容分 +0.3，战力 +150；一张卡 +5 共 +1.5 分，五人都 +5 共 +7.5 分。", s.jsx("br", {}), s.jsx("b", {
+                children: "教练"
+            }), "：战术、培养、激励越高，全队加得越多；教练每升一级阵容分 +0.3，+5 共 +1.5 分。", s.jsx("br", {}), s.jsx("b", {
+                children: "默契"
+            }), "：每 10 点 +1 分。", s.jsx("b", {
+                children: "错位"
+            }), "：一人 −1.2 分。", s.jsx("b", {
+                children: "没有指挥"
+            }), "：−3 分。"]
+        }), s.jsxs("p", {
+            style: {
+                margin: "6px 0 0"
+            },
+            children: [s.jsx("b", {
+                children: "彩卡是纪念卡"
+            }), "，评分高，但不保证赢：阵容分相同，彩卡阵容和金卡阵容胜率一样。"]
+        })]
+    })
+}
+const ja = {
+        club: "同队",
+        former: "同队（退役）",
+        nat: "同国籍",
+        region: "同赛区"
+    },
+    ba = {
+        club: "同队",
+        coached: "带过",
+        region: "同赛区"
+    },
+    ds = e => e.toLocaleString("en-US"),
+    hs = 60;
+
+function Si() {
+    const {
+        g: e,
+        version: t,
+        commit: a,
+        toast: n,
+        go: r
+    } = oe(), [i, l] = x.useState(null), [c, o] = x.useState(null), [d, h] = x.useState(""), [g, y] = x.useState(Pe), [u, f] = x.useState(!1), p = Ie(() => l(null), i !== null), b = x.useDeferredValue(d), [w, N] = x.useState(hs);
+    x.useEffect(() => {
+        N(hs)
+    }, [i, b, g]);
+    const I = S => Je(e, S),
+        k = yt(e.squad),
+        C = Cl(e.squad, I),
+        m = xt(e.squad, I),
+        T = nt(e.squad, I),
+        _ = Tl,
+        A = S => S > 0 ? `+${ds(S)}` : ds(S),
+        v = Hr(e.squad),
+        M = e.squad.slots.filter(Boolean).length,
+        O = x.useMemo(() => {
+            if (i === null) return [];
+            const S = i === "coach" ? "coach" : "player";
+            return st(e).filter(({
+                card: F
+            }) => S === "coach" ? pe(F) : Q(F)).map(({
+                card: F
+            }) => F)
+        }, [e, i, t]),
+        K = x.useMemo(() => {
+            if (i === null) return [];
+            const S = i === "coach" ? "coach" : "player",
+                F = b.trim().toLowerCase();
+            return st(e).filter(({
+                card: L
+            }) => S === "coach" ? pe(L) : Q(L)).filter(({
+                card: L
+            }) => Oe(L, g)).filter(({
+                card: L
+            }) => F ? (Q(L) ? `${L.ign} ${L.realName??""} ${L.clubTag??""} ${L.roles.join("")}` : `${L.name} ${L.clubTag??""}`).toLowerCase().includes(F) : !0).sort((L, D) => {
+                if (typeof i == "number") {
+                    const H = Te[i],
+                        W = Q(L.card) && L.card.roles.includes(H) ? 1 : 0,
+                        R = Q(D.card) && D.card.roles.includes(H) ? 1 : 0;
+                    if (W !== R) return R - W
+                }
+                return D.rating - L.rating
+            })
+        }, [e, i, b, g, t]),
+        G = S => {
+            i === "coach" ? e.squad.coach = S : typeof i == "number" && Es(e, i, S), l(null), h(""), y(Pe), a(!0)
+        };
+    return s.jsxs(s.Fragment, {
+        children: [s.jsx(bi, {}), s.jsx(le, {
+            title: "我的卡组",
+            actions: s.jsxs("div", {
+                className: "row wrap",
+                style: {
+                    gap: 8
+                },
+                children: [s.jsx("button", {
+                    className: "sm",
+                    onClick: () => {
+                        e.squad = On(e), a(!0), n("已按评分、默契和指挥自动组队。")
+                    },
+                    children: "自动组队"
+                }), s.jsx("button", {
+                    className: "sm",
+                    onClick: () => f(!0),
+                    children: "分享阵容"
+                }), s.jsx("button", {
+                    className: "sm ghost",
+                    title: "清空五个位置和教练，存过的配置不受影响",
+                    onClick: () => {
+                        if (!e.squad.slots.some(Boolean) && !e.squad.coach) {
+                            n("卡组已经是空的。");
+                            return
+                        }
+                        for (let S = 0; S < e.squad.slots.length; S++) Es(e, S, null);
+                        e.squad.coach = null, a(!0), n("已清空当前卡组，存过的配置还在。")
+                    },
+                    children: "清空卡组"
+                })]
+            }),
+            children: s.jsxs(vi, {
+                squad: e.squad,
+                children: [s.jsx("p", {
+                    className: "small muted",
+                    style: {
+                        marginTop: 0
+                    },
+                    children: M < 5 ? `已上阵 ${M}/5 位选手。点空位挑选，或使用自动组队补齐阵容。` : "五人阵容已就绪。点选手卡可查看详情、升级或替换。"
+                }), s.jsx("div", {
+                    className: "cm-squad",
+                    children: Te.map((S, F) => {
+                        const L = e.squad.slots[F],
+                            D = L ? te(L) : null;
+                        return D ? s.jsx(Me, {
+                            card: D,
+                            level: I(D.id),
+                            selected: k.misfits.includes(F),
+                            onClick: () => o(F),
+                            footer: k.misfits.includes(F) ? `不熟悉${S}` : Q(D) && D.role !== S && S !== "自由人" ? `${S} · 兼任` : S
+                        }, F) : s.jsx(Et, {
+                            label: S,
+                            onClick: () => l(F)
+                        }, F)
+                    })
+                }), s.jsxs("div", {
+                    className: "row wrap",
+                    style: {
+                        gap: 16,
+                        marginTop: 16,
+                        alignItems: "flex-start"
+                    },
+                    children: [s.jsxs("div", {
+                        style: {
+                            minWidth: 150
+                        },
+                        children: [s.jsx("div", {
+                            className: "tiny faint",
+                            children: "教练"
+                        }), e.squad.coach && te(e.squad.coach) ? s.jsx("div", {
+                            style: {
+                                marginTop: 6
+                            },
+                            children: s.jsx(Me, {
+                                card: te(e.squad.coach),
+                                level: I(e.squad.coach),
+                                size: "sm",
+                                onClick: () => o("coach")
+                            })
+                        }) : s.jsx("div", {
+                            style: {
+                                marginTop: 6
+                            },
+                            children: s.jsx(Et, {
+                                label: "教练",
+                                onClick: () => l("coach"),
+                                hint: "教练包里开得到"
+                            })
+                        })]
+                    }), s.jsxs("div", {
+                        style: {
+                            flex: "1 1 260px",
+                            minWidth: 0
+                        },
+                        children: [s.jsxs("div", {
+                            className: "row",
+                            style: {
+                                gap: 20,
+                                marginBottom: 6
+                            },
+                            children: [s.jsxs("div", {
+                                children: [s.jsx("div", {
+                                    className: "tiny faint",
+                                    children: "阵容战力"
+                                }), s.jsx("div", {
+                                    className: "display",
+                                    style: {
+                                        fontSize: 34,
+                                        lineHeight: 1
+                                    },
+                                    children: ds(m)
+                                })]
+                            }), s.jsxs("div", {
+                                children: [s.jsx("div", {
+                                    className: "tiny faint",
+                                    children: "默契"
+                                }), s.jsx("div", {
+                                    className: "display",
+                                    style: {
+                                        fontSize: 34,
+                                        lineHeight: 1,
+                                        color: k.score >= 60 ? "var(--win)" : k.score >= 35 ? "var(--warn)" : "var(--loss)"
+                                    },
+                                    children: k.score
+                                })]
+                            }), s.jsxs("div", {
+                                children: [s.jsx("div", {
+                                    className: "tiny faint",
+                                    children: "阵容分"
+                                }), s.jsx("div", {
+                                    className: "display",
+                                    style: {
+                                        fontSize: 34,
+                                        lineHeight: 1
+                                    },
+                                    children: C
+                                })]
+                            })]
+                        }), M > 0 && s.jsxs("div", {
+                            className: "tiny muted mono",
+                            style: {
+                                marginBottom: 8,
+                                lineHeight: 1.7
+                            },
+                            children: ["五人 ", ds(_(T.mean - T.growth + T.misfits * 6 / T.players)), T.growth > 0 && ` · 强化 ${A(_(T.growth))}`, T.misfits > 0 && ` · 错位 ${A(-_(T.misfits*6/T.players))}`, ` · 默契 ${A(_(T.chem))}`, T.lift !== 0 && ` · 教练 ${A(_(T.lift))}`, T.uncalled > 0 && ` · 无指挥 ${A(-_(T.uncalled))}`, T.short > 0 && ` · 缺人 ${A(-_(T.short))}`]
+                        }), s.jsxs("p", {
+                            className: "small muted",
+                            style: {
+                                marginTop: 0,
+                                lineHeight: 1.75
+                            },
+                            children: ["战力综合反映当前培养与阵容搭配，实际比赛还受对手、战术和临场表现影响。 教练的战术、培养、激励和等级都计入战力，教练带来的默契另算。 默契来自真实关系：", s.jsx("b", {
+                                children: "同一支俱乐部"
+                            }), "最高，其次", s.jsx("b", {
+                                children: "同国籍"
+                            }), "，再次", s.jsx("b", {
+                                children: "同赛区"
+                            }), "；退役普卡和他最后效力的队伍也算同队，比现役略低；退役彩卡和普通彩卡一样算同队。默契高的阵容能打赢评分更高的对手。"]
+                        }), s.jsx(wi, {}), M < 5 && s.jsxs("p", {
+                            className: "small warn",
+                            children: ["还差 ", 5 - M, " 个人。"]
+                        }), !!v.length && s.jsxs("p", {
+                            className: "small warn",
+                            children: ["没人打得了：", v.join("、"), "，比赛里会吃亏。"]
+                        }), k.noIgl && M > 0 && s.jsx("p", {
+                            className: "small warn",
+                            children: "没有指挥，中局决策会吃亏。"
+                        }), !!k.notes.length && s.jsx("p", {
+                            className: "tiny faint",
+                            style: {
+                                marginBottom: 0
+                            },
+                            children: k.notes.join(" · ")
+                        }), !!(k.links.length + k.coachLinks.length) && s.jsxs("div", {
+                            style: {
+                                marginTop: 12
+                            },
+                            children: [s.jsxs("div", {
+                                className: "tiny faint",
+                                style: {
+                                    marginBottom: 5
+                                },
+                                children: ["默契关系（", k.links.length + k.coachLinks.length, " 条）"]
+                            }), s.jsxs("div", {
+                                className: "row wrap",
+                                style: {
+                                    gap: 5
+                                },
+                                children: [k.links.map((S, F) => {
+                                    const L = e.squad.slots[S.a] ? te(e.squad.slots[S.a]) : void 0,
+                                        D = e.squad.slots[S.b] ? te(e.squad.slots[S.b]) : void 0;
+                                    return !Q(L) || !Q(D) ? null : s.jsxs("span", {
+                                        className: "trait",
+                                        "data-good": "y",
+                                        title: `${L.ign} × ${D.ign}：${ja[S.why]}`,
+                                        children: [L.ign, " × ", D.ign, " · ", ja[S.why]]
+                                    }, F)
+                                }), k.coachLinks.map(S => {
+                                    const F = e.squad.coach ? te(e.squad.coach) : void 0,
+                                        L = e.squad.slots[S.slot] ? te(e.squad.slots[S.slot]) : void 0;
+                                    return !pe(F) || !Q(L) ? null : s.jsxs("span", {
+                                        className: "trait",
+                                        "data-good": "y",
+                                        title: `教练 ${F.name} × ${L.ign}：${ba[S.why]}`,
+                                        children: [F.name, " × ", L.ign, " · ", ba[S.why]]
+                                    }, `c${S.slot}`)
+                                })]
+                            })]
+                        })]
+                    })]
+                })]
+            })
+        }), u && s.jsx(ji, {
+            onClose: () => f(!1)
+        }), c !== null && (() => {
+            const S = c === "coach" ? e.squad.coach : e.squad.slots[c];
+            if (!S || !e.cards[S]) return null;
+            const F = c === "coach" ? "教练" : Te[c];
+            return s.jsx(Oa, {
+                cardId: S,
+                onClose: () => o(null),
+                actions: s.jsxs(s.Fragment, {
+                    children: [s.jsxs("button", {
+                        className: "primary sm",
+                        onClick: () => {
+                            l(c), o(null)
+                        },
+                        children: ["替换（", F, "）"]
+                    }), s.jsx("button", {
+                        className: "sm ghost",
+                        onClick: () => {
+                            c === "coach" ? e.squad.coach = null : Es(e, c, null), o(null), a(!0)
+                        },
+                        children: "移出卡组"
+                    })]
+                })
+            })
+        })(), i !== null && s.jsx("div", {
+            className: "modal-bg",
+            onClick: () => l(null),
+            children: s.jsxs("div", {
+                ref: p,
+                role: "dialog",
+                "aria-modal": "true",
+                "aria-label": "选择阵容卡牌",
+                tabIndex: -1,
+                className: "modal",
+                style: {
+                    maxWidth: 860
+                },
+                onClick: S => S.stopPropagation(),
+                children: [s.jsxs("div", {
+                    className: "modal-head",
+                    children: [s.jsx("h2", {
+                        children: i === "coach" ? "选一名教练" : `选一名${Te[i]}`
+                    }), s.jsx("div", {
+                        className: "spacer"
+                    }), s.jsx("button", {
+                        className: "ghost sm",
+                        onClick: () => G(null),
+                        children: "清空这个位置"
+                    }), s.jsx("button", {
+                        className: "ghost sm",
+                        onClick: () => l(null),
+                        children: "关闭"
+                    })]
+                }), s.jsxs("div", {
+                    className: "modal-body",
+                    children: [s.jsx(Ba, {
+                        value: g,
+                        onChange: y,
+                        pool: O,
+                        extra: s.jsx("input", {
+                            className: "sm",
+                            style: {
+                                flex: "1 1 170px",
+                                minWidth: 130,
+                                padding: "4px 7px"
+                            },
+                            type: "search",
+                            "aria-label": "搜索阵容选手",
+                            placeholder: "搜 ID / 真名 / 战队",
+                            value: d,
+                            onChange: S => h(S.target.value)
+                        })
+                    }), K.length === 0 ? s.jsxs("div", {
+                        className: "cm-empty",
+                        role: "status",
+                        children: [s.jsx("p", {
+                            children: O.length === 0 ? i === "coach" ? "还没有教练卡，去开一个教练包。" : "没有可选的卡，先去抽卡。" : "这些条件下没有卡，放宽一点看看。"
+                        }), O.length === 0 ? s.jsx("button", {
+                            onClick: () => {
+                                l(null), r("packs")
+                            },
+                            children: "去抽卡"
+                        }) : s.jsx("button", {
+                            onClick: () => {
+                                h(""), y(Pe)
+                            },
+                            children: "清除搜索与筛选"
+                        })]
+                    }) : s.jsxs(s.Fragment, {
+                        children: [s.jsx("div", {
+                            className: "cm-grid sm",
+                            "aria-busy": b !== d,
+                            children: K.slice(0, w).map(({
+                                card: S,
+                                owned: F
+                            }) => {
+                                const L = e.squad.slots.includes(S.id) || e.squad.coach === S.id,
+                                    D = typeof i == "number" && Dn(e, S.id, i),
+                                    H = typeof i == "number" && Q(S) && S.roles.includes(Te[i]);
+                                return s.jsx(Me, {
+                                    card: S,
+                                    level: F.level,
+                                    size: "sm",
+                                    dimmed: L,
+                                    onClick: () => G(S.id),
+                                    footer: L ? "已上场" : D ? "会顶替本人" : H ? "位置吻合" : void 0
+                                }, S.id)
+                            })
+                        }), K.length > w && s.jsx("div", {
+                            className: "row",
+                            style: {
+                                justifyContent: "center",
+                                marginTop: 12
+                            },
+                            children: s.jsxs("button", {
+                                className: "sm",
+                                onClick: () => N(S => S + hs),
+                                children: ["再显示 ", Math.min(hs, K.length - w), " 张（共 ", K.length, " 张）"]
+                            })
+                        })]
+                    })]
+                })]
+            })
+        })]
+    })
+}
+async function Va(e) {
+    try {
+        return await navigator.clipboard.writeText(e), !0
+    } catch {}
+    try {
+        const t = document.createElement("textarea");
+        t.value = e, t.style.position = "fixed", t.style.opacity = "0", document.body.appendChild(t), t.select();
+        const a = document.execCommand("copy");
+        return document.body.removeChild(t), a
+    } catch {
+        return !1
+    }
+}
+
+function ki(e) {
+    const t = new Date(e);
+    if (Number.isNaN(t.getTime())) return `${e.slice(5,10)} ${e.slice(11,16)}`;
+    const a = n => String(n).padStart(2, "0");
+    return `${a(t.getMonth()+1)}-${a(t.getDate())} ${a(t.getHours())}:${a(t.getMinutes())}`
+}
+
+function Ni({
+    onSignOut: e
+}) {
+    const {
+        g: t,
+        cloud: a,
+        phone: n,
+        bound: r,
+        toast: i,
+        commit: l
+    } = oe(), [c, o] = x.useState(!1), [d, h] = x.useState(t.name), g = Bn(t), y = g > Date.now(), u = va(t);
+    return s.jsxs(s.Fragment, {
+        children: [s.jsxs(le, {
+            title: "账号",
+            children: [s.jsxs("p", {
+                className: "small muted",
+                style: {
+                    marginTop: 0,
+                    lineHeight: 1.8
+                },
+                children: ["这个 ID 就是你的账号，没有密码，丢了找不回来。", s.jsx("b", {
+                    style: {
+                        color: "var(--warn)"
+                    },
+                    children: "请截图或复制保存"
+                }), "，换设备用它登录。"]
+            }), s.jsx("div", {
+                className: "acct-id",
+                style: {
+                    filter: c ? "none" : "blur(7px)"
+                },
+                children: t.id
+            }), s.jsx("p", {
+                className: "small muted",
+                style: {
+                    margin: "8px 0 0"
+                },
+                children: n ? s.jsxs(s.Fragment, {
+                    children: ["已绑手机 尾号 ", s.jsx("b", {
+                        children: n
+                    }), "。换设备请用 ID 登录；用手机号进入每次扣 ", Qe, " 点体力。"]
+                }) : `还没绑手机。绑上以后 ID 丢了也能用手机号进来（每次扣 ${Qe} 点体力）。`
+            }), s.jsxs("div", {
+                className: "row",
+                style: {
+                    gap: 8,
+                    marginTop: 10
+                },
+                children: [s.jsx("button", {
+                    className: "sm",
+                    onClick: () => o(f => !f),
+                    children: c ? "隐藏" : "显示 ID"
+                }), s.jsx("button", {
+                    className: "primary sm",
+                    onClick: async () => {
+                        o(!0), i(await Va(t.id) ? "ID 已复制，记得存好。" : "复制失败，请手动选中复制。")
+                    },
+                    children: "复制 ID"
+                })]
+            }), s.jsxs("div", {
+                className: "row wrap",
+                style: {
+                    gap: 8,
+                    marginTop: 14,
+                    alignItems: "center"
+                },
+                children: [s.jsx("span", {
+                    className: "tiny faint",
+                    children: "昵称"
+                }), s.jsx("input", {
+                    style: {
+                        width: 160
+                    },
+                    value: y ? t.name : d,
+                    maxLength: 20,
+                    disabled: y,
+                    onChange: f => h(f.target.value),
+                    onBlur: () => {
+                        const f = d.trim().slice(0, 20) || "经理";
+                        y || f === t.name || (t.name = f, t.nameAt = Date.now(), l(!0), i(`昵称已改，${At} 天后才能再改。`))
+                    }
+                }), s.jsx("span", {
+                    className: "tiny faint",
+                    children: y ? `${new Date(g).getMonth()+1}月${new Date(g).getDate()}日后可再改` : `每 ${At} 天可改一次`
+                }), s.jsx("span", {
+                    className: `tag ${a?"t1":"t2"}`,
+                    title: a ? "收藏已同步到服务器" : "服务器连不上，只存在这台设备里",
+                    children: a ? "云端同步中" : "仅本机"
+                })]
+            }), !a && s.jsx("p", {
+                className: "tiny warn",
+                style: {
+                    marginTop: 8
+                },
+                children: "连不上服务器，进度只存在本机，联网后自动上传。"
+            })]
+        }), s.jsx(le, {
+            title: "战绩",
+            children: s.jsxs("div", {
+                className: "grid c4",
+                children: [s.jsx(us, {
+                    label: "收集",
+                    value: `${u.owned}/${u.total}`
+                }), s.jsx(us, {
+                    label: "抽卡次数",
+                    value: String(t.pulls)
+                }), s.jsx(us, {
+                    label: "天梯",
+                    value: `${t.ladder.wins}–${t.ladder.losses}`
+                }), s.jsx(us, {
+                    label: "最高段位",
+                    value: (() => {
+                        const f = Math.max(t.ladder.best, t.ladder.peak ?? 0),
+                            p = Math.max(t.ladder.bestPoints ?? 0, t.ladder.peakPoints ?? 0);
+                        return t.ladder.div >= tt || f >= tt ? `${zn(p)} ${p}` : Fn[f]
+                    })()
+                })]
+            })
+        }), s.jsx(le, {
+            title: "最近动态",
+            children: t.log.length === 0 ? s.jsx("p", {
+                className: "empty",
+                children: "还没开始。"
+            }) : s.jsx("div", {
+                className: "grid",
+                style: {
+                    gap: 0
+                },
+                children: t.log.slice(0, 25).map((f, p) => s.jsxs("div", {
+                    className: "small",
+                    style: {
+                        padding: "5px 0",
+                        borderBottom: "1px solid var(--line-soft)"
+                    },
+                    children: [s.jsx("span", {
+                        className: "tiny faint mono",
+                        style: {
+                            marginRight: 8
+                        },
+                        children: ki(f.at)
+                    }), f.text]
+                }, p))
+            })
+        }), !n && s.jsx(le, {
+            title: "绑定手机",
+            children: s.jsx(vt, {
+                id: t.id,
+                onBound: f => {
+                    r(f), i(`绑好了，尾号 ${f}。`)
+                },
+                onSignOut: () => {},
+                backLabel: "",
+                embedded: !0
+            })
+        }), s.jsxs(le, {
+            title: "退出",
+            children: [s.jsx("p", {
+                className: "small muted",
+                style: {
+                    marginTop: 0
+                },
+                children: "退出后本机不再记住 ID，确认已保存再退。"
+            }), s.jsx("button", {
+                onClick: () => {
+                    confirm("确认退出？没存 ID 就找不回来了。") && e()
+                },
+                children: "退出登录"
+            })]
+        }), s.jsx(ll, {})]
+    })
+}
+
+function us({
+    label: e,
+    value: t
+}) {
+    return s.jsxs("div", {
+        className: "stat",
+        children: [s.jsx("div", {
+            className: "tiny faint",
+            children: e
+        }), s.jsx("div", {
+            style: {
+                fontSize: 19,
+                fontWeight: 700
+            },
+            children: t
+        })]
+    })
+}
+const Ci = 3e4,
+    ms = () => ({
+        mythic: 0,
+        gold: 0,
+        silver: 0,
+        bronze: 0
+    });
+
+function Ti(e = Ci) {
+    const t = [];
+    for (const a of wa) {
+        const n = ne[a],
+            r = qn("ODDS", "概率", "2026-01-01");
+        r.coins = Number.MAX_SAFE_INTEGER;
+        const i = ms(),
+            l = ms();
+        let c = 0;
+        for (let h = 0; h < e; h++) {
+            r.packs[a] = 1;
+            const g = Gn(r, a),
+                y = new Set;
+            for (const u of g) {
+                const f = u.card.rarity;
+                i[f]++, c++, y.add(f)
+            }
+            for (const u of y) l[u]++
+        }
+        const o = ms(),
+            d = ms();
+        for (const h of Object.keys(i)) o[h] = c ? i[h] / c : 0, d[h] = l[h] / e;
+        t.push({
+            kind: a,
+            name: n.name,
+            cost: n.cost,
+            draws: n.draws,
+            shop: n.shop !== !1,
+            perCard: o,
+            perPack: d,
+            base: {
+                mythic: n.mythic,
+                gold: n.gold,
+                silver: n.silver,
+                bronze: Math.max(0, 1 - n.mythic - n.gold - n.silver)
+            }
+        })
+    }
+    return t
+}
+const $i = [{
+        key: "mythic",
+        label: "彩卡",
+        cls: "r-mythic"
+    }, {
+        key: "gold",
+        label: "金卡",
+        cls: "r-gold"
+    }, {
+        key: "silver",
+        label: "银卡",
+        cls: "r-silver"
+    }, {
+        key: "bronze",
+        label: "铜卡",
+        cls: "r-bronze"
+    }],
+    Zs = e => `${(e*100).toFixed(e<.001?3:2)}%`,
+    Mi = e => e > 0 ? `约 ${Math.round(1/e).toLocaleString()} 包一张` : "—";
+
+function Ai() {
+    const [e, t] = x.useState(null);
+    return x.useEffect(() => {
+        const a = setTimeout(() => t(Ti()), 30);
+        return () => clearTimeout(a)
+    }, []), e ? s.jsx(s.Fragment, {
+        children: e.map(a => s.jsxs("div", {
+            className: "odds-pack",
+            children: [s.jsxs("div", {
+                className: "odds-head",
+                children: [s.jsx("b", {
+                    children: a.name
+                }), s.jsxs("span", {
+                    className: "tiny muted",
+                    children: ["每包 ", a.draws, " 张 · ", a.shop ? `${a.cost.toLocaleString()} 金币` : "非卖品：从玩法与活动奖励获得"]
+                })]
+            }), s.jsx("div", {
+                className: "table-wrap",
+                children: s.jsxs("table", {
+                    children: [s.jsx("thead", {
+                        children: s.jsxs("tr", {
+                            children: [s.jsx("th", {
+                                children: "稀有度"
+                            }), s.jsx("th", {
+                                className: "num",
+                                children: "每张卡的概率"
+                            }), s.jsx("th", {
+                                className: "num",
+                                children: "每包至少一张"
+                            }), s.jsx("th", {
+                                className: "num",
+                                children: "基础值"
+                            })]
+                        })
+                    }), s.jsx("tbody", {
+                        children: $i.map(n => {
+                            const r = a.perCard[n.key],
+                                i = a.perPack[n.key],
+                                l = a.base[n.key];
+                            return n.key === "mythic" && r === 0 && l === 0 ? s.jsxs("tr", {
+                                children: [s.jsx("td", {
+                                    children: s.jsx("span", {
+                                        className: `tag ${n.cls}`,
+                                        children: n.label
+                                    })
+                                }), s.jsx("td", {
+                                    className: "num faint",
+                                    colSpan: 3,
+                                    children: "这种包不出彩卡"
+                                })]
+                            }, n.key) : s.jsxs("tr", {
+                                children: [s.jsx("td", {
+                                    children: s.jsx("span", {
+                                        className: `tag ${n.cls}`,
+                                        children: n.label
+                                    })
+                                }), s.jsx("td", {
+                                    className: "num mono",
+                                    children: Zs(r)
+                                }), s.jsxs("td", {
+                                    className: "num mono",
+                                    children: [Zs(i), n.key !== "bronze" && s.jsx("em", {
+                                        className: "tiny faint",
+                                        style: {
+                                            marginLeft: 6,
+                                            fontStyle: "normal"
+                                        },
+                                        children: Mi(i)
+                                    })]
+                                }), s.jsx("td", {
+                                    className: "num mono faint",
+                                    children: Zs(l)
+                                })]
+                            }, n.key)
+                        })
+                    })]
+                })
+            })]
+        }, a.kind))
+    }) : s.jsx("p", {
+        className: "small faint",
+        children: "正在开三万包…"
+    })
+}
+
+function Ii() {
+    return s.jsxs(s.Fragment, {
+        children: [s.jsxs("ul", {
+            className: "odds-why",
+            children: [s.jsxs("li", {
+                children: [s.jsx("b", {
+                    children: "金卡保底"
+                }), "：连续 ", Re, " 抽没出金卡后概率递增，第 ", fe, " 抽必出，所以实测金卡率高于基础值。"]
+            }), s.jsxs("li", {
+                children: [s.jsx("b", {
+                    children: "彩卡保底"
+                }), "：连续 ", Ne.toLocaleString(), " 抽没出彩卡必出一张。位置包不出彩卡，也不计入。"]
+            }), s.jsxs("li", {
+                children: [s.jsx("b", {
+                    children: "退役彩卡保底"
+                }), "：退役选手包单独计数，连续 ", be, " 抽没出退役彩卡，下一抽必出；它和上面的彩卡保底互不影响。"]
+            }), s.jsxs("li", {
+                children: [s.jsx("b", {
+                    children: "保底进度挂在账号上"
+                }), "，换一种包开不重置。"]
+            }), s.jsxs("li", {
+                children: [s.jsx("b", {
+                    children: "选拔包保底银卡、十连包保底金卡"
+                }), "：一包里最好的一张不够档就补到该档。补出来的金卡不清空金卡保底进度。"]
+            })]
+        }), s.jsx("p", {
+            className: "tiny faint",
+            style: {
+                marginBottom: 0
+            },
+            children: "彩卡是纪念特定比赛夜晚的纪念卡，极稀有；比赛只比阵容分，彩卡不保证赢。这个游戏不卖任何东西。"
+        })]
+    })
+}
+
+function Ri() {
+    const [e, t] = x.useState(!1), a = Ie(() => t(!1), e), [n, r] = x.useState(!1);
+    return x.useEffect(() => {
+        if (!e) return;
+        const i = l => {
+            l.key === "Escape" && t(!1)
+        };
+        return window.addEventListener("keydown", i), () => window.removeEventListener("keydown", i)
+    }, [e]), s.jsxs(s.Fragment, {
+        children: [s.jsxs("button", {
+            className: `support-fab odds-fab${e?" on":""}`,
+            onClick: () => {
+                t(i => !i), r(!0)
+            },
+            "aria-expanded": e,
+            title: "每种包的实测概率",
+            children: [s.jsx("span", {
+                className: "ico",
+                "aria-hidden": "true",
+                children: "🎲"
+            }), s.jsx("span", {
+                className: "lbl",
+                children: "概率"
+            })]
+        }), e && s.jsxs(s.Fragment, {
+            children: [s.jsx("div", {
+                className: "support-veil",
+                onClick: () => t(!1)
+            }), s.jsxs("div", {
+                className: "support-card odds-card",
+                ref: a,
+                role: "dialog",
+                "aria-modal": "true",
+                tabIndex: -1,
+                "aria-label": "概率公示",
+                children: [s.jsxs("div", {
+                    className: "support-head",
+                    children: [s.jsx("h3", {
+                        children: "概率公示"
+                    }), s.jsx("button", {
+                        className: "sm ghost",
+                        onClick: () => t(!1),
+                        children: "关闭 ✕"
+                    })]
+                }), s.jsxs("p", {
+                    className: "small muted",
+                    style: {
+                        margin: 0,
+                        lineHeight: 1.9
+                    },
+                    children: ["以下都是", s.jsx("b", {
+                        children: "实测"
+                    }), "值：用游戏同一套开包代码各开三万包统计得出。"]
+                }), n && s.jsx(Ai, {}), s.jsx("h4", {
+                    style: {
+                        margin: "4px 0 0",
+                        fontSize: "var(--t-body)"
+                    },
+                    children: "为什么实测和基础值不一样"
+                }), s.jsx(Ii, {})]
+            })]
+        })]
+    })
+}
+const Ei = e => {
+    const t = new Date(e),
+        a = n => String(n).padStart(2, "0");
+    return `${t.getMonth()+1}/${t.getDate()} ${a(t.getHours())}:${a(t.getMinutes())}`
+};
+
+function Li() {
+    const {
+        g: e,
+        cloud: t,
+        act: a,
+        toast: n
+    } = oe(), [r, i] = x.useState(!1), [l, c] = x.useState(!1), [o, d] = x.useState(() => new Set), h = Zt(e), g = e.mail ?? [], y = async () => {
+        var p;
+        if (!t || l) return;
+        c(!0);
+        const u = await a("mail_take");
+        if (c(!1), !u.ok) {
+            n(u.why);
+            return
+        }
+        const f = ((p = u.result) == null ? void 0 : p.mail) ?? [];
+        f.length && n(f.length === 1 ? `${Ea(f[0])}，已收下。` : `信箱收到 ${f.length} 条，已收下。`)
+    };
+    return x.useEffect(() => {
+        if (!r) return;
+        d(new Set((e.mail ?? []).filter(f => !f.seen).map(f => f.at))), Zt(e) > 0 && t && a("mail_seen"), y();
+        const u = f => {
+            f.key === "Escape" && i(!1)
+        };
+        return window.addEventListener("keydown", u), () => window.removeEventListener("keydown", u)
+    }, [r]), s.jsxs(s.Fragment, {
+        children: [s.jsxs("div", {
+            className: `chip mail-chip${h?" own":""}`,
+            role: "button",
+            tabIndex: 0,
+            title: "成交、退款和官方发放都在这里",
+            onClick: () => i(u => !u),
+            onKeyDown: u => {
+                (u.key === "Enter" || u.key === " ") && (u.preventDefault(), i(f => !f))
+            },
+            children: ["✉ 信箱", h > 0 && s.jsxs("b", {
+                style: {
+                    color: "var(--accent)"
+                },
+                children: [" ", h]
+            })]
+        }), r && s.jsxs(s.Fragment, {
+            children: [s.jsx("div", {
+                className: "support-veil",
+                onClick: () => i(!1)
+            }), s.jsxs("div", {
+                className: "support-card mail-card",
+                role: "dialog",
+                "aria-label": "信箱",
+                children: [s.jsxs("div", {
+                    className: "support-head",
+                    children: [s.jsx("h3", {
+                        children: "信箱"
+                    }), s.jsx("button", {
+                        className: "sm ghost",
+                        disabled: !t || l,
+                        onClick: () => void y(),
+                        children: l ? "收取中…" : "收取（最多100条）"
+                    }), s.jsx("button", {
+                        className: "sm ghost",
+                        onClick: () => i(!1),
+                        children: "关闭 ✕"
+                    })]
+                }), s.jsxs("p", {
+                    className: "small muted",
+                    style: {
+                        lineHeight: 1.8
+                    },
+                    children: ["交易区的成交、退款和", s.jsx("b", {
+                        children: "官方发放"
+                    }), "都从这里进来，下面显示的是", s.jsx("b", {
+                        children: "已经到账"
+                    }), "的记录。每次最多收取100条；积压较多时可继续点收取。标「新」的是这次刚到的。"]
+                }), !t && s.jsx("p", {
+                    className: "small",
+                    style: {
+                        color: "var(--warn)"
+                    },
+                    children: "服务器连不上，信箱暂时收不了。"
+                }), g.length === 0 ? s.jsx("div", {
+                    className: "empty",
+                    children: "还没有收到过东西。"
+                }) : s.jsx("div", {
+                    className: "mail-list",
+                    children: g.map((u, f) => s.jsxs("div", {
+                        className: `mail-item${u.kind==="grant"?" grant":""}`,
+                        children: [s.jsxs("div", {
+                            className: "row",
+                            style: {
+                                gap: 8,
+                                alignItems: "baseline"
+                            },
+                            children: [s.jsx("span", {
+                                className: "tiny faint mono",
+                                children: Ei(u.at)
+                            }), u.kind === "grant" && s.jsx("span", {
+                                className: "tag",
+                                style: {
+                                    borderColor: "var(--warn)",
+                                    color: "var(--warn)"
+                                },
+                                children: "官方"
+                            }), o.has(u.at) ? s.jsx("span", {
+                                className: "tag",
+                                style: {
+                                    borderColor: "var(--accent)",
+                                    color: "var(--accent)"
+                                },
+                                children: "新 · 已到账"
+                            }) : s.jsx("span", {
+                                className: "tiny faint",
+                                children: "已到账"
+                            })]
+                        }), s.jsx("div", {
+                            className: "small",
+                            style: {
+                                marginTop: 2
+                            },
+                            children: u.text
+                        }), u.note && s.jsxs("div", {
+                            className: "small muted",
+                            style: {
+                                marginTop: 2
+                            },
+                            children: ["附言：", u.note]
+                        })]
+                    }, `${u.at}-${f}`))
+                })]
+            })]
+        })]
+    })
+}
+const _i = x.lazy(() => me(() => import("./Champions-DCqTJmkG.js"), __vite__mapDeps([0, 1, 2, 3, 4]), import.meta.url)),
+    Pi = x.lazy(() => me(() => import("./Minigames-DIg2mtE7.js"), __vite__mapDeps([5, 1, 6, 7, 8, 9, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 3, 19, 20]), import.meta.url)),
+    Oi = x.lazy(() => me(() => import("./Ladder-BvxaDR-o.js"), __vite__mapDeps([21, 1, 6, 7, 8, 9, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 3, 22, 19, 20]), import.meta.url)),
+    Di = x.lazy(() => me(() => import("./Friends-B9XSY5V7.js"), __vite__mapDeps([23, 1, 6, 7, 8, 9, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 3, 22, 24, 19, 20]), import.meta.url)),
+    Bi = x.lazy(() => me(() => import("./Market-3nc1Q9CY.js"), __vite__mapDeps([25, 1, 6, 7, 8, 9, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 3, 24, 19, 20]), import.meta.url)),
+    Fi = x.lazy(() => me(() => import("./Cup-BR7reR3q.js"), __vite__mapDeps([26, 1, 6, 7, 8, 9, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 3, 22, 19, 20]), import.meta.url)),
+    zi = x.lazy(() => me(() => import("./Predict-CO4L9I78.js"), __vite__mapDeps([27, 1, 6, 7, 8, 9, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 3, 19, 20, 28]), import.meta.url)),
+    qi = x.lazy(() => me(() => import("./BangkokRoute-CtPHYFVt.js"), __vite__mapDeps([29, 1, 6, 7, 8, 9, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 3, 22, 19, 20]), import.meta.url)),
+    Gi = x.lazy(() => me(() => import("./HistoryTeams-CgfwhsTV.js"), __vite__mapDeps([30, 1, 6, 7, 8, 9, 10, 11, 12, 13, 14, 2, 15, 16, 17, 18, 3, 22, 19, 20]), import.meta.url)),
+    Hi = x.lazy(() => me(() => import("./Evolve-BtPnI2o5.js"), __vite__mapDeps([31, 1, 15, 16, 7, 8, 9, 10, 11, 12, 17, 18, 6, 13, 14, 2, 3, 19, 20]), import.meta.url)),
+    Ui = e => {
+        const t = Math.max(0, Math.ceil(e / 1e3)),
+            a = t % 60,
+            n = Math.floor(t / 60) % 60,
+            r = Math.floor(t / 3600),
+            i = l => String(l).padStart(2, "0");
+        return r ? `${r}:${i(n)}:${i(a)}` : `${n}:${i(a)}`
+    };
+
+function Wi({
+    g: e,
+    onTick: t
+}) {
+    const [a, n] = x.useState(() => de()), r = x.useRef(_s(e, de()));
+    x.useEffect(() => {
+        const c = window.setInterval(() => {
+            const o = de();
+            n(o);
+            const d = _s(e, o);
+            d !== r.current && (r.current = d, t())
+        }, 1e3);
+        return () => window.clearInterval(c)
+    }, [e, t]);
+    const i = _s(e, a),
+        l = Qn(e, a);
+    return s.jsxs("div", {
+        className: `chip${i===0?" spent":""}`,
+        title: `天梯每场 ${Rt.ladder} 点，杯赛入场 ${Rt.cup} 点，之后每轮免费。${Jn()}，上限 ${Ps} 点。`,
+        children: ["⚡ ", s.jsxs("b", {
+            children: [i, "/", Ps]
+        }), i < Ps && s.jsxs("span", {
+            className: "faint mono",
+            style: {
+                marginLeft: 5,
+                fontSize: 11
+            },
+            children: ["+1 · ", Ui(l)]
+        })]
+    })
+}
+
+function Ki({
+    onExit: e
+}) {
+    var D, H, W;
+    const t = x.useRef(null),
+        [a, n] = x.useReducer(R => R + 1, 0),
+        [r, i] = x.useState(Ft),
+        l = x.useCallback(R => {
+            _e.some(X => X.key === R) && (window.location.hash !== `#${R}` && history.pushState(null, "", `#${R}`), i(R))
+        }, []);
+    x.useEffect(() => {
+        const R = () => i(Ft());
+        return window.addEventListener("popstate", R), window.addEventListener("hashchange", R), () => {
+            window.removeEventListener("popstate", R), window.removeEventListener("hashchange", R)
+        }
+    }, []);
+    const [c, o] = x.useState(!1), [d, h] = x.useState(!0), [g, y] = x.useState(null), [u, f] = x.useState(!0), [p, b] = x.useState(null), [w, N] = x.useState(null), [I, k] = x.useState(!1), [C, m] = x.useState(() => de()), T = Hn(C), _ = x.useRef(null);
+    x.useEffect(() => {
+        const R = window.setInterval(() => m(de()), 3e4);
+        return () => window.clearInterval(R)
+    }, []);
+    const A = x.useRef(void 0);
+    x.useEffect(() => () => window.clearTimeout(A.current), []);
+    const v = x.useCallback(R => {
+            window.clearTimeout(A.current), b(R), A.current = window.setTimeout(() => b(X => X === R ? null : X), 3200)
+        }, []),
+        M = x.useCallback((R = !1) => (n(), t.current ? Un(t.current, R) : Promise.resolve()), []);
+    x.useEffect(() => {
+        let R = !0;
+        return (async () => {
+            const X = ka();
+            if (!X) {
+                const z = await Wn();
+                if (!R) return;
+                m(de()), o(z.cloud), f(!1);
+                return
+            }
+            const Y = await Sa(X);
+            R && (m(de()), Y.ok ? (t.current = Y.state, o(Y.cloud), h(Y.verified), y(Y.phone), et(Y.state, Y.today), Y.cloud || v("连不上服务器，只能看收藏。开包、签到、比赛需要联网。"), Ye("card_start", {
+                fresh: !1,
+                cloud: Y.cloud,
+                owned: Object.keys(Y.state.cards).length,
+                div: Y.state.ladder.div
+            })) : ys(null), f(!1))
+        })(), () => {
+            R = !1
+        }
+    }, []), x.useEffect(() => (It(R => {
+        t.current = R, n(), v("账号在别的设备上有新进度，已同步。")
+    }), () => It(null)), [v]);
+    const O = x.useCallback(async (R, X = {}) => {
+            const Y = t.current;
+            if (!Y) return {
+                ok: !1,
+                why: "还没登录"
+            };
+            if (!c) return {
+                ok: !1,
+                why: "连不上服务器，这一步需要联网。",
+                offline: !0
+            };
+            const z = await Kn(Y, R, X);
+            return n(), z
+        }, [c]),
+        K = x.useCallback(async (R = !1) => {
+            var z;
+            const X = await O("mail_take");
+            if (!X.ok) return 0;
+            const Y = ((z = X.result) == null ? void 0 : z.mail) ?? [];
+            return Y.length && !R && v(Y.length === 1 ? `${Ea(Y[0])}，已收下。` : `信箱收到 ${Y.length} 条，已收下。`), Y.length
+        }, [O, v]);
+    x.useEffect(() => {
+        !t.current || !c || K()
+    }, [c, (D = t.current) == null ? void 0 : D.id]), x.useEffect(() => {
+        const R = () => {
+                const z = t.current;
+                z && (Zn(z), el(z).then(V => {
+                    !V || t.current !== z || (n(), v("已同步别的设备上的改动。"))
+                }))
+            },
+            X = () => {
+                if (t.current) {
+                    if (document.visibilityState === "hidden") {
+                        Ls(t.current);
+                        return
+                    }
+                    R(), c && K()
+                }
+            },
+            Y = () => R();
+        return document.addEventListener("visibilitychange", X), window.addEventListener("online", Y), () => {
+            document.removeEventListener("visibilitychange", X), window.removeEventListener("online", Y)
+        }
+    }, [c, K]), x.useEffect(() => {
+        var R;
+        (R = _.current) == null || R.scrollTo(0, 0)
+    }, [r]);
+    const G = x.useMemo(() => ({
+        g: t.current,
+        version: a,
+        today: T,
+        now: C,
+        cloud: c,
+        phone: g,
+        bound: R => {
+            h(!0), y(R)
+        },
+        commit: M,
+        act: O,
+        toast: v,
+        collect: K,
+        openDossier: R => {
+            N(R), l("dossier")
+        },
+        go: l
+    }), [M, O, v, K, T, C, c, g, t.current, r, a]);
+    if (u) return s.jsx("div", {
+        className: "wrap",
+        style: {
+            padding: 40
+        },
+        children: s.jsx("p", {
+            className: "muted",
+            children: "正在读取卡牌账号…"
+        })
+    });
+    const S = t.current;
+    if (!S) return s.jsxs(s.Fragment, {
+        children: [s.jsx(Vi, {
+            onExit: e,
+            onReady: (R, X, Y, z, V, J) => {
+                t.current = R, o(Y), h(V), y(J), m(de()), et(R, z), Ye("card_start", {
+                    fresh: X,
+                    cloud: Y,
+                    owned: Object.keys(R.cards).length
+                }), k(X), l(X ? "account" : "packs"), n()
+            }
+        }), s.jsx(Os, {}), s.jsx(Ds, {})]
+    });
+    const F = {
+            packs: Wt,
+            challenge: mr,
+            minigames: Pi,
+            squad: Si,
+            collection: Or,
+            ladder: Oi,
+            friends: Di,
+            market: Bi,
+            cup: Fi,
+            predict: zi,
+            bangkok: qi,
+            history: Gi,
+            evolve: Hi
+        } [r],
+        L = () => {
+            ys(null), t.current = null, k(!1), n()
+        };
+    return d ? s.jsx($a.Provider, {
+        value: G,
+        children: s.jsxs("div", {
+            className: "app cardmode",
+            children: [s.jsx("a", {
+                className: "skip-link",
+                href: "#main",
+                onClick: R => {
+                    var X;
+                    R.preventDefault(), (X = _.current) == null || X.focus()
+                },
+                children: "跳到主内容"
+            }), s.jsxs("header", {
+                className: "topbar",
+                children: [s.jsxs("div", {
+                    className: "brand",
+                    "aria-label": "开瓦包",
+                    children: ["开", s.jsx("span", {
+                        children: "瓦包"
+                    }), s.jsx("em", {
+                        className: "by",
+                        children: "VAL CARDS"
+                    })]
+                }), s.jsxs("div", {
+                    className: "chip",
+                    title: "金币",
+                    children: ["🪙 ", s.jsx("b", {
+                        children: S.coins.toLocaleString("en-US")
+                    })]
+                }), s.jsx(Wi, {
+                    g: S,
+                    onTick: () => m(de())
+                }), s.jsxs("div", {
+                    className: "chip cm-rank",
+                    title: "段位",
+                    children: [Vn(S.ladder.div, S.ladder.stars, S.ladder.points ?? 0), S.ladder.div < tt && s.jsxs("b", {
+                        children: [" ", Xn(S.ladder.div, S.ladder.stars), "/", Yn(S.ladder.div), "★"]
+                    })]
+                }), s.jsxs("div", {
+                    className: "chip small muted cm-pack-count",
+                    title: "未开的卡包",
+                    children: ["📦 ", Object.values(S.packs).reduce((R, X) => R + (X ?? 0), 0)]
+                }), s.jsx(Li, {}), s.jsx("div", {
+                    className: "spacer"
+                }), !c && s.jsx("div", {
+                    className: "chip small",
+                    style: {
+                        color: "var(--warn)"
+                    },
+                    title: "服务器连不上，进度只在本机",
+                    children: "仅本机"
+                }), s.jsx(Rl, {
+                    compact: !0
+                }), s.jsx("button", {
+                    className: "ghost sm cm-home",
+                    onClick: () => {
+                        Ls(S), e()
+                    },
+                    children: "← 返回首页"
+                })]
+            }), s.jsxs("div", {
+                className: "cm-workspace",
+                children: [s.jsx(El, {
+                    current: r,
+                    onExit: () => {
+                        Ls(S), e()
+                    },
+                    onNavigate: R => {
+                        l(R), R !== "dossier" && N(null)
+                    }
+                }), s.jsxs("main", {
+                    className: "cm-body",
+                    id: "main",
+                    ref: _,
+                    tabIndex: -1,
+                    children: [s.jsxs("div", {
+                        className: "cm-page-heading",
+                        children: [s.jsxs("div", {
+                            children: [s.jsx("h1", {
+                                children: (H = _e.find(R => R.key === r)) == null ? void 0 : H.label
+                            }), s.jsx("p", {
+                                children: (W = _e.find(R => R.key === r)) == null ? void 0 : W.description
+                            })]
+                        }), s.jsxs("div", {
+                            className: "cm-page-tools",
+                            children: [s.jsx(Ri, {}), s.jsx(Os, {}), s.jsx(Ds, {})]
+                        })]
+                    }), !c && s.jsxs("div", {
+                        className: "cm-offline",
+                        role: "status",
+                        children: ["目前离线，可浏览已缓存的收藏。开包、领奖和比赛需要联网。", s.jsx("button", {
+                            className: "sm",
+                            onClick: () => window.location.reload(),
+                            children: "重新连接"
+                        })]
+                    }), I && r === "account" && s.jsx("div", {
+                        className: "panel",
+                        style: {
+                            borderColor: "var(--accent-line)",
+                            marginBottom: 14
+                        },
+                        children: s.jsxs("div", {
+                            className: "panel-body",
+                            children: [s.jsx("b", {
+                                style: {
+                                    color: "var(--accent)"
+                                },
+                                children: "账号已创建，先把下面的 ID 存好。"
+                            }), s.jsx("p", {
+                                className: "small muted",
+                                style: {
+                                    marginBottom: 0
+                                },
+                                children: "没有密码和邮箱，ID 丢了就找不回来。"
+                            }), s.jsx("button", {
+                                className: "primary sm",
+                                style: {
+                                    marginTop: 10
+                                },
+                                onClick: () => {
+                                    k(!1), l("packs")
+                                },
+                                children: "存好了，去抽卡 →"
+                            })]
+                        })
+                    }), s.jsx(x.Suspense, {
+                        fallback: s.jsx("div", {
+                            className: "cm-loading",
+                            role: "status",
+                            children: "正在载入玩法…"
+                        }),
+                        children: r === "champions" ? s.jsx(_i, {
+                            embedded: !0
+                        }) : r === "dossier" ? s.jsx(rl, {
+                            playerId: w,
+                            onOpen: N
+                        }) : r === "account" ? s.jsx(Ni, {
+                            onSignOut: L
+                        }) : F ? s.jsxs(s.Fragment, {
+                            children: [r === "packs" && s.jsx(nr, {}), s.jsx(F, {})]
+                        }) : s.jsx(Wt, {})
+                    }), s.jsx(Na, {})]
+                })]
+            }), p && s.jsx("div", {
+                className: "toast",
+                role: "status",
+                "aria-live": "polite",
+                children: p
+            })]
+        })
+    }) : s.jsxs(s.Fragment, {
+        children: [s.jsx(vt, {
+            id: S.id,
+            onBound: R => {
+                h(!0), y(R), v(`绑好了，尾号 ${R}。`)
+            },
+            onSignOut: L
+        }), s.jsx(Os, {}), s.jsx(Ds, {})]
+    })
+}
+
+function Vi({
+    onReady: e,
+    onExit: t
+}) {
+    const [a, n] = x.useState(""), [r, i] = x.useState(""), [l, c] = x.useState(!1), [o, d] = x.useState(null), [h, g] = x.useState("create"), [y, u] = x.useState(null), [f, p] = x.useState(!1), [b, w] = x.useState(!1), [N, I] = x.useState(!1), k = async () => {
+        if (l) return;
+        g("create"), c(!0), d(null);
+        const m = await sl(a);
+        if (c(!1), !m.ok) {
+            d(m.why);
+            return
+        }
+        u({
+            state: m.state,
+            cloud: !0,
+            today: m.today
+        })
+    }, C = async () => {
+        if (l) return;
+        g("signin"), c(!0), d(null);
+        const m = await Sa(r);
+        c(!1), m.ok ? (ys(m.state.id), e(m.state, !1, m.cloud, m.today, m.verified, m.phone)) : d({
+            bad: "ID 格式不对：VM- 开头，后面五组四位。",
+            missing: "没有这个 ID，检查是否抄错。",
+            offline: "连不上服务器，本机也没有这个账号的备份。"
+        } [m.reason])
+    };
+    return N ? s.jsx(vt, {
+        onBound: () => {},
+        onSignOut: () => I(!1),
+        backLabel: "返回"
+    }) : y ? s.jsxs("div", {
+        className: "wrap newgame cm-gate",
+        children: [s.jsx("h1", {
+            className: "display",
+            children: "记好这串 ID"
+        }), s.jsxs("p", {
+            className: "muted",
+            style: {
+                lineHeight: 1.9
+            },
+            children: ["这就是你的账号。", s.jsx("b", {
+                style: {
+                    color: "var(--warn)"
+                },
+                children: "没有密码和邮箱，丢了找不回来。"
+            }), s.jsx("br", {}), "截图或复制保存。"]
+        }), s.jsx("div", {
+            className: "acct-id",
+            style: {
+                maxWidth: 460
+            },
+            children: y.state.id
+        }), s.jsxs("div", {
+            className: "row",
+            style: {
+                gap: 8,
+                marginTop: 12
+            },
+            children: [s.jsx("button", {
+                className: "primary",
+                onClick: async () => {
+                    const m = await Va(y.state.id);
+                    p(m), m || d("自动复制失败，请长按手动复制，或者截图。")
+                },
+                children: f ? "已复制 ✓" : "复制 ID"
+            }), s.jsx("button", {
+                onClick: () => {
+                    f || b ? e(y.state, !0, y.cloud, y.today, !1, null) : w(!0)
+                },
+                children: b ? "确定，直接进入 →" : "存好了，进入游戏 →"
+            })]
+        }), b && !f && s.jsx("p", {
+            className: "small warn",
+            style: {
+                marginTop: 10,
+                marginBottom: 0
+            },
+            children: "还没复制 ID，丢了找不回来。再点一次直接进入。"
+        }), o && s.jsx("p", {
+            className: "small warn",
+            style: {
+                marginTop: 10
+            },
+            children: o
+        })]
+    }) : s.jsxs("div", {
+        className: "wrap newgame cm-gate",
+        children: [s.jsx("h1", {
+            className: "display",
+            style: {
+                marginBottom: 2
+            },
+            children: "开瓦包"
+        }), s.jsx("p", {
+            className: "tiny faint",
+            style: {
+                letterSpacing: ".34em",
+                margin: "0 0 16px"
+            },
+            children: "VAL CARDS"
+        }), s.jsxs("p", {
+            className: "muted",
+            style: {
+                lineHeight: 1.9,
+                maxWidth: 620
+            },
+            children: ["抽真实 VCT 选手做成的卡牌，金银铜三档，组一套五人阵容去打职业战队。", s.jsx("b", {
+                children: "同队、同国籍、同赛区"
+            }), "的选手一起上有默契加成。"]
+        }), s.jsxs("div", {
+            className: "grid c2",
+            style: {
+                maxWidth: 720,
+                marginTop: 20,
+                alignItems: "start"
+            },
+            children: [s.jsxs("div", {
+                className: "panel",
+                children: [s.jsx("div", {
+                    className: "panel-head",
+                    children: s.jsx("h2", {
+                        children: "已有账号"
+                    })
+                }), s.jsxs("div", {
+                    className: "panel-body",
+                    children: [s.jsx("p", {
+                        className: "small muted",
+                        style: {
+                            marginTop: 0
+                        },
+                        children: "填入之前保存的 ID。"
+                    }), s.jsx("label", {
+                        className: "cm-field-label",
+                        htmlFor: "card-login-id",
+                        children: "账号 ID"
+                    }), s.jsx("input", {
+                        id: "card-login-id",
+                        name: "card-id",
+                        autoComplete: "username",
+                        spellCheck: !1,
+                        "aria-label": "账号 ID",
+                        placeholder: "VM-XXXX-XXXX-XXXX-XXXX-XXXX",
+                        value: r,
+                        onChange: m => i(m.target.value),
+                        onKeyDown: m => {
+                            m.key === "Enter" && !l && r.trim().length >= 8 && C()
+                        },
+                        style: {
+                            fontFamily: "var(--mono)"
+                        }
+                    }), s.jsx("button", {
+                        style: {
+                            marginTop: 10
+                        },
+                        onClick: C,
+                        disabled: l || r.trim().length < 8,
+                        children: l ? "读取中…" : "登录"
+                    }), s.jsxs("p", {
+                        className: "small muted",
+                        style: {
+                            margin: "12px 0 0"
+                        },
+                        children: ["ID 找不到了？绑过手机的账号可以", s.jsx("button", {
+                            className: "ghost sm",
+                            style: {
+                                marginLeft: 6
+                            },
+                            onClick: () => I(!0),
+                            children: "用手机号进入"
+                        }), s.jsx("br", {}), "每次扣 ", Qe, " 点体力，有 ID 请用 ID 登录。", s.jsx("br", {}), s.jsx("span", {
+                            style: {
+                                color: "var(--warn)"
+                            },
+                            children: "⚠️发短信验证码每条都要作者花钱的，请大家多用自己的账号登录，谢谢配合。"
+                        })]
+                    }), o && h === "signin" && s.jsx("p", {
+                        role: "alert",
+                        className: "small",
+                        style: {
+                            color: "var(--loss)"
+                        },
+                        children: o
+                    })]
+                })]
+            }), s.jsxs("div", {
+                className: "panel",
+                children: [s.jsx("div", {
+                    className: "panel-head",
+                    children: s.jsx("h2", {
+                        children: "第一次玩"
+                    })
+                }), s.jsxs("div", {
+                    className: "panel-body",
+                    children: [s.jsx("p", {
+                        className: "small muted",
+                        style: {
+                            marginTop: 0
+                        },
+                        children: "取个名字，会生成一串 ID 作为账号，记得存好。"
+                    }), s.jsx("label", {
+                        className: "cm-field-label",
+                        htmlFor: "card-nickname",
+                        children: "你的昵称"
+                    }), s.jsx("input", {
+                        id: "card-nickname",
+                        name: "nickname",
+                        autoComplete: "nickname",
+                        "aria-label": "你的昵称",
+                        placeholder: "你的昵称",
+                        value: a,
+                        maxLength: 20,
+                        onChange: m => n(m.target.value),
+                        onKeyDown: m => {
+                            m.key === "Enter" && !l && k()
+                        }
+                    }), s.jsx("button", {
+                        className: "primary",
+                        style: {
+                            marginTop: 10
+                        },
+                        onClick: k,
+                        disabled: l,
+                        children: l ? "创建中…" : "创建账号"
+                    }), o && h === "create" && s.jsx("p", {
+                        role: "alert",
+                        className: "small warn",
+                        children: o
+                    })]
+                })]
+            })]
+        }), s.jsx("div", {
+            className: "row",
+            style: {
+                marginTop: 22
+            },
+            children: s.jsx("button", {
+                className: "ghost sm",
+                onClick: t,
+                children: "← 返回首页"
+            })
+        }), s.jsx("div", {
+            style: {
+                marginTop: 20
+            },
+            children: s.jsx(Na, {})
+        })]
+    })
+}
+const Lo = Object.freeze(Object.defineProperty({
+    __proto__: null,
+    default: Ki
+}, Symbol.toStringTag, {
+    value: "Module"
+}));
+export {
+    xo as A, bo as B, Ba as C, _a as D, Pe as E, Cr as F, wi as G, fo as H, Mo as I, $r as J, ti as K, Bl as L, yo as M, Lo as N, Mr as P, ho as S, vi as T, To as a, $o as b, io as c, Eo as d, uo as e, po as f, co as g, oo as h, mo as i, Oe as j, Ro as k, ro as l, Co as m, So as n, jo as o, No as p, Tr as q, go as r, Ze as s, Ao as t, oe as u, Io as v, ta as w, ko as x, wo as y, vo as z
+};

@@ -1,0 +1,5099 @@
+import {
+    W as P,
+    bZ as Sa,
+    cb as be,
+    V as Be,
+    H as j,
+    v as Ta,
+    d as h,
+    i as H,
+    M as I,
+    cc as Ma,
+    J as Na,
+    j as Te,
+    e as ye,
+    k as m0,
+    cd as h0,
+    s as me,
+    n as B0,
+    ag as K0,
+    ah as q0,
+    h as B,
+    aL as je,
+    al as $0,
+    ce as z0,
+    m as Ke,
+    cf as Ra,
+    ar as Oa,
+    g as Pa,
+    N as U,
+    I as A,
+    A as Je,
+    cg as qe,
+    D as x0,
+    q as U0,
+    p as S,
+    U as k0,
+    r as q,
+    R as C0,
+    C as La,
+    ch as Z0,
+    ci as v0,
+    c4 as $e,
+    B as he,
+    S as ke,
+    f as J,
+    cj as R
+} from "./cards-Cmwwaaa1.js";
+import {
+    a as Da,
+    r as We
+} from "./cardid-Gm1djOTv.js";
+const Ye = P.map(e => {
+        var o;
+        const a = Sa.filter(c => c.clubId === e.id && e.roster.includes(c.playerId)).sort((c, u) => c.id.localeCompare(u.id)),
+            t = ((o = be.find(c => {
+                var u;
+                return c.clubId === e.id && c.name === ((u = e.coach) == null ? void 0 : u.name)
+            })) == null ? void 0 : o.id) ?? null;
+        let r = {
+                slots: [],
+                coach: t
+            },
+            l = -1 / 0;
+        const s = [],
+            n = new Set,
+            i = () => {
+                if (s.length === j.length) {
+                    const c = {
+                            slots: [...s],
+                            coach: t
+                        },
+                        u = Ta(c).score;
+                    u > l && (r = c, l = u);
+                    return
+                }
+                for (const c of a) n.has(c.playerId) || (n.add(c.playerId), s.push(c.id), i(), s.pop(), n.delete(c.playerId))
+            };
+        if (i(), r.slots.length !== 5) throw new Error(`杯赛俱乐部 ${e.id} 缺少五名现役卡`);
+        return {
+            id: e.id,
+            name: e.name,
+            tag: e.tag,
+            squad: r,
+            rating: Be(r)
+        }
+    }),
+    Ga = new Map(Ye.map(e => [e.id, e])),
+    _r = e => Ga.get(e),
+    E0 = 2,
+    Ia = e => e.filter(a => {
+        const t = a ? h(a) : void 0;
+        return H(t) && t.retired === !0
+    }).length;
+
+function _a(e) {
+    const a = Ia(e);
+    return a > E0 ? {
+        ok: !1,
+        why: `首发最多上 ${E0} 名退役选手，现在有 ${a} 名。`
+    } : {
+        ok: !0
+    }
+}
+const Fa = {
+        "champions-2026": {
+            A: {
+                winners: {
+                    o1: "100T",
+                    o2: "FUT",
+                    w: "100T",
+                    e: "T1",
+                    d: "T1"
+                },
+                first: "100T",
+                second: "T1",
+                confirmedAt: 1791126e6
+            },
+            B: {
+                winners: {
+                    o1: "VIT",
+                    o2: "LOUD",
+                    w: "VIT",
+                    e: "GE",
+                    d: "LOUD"
+                },
+                first: "VIT",
+                second: "LOUD",
+                confirmedAt: 1791126e6
+            },
+            C: {
+                winners: {
+                    o1: "PRX",
+                    o2: "G2",
+                    w: "PRX",
+                    e: "TL",
+                    d: "G2"
+                },
+                first: "PRX",
+                second: "G2",
+                confirmedAt: 17910414e5
+            },
+            D: {
+                winners: {
+                    o1: "NRG",
+                    o2: "KC",
+                    w: "NRG",
+                    e: "NS",
+                    d: "NS"
+                },
+                first: "NRG",
+                second: "NS",
+                confirmedAt: 17910414e5
+            }
+        }
+    },
+    Ba = {
+        "champions-2026-playoffs": null
+    },
+    Xe = ["q1", "q2", "q3", "q4", "s1", "s2", "l1a", "l1b", "l2a", "l2b", "uf", "l3", "lf", "gf"],
+    y0 = {
+        s1: [{
+            win: "q1"
+        }, {
+            win: "q2"
+        }],
+        s2: [{
+            win: "q3"
+        }, {
+            win: "q4"
+        }],
+        l1a: [{
+            lose: "q1"
+        }, {
+            lose: "q2"
+        }],
+        l1b: [{
+            lose: "q3"
+        }, {
+            lose: "q4"
+        }],
+        l2a: [{
+            lose: "s2"
+        }, {
+            win: "l1a"
+        }],
+        l2b: [{
+            lose: "s1"
+        }, {
+            win: "l1b"
+        }],
+        uf: [{
+            win: "s1"
+        }, {
+            win: "s2"
+        }],
+        l3: [{
+            win: "l2a"
+        }, {
+            win: "l2b"
+        }],
+        lf: [{
+            lose: "uf"
+        }, {
+            win: "l3"
+        }],
+        gf: [{
+            win: "uf"
+        }, {
+            win: "lf"
+        }]
+    },
+    Y0 = "P",
+    y = e => Date.parse(e),
+    Ka = y("2026-10-07T08:00:00Z"),
+    qa = {
+        id: "champions-2026-playoffs",
+        name: "上海冠军赛淘汰赛",
+        from: "champions-2026",
+        quarters: [
+            ["100T", "G2"],
+            ["VIT", "NS"],
+            ["NRG", "T1"],
+            ["PRX", "LOUD"]
+        ],
+        deadline: Ka,
+        at: {
+            q1: y("2026-10-08T09:00Z"),
+            q2: y("2026-10-08T12:00Z"),
+            q3: y("2026-10-07T09:00Z"),
+            q4: y("2026-10-07T12:00Z"),
+            l1a: y("2026-10-09T09:00Z"),
+            l1b: y("2026-10-09T12:00Z"),
+            s1: y("2026-10-10T09:00Z"),
+            s2: y("2026-10-10T12:00Z"),
+            l2a: y("2026-10-11T09:00Z"),
+            l2b: y("2026-10-11T12:00Z"),
+            uf: y("2026-10-16T06:00Z"),
+            l3: y("2026-10-16T09:00Z"),
+            lf: y("2026-10-17T07:00Z"),
+            gf: y("2026-10-18T06:00Z")
+        },
+        bo: {
+            q1: 3,
+            q2: 3,
+            q3: 3,
+            q4: 3,
+            s1: 3,
+            s2: 3,
+            l1a: 3,
+            l1b: 3,
+            l2a: 3,
+            l2b: 3,
+            uf: 3,
+            l3: 3,
+            lf: 5,
+            gf: 5
+        }
+    },
+    V0 = [qa],
+    $a = e => !!e[0] && !!e[1],
+    Me = (e, a) => $a(e) && a != null && e.includes(a) ? a : null,
+    Ce = (e, a) => {
+        const t = Me(e, a);
+        return t ? t === e[0] ? e[1] : e[0] : null
+    };
+
+function j0(e, a) {
+    const t = {},
+        r = e.quarters;
+    ["q1", "q2", "q3", "q4"].forEach((l, s) => {
+        t[l] = r ? [r[s][0], r[s][1]] : [null, null]
+    });
+    for (const l of Xe)
+        if (l in y0) {
+            const [s, n] = y0[l], i = o => "win" in o ? Me(t[o.win], a[o.win]) : Ce(t[o.lose], a[o.lose]);
+            t[l] = [i(s), i(n)]
+        } return t
+}
+
+function J0(e, a) {
+    const t = a && typeof a == "object" ? a : {},
+        r = {};
+    if (!e.quarters) return r;
+    for (const l of Xe) {
+        const s = typeof t[l] == "string" ? t[l] : void 0;
+        Me(j0(e, r)[l], s) && (r[l] = s)
+    }
+    return r
+}
+
+function za(e, a) {
+    const t = j0(e, a);
+    return {
+        champion: Me(t.gf, a.gf),
+        runnerUp: Ce(t.gf, a.gf),
+        third: Ce(t.lf, a.lf),
+        fourth: Ce(t.l3, a.l3)
+    }
+}
+
+function xa(e, a) {
+    const t = e.quarters;
+    if (!t || t.length !== 4 || t.some(l => !Array.isArray(l) || l.length !== 2)) return !1;
+    const r = t.flat();
+    return a.length === 8 && new Set(r).size === 8 && r.every(l => a.includes(l))
+}
+
+function Ua(e, a, t) {
+    if (!a || !e.quarters || !Number.isSafeInteger(a.confirmedAt) || t < a.confirmedAt) return null;
+    const r = a.winners && typeof a.winners == "object" ? a.winners : {},
+        l = J0(e, r);
+    for (const s of Object.keys(r))
+        if (!Xe.includes(s) || l[s] !== r[s] || e.at[s] >= a.confirmedAt) return null;
+    return l
+}
+
+function Fr(e, a) {
+    const t = +(e.champion === a.champion) + +(e.runnerUp === a.runnerUp),
+        r = [e.champion, e.runnerUp].filter(l => l && (l === a.champion || l === a.runnerUp)).length;
+    return t === 2 ? {
+        elite: 0,
+        ten: 3
+    } : e.champion === a.champion ? {
+        elite: 0,
+        ten: 2
+    } : e.runnerUp === a.runnerUp ? {
+        elite: 0,
+        ten: 1
+    } : r === 2 ? {
+        elite: 5,
+        ten: 0
+    } : r === 1 ? {
+        elite: 3,
+        ten: 0
+    } : {
+        elite: 0,
+        ten: 0
+    }
+}
+const Qe = ["o1", "o2", "w", "e", "d"],
+    ie = (e, a, t, r, l) => ({
+        o1: Date.parse(e),
+        o2: Date.parse(a),
+        w: Date.parse(t),
+        e: Date.parse(r),
+        d: Date.parse(l)
+    }),
+    ne = Date.parse("2026-09-24T16:00:00+08:00"),
+    Za = {
+        id: "champions-2026",
+        name: "上海冠军赛",
+        teams: {
+            "100T": {
+                tag: "100T",
+                clubId: "T6",
+                name: "100 Thieves"
+            },
+            T1: {
+                tag: "T1",
+                clubId: "T25",
+                name: "T1"
+            },
+            JDG: {
+                tag: "JDG",
+                clubId: "T45",
+                name: "JD Gaming"
+            },
+            FUT: {
+                tag: "FUT",
+                clubId: "T15",
+                name: "FUT Esports"
+            },
+            GE: {
+                tag: "GE",
+                clubId: "T34",
+                name: "Global Esports"
+            },
+            VIT: {
+                tag: "VIT",
+                clubId: "T12",
+                name: "Team Vitality"
+            },
+            LOUD: {
+                tag: "LOUD",
+                clubId: "T8",
+                name: "LOUD"
+            },
+            EDG: {
+                tag: "EDG",
+                clubId: "T36",
+                name: "EDward Gaming"
+            },
+            TL: {
+                tag: "TL",
+                clubId: "T18",
+                name: "Team Liquid"
+            },
+            PRX: {
+                tag: "PRX",
+                clubId: "T24",
+                name: "Paper Rex"
+            },
+            TYL: {
+                tag: "TYL",
+                clubId: "T38",
+                name: "TYLOO"
+            },
+            G2: {
+                tag: "G2",
+                clubId: "T2",
+                name: "G2 Esports"
+            },
+            NS: {
+                tag: "NS",
+                clubId: "T26",
+                name: "Nongshim RedForce"
+            },
+            NRG: {
+                tag: "NRG",
+                clubId: "T1",
+                name: "NRG"
+            },
+            KC: {
+                tag: "KC",
+                clubId: "T23",
+                name: "Karmine Corp"
+            },
+            XLG: {
+                tag: "XLG",
+                clubId: "T37",
+                name: "Xi Lai Gaming"
+            }
+        },
+        groups: [{
+            key: "A",
+            deadline: ne,
+            teams: ["100T", "T1", "JDG", "FUT"],
+            at: ie("2026-09-27T09:00Z", "2026-09-27T12:00Z", "2026-09-30T12:00Z", "2026-10-02T12:00Z", "2026-10-04T12:00Z")
+        }, {
+            key: "B",
+            deadline: ne,
+            teams: ["GE", "VIT", "LOUD", "EDG"],
+            at: ie("2026-09-26T09:00Z", "2026-09-26T12:00Z", "2026-09-30T09:00Z", "2026-10-02T09:00Z", "2026-10-04T09:00Z")
+        }, {
+            key: "C",
+            deadline: ne,
+            teams: ["TL", "PRX", "TYL", "G2"],
+            at: ie("2026-09-24T09:00Z", "2026-09-24T12:00Z", "2026-09-29T09:00Z", "2026-10-01T09:00Z", "2026-10-03T09:00Z")
+        }, {
+            key: "D",
+            deadline: ne,
+            teams: ["NS", "NRG", "KC", "XLG"],
+            at: ie("2026-09-25T09:00Z", "2026-09-25T12:00Z", "2026-09-29T12:00Z", "2026-10-01T12:00Z", "2026-10-03T12:00Z")
+        }]
+    },
+    e0 = [Za],
+    Va = e => !!e[0] && !!e[1],
+    F = (e, a) => Va(e) && a != null && e.includes(a) ? a : null,
+    W = (e, a) => {
+        const t = F(e, a);
+        return t ? t === e[0] ? e[1] : e[0] : null
+    };
+
+function W0(e, a) {
+    const t = [e.teams[0], e.teams[1]],
+        r = [e.teams[2], e.teams[3]],
+        l = [F(t, a.o1), F(r, a.o2)],
+        s = [W(t, a.o1), W(r, a.o2)],
+        n = [W(l, a.w), F(s, a.e)];
+    return {
+        o1: t,
+        o2: r,
+        w: l,
+        e: s,
+        d: n
+    }
+}
+
+function a0(e, a) {
+    const t = a && typeof a == "object" ? a : {},
+        r = {};
+    for (const l of Qe) {
+        const s = typeof t[l] == "string" ? t[l] : void 0;
+        F(W0(e, r)[l], s) && (r[l] = s)
+    }
+    return r
+}
+
+function X0(e, a) {
+    const t = W0(e, a);
+    return {
+        first: F(t.w, a.w),
+        second: F(t.d, a.d),
+        third: W(t.d, a.d),
+        fourth: W(t.e, a.e)
+    }
+}
+const ja = e => e.deadline ?? Math.min(...Qe.map(a => e.at[a])),
+    Br = (e, a) => a >= ja(e),
+    Kr = (e, a, t) => {
+        var r, l, s;
+        return ((s = (l = (r = e.predict) == null ? void 0 : r[a]) == null ? void 0 : l[t]) == null ? void 0 : s.picks) ?? {}
+    };
+
+function Ja(e) {
+    var t, r;
+    if (!e || typeof e != "object") return;
+    const a = {};
+    for (const l of e0) {
+        const s = e[l.id];
+        if (!(!s || typeof s != "object"))
+            for (const n of l.groups) {
+                const i = s[n.key];
+                if (!i || typeof i != "object") continue;
+                const o = a0(n, i.picks);
+                if (!Object.keys(o).length) continue;
+                a[t = l.id] ?? (a[t] = {});
+                const c = Number(i.claimedAt);
+                a[l.id][n.key] = {
+                    picks: o,
+                    at: Math.max(0, Math.trunc(Number(i.at) || 0)),
+                    ...Number.isSafeInteger(c) && c > 0 ? {
+                        claimedAt: c
+                    } : {}
+                }
+            }
+    }
+    for (const l of V0) {
+        const s = (r = e[l.id]) == null ? void 0 : r[Y0];
+        if (!s || typeof s != "object") continue;
+        const n = J0(l, s.picks);
+        if (!Object.keys(n).length) continue;
+        const i = Number(s.claimedAt);
+        a[l.id] = {
+            [Y0]: {
+                picks: n,
+                at: Math.max(0, Math.trunc(Number(s.at) || 0)),
+                ...Number.isSafeInteger(i) && i > 0 ? {
+                    claimedAt: i
+                } : {}
+            }
+        }
+    }
+    return Object.keys(a).length ? a : void 0
+}
+const Wa = Fa;
+
+function Xa(e, a, t) {
+    var n;
+    const r = (n = Wa[e]) == null ? void 0 : n[a.key];
+    if (!r || !a.teams.includes(r.first) || !a.teams.includes(r.second) || r.first === r.second || !Number.isSafeInteger(r.confirmedAt) || r.confirmedAt <= a.at.d || t < r.confirmedAt) return null;
+    const l = r.winners;
+    if (!l || typeof l != "object" || Qe.some(i => a0(a, l)[i] !== l[i])) return null;
+    const s = X0(a, l);
+    return s.first !== r.first || s.second !== r.second ? null : r
+}
+
+function qr(e, a, t) {
+    const r = X0(e, a0(e, a)),
+        l = +(r.first === t.first) + +(r.second === t.second),
+        s = [r.first, r.second].filter(n => n && [t.first, t.second].includes(n)).length;
+    return l === 2 ? {
+        elite: 0,
+        ten: 2
+    } : l === 1 ? {
+        elite: 0,
+        ten: 1
+    } : {
+        elite: s === 2 ? 5 : s === 1 ? 3 : 0,
+        ten: 0
+    }
+} [...e0.map(e => e.id), ...V0.map(e => e.id)];
+const Qa = Ba;
+
+function et(e, a) {
+    const t = e0.find(l => l.id === e.from);
+    if (!t) return [];
+    const r = [];
+    for (const l of t.groups) {
+        const s = Xa(t.id, l, a);
+        if (!s) return [];
+        r.push(s.first, s.second)
+    }
+    return r
+}
+const at = (e, a) => xa(e, et(e, a)),
+    $r = (e, a) => a >= e.deadline,
+    tt = (e, a) => at(e, a) ? Ua(e, Qa[e.id] ?? void 0, a) : null;
+
+function zr(e, a) {
+    const t = tt(e, a);
+    if (!(t != null && t.gf)) return null;
+    const r = za(e, t);
+    return r.champion && r.runnerUp ? {
+        champion: r.champion,
+        runnerUp: r.runnerUp
+    } : null
+}
+const ze = 5,
+    De = 5,
+    Q0 = 80,
+    Ge = [{
+        at: 88,
+        gain: 3
+    }, {
+        at: 78,
+        gain: 2
+    }, {
+        at: 0,
+        gain: 1
+    }],
+    rt = e => (Ge.find(a => e >= a.at) ?? Ge[Ge.length - 1]).gain,
+    ee = e => {
+        const a = Number(e);
+        return Number.isFinite(a) ? Math.max(0, Math.trunc(a)) : 0
+    };
+
+function He(e) {
+    if (!e || typeof e != "object" || Array.isArray(e)) return;
+    const a = e,
+        t = Math.min(ze, ee(a.n)),
+        r = {},
+        l = a.add && typeof a.add == "object" && !Array.isArray(a.add) ? a.add : {};
+    let s = 0;
+    for (const n of Te) {
+        const i = Math.min(99, ee(l[n]));
+        i > 0 && (r[n] = i, s += i)
+    }
+    if (!(!t || !s)) return {
+        n: t,
+        add: r
+    }
+}
+const ea = e => h0[e.role] ?? h0.自由人,
+    H0 = (e, a, t) => Math.max(0, 99 - e.attrs[t] - ((a == null ? void 0 : a.add[t]) ?? 0));
+
+function xr(e, a) {
+    const t = {
+        ...e.attrs
+    };
+    for (const r of Te) t[r] = Math.min(99, t[r] + ((a == null ? void 0 : a.add[r]) ?? 0));
+    return t
+}
+
+function lt(e, a) {
+    if (!a) return 0;
+    const t = ea(e);
+    let r = 0;
+    for (const l of Te) r += t[l] * (a.add[l] ?? 0);
+    return r
+}
+const st = (e, a) => ea(e)[a];
+
+function it(e, a) {
+    if (!a) return 0;
+    const t = Math.min(I, ee(a.level));
+    if (t < I) return t;
+    const r = h(e);
+    if (!H(r)) return t;
+    const l = He(a.evo);
+    return l ? t + Math.min(Ma, lt(r, l) / Na) : t
+}
+
+function nt(e, a, t) {
+    return t.roles.some(r => e.roles.includes(r)) ? "role" : t.attrs[a] >= Q0 ? "attr" : null
+}
+
+function Ur(e, a, t, r) {
+    var g;
+    const l = f => ({
+            ok: !1,
+            why: f,
+            gain: 0,
+            avg: 0,
+            rating: 0
+        }),
+        s = h(a),
+        n = e.cards[a];
+    if (!n || !H(s)) return l("只有自己的选手卡能进修");
+    if (ee(n.level) < I) return l(`先升到 +${I} 才能进修`);
+    if (!Te.includes(t)) return l("先选一项能力");
+    const i = t,
+        o = He(n.evo);
+    if (((o == null ? void 0 : o.n) ?? 0) >= ze) return l(`已经进修 ${ze} 次，满了`);
+    if (H0(s, o, i) <= 0) return l(`${m0[i]}已经 99`);
+    if (r.length !== De) return l(`要放 ${De} 张卡`);
+    const c = new Map;
+    for (const f of r) c.set(f, (c.get(f) ?? 0) + 1);
+    let u = 0;
+    for (const [f, m] of c) {
+        const b = h(f);
+        if (!H(b)) return l("只能用选手卡");
+        if (ee((g = e.cards[f]) == null ? void 0 : g.dupes) < m) return l(`${b?ye(b):f} 的重复卡不够 ${m} 张`);
+        if (!nt(s, i, b)) return l(`${ye(b)} 不是同位置，${m0[i]}也不到 ${Q0}`);
+        u += b.attrs[i] * m
+    }
+    const p = u / De,
+        d = Math.min(rt(p), H0(s, o, i));
+    return {
+        ok: !0,
+        gain: d,
+        avg: p,
+        rating: d * st(s, i)
+    }
+}
+const ot = JSON.parse('[{"id":"Hv1380","ign":"Leo","real":"Leo Jannesson","nat":"se","region":"EMEA","birth":"2003-12-15","age":22,"ageEstimated":false,"role":"先锋","roles":["先锋"],"peak":86,"peakYear":2024,"peakClub":"FNC","lastYear":2024,"lastClub":"FNC","tier1":true,"coach":false,"img":"Hv1380.webp"},{"id":"Hv659","ign":"Sacy","real":"Gustavo Henrique Rossi da Silva","nat":"br","region":"Americas","birth":"1997-12-02","age":28,"ageEstimated":false,"role":"先锋","roles":["先锋"],"peak":86,"peakYear":2024,"peakClub":"SEN","lastYear":2024,"lastClub":"SEN","tier1":true,"coach":false,"img":"Hv659.webp"},{"id":"Hv16003","ign":"runi","real":"Dylan Cade","nat":"us","region":"Americas","birth":"1999-01-19","age":26,"ageEstimated":false,"role":"先锋","roles":["先锋"],"peak":86,"peakYear":2023,"peakClub":"C9","lastYear":2023,"lastClub":"C9","tier1":true,"coach":false,"img":"Hv16003.webp"},{"id":"Hv1281","ign":"MOLSI","real":"Michał Łącki","nat":"pl","region":"EMEA","birth":"1997-01-26","age":28,"ageEstimated":false,"role":"决斗者","roles":["决斗者","先锋"],"peak":85,"peakYear":2024,"peakClub":"APK","lastYear":2025,"lastClub":"APK","tier1":true,"coach":false,"img":"Hv1281.webp"},{"id":"Hv4164","ign":"s0m","real":"Sam Oh","nat":"us","region":"Americas","birth":"2002-06-07","age":23,"ageEstimated":false,"role":"控场","roles":["控场","决斗者"],"peak":85,"peakYear":2025,"peakClub":"NRG","lastYear":2025,"lastClub":"NRG","tier1":true,"coach":true,"img":"Hv4164.webp"},{"id":"Hv9800","ign":"mindfreak","real":"Aaron Leonhart","nat":"id","region":"Pacific","birth":"1999-10-04","age":26,"ageEstimated":false,"role":"控场","roles":["控场"],"peak":85,"peakYear":2023,"peakClub":"PRX","lastYear":2025,"lastClub":"PRX","tier1":true,"coach":false,"img":"Hv9800.webp"},{"id":"Hv3070","ign":"nukkye","real":"Žygimantas Chmieliauskas","nat":"lt","region":"EMEA","birth":"1997-11-05","age":28,"ageEstimated":false,"role":"先锋","roles":["先锋","决斗者","控场"],"peak":85,"peakYear":2023,"peakClub":"GIA","lastYear":2024,"lastClub":"GX","tier1":true,"coach":false,"img":"Hv3070.webp"},{"id":"Hv772","ign":"Zest","real":"김기석","nat":"kr","region":"Pacific","birth":"2000-12-27","age":25,"ageEstimated":false,"role":"先锋","roles":["先锋","哨卫"],"peak":85,"peakYear":2023,"peakClub":"KRX","lastYear":2023,"lastClub":"KRX","tier1":true,"coach":false,"img":"Hv772.webp"},{"id":"Hv4710","ign":"YOU","real":"Yip Man Ho","nat":"hk","region":"China","birth":"1999-09-04","age":26,"ageEstimated":false,"role":"先锋","roles":["先锋","哨卫"],"peak":85,"peakYear":2025,"peakClub":"XLG","lastYear":2025,"lastClub":"XLG","tier1":true,"coach":false,"img":"Hv4710.webp"},{"id":"Hv261","ign":"Victor","real":"Victor Wong","nat":"us","region":"Americas","birth":"1996-09-14","age":29,"ageEstimated":false,"role":"先锋","roles":["先锋","决斗者"],"peak":85,"peakYear":2023,"peakClub":"NRG","lastYear":2024,"lastClub":"NRG","tier1":true,"coach":false,"img":"Hv261.webp"},{"id":"Hv4559","ign":"Suggest","real":"서재영","nat":"kr","region":"Pacific","birth":"2002-09-30","age":23,"ageEstimated":false,"role":"先锋","roles":["先锋","哨卫","决斗者"],"peak":85,"peakYear":2023,"peakClub":"DFM","lastYear":2023,"lastClub":"DFM","tier1":true,"coach":false,"img":"Hv4559.webp"},{"id":"Hv864","ign":"BcJ","real":"Brendan Jensen","nat":"us","region":"Americas","birth":"2000-07-04","age":25,"ageEstimated":false,"role":"先锋","roles":["先锋","控场"],"peak":85,"peakYear":2023,"peakClub":"EG","lastYear":2023,"lastClub":"EG","tier1":true,"coach":true,"img":"Hv864.webp"},{"id":"Hv5241","ign":"Maple","real":"Elvin Sun","nat":"au","region":"China","birth":"2000-05-08","age":25,"ageEstimated":false,"role":"先锋","roles":["先锋","哨卫"],"peak":85,"peakYear":2023,"peakClub":"WBG","lastYear":2023,"lastClub":"WBG","tier1":true,"coach":false,"img":"Hv5241.webp"},{"id":"Hv474","ign":"xeta","real":"손선호","nat":"kr","region":"Pacific","birth":"1997-06-03","age":28,"ageEstimated":false,"role":"先锋","roles":["先锋","控场"],"peak":84,"peakYear":2023,"peakClub":"T1","lastYear":2023,"lastClub":"T1","tier1":true,"coach":false,"img":"Hv474.webp"},{"id":"Hv6510","ign":"AtaKaptan","real":"Ata Tan","nat":"tr","region":"EMEA","birth":null,"age":21,"ageEstimated":true,"role":"控场","roles":["控场","先锋"],"peak":83,"peakYear":2024,"peakClub":"FUT","lastYear":2025,"lastClub":"FUT","tier1":true,"coach":false,"img":"Hv6510.webp"},{"id":"Hv98","ign":"ardiis","real":"Ardis Svarenieks","nat":"lv","region":"Americas","birth":"1998-05-01","age":27,"ageEstimated":false,"role":"哨卫","roles":["哨卫","决斗者","先锋"],"peak":83,"peakYear":2023,"peakClub":"NRG","lastYear":2024,"lastClub":"NAVI","tier1":true,"coach":false,"img":"Hv98.webp"},{"id":"Hv9","ign":"TenZ","real":"Tyson Van Ngo","nat":"ca","region":"Americas","birth":"2001-05-05","age":24,"ageEstimated":false,"role":"决斗者","roles":["决斗者","哨卫"],"peak":83,"peakYear":2023,"peakClub":"SEN","lastYear":2024,"lastClub":"SEN","tier1":true,"coach":false,"img":"Hv9.webp"},{"id":"Hv824","ign":"AYRIN","real":"Jordan He","nat":"ca","region":"Pacific","birth":"1996-04-04","age":29,"ageEstimated":false,"role":"控场","roles":["控场","哨卫"],"peak":83,"peakYear":2023,"peakClub":"GE","lastYear":2023,"lastClub":"GE","tier1":true,"coach":false,"img":"Hv824.webp"},{"id":"Hv1139","ign":"qRaxs","real":"Doğukan Balaban","nat":"tr","region":"EMEA","birth":"2000-05-02","age":25,"ageEstimated":false,"role":"先锋","roles":["先锋","哨卫"],"peak":82,"peakYear":2024,"peakClub":"FUT","lastYear":2025,"lastClub":"FUT","tier1":true,"coach":false,"img":"Hv1139.webp"},{"id":"Hv35013","ign":"Flashback","real":"조민혁","nat":"kr","region":"Pacific","birth":"2005-11-15","age":20,"ageEstimated":false,"role":"哨卫","roles":["哨卫","控场"],"peak":82,"peakYear":2025,"peakClub":"KRX","lastYear":2025,"lastClub":"KRX","tier1":true,"coach":false,"img":"Hv35013.webp"},{"id":"Hv725","ign":"nzr","real":"Agustin Ibarra","nat":"ar","region":"Americas","birth":"1998-05-08","age":27,"ageEstimated":false,"role":"先锋","roles":["先锋","决斗者"],"peak":82,"peakYear":2025,"peakClub":"MIBR","lastYear":2025,"lastClub":"MIBR","tier1":true,"coach":false,"img":"Hv725.webp"},{"id":"Hv7870","ign":"vanity","real":"Shane Anthony Malaspina","nat":"us","region":"Americas","birth":"1998-12-04","age":27,"ageEstimated":false,"role":"控场","roles":["控场","先锋"],"peak":82,"peakYear":2024,"peakClub":"C9","lastYear":2024,"lastClub":"C9","tier1":true,"coach":false,"img":"Hv7870.webp"},{"id":"Hv9802","ign":"Benkai","real":"Benedict Tan Tze Yang","nat":"sg","region":"Pacific","birth":"1996-11-10","age":29,"ageEstimated":false,"role":"先锋","roles":["先锋","哨卫"],"peak":82,"peakYear":2023,"peakClub":"PRX","lastYear":2024,"lastClub":"GE","tier1":true,"coach":true,"img":"Hv9802.webp"},{"id":"Hv2333","ign":"BORKUM","real":"Jim Albert Abadiano Timbreza","nat":"ph","region":"Pacific","birth":"1996-04-18","age":29,"ageEstimated":false,"role":"控场","roles":["控场"],"peak":82,"peakYear":2024,"peakClub":"TS","lastYear":2024,"lastClub":"TS","tier1":true,"coach":false,"img":"Hv2333.webp"},{"id":"Hv1002","ign":"takej","real":"竹森 祥悟","nat":"jp","region":"Pacific","birth":"2000-12-17","age":25,"ageEstimated":false,"role":"控场","roles":["控场","决斗者"],"peak":82,"peakYear":2023,"peakClub":"DFM","lastYear":2023,"lastClub":"DFM","tier1":true,"coach":false,"img":"Hv1002.webp"},{"id":"Hv92","ign":"ScreaM","real":"Adil Benrlitom","nat":"be","region":"EMEA","birth":"1994-07-02","age":31,"ageEstimated":false,"role":"决斗者","roles":["决斗者","哨卫"],"peak":82,"peakYear":2023,"peakClub":"KC","lastYear":2023,"lastClub":"KC","tier1":true,"coach":false,"img":"Hv92.webp"},{"id":"Hv882","ign":"dephh","real":"Rory Jackson","nat":"gb","region":"Americas","birth":"1991-12-23","age":34,"ageEstimated":false,"role":"控场","roles":["控场","先锋","哨卫"],"peak":82,"peakYear":2023,"peakClub":"SEN","lastYear":2023,"lastClub":"SEN","tier1":true,"coach":false,"img":"Hv882.webp"},{"id":"Hv1851","ign":"oderus","real":"Chad Miller","nat":"us","region":"EMEA","birth":"1999-06-28","age":26,"ageEstimated":false,"role":"控场","roles":["控场","哨卫"],"peak":80,"peakYear":2025,"peakClub":"APK","lastYear":2025,"lastClub":"APK","tier1":true,"coach":true,"img":"Hv1851.webp"},{"id":"Hv10627","ign":"Art","real":"Koki Kagami","nat":"jp","region":"Pacific","birth":"1999-04-02","age":26,"ageEstimated":false,"role":"控场","roles":["控场"],"peak":80,"peakYear":2025,"peakClub":"DFM","lastYear":2025,"lastClub":"DFM","tier1":true,"coach":true,"img":"Hv10627.webp"},{"id":"Hv1711","ign":"Khalil","real":"Khalil Schmidt Faour Auad","nat":"br","region":"Americas","birth":"2004-06-11","age":21,"ageEstimated":false,"role":"控场","roles":["控场","哨卫"],"peak":80,"peakYear":2025,"peakClub":"FUR","lastYear":2025,"lastClub":"FUR","tier1":true,"coach":false,"img":"Hv1711.webp"},{"id":"Hv5893","ign":"RobbieBk","real":"Robbie Boerkamp","nat":"nl","region":"EMEA","birth":"2001-11-07","age":24,"ageEstimated":false,"role":"先锋","roles":["先锋"],"peak":80,"peakYear":2025,"peakClub":"M8","lastYear":2025,"lastClub":"M8","tier1":true,"coach":false,"img":"Hv5893.webp"},{"id":"Hv7045","ign":"fl1pzjder","real":"Saibani Rahmad","nat":"id","region":"Pacific","birth":"1999-07-27","age":26,"ageEstimated":false,"role":"先锋","roles":["先锋","哨卫"],"peak":80,"peakYear":2024,"peakClub":"RRQ","lastYear":2024,"lastClub":"RRQ","tier1":true,"coach":false,"img":"Hv7045.webp"},{"id":"Hv4545","ign":"Sayaplayer","real":"하정우","nat":"kr","region":"Pacific","birth":"1998-07-29","age":27,"ageEstimated":false,"role":"决斗者","roles":["决斗者","哨卫"],"peak":80,"peakYear":2023,"peakClub":"T1","lastYear":2024,"lastClub":"T1","tier1":true,"coach":false,"img":"Hv4545.webp"},{"id":"Hv999","ign":"Laz","real":"牛田 浩二","nat":"jp","region":"Pacific","birth":"1995-11-26","age":30,"ageEstimated":false,"role":"哨卫","roles":["哨卫","控场","先锋"],"peak":80,"peakYear":2023,"peakClub":"ZETA","lastYear":2024,"lastClub":"ZETA","tier1":true,"coach":false,"img":"Hv999.webp"},{"id":"Hv25258","ign":"Lumo","real":"Максим Демиановских","nat":"ru","region":"China","birth":"2002-06-19","age":23,"ageEstimated":false,"role":"先锋","roles":["先锋","哨卫"],"peak":80,"peakYear":2024,"peakClub":"4AM","lastYear":2024,"lastClub":"4AM","tier1":true,"coach":false,"img":"Hv25258.webp"},{"id":"Hv983","ign":"TS","real":"유태석","nat":"kr","region":"Pacific","birth":"1995-02-25","age":30,"ageEstimated":false,"role":"先锋","roles":["先锋","控场"],"peak":80,"peakYear":2023,"peakClub":"GEN","lastYear":2023,"lastClub":"GEN","tier1":true,"coach":false,"img":"Hv983.webp"},{"id":"Hv10","ign":"rhyme","real":"Emir Muminovic","nat":"no","region":"EMEA","birth":"1999-01-12","age":26,"ageEstimated":false,"role":"决斗者","roles":["决斗者","哨卫"],"peak":80,"peakYear":2023,"peakClub":"GIA","lastYear":2023,"lastClub":"GIA","tier1":true,"coach":false,"img":"Hv10.webp"},{"id":"Hv339","ign":"koldamenta","real":"José Luis Aranguren Herrero","nat":"es","region":"EMEA","birth":"1993-05-24","age":32,"ageEstimated":false,"role":"控场","roles":["控场"],"peak":80,"peakYear":2023,"peakClub":"MKOI","lastYear":2023,"lastClub":"MKOI","tier1":true,"coach":false,"img":"Hv339.webp"},{"id":"Hv25025","ign":"Estrella","real":"박건","nat":"kr","region":"Pacific","birth":"1999-05-17","age":26,"ageEstimated":false,"role":"控场","roles":["控场","先锋"],"peak":78,"peakYear":2025,"peakClub":"RRQ","lastYear":2025,"lastClub":"RRQ","tier1":true,"coach":false,"img":"Hv25025.webp"},{"id":"Hv5129","ign":"ban","real":"Joseph Oh Seung-min","nat":"kr","region":"Pacific","birth":"2000-01-27","age":25,"ageEstimated":false,"role":"决斗者","roles":["决斗者","先锋","哨卫"],"peak":78,"peakYear":2023,"peakClub":"T1","lastYear":2025,"lastClub":"TLN","tier1":true,"coach":false,"img":"Hv5129.webp"},{"id":"Hv1457","ign":"Mistic","real":"James Orfila","nat":"gb","region":"EMEA","birth":"2001-11-12","age":24,"ageEstimated":false,"role":"先锋","roles":["先锋","控场"],"peak":78,"peakYear":2024,"peakClub":"TL","lastYear":2024,"lastClub":"TL","tier1":true,"coach":false,"img":"Hv1457.webp"},{"id":"Hv871","ign":"pl1xx","real":"Christopher Li","nat":"au","region":"China","birth":"1997-10-25","age":28,"ageEstimated":false,"role":"先锋","roles":["先锋","控场","决斗者"],"peak":78,"peakYear":2024,"peakClub":"WOL","lastYear":2024,"lastClub":"WOL","tier1":true,"coach":false,"img":"Hv871.webp"},{"id":"Hv1481","ign":"AsLanM4shadoW","real":"Ali Osman Balta","nat":"tr","region":"EMEA","birth":"1994-04-21","age":31,"ageEstimated":false,"role":"控场","roles":["控场","先锋","哨卫"],"peak":78,"peakYear":2023,"peakClub":"BBL","lastYear":2023,"lastClub":"BBL","tier1":true,"coach":false,"img":"Hv1481.webp"},{"id":"Hv805","ign":"Bazzi","real":"박준기","nat":"kr","region":"Pacific","birth":"1999-03-24","age":26,"ageEstimated":false,"role":"决斗者","roles":["决斗者"],"peak":78,"peakYear":2023,"peakClub":"GE","lastYear":2023,"lastClub":"GE","tier1":true,"coach":false,"img":"Hv805.webp"},{"id":"Hv2622","ign":"Newzera","real":"Alexis Humbert","nat":"fr","region":"EMEA","birth":null,"age":21,"ageEstimated":true,"role":"决斗者","roles":["决斗者","先锋"],"peak":78,"peakYear":2023,"peakClub":"KC","lastYear":2023,"lastClub":"KC","tier1":true,"coach":false,"img":"Hv2622.webp"},{"id":"Hv1137","ign":"Twisten","real":"Karel Ašenbrener","nat":"cz","region":"EMEA","birth":"2003-12-04","age":22,"ageEstimated":false,"role":"决斗者","roles":["决斗者","先锋","哨卫"],"peak":78,"peakYear":2023,"peakClub":"VIT","lastYear":2023,"lastClub":"VIT","tier1":true,"coach":false,"img":"Hv1137.webp"},{"id":"Hv612","ign":"mitch","real":"Mitchell Semago","nat":"us","region":"Americas","birth":"1996-07-31","age":29,"ageEstimated":false,"role":"哨卫","roles":["哨卫"],"peak":77,"peakYear":2025,"peakClub":"C9","lastYear":2025,"lastClub":"C9","tier1":true,"coach":true,"img":"Hv612.webp"},{"id":"Hv881","ign":"yay","real":"Jaccob Whiteaker","nat":"us","region":"Americas","birth":"1998-09-09","age":27,"ageEstimated":false,"role":"哨卫","roles":["哨卫","决斗者","控场"],"peak":77,"peakYear":2025,"peakClub":"EG","lastYear":2025,"lastClub":"EG","tier1":true,"coach":false,"img":"Hv881.webp"},{"id":"Hv4321","ign":"ceNder","real":"Jokūbas Labutis","nat":"lt","region":"EMEA","birth":"2001-10-30","age":24,"ageEstimated":false,"role":"哨卫","roles":["哨卫","控场"],"peak":77,"peakYear":2024,"peakClub":"VIT","lastYear":2025,"lastClub":"Laur","tier1":true,"coach":false,"img":"Hv4321.webp"},{"id":"Hv7764","ign":"Lmemore","real":"Hagai Kristen Yesyurun Tewuh","nat":"id","region":"Pacific","birth":"2002-09-06","age":23,"ageEstimated":false,"role":"哨卫","roles":["哨卫","控场","先锋"],"peak":77,"peakYear":2023,"peakClub":"RRQ","lastYear":2024,"lastClub":"RRQ","tier1":true,"coach":false,"img":"Hv7764.webp"},{"id":"Hv1924","ign":"Ace","real":"翁家進","nat":"hk","region":"China","birth":null,"age":21,"ageEstimated":true,"role":"控场","roles":["控场","哨卫","先锋"],"peak":77,"peakYear":2023,"peakClub":"4AM","lastYear":2024,"lastClub":"4AM","tier1":true,"coach":false,"img":"Hv1924.webp"},{"id":"Hv101","ign":"soulcas","real":"Dom Sulcas","nat":"gb","region":"EMEA","birth":"2000-01-02","age":25,"ageEstimated":false,"role":"先锋","roles":["先锋","哨卫"],"peak":76,"peakYear":2025,"peakClub":"MKOI","lastYear":2025,"lastClub":"MKOI","tier1":true,"coach":false,"img":"Hv101.webp"},{"id":"Hv817","ign":"FNS","real":"Pujan Mehta","nat":"ca","region":"Americas","birth":"1992-03-19","age":33,"ageEstimated":false,"role":"控场","roles":["控场","先锋","哨卫"],"peak":76,"peakYear":2025,"peakClub":"NRG","lastYear":2025,"lastClub":"NRG","tier1":true,"coach":false,"img":"Hv817.webp"},{"id":"Hv8137","ign":"lenne","real":"Lionel Lim You Xiang","nat":"sg","region":"Pacific","birth":"1999-11-13","age":26,"ageEstimated":false,"role":"先锋","roles":["先锋"],"peak":76,"peakYear":2023,"peakClub":"TS","lastYear":2024,"lastClub":"TLN","tier1":true,"coach":false,"img":"Hv8137.webp"},{"id":"Hv2764","ign":"DaveeyS","real":"Santiago Galvis Ruiz","nat":"co","region":"Americas","birth":null,"age":21,"ageEstimated":true,"role":"哨卫","roles":["哨卫","决斗者"],"peak":76,"peakYear":2023,"peakClub":"KRÜ","lastYear":2023,"lastClub":"KRÜ","tier1":true,"coach":false,"img":"Hv2764.webp"},{"id":"Hv1162","ign":"Russ","real":"Russel Mendes","nat":"gb","region":"Pacific","birth":"1998-01-17","age":27,"ageEstimated":false,"role":"先锋","roles":["先锋","哨卫"],"peak":75,"peakYear":2025,"peakClub":"VLT","lastYear":2025,"lastClub":"VLT","tier1":true,"coach":false,"img":"Hv1162.webp"},{"id":"Hv1743","ign":"blaZek1ng","real":"Gary Dastin","nat":"id","region":"Pacific","birth":"1996-05-03","age":29,"ageEstimated":false,"role":"先锋","roles":["先锋","控场"],"peak":75,"peakYear":2024,"peakClub":"GE","lastYear":2024,"lastClub":"GE","tier1":true,"coach":false,"img":"Hv1743.webp"},{"id":"Hv3342","ign":"Sushiboys","real":"ปัญญวัต ทรัพย์ศิริโรจน์","nat":"th","region":"Pacific","birth":"2000-11-06","age":25,"ageEstimated":false,"role":"哨卫","roles":["哨卫","决斗者"],"peak":75,"peakYear":2023,"peakClub":"TLN","lastYear":2024,"lastClub":"FS","tier1":true,"coach":true,"img":"Hv3342.webp"},{"id":"Hv771","ign":"k1Ng","real":"이승원","nat":"kr","region":"Pacific","birth":"2000-11-03","age":25,"ageEstimated":false,"role":"哨卫","roles":["哨卫","控场"],"peak":75,"peakYear":2023,"peakClub":"GEN","lastYear":2023,"lastClub":"GEN","tier1":true,"coach":false,"img":"Hv771.webp"},{"id":"Hv14669","ign":"Nivera","real":"Nabil Benrlitom","nat":"be","region":"EMEA","birth":"2001-06-10","age":24,"ageEstimated":false,"role":"控场","roles":["控场","哨卫","先锋"],"peak":75,"peakYear":2023,"peakClub":"KC","lastYear":2023,"lastClub":"KC","tier1":true,"coach":false,"img":"Hv14669.webp"},{"id":"Hv604","ign":"Boostio","real":"Kelden Elric Pupello","nat":"us","region":"Americas","birth":"2000-11-14","age":25,"ageEstimated":false,"role":"哨卫","roles":["哨卫","控场","决斗者"],"peak":74,"peakYear":2024,"peakClub":"100T","lastYear":2025,"lastClub":"100T","tier1":true,"coach":false,"img":"Hv604.webp"},{"id":"Hv2348","ign":"Famouz","real":"Fikri Zaki Hamdani","nat":"id","region":"Pacific","birth":"1998-06-03","age":27,"ageEstimated":false,"role":"决斗者","roles":["决斗者","先锋","哨卫"],"peak":74,"peakYear":2025,"peakClub":"BME","lastYear":2025,"lastClub":"BME","tier1":true,"coach":false,"img":"Hv2348.webp"},{"id":"Hv6654","ign":"WRONSKI","real":"Michael Wronski","nat":"au","region":"Pacific","birth":null,"age":21,"ageEstimated":true,"role":"决斗者","roles":["决斗者","哨卫"],"peak":74,"peakYear":2023,"peakClub":"GE","lastYear":2023,"lastClub":"GE","tier1":true,"coach":false,"img":"Hv6654.webp"},{"id":"Hv2021","ign":"axeddy","real":"Carlos Alberto","nat":"br","region":"Americas","birth":"2003-06-11","age":22,"ageEstimated":false,"role":"先锋","roles":["先锋","决斗者","哨卫"],"peak":74,"peakYear":2023,"peakClub":"KRÜ","lastYear":2023,"lastClub":"KRÜ","tier1":true,"coach":false,"img":"Hv2021.webp"},{"id":"Hv1395","ign":"TENNN","real":"Tenta Asai","nat":"jp","region":"Pacific","birth":"2001-10-19","age":24,"ageEstimated":false,"role":"决斗者","roles":["决斗者","先锋","哨卫"],"peak":74,"peakYear":2023,"peakClub":"ZETA","lastYear":2023,"lastClub":"ZETA","tier1":true,"coach":false,"img":"Hv1395.webp"},{"id":"Hv4052","ign":"Jinboong","real":"김진원","nat":"kr","region":"Pacific","birth":"2003-03-01","age":22,"ageEstimated":false,"role":"先锋","roles":["先锋","决斗者","哨卫"],"peak":73,"peakYear":2025,"peakClub":"DFM","lastYear":2025,"lastClub":"DFM","tier1":true,"coach":false,"img":"Hv4052.webp"},{"id":"Hv9747","ign":"Emman","real":"Emmanuel Morales","nat":"ph","region":"Pacific","birth":"2000-06-01","age":25,"ageEstimated":false,"role":"先锋","roles":["先锋","哨卫","决斗者"],"peak":73,"peakYear":2024,"peakClub":"NAOS","lastYear":2024,"lastClub":"NAOS","tier1":true,"coach":false,"img":"Hv9747.webp"},{"id":"Hv4827","ign":"GodDead","real":"김성신","nat":"kr","region":"Pacific","birth":"1998-01-09","age":27,"ageEstimated":false,"role":"先锋","roles":["先锋","哨卫"],"peak":73,"peakYear":2023,"peakClub":"GEN","lastYear":2023,"lastClub":"GEN","tier1":true,"coach":false,"img":"Hv4827.webp"},{"id":"Hv3582","ign":"keloqz","real":"Wassim Cista","nat":"fr","region":"EMEA","birth":"2003-03-26","age":22,"ageEstimated":false,"role":"决斗者","roles":["决斗者"],"peak":73,"peakYear":2023,"peakClub":"TH","lastYear":2023,"lastClub":"TH","tier1":true,"coach":false,"img":"Hv3582.webp"},{"id":"Hv31207","ign":"carpe","real":"이재혁","nat":"kr","region":"Pacific","birth":"1998-10-14","age":27,"ageEstimated":false,"role":"先锋","roles":["先锋","控场"],"peak":73,"peakYear":2024,"peakClub":"T1","lastYear":2025,"lastClub":"T1","tier1":true,"coach":false,"img":"Hv31207.webp"},{"id":"Hv1003","ign":"Reita","real":"Ryumon Oshiro","nat":"jp","region":"Pacific","birth":"1994-12-11","age":31,"ageEstimated":false,"role":"先锋","roles":["先锋","控场","哨卫"],"peak":73,"peakYear":2023,"peakClub":"DFM","lastYear":2023,"lastClub":"DFM","tier1":true,"coach":true,"img":"Hv1003.webp"},{"id":"Hv4603","ign":"xms","real":"Alexandre Forté","nat":"fr","region":"EMEA","birth":"1997-05-24","age":28,"ageEstimated":false,"role":"控场","roles":["控场","哨卫"],"peak":73,"peakYear":2023,"peakClub":"KC","lastYear":2023,"lastClub":"KC","tier1":true,"coach":false,"img":"Hv4603.webp"},{"id":"Hv2679","ign":"DubsteP","real":"Jayvee Paguirigan","nat":"ph","region":"Pacific","birth":"1992-09-21","age":33,"ageEstimated":false,"role":"决斗者","roles":["决斗者","先锋"],"peak":73,"peakYear":2023,"peakClub":"TS","lastYear":2023,"lastClub":"TS","tier1":true,"coach":false,"img":"Hv2679.webp"},{"id":"Hv172","ign":"vakk","real":"Vakaris Bebravičius","nat":"lt","region":"EMEA","birth":"2000-07-07","age":25,"ageEstimated":false,"role":"哨卫","roles":["哨卫","先锋","决斗者"],"peak":73,"peakYear":2025,"peakClub":"BBL","lastYear":2025,"lastClub":"BBL","tier1":true,"coach":false,"img":"Hv172.webp"},{"id":"Hv451","ign":"ShadoW","real":"Tobias Flodström","nat":"se","region":"EMEA","birth":"1995-06-11","age":30,"ageEstimated":false,"role":"先锋","roles":["先锋"],"peak":73,"peakYear":2024,"peakClub":"MKOI","lastYear":2024,"lastClub":"MKOI","tier1":true,"coach":true,"img":"Hv451.webp"},{"id":"Hv18035","ign":"garnetS","real":"อภิวัฒน์ อภิรักษ์สุขุมาล","nat":"th","region":"Pacific","birth":"2004-07-07","age":21,"ageEstimated":false,"role":"决斗者","roles":["决斗者"],"peak":73,"peakYear":2023,"peakClub":"TLN","lastYear":2024,"lastClub":"XGOD","tier1":true,"coach":false,"img":"Hv18035.webp"},{"id":"Hv7403","ign":"EJAY","real":"Eroll Jule R. Delfin","nat":"ph","region":"Pacific","birth":null,"age":21,"ageEstimated":true,"role":"决斗者","roles":["决斗者","哨卫"],"peak":73,"peakYear":2023,"peakClub":"RRQ","lastYear":2023,"lastClub":"RRQ","tier1":true,"coach":false,"img":"Hv7403.webp"},{"id":"Hv662","ign":"pryze","real":"Luis Henrique","nat":"br","region":"Americas","birth":"1999-02-01","age":26,"ageEstimated":false,"role":"先锋","roles":["先锋","决斗者"],"peak":72,"peakYear":2025,"peakClub":"2G","lastYear":2025,"lastClub":"2G","tier1":true,"coach":false,"img":"Hv662.webp"},{"id":"Hv129","ign":"hype","real":"Tautvydas Paldavicius","nat":"lt","region":"EMEA","birth":"1999-09-08","age":26,"ageEstimated":false,"role":"控场","roles":["控场","哨卫"],"peak":72,"peakYear":2024,"peakClub":"APK","lastYear":2025,"lastClub":"APK","tier1":true,"coach":false,"img":"Hv129.webp"},{"id":"Hv4402","ign":"o0o0o","real":"叶晓栋","nat":"cn","region":"China","birth":"1997-06-07","age":28,"ageEstimated":false,"role":"先锋","roles":["先锋","控场","决斗者"],"peak":72,"peakYear":2025,"peakClub":"NOVA","lastYear":2025,"lastClub":"NOVA","tier1":true,"coach":false,"img":"Hv4402.webp"},{"id":"Hv1970","ign":"neth","real":"Yusuke Matsuda","nat":"jp","region":"Pacific","birth":"1996-05-26","age":29,"ageEstimated":false,"role":"哨卫","roles":["哨卫","决斗者","控场","先锋"],"peak":72,"peakYear":2024,"peakClub":"DFM","lastYear":2024,"lastClub":"DFM","tier1":true,"coach":false,"img":"Hv1970.webp"},{"id":"Hv12322","ign":"NDG","real":"Noel De Guia","nat":"ph","region":"Pacific","birth":"2004-12-24","age":21,"ageEstimated":false,"role":"控场","roles":["控场"],"peak":72,"peakYear":2024,"peakClub":"TS","lastYear":2024,"lastClub":"TS","tier1":true,"coach":false,"img":"Hv12322.webp"},{"id":"Hv568","ign":"Turko","real":"Mehmet Özen","nat":"tr","region":"EMEA","birth":"1999-01-15","age":26,"ageEstimated":false,"role":"哨卫","roles":["哨卫","先锋"],"peak":72,"peakYear":2023,"peakClub":"BBL","lastYear":2023,"lastClub":"BBL","tier1":true,"coach":false,"img":"Hv568.webp"},{"id":"Hv93","ign":"Mixwell","real":"Óscar Cañellas","nat":"es","region":"EMEA","birth":"1995-10-10","age":30,"ageEstimated":false,"role":"哨卫","roles":["哨卫","决斗者","先锋"],"peak":72,"peakYear":2023,"peakClub":"TH","lastYear":2023,"lastClub":"TH","tier1":true,"coach":false,"img":"Hv93.webp"},{"id":"Hv109","ign":"ANGE1","real":"Кирило Карасьов","nat":"ua","region":"EMEA","birth":"1989-09-10","age":36,"ageEstimated":false,"role":"控场","roles":["控场","先锋"],"peak":72,"peakYear":2025,"peakClub":"NAVI","lastYear":2025,"lastClub":"NAVI","tier1":true,"coach":true,"img":"Hv109.webp"},{"id":"Hv220","ign":"beyAz","real":"Beyazıt Körpe","nat":"fr","region":"EMEA","birth":"1996-11-04","age":29,"ageEstimated":false,"role":"先锋","roles":["先锋","决斗者"],"peak":72,"peakYear":2024,"peakClub":"M8","lastYear":2024,"lastClub":"M8","tier1":true,"coach":false,"img":"Hv220.webp"},{"id":"Hv3604","ign":"MOJJ","real":"Buğra Kiraz","nat":"tr","region":"EMEA","birth":"1997-05-21","age":28,"ageEstimated":false,"role":"哨卫","roles":["哨卫","控场"],"peak":72,"peakYear":2023,"peakClub":"FUT","lastYear":2023,"lastClub":"FUT","tier1":true,"coach":false,"img":"Hv3604.webp"},{"id":"Hv482","ign":"iNTRO","real":"강승균","nat":"kr","region":"Pacific","birth":"2002-02-02","age":23,"ageEstimated":false,"role":"控场","roles":["控场","哨卫","先锋"],"peak":72,"peakYear":2023,"peakClub":"T1","lastYear":2023,"lastClub":"T1","tier1":true,"coach":false,"img":"Hv482.webp"},{"id":"Hv2452","ign":"Patiphan","real":"ปฏิภาณ ไชยวงษ์","nat":"th","region":"Pacific","birth":"2003-09-03","age":22,"ageEstimated":false,"role":"控场","roles":["控场","先锋"],"peak":72,"peakYear":2023,"peakClub":"TLN","lastYear":2023,"lastClub":"TLN","tier1":true,"coach":false,"img":"Hv2452.webp"},{"id":"Hv1000","ign":"crow","real":"丸岡 智明","nat":"jp","region":"Pacific","birth":"1997-11-28","age":28,"ageEstimated":false,"role":"先锋","roles":["先锋"],"peak":72,"peakYear":2023,"peakClub":"ZETA","lastYear":2023,"lastClub":"ZETA","tier1":true,"coach":false,"img":"Hv1000.webp"},{"id":"Hv10125","ign":"qw1","real":"Konuralp Şahin","nat":"tr","region":"EMEA","birth":"2002-06-10","age":23,"ageEstimated":false,"role":"决斗者","roles":["决斗者","先锋"],"peak":71,"peakYear":2023,"peakClub":"FUT","lastYear":2023,"lastClub":"FUT","tier1":true,"coach":false,"img":"Hv10125.webp"},{"id":"Hv8551","ign":"Muj","real":"Serhat Yüksel","nat":"tr","region":"EMEA","birth":"2001-10-24","age":24,"ageEstimated":false,"role":"先锋","roles":["先锋"],"peak":71,"peakYear":2023,"peakClub":"FUT","lastYear":2023,"lastClub":"FUT","tier1":true,"coach":false,"img":"Hv8551.webp"},{"id":"Hv8402","ign":"icy","real":"Jacob Lange","nat":"us","region":"Americas","birth":"2003-04-30","age":22,"ageEstimated":false,"role":"决斗者","roles":["决斗者","先锋"],"peak":71,"peakYear":2025,"peakClub":"EG","lastYear":2025,"lastClub":"EG","tier1":true,"coach":false,"img":"Hv8402.webp"},{"id":"Hv15302","ign":"Babyblue","real":"耿浩然","nat":"cn","region":"China","birth":"2002-10-05","age":23,"ageEstimated":false,"role":"决斗者","roles":["决斗者","先锋"],"peak":71,"peakYear":2025,"peakClub":"JDG","lastYear":2025,"lastClub":"JDG","tier1":true,"coach":false,"img":"Hv15302.webp"},{"id":"Hv4416","ign":"Link","real":"Wen Xuan Zhong (钟文轩)","nat":"cn","region":"China","birth":null,"age":20,"ageEstimated":true,"role":"哨卫","roles":["哨卫","控场"],"peak":71,"peakYear":2025,"peakClub":"ALG","lastYear":2025,"lastClub":"ALG","tier1":true,"coach":false,"img":"Hv4416.webp"},{"id":"Hv2362","ign":"Egoist","real":"Javier Chua Dong Qing","nat":"sg","region":"Pacific","birth":"2001-06-05","age":24,"ageEstimated":false,"role":"哨卫","roles":["哨卫","先锋"],"peak":71,"peakYear":2024,"peakClub":"BLD","lastYear":2024,"lastClub":"BLD","tier1":true,"coach":false,"img":"Hv2362.webp"},{"id":"Hv25329","ign":"B3ar","real":"Yang Zhanxiong (杨瞻雄)","nat":"cn","region":"China","birth":null,"age":20,"ageEstimated":true,"role":"先锋","roles":["先锋"],"peak":71,"peakYear":2024,"peakClub":"BLG","lastYear":2024,"lastClub":"BLG","tier1":true,"coach":false,"img":"Hv25329.webp"},{"id":"Hv868","ign":"logaN","real":"Logan Corti","nat":"fr","region":"EMEA","birth":"1998-06-18","age":27,"ageEstimated":false,"role":"哨卫","roles":["哨卫","控场","先锋"],"peak":71,"peakYear":2024,"peakClub":"M8","lastYear":2024,"lastClub":"M8","tier1":true,"coach":false,"img":"Hv868.webp"},{"id":"Hv4778","ign":"kawaii","real":"朴民","nat":"cn","region":"China","birth":null,"age":20,"ageEstimated":true,"role":"控场","roles":["控场","先锋","决斗者"],"peak":71,"peakYear":2024,"peakClub":"TEC","lastYear":2024,"lastClub":"TEC","tier1":true,"coach":false,"img":"Hv4778.webp"},{"id":"Hv4771","ign":"ICEKING","real":"程万鹏","nat":"cn","region":"China","birth":"2001-04-01","age":24,"ageEstimated":false,"role":"先锋","roles":["先锋","控场"],"peak":71,"peakYear":2023,"peakClub":"TE","lastYear":2024,"lastClub":"TYL","tier1":true,"coach":false,"img":"Hv4771.webp"},{"id":"Hv783","ign":"murizzz","real":"Murillo Tuchtenhagen","nat":"br","region":"Americas","birth":"1999-09-16","age":26,"ageEstimated":false,"role":"控场","roles":["控场","哨卫","先锋"],"peak":71,"peakYear":2024,"peakClub":"RETA","lastYear":2024,"lastClub":"RETA","tier1":true,"coach":false,"img":"Hv783.webp"},{"id":"Hv3027","ign":"Cyah","real":"鄧恩平","nat":"hk","region":"China","birth":"2003-03-27","age":22,"ageEstimated":false,"role":"控场","roles":["控场"],"peak":71,"peakYear":2023,"peakClub":"ME","lastYear":2023,"lastClub":"ME","tier1":true,"coach":false,"img":"Hv3027.webp"},{"id":"Hv24236","ign":"Zoomer","real":"徐景波","nat":"cn","region":"China","birth":null,"age":20,"ageEstimated":true,"role":"先锋","roles":["先锋","决斗者"],"peak":71,"peakYear":2023,"peakClub":"WBG","lastYear":2023,"lastClub":"WBG","tier1":true,"coach":false,"img":"Hv24236.webp"},{"id":"Hv1839","ign":"Polvi","real":"Niko Polvinen","nat":"fi","region":"Pacific","birth":"2000-11-16","age":25,"ageEstimated":false,"role":"决斗者","roles":["决斗者","哨卫"],"peak":71,"peakYear":2024,"peakClub":"GE","lastYear":2024,"lastClub":"GE","tier1":true,"coach":false,"img":"Hv1839.webp"},{"id":"Hv941","ign":"TxoziN","real":"André Rafael Max Saidel","nat":"br","region":"Americas","birth":null,"age":21,"ageEstimated":true,"role":"控场","roles":["控场","哨卫"],"peak":71,"peakYear":2023,"peakClub":"MIBR","lastYear":2023,"lastClub":"MIBR","tier1":true,"coach":false,"img":"Hv941.webp"},{"id":"Hv3124","ign":"Core","real":"安梓文","nat":"cn","region":"China","birth":null,"age":20,"ageEstimated":true,"role":"先锋","roles":["先锋","哨卫"],"peak":71,"peakYear":2023,"peakClub":"TYL","lastYear":2023,"lastClub":"TYL","tier1":true,"coach":false,"img":"Hv3124.webp"},{"id":"Hv3517","ign":"maizi","real":"沈翔鹏","nat":"cn","region":"China","birth":"2000-07-30","age":25,"ageEstimated":false,"role":"先锋","roles":["先锋","决斗者"],"peak":71,"peakYear":2023,"peakClub":"TYL","lastYear":2023,"lastClub":"TYL","tier1":true,"coach":false,"img":"Hv3517.webp"},{"id":"Hv2038","ign":"weber","real":"Brandon William Weber","nat":"gb","region":"EMEA","birth":"1993-12-08","age":32,"ageEstimated":false,"role":"先锋","roles":["先锋"],"peak":70,"peakYear":2023,"peakClub":"TH","lastYear":2023,"lastClub":"TH","tier1":true,"coach":true,"img":"Hv2038.webp"},{"id":"Hv25081","ign":"yoman","real":"채영문","nat":"kr","region":"Pacific","birth":"1996-07-11","age":29,"ageEstimated":false,"role":"决斗者","roles":["决斗者","哨卫"],"peak":69,"peakYear":2025,"peakClub":"GEN","lastYear":2025,"lastClub":"GEN","tier1":true,"coach":true,"img":"Hv25081.webp"},{"id":"Hv4320","ign":"YiHao","real":"陈一豪","nat":"cn","region":"China","birth":"2000-04-17","age":25,"ageEstimated":false,"role":"控场","roles":["控场"],"peak":69,"peakYear":2024,"peakClub":"JDG","lastYear":2024,"lastClub":"JDG","tier1":true,"coach":false,"img":"Hv4320.webp"},{"id":"Hv36512","ign":"nos","real":"刘爽","nat":"cn","region":"China","birth":null,"age":20,"ageEstimated":true,"role":"控场","roles":["控场"],"peak":69,"peakYear":2023,"peakClub":"WBG","lastYear":2023,"lastClub":"WBG","tier1":true,"coach":false,"img":"Hv36512.webp"},{"id":"Hv4880","ign":"TZH","real":"唐哲昊","nat":"cn","region":"China","birth":"1999-10-02","age":26,"ageEstimated":false,"role":"控场","roles":["控场"],"peak":68,"peakYear":2025,"peakClub":"AG","lastYear":2025,"lastClub":"AG","tier1":true,"coach":false,"img":"Hv4880.webp"},{"id":"Hv7841","ign":"TvirusLuke","real":"陳振慶","nat":"tw","region":"China","birth":"1999-09-06","age":26,"ageEstimated":false,"role":"决斗者","roles":["决斗者"],"peak":68,"peakYear":2023,"peakClub":"DRG","lastYear":2025,"lastClub":"DRG","tier1":true,"coach":false,"img":"Hv7841.webp"},{"id":"Hv7866","ign":"Click","real":"Haydem Ali","nat":"de","region":"EMEA","birth":"2006-04-03","age":19,"ageEstimated":false,"role":"决斗者","roles":["决斗者"],"peak":68,"peakYear":2025,"peakClub":"M8","lastYear":2025,"lastClub":"M8","tier1":true,"coach":false,"img":"Hv7866.webp"},{"id":"Hv10816","ign":"xccurate","real":"Kevin Susanto","nat":"id","region":"Pacific","birth":null,"age":21,"ageEstimated":true,"role":"哨卫","roles":["哨卫"],"peak":68,"peakYear":2024,"peakClub":"T1","lastYear":2024,"lastClub":"T1","tier1":true,"coach":false,"img":"Hv10816.webp"},{"id":"Hv6195","ign":"lz","real":"Luiz Reche","nat":"br","region":"Americas","birth":"2003-09-07","age":22,"ageEstimated":false,"role":"控场","roles":["控场","哨卫"],"peak":68,"peakYear":2025,"peakClub":"2G","lastYear":2025,"lastClub":"2G","tier1":true,"coach":false,"img":"Hv6195.webp"},{"id":"Hv36668","ign":"MarT1n","real":"卓政杰","nat":"cn","region":"China","birth":"2000-05-01","age":25,"ageEstimated":false,"role":"哨卫","roles":["哨卫"],"peak":68,"peakYear":2024,"peakClub":"JDG","lastYear":2024,"lastClub":"JDG","tier1":true,"coach":false,"img":"Hv36668.webp"},{"id":"Hv19522","ign":"Wailers","real":"Wailers Locart","nat":"fr","region":"EMEA","birth":"1997-11-24","age":28,"ageEstimated":false,"role":"控场","roles":["控场"],"peak":68,"peakYear":2024,"peakClub":"M8","lastYear":2024,"lastClub":"M8","tier1":true,"coach":false,"img":"Hv19522.webp"},{"id":"Hv3025","ign":"Zero1","real":"任梦真","nat":"cn","region":"China","birth":"2001-04-18","age":24,"ageEstimated":false,"role":"先锋","roles":["先锋"],"peak":68,"peakYear":2023,"peakClub":"ASE","lastYear":2023,"lastClub":"ASE","tier1":true,"coach":false,"img":"Hv3025.webp"},{"id":"Hv4727","ign":"PangH","real":"宋文豪","nat":"cn","region":"China","birth":"2000-03-29","age":25,"ageEstimated":false,"role":"哨卫","roles":["哨卫","先锋"],"peak":66,"peakYear":2024,"peakClub":"NOVA","lastYear":2024,"lastClub":"NOVA","tier1":true,"coach":false,"img":"Hv4727.webp"},{"id":"Hv37928","ign":"XuAN","real":"Zhang Luxuan (张陆轩)","nat":"cn","region":"China","birth":null,"age":20,"ageEstimated":true,"role":"哨卫","roles":["哨卫","控场"],"peak":65,"peakYear":2023,"peakClub":"4AM","lastYear":2024,"lastClub":"4AM","tier1":true,"coach":false,"img":"Hv37928.webp"},{"id":"Hv30526","ign":"B1ack","real":"李松泰","nat":"cn","region":"China","birth":"2002-06-08","age":23,"ageEstimated":false,"role":"先锋","roles":["先锋"],"peak":64,"peakYear":2025,"peakClub":"TEC","lastYear":2025,"lastClub":"TEC","tier1":true,"coach":false,"img":"Hv30526.webp"},{"id":"Hv25339","ign":"LockM","real":"邢福凌","nat":"cn","region":"China","birth":"2002-09-29","age":23,"ageEstimated":false,"role":"控场","roles":["控场","先锋"],"peak":62,"peakYear":2024,"peakClub":"TEC","lastYear":2024,"lastClub":"TEC","tier1":true,"coach":false,"img":"Hv25339.webp"},{"id":"Hv3024","ign":"DK","real":"李乐炜","nat":"cn","region":"China","birth":"1998-05-18","age":27,"ageEstimated":false,"role":"控场","roles":["控场","哨卫"],"peak":62,"peakYear":2023,"peakClub":"BLG","lastYear":2023,"lastClub":"BLG","tier1":true,"coach":false,"img":"Hv3024.webp"},{"id":"Hv4410","ign":"R1ckLee","real":"Li Xu (李旭)","nat":"cn","region":"China","birth":null,"age":20,"ageEstimated":true,"role":"哨卫","roles":["哨卫","控场"],"peak":62,"peakYear":2023,"peakClub":"WBG","lastYear":2023,"lastClub":"WBG","tier1":true,"coach":false,"img":"Hv4410.webp"},{"id":"Hv7135","ign":"zjc","real":"张峻程","nat":"cn","region":"China","birth":"2001-06-11","age":24,"ageEstimated":false,"role":"决斗者","roles":["决斗者","先锋"],"peak":61,"peakYear":2023,"peakClub":"ASE","lastYear":2025,"lastClub":"TYL","tier1":true,"coach":false,"img":"Hv7135.webp"},{"id":"Hv50080","ign":"Lsn","real":"李思南","nat":"cn","region":"China","birth":"1993-03-26","age":32,"ageEstimated":false,"role":"先锋","roles":["先锋","控场"],"peak":60,"peakYear":2025,"peakClub":"AG","lastYear":2025,"lastClub":"AG","tier1":true,"coach":false,"img":"Hv50080.webp"},{"id":"Hv1586","ign":"v1nny","real":"Vínicius Gonçalves","nat":"br","region":"Americas","birth":"1997-05-24","age":28,"ageEstimated":false,"role":"先锋","roles":["先锋","控场"],"peak":60,"peakYear":2025,"peakClub":"LOUD","lastYear":2025,"lastClub":"LOUD","tier1":true,"coach":false,"img":"Hv1586.webp"},{"id":"Hv4773","ign":"AAK","real":"施叶凯","nat":"cn","region":"China","birth":"2001-08-21","age":24,"ageEstimated":false,"role":"决斗者","roles":["决斗者","哨卫"],"peak":59,"peakYear":2024,"peakClub":"TYL","lastYear":2024,"lastClub":"TYL","tier1":true,"coach":false,"img":"Hv4773.webp"},{"id":"Hv3672","ign":"BONECOLD","real":"Santeri Heikki Juhani Sassi","nat":"fi","region":"EMEA","birth":"1998-10-13","age":27,"ageEstimated":false,"role":"先锋","roles":["先锋","控场"],"peak":59,"peakYear":2023,"peakClub":"VIT","lastYear":2023,"lastClub":"VIT","tier1":true,"coach":false,"img":"Hv3672.webp"},{"id":"Hv302","ign":"ZE1SH","real":"Ahmed El Sheikh","nat":"eg","region":"EMEA","birth":"1999-06-26","age":26,"ageEstimated":false,"role":"先锋","roles":["先锋","控场"],"peak":57,"peakYear":2023,"peakClub":"KC","lastYear":2023,"lastClub":"KC","tier1":true,"coach":true,"img":"Hv302.webp"},{"id":"Hv37674","ign":"MrCANI","real":"陳廷訓","nat":"tw","region":"China","birth":"1996-06-14","age":29,"ageEstimated":false,"role":"先锋","roles":["先锋","控场"],"peak":56,"peakYear":2025,"peakClub":"JDG","lastYear":2025,"lastClub":"JDG","tier1":true,"coach":false,"img":"Hv37674.webp"},{"id":"Hv569","ign":"pAura","real":"Melih Karaduran","nat":"tr","region":"EMEA","birth":"1997-10-27","age":28,"ageEstimated":false,"role":"哨卫","roles":["哨卫","先锋"],"peak":55,"peakYear":2024,"peakClub":"BBL","lastYear":2024,"lastClub":"BBL","tier1":true,"coach":false,"img":"Hv569.webp"},{"id":"Hv556","ign":"SouhcNi","real":"İbrahim Sağır","nat":"tr","region":"EMEA","birth":"1999-11-23","age":26,"ageEstimated":false,"role":"哨卫","roles":["哨卫","先锋"],"peak":55,"peakYear":2023,"peakClub":"BBL","lastYear":2023,"lastClub":"BBL","tier1":true,"coach":false,"img":"Hv556.webp"},{"id":"Hv3269","ign":"Antidote","real":"Sabyasachi Bose","nat":"in","region":"Pacific","birth":"1996-06-08","age":29,"ageEstimated":false,"role":"控场","roles":["控场","哨卫","先锋"],"peak":85,"peakYear":2025,"peakClub":"RNTX","lastYear":2025,"lastClub":"RNTX","tier1":false,"coach":true,"img":"Hv3269.webp"},{"id":"Hv1850","ign":"ShoT_UP","real":"Andrew Orlowski","nat":"us","region":"Americas","birth":"1999-12-08","age":26,"ageEstimated":false,"role":"决斗者","roles":["决斗者","控场"],"peak":80,"peakYear":2025,"peakClub":"L11","lastYear":2025,"lastClub":"L11","tier1":false,"coach":false,"img":"Hv1850.webp"},{"id":"Hv5886","ign":"Flaring","real":"Henri Forichon","nat":"sg","region":"Pacific","birth":"2002-11-25","age":23,"ageEstimated":false,"role":"控场","roles":["控场","哨卫"],"peak":80,"peakYear":2024,"peakClub":"LESS","lastYear":2024,"lastClub":"LESS","tier1":false,"coach":false,"img":"Hv5886.webp"},{"id":"Hv1437","ign":"YESicaN","real":"Đinh Đình Đạt","nat":"vn","region":"Pacific","birth":"1997-06-14","age":28,"ageEstimated":false,"role":"先锋","roles":["先锋","控场"],"peak":80,"peakYear":2023,"peakClub":"FCY","lastYear":2023,"lastClub":"FCY","tier1":false,"coach":false,"img":"Hv1437.webp"},{"id":"Hv7616","ign":"Feniz","real":"Thomas Daniel Molina Solano","nat":"cr","region":"Americas","birth":"2000-10-31","age":25,"ageEstimated":false,"role":"先锋","roles":["先锋","哨卫","决斗者"],"peak":77,"peakYear":2025,"peakClub":"EXL","lastYear":2025,"lastClub":"EXL","tier1":false,"coach":false,"img":"Hv7616.webp"},{"id":"Hv3271","ign":"Excali","real":"करण म्हसवडकर","nat":"in","region":"Pacific","birth":"1997-08-30","age":28,"ageEstimated":false,"role":"决斗者","roles":["决斗者","先锋"],"peak":77,"peakYear":2023,"peakClub":"VLT","lastYear":2023,"lastClub":"VLT","tier1":false,"coach":false,"img":"Hv3271.webp"},{"id":"Hv2570","ign":"roxie","real":"Povilas Krivelis","nat":"lt","region":"EMEA","birth":"2002-02-08","age":23,"ageEstimated":false,"role":"先锋","roles":["先锋"],"peak":76,"peakYear":2025,"peakClub":"Laur","lastYear":2025,"lastClub":"Laur","tier1":false,"coach":false,"img":"Hv2570.webp"},{"id":"Hv12947","ign":"rawfiul","real":"Akram Virani","nat":"in","region":"Pacific","birth":"2001-05-21","age":24,"ageEstimated":false,"role":"决斗者","roles":["决斗者","哨卫"],"peak":76,"peakYear":2025,"peakClub":"RNTX","lastYear":2025,"lastClub":"RNTX","tier1":false,"coach":false,"img":"Hv12947.webp"},{"id":"Hv24653","ign":"Vera","real":"Rodman Yap Yao Rong","nat":"sg","region":"Pacific","birth":"2005-04-05","age":20,"ageEstimated":false,"role":"决斗者","roles":["决斗者"],"peak":76,"peakYear":2024,"peakClub":"LESS","lastYear":2024,"lastClub":"LESS","tier1":false,"coach":false,"img":"Hv24653.webp"},{"id":"Hv13220","ign":"JA","real":"John Timothy Arone","nat":"ph","region":"Pacific","birth":"1998-09-04","age":27,"ageEstimated":false,"role":"控场","roles":["控场","哨卫","决斗者"],"peak":76,"peakYear":2024,"peakClub":"NAOS","lastYear":2024,"lastClub":"NAOS","tier1":false,"coach":false,"img":"Hv13220.webp"},{"id":"Hv2534","ign":"lowel","real":"Christian García","nat":"es","region":"EMEA","birth":"1996-12-11","age":29,"ageEstimated":false,"role":"控场","roles":["控场","哨卫"],"peak":76,"peakYear":2023,"peakClub":"TQ","lastYear":2023,"lastClub":"TQ","tier1":false,"coach":false,"img":"Hv2534.webp"},{"id":"Hv3270","ign":"Amaterasu","real":"Anuj Sharma","nat":"in","region":"Pacific","birth":null,"age":21,"ageEstimated":true,"role":"先锋","roles":["先锋","控场"],"peak":76,"peakYear":2023,"peakClub":"VLT","lastYear":2023,"lastClub":"VLT","tier1":false,"coach":false,"img":"Hv3270.webp"},{"id":"Hv8400","ign":"Cain","real":"Nathan Lee","nat":"ca","region":"Americas","birth":null,"age":21,"ageEstimated":true,"role":"先锋","roles":["先锋","哨卫"],"peak":75,"peakYear":2025,"peakClub":"L11","lastYear":2025,"lastClub":"L11","tier1":false,"coach":false,"img":"Hv8400.webp"},{"id":"Hv11106","ign":"MIKE","real":"Michael Smith","nat":"au","region":"Pacific","birth":null,"age":21,"ageEstimated":true,"role":"哨卫","roles":["哨卫","控场","先锋"],"peak":75,"peakYear":2025,"peakClub":"LNF","lastYear":2025,"lastClub":"LNF","tier1":false,"coach":false,"img":"Hv11106.webp"},{"id":"Hv320","ign":"dimasick","real":"Дмитрий Матвиенко","nat":"kz","region":"China","birth":"1996-07-06","age":29,"ageEstimated":false,"role":"控场","roles":["控场","哨卫","决斗者","先锋"],"peak":75,"peakYear":2025,"peakClub":"KBG","lastYear":2025,"lastClub":"KBG","tier1":false,"coach":true,"img":"Hv320.webp"},{"id":"Hv2753","ign":"BandiCoot","real":"Michael Duvan Mancipe Ochoa","nat":"co","region":"Americas","birth":"2001-05-10","age":24,"ageEstimated":false,"role":"控场","roles":["控场","先锋"],"peak":75,"peakYear":2024,"peakClub":"TP","lastYear":2024,"lastClub":"TP","tier1":false,"coach":false,"img":"Hv2753.webp"},{"id":"Hv2190","ign":"baddyG","real":"Kamil Graniczka","nat":"pl","region":"EMEA","birth":"2001-10-09","age":24,"ageEstimated":false,"role":"控场","roles":["控场","决斗者"],"peak":75,"peakYear":2023,"peakClub":"ACE","lastYear":2023,"lastClub":"ACE","tier1":false,"coach":false,"img":"Hv2190.webp"},{"id":"Hv2468","ign":"delz1k","real":"Joaquín Ignacio Espinoza Soto","nat":"cl","region":"Americas","birth":"2000-06-22","age":25,"ageEstimated":false,"role":"控场","roles":["控场"],"peak":73,"peakYear":2024,"peakClub":"RETA","lastYear":2024,"lastClub":"RETA","tier1":false,"coach":false,"img":"Hv2468.webp"},{"id":"Hv1374","ign":"ALIVE","real":"גלעד חכים","nat":"il","region":"EMEA","birth":"1999-03-30","age":26,"ageEstimated":false,"role":"决斗者","roles":["决斗者"],"peak":73,"peakYear":2023,"peakClub":"ACE","lastYear":2023,"lastClub":"ACE","tier1":false,"coach":false,"img":"Hv1374.webp"},{"id":"Hv7106","ign":"diseased","real":"Alexander Zakharov","nat":"by","region":"China","birth":null,"age":21,"ageEstimated":true,"role":"控场","roles":["控场"],"peak":73,"peakYear":2023,"peakClub":"GK","lastYear":2023,"lastClub":"GK","tier1":false,"coach":false,"img":"Hv7106.webp"},{"id":"Hv2313","ign":"feqew","real":"Lukas Petrauskas","nat":"lt","region":"EMEA","birth":"1997-04-18","age":28,"ageEstimated":false,"role":"决斗者","roles":["决斗者","哨卫","先锋"],"peak":73,"peakYear":2025,"peakClub":"Laur","lastYear":2025,"lastClub":"Laur","tier1":false,"coach":false,"img":"Hv2313.webp"},{"id":"Hv2571","ign":"Feeqn","real":"Okko Pajari","nat":"fi","region":"EMEA","birth":"2000-08-18","age":25,"ageEstimated":false,"role":"哨卫","roles":["哨卫","决斗者"],"peak":73,"peakYear":2024,"peakClub":"OF","lastYear":2024,"lastClub":"OF","tier1":false,"coach":false,"img":"Hv2571.webp"},{"id":"Hv24304","ign":"Kiuuuu","real":"容子翘","nat":"hk","region":"EMEA","birth":null,"age":21,"ageEstimated":true,"role":"控场","roles":["控场","哨卫"],"peak":73,"peakYear":2024,"peakClub":"OF","lastYear":2024,"lastClub":"OF","tier1":false,"coach":false,"img":"Hv24304.webp"},{"id":"Hv19588","ign":"neptuNo","real":"Alberto González","nat":"es","region":"EMEA","birth":"1992-02-12","age":33,"ageEstimated":false,"role":"哨卫","roles":["哨卫"],"peak":73,"peakYear":2023,"peakClub":"TQ","lastYear":2023,"lastClub":"TQ","tier1":false,"coach":false,"img":"Hv19588.webp"},{"id":"Hv2035","ign":"gustt1nha","real":"Gustavo Gabriel","nat":"br","region":"Americas","birth":null,"age":21,"ageEstimated":true,"role":"先锋","roles":["先锋"],"peak":72,"peakYear":2023,"peakClub":"TOP","lastYear":2023,"lastClub":"TOP","tier1":false,"coach":false,"img":"Hv2035.webp"},{"id":"Hv5642","ign":"chrollo","real":"عمر حسين","nat":"eg","region":"EMEA","birth":"2002-03-17","age":23,"ageEstimated":false,"role":"控场","roles":["控场"],"peak":72,"peakYear":2025,"peakClub":"RAAD","lastYear":2025,"lastClub":"RAAD","tier1":false,"coach":true,"img":"Hv5642.webp"},{"id":"Hv22266","ign":"unrivaled","real":"Francisco Barata","nat":"pt","region":"EMEA","birth":null,"age":21,"ageEstimated":true,"role":"先锋","roles":["先锋"],"peak":72,"peakYear":2023,"peakClub":"Patr","lastYear":2023,"lastClub":"Patr","tier1":false,"coach":false,"img":"Hv22266.webp"},{"id":"Hv1353","ign":"Dext","real":"Norbert Paulovčák","nat":"sk","region":"EMEA","birth":"2004-02-24","age":21,"ageEstimated":false,"role":"哨卫","roles":["哨卫","控场"],"peak":72,"peakYear":2023,"peakClub":"EGN","lastYear":2023,"lastClub":"EGN","tier1":false,"coach":false,"img":"Hv1353.webp"},{"id":"Hv8225","ign":"f1cio","real":"Hoàng Ngọc Sơn","nat":"vn","region":"Pacific","birth":"2005-08-15","age":20,"ageEstimated":false,"role":"决斗者","roles":["决斗者","哨卫","控场"],"peak":72,"peakYear":2023,"peakClub":"FCY","lastYear":2023,"lastClub":"FCY","tier1":false,"coach":false,"img":"Hv8225.webp"},{"id":"Hv4089","ign":"DOXZ3R","real":"Soumyadeep Dey","nat":"in","region":"Pacific","birth":"1999-10-20","age":26,"ageEstimated":false,"role":"先锋","roles":["先锋","控场"],"peak":71,"peakYear":2025,"peakClub":"Miss","lastYear":2025,"lastClub":"Miss","tier1":false,"coach":false,"img":"Hv4089.webp"},{"id":"Hv2879","ign":"dimaxx","real":"Дмитро Палій","nat":"pt","region":"EMEA","birth":"2002-10-28","age":23,"ageEstimated":false,"role":"先锋","roles":["先锋"],"peak":71,"peakYear":2024,"peakClub":"KPI","lastYear":2024,"lastClub":"KPI","tier1":false,"coach":false,"img":"Hv2879.webp"},{"id":"Hv3806","ign":"xenon","real":"Владимир Лобов","nat":"ru","region":"EMEA","birth":"1995-09-30","age":30,"ageEstimated":false,"role":"控场","roles":["控场","先锋"],"peak":71,"peakYear":2024,"peakClub":"Team","lastYear":2024,"lastClub":"Team","tier1":false,"coach":true,"img":"Hv3806.webp"},{"id":"Hv2483","ign":"PoPiFresH","real":"Mario González","nat":"es","region":"EMEA","birth":"1997-08-27","age":28,"ageEstimated":false,"role":"决斗者","roles":["决斗者"],"peak":71,"peakYear":2023,"peakClub":"TQ","lastYear":2023,"lastClub":"TQ","tier1":false,"coach":false,"img":"Hv2483.webp"},{"id":"Hv6702","ign":"bazz","real":"Naoya Matsuyama","nat":"jp","region":"Pacific","birth":"2000-04-24","age":25,"ageEstimated":false,"role":"控场","roles":["控场"],"peak":71,"peakYear":2023,"peakClub":"FAV","lastYear":2023,"lastClub":"FAV","tier1":false,"coach":false,"img":"Hv6702.webp"},{"id":"Hv13221","ign":"azys","real":"Azis Nandang","nat":"ph","region":"Pacific","birth":"2002-03-17","age":23,"ageEstimated":false,"role":"决斗者","roles":["决斗者","先锋"],"peak":71,"peakYear":2025,"peakClub":"RNTX","lastYear":2025,"lastClub":"RNTX","tier1":false,"coach":false,"img":"Hv13221.webp"},{"id":"Hv4385","ign":"monSi","real":"Ludovic Lefebvre","nat":"ca","region":"Americas","birth":"2002-07-22","age":23,"ageEstimated":false,"role":"控场","roles":["控场"],"peak":71,"peakYear":2024,"peakClub":"BLIN","lastYear":2024,"lastClub":"BLIN","tier1":false,"coach":true,"img":"Hv4385.webp"},{"id":"Hv1585","ign":"gtn","real":"Gustavo Moura","nat":"br","region":"Americas","birth":null,"age":21,"ageEstimated":true,"role":"先锋","roles":["先锋","哨卫","决斗者"],"peak":71,"peakYear":2023,"peakClub":"RED","lastYear":2023,"lastClub":"RED","tier1":false,"coach":false,"img":"Hv1585.webp"},{"id":"Hv22676","ign":"VenTT","real":"Emre Bozkurt","nat":"tr","region":"EMEA","birth":"2003-07-04","age":22,"ageEstimated":false,"role":"控场","roles":["控场"],"peak":71,"peakYear":2023,"peakClub":"SUR","lastYear":2023,"lastClub":"SUR","tier1":false,"coach":false,"img":"Hv22676.webp"},{"id":"Hv14254","ign":"gin","real":"Phan Văn Gin","nat":"vn","region":"Pacific","birth":"2003-10-03","age":22,"ageEstimated":false,"role":"决斗者","roles":["决斗者"],"peak":71,"peakYear":2023,"peakClub":"FCY","lastYear":2023,"lastClub":"FCY","tier1":false,"coach":false,"img":"Hv14254.webp"},{"id":"Hv8892","ign":"snw","real":"Miguel Marcondes","nat":"br","region":"Americas","birth":"2002-12-22","age":23,"ageEstimated":false,"role":"决斗者","roles":["决斗者"],"peak":71,"peakYear":2024,"peakClub":"RETA","lastYear":2024,"lastClub":"RETA","tier1":false,"coach":false,"img":"Hv8892.webp"},{"id":"Hv1944","ign":"caydeN","real":"Yari Olmi","nat":"it","region":"EMEA","birth":"1999-07-15","age":26,"ageEstimated":false,"role":"控场","roles":["控场","决斗者","先锋"],"peak":71,"peakYear":2024,"peakClub":"DSY","lastYear":2024,"lastClub":"DSY","tier1":false,"coach":false,"img":"Hv1944.webp"},{"id":"Hv17089","ign":"Xiaonuo","real":null,"nat":"cn","region":"China","birth":"2002-06-24","age":23,"ageEstimated":false,"role":"控场","roles":["控场","哨卫"],"peak":71,"peakYear":2024,"peakClub":"RNG","lastYear":2024,"lastClub":"RNG","tier1":false,"coach":false,"img":"Hv17089.webp"},{"id":"Hv4711","ign":"XiaoFei","real":"Yi Zhang (张翊)","nat":"cn","region":"China","birth":null,"age":20,"ageEstimated":true,"role":"先锋","roles":["先锋","控场"],"peak":71,"peakYear":2024,"peakClub":"NWG","lastYear":2024,"lastClub":"NWG","tier1":false,"coach":false,"img":"Hv4711.webp"},{"id":"Hv5716","ign":"Maverick","real":"Henrique Tozatto","nat":"br","region":"Americas","birth":null,"age":21,"ageEstimated":true,"role":"控场","roles":["控场","先锋"],"peak":71,"peakYear":2023,"peakClub":"TOP","lastYear":2023,"lastClub":"TOP","tier1":false,"coach":false,"img":"Hv5716.webp"},{"id":"Hv11046","ign":"deigara","real":"Gonzalo Funes","nat":"ar","region":"Americas","birth":"1997-11-17","age":28,"ageEstimated":false,"role":"控场","roles":["控场","先锋"],"peak":71,"peakYear":2023,"peakClub":"9ZG","lastYear":2023,"lastClub":"9ZG","tier1":false,"coach":true,"img":"Hv11046.webp"},{"id":"Hv4556","ign":"txddy","real":"Sergio Oliveira","nat":"br","region":"Americas","birth":null,"age":21,"ageEstimated":true,"role":"哨卫","roles":["哨卫","控场"],"peak":71,"peakYear":2023,"peakClub":"RED","lastYear":2023,"lastClub":"RED","tier1":false,"coach":false,"img":"Hv4556.webp"},{"id":"Hv1567","ign":"bezn1","real":"Gabriel Luiz da Costa","nat":"br","region":"Americas","birth":"1997-10-16","age":28,"ageEstimated":false,"role":"哨卫","roles":["哨卫","先锋"],"peak":71,"peakYear":2023,"peakClub":"RED","lastYear":2023,"lastClub":"RED","tier1":false,"coach":false,"img":"Hv1567.webp"},{"id":"Hv5228","ign":"Minimise","real":"Jackson Nicholas White","nat":"au","region":"Pacific","birth":"2002-10-19","age":23,"ageEstimated":false,"role":"先锋","roles":["先锋","控场"],"peak":70,"peakYear":2025,"peakClub":"KING","lastYear":2025,"lastClub":"KING","tier1":false,"coach":false,"img":"Hv5228.webp"},{"id":"Hv7162","ign":"wackie","real":"Rikardo Birjukov","nat":"ee","region":"EMEA","birth":"2000-08-04","age":25,"ageEstimated":false,"role":"决斗者","roles":["决斗者"],"peak":70,"peakYear":2024,"peakClub":"DSY","lastYear":2024,"lastClub":"DSY","tier1":false,"coach":false,"img":"Hv7162.webp"},{"id":"Hv32351","ign":"cullumx","real":"Nikolaj Cullum Andersen","nat":"dk","region":"EMEA","birth":null,"age":30,"ageEstimated":true,"role":"决斗者","roles":["决斗者","哨卫"],"peak":70,"peakYear":2024,"peakClub":"Zero","lastYear":2024,"lastClub":"Zero","tier1":false,"coach":false,"img":"Hv32351.webp"},{"id":"Hv7530","ign":"kimmy","real":"Dominic Lee","nat":"sg","region":"Pacific","birth":null,"age":21,"ageEstimated":true,"role":"决斗者","roles":["决斗者","先锋"],"peak":70,"peakYear":2024,"peakClub":"LESS","lastYear":2024,"lastClub":"LESS","tier1":false,"coach":true,"img":"Hv7530.webp"},{"id":"Hv14928","ign":"ChiaWei","real":"張家偉","nat":"tw","region":"Pacific","birth":"1996-10-31","age":29,"ageEstimated":false,"role":"先锋","roles":["先锋"],"peak":70,"peakYear":2024,"peakClub":"ONE","lastYear":2024,"lastClub":"ONE","tier1":false,"coach":false,"img":"Hv14928.webp"},{"id":"Hv5255","ign":"Neal X","real":"Lee Jae-yong","nat":"kr","region":"China","birth":null,"age":21,"ageEstimated":true,"role":"决斗者","roles":["决斗者"],"peak":70,"peakYear":2024,"peakClub":"NOP","lastYear":2024,"lastClub":"NOP","tier1":false,"coach":false,"img":"Hv5255.webp"},{"id":"Hv1291","ign":"bnj","real":"Benjamin Rabinovich","nat":"ar","region":"Americas","birth":"2000-11-23","age":25,"ageEstimated":false,"role":"控场","roles":["控场","先锋"],"peak":70,"peakYear":2023,"peakClub":"RED","lastYear":2023,"lastClub":"RED","tier1":false,"coach":false,"img":"Hv1291.webp"},{"id":"Hv1830","ign":"HighKitty","real":"Fabian Schultze","nat":"de","region":"EMEA","birth":"1997-03-02","age":28,"ageEstimated":false,"role":"决斗者","roles":["决斗者","哨卫"],"peak":70,"peakYear":2023,"peakClub":"Patr","lastYear":2023,"lastClub":"Patr","tier1":false,"coach":false,"img":"Hv1830.webp"},{"id":"Hv4214","ign":"Eso177","real":"Станислав Николов","nat":"bg","region":"EMEA","birth":"2001-11-17","age":24,"ageEstimated":false,"role":"先锋","roles":["先锋","哨卫"],"peak":70,"peakYear":2023,"peakClub":"EGN","lastYear":2023,"lastClub":"EGN","tier1":false,"coach":false,"img":"Hv4214.webp"},{"id":"Hv26789","ign":"pdr","real":"Pedro Sousa","nat":"pt","region":"EMEA","birth":"2000-06-02","age":25,"ageEstimated":false,"role":"控场","roles":["控场"],"peak":70,"peakYear":2023,"peakClub":"EGN","lastYear":2023,"lastClub":"EGN","tier1":false,"coach":false,"img":"Hv26789.webp"},{"id":"Hv18704","ign":"LeVi","real":"Rajiv Satpute","nat":"in","region":"Pacific","birth":"2002-04-06","age":23,"ageEstimated":false,"role":"先锋","roles":["先锋"],"peak":70,"peakYear":2023,"peakClub":"OGS","lastYear":2023,"lastClub":"OGS","tier1":false,"coach":false,"img":"Hv18704.webp"},{"id":"Hv42702","ign":"Krizz","real":"Krzysztof Łukaszkiewicz","nat":"pl","region":"EMEA","birth":"2007-11-21","age":18,"ageEstimated":false,"role":"哨卫","roles":["哨卫","控场"],"peak":69,"peakYear":2025,"peakClub":"SM","lastYear":2025,"lastClub":"SM","tier1":false,"coach":false,"img":"Hv42702.webp"},{"id":"Hv16842","ign":"Mojer","real":"Jerome Literal","nat":"ph","region":"Pacific","birth":"2005-06-14","age":20,"ageEstimated":false,"role":"决斗者","roles":["决斗者"],"peak":69,"peakYear":2024,"peakClub":"NAOS","lastYear":2024,"lastClub":"NAOS","tier1":false,"coach":false,"img":"Hv16842.webp"},{"id":"Hv13848","ign":"WeboDeus","real":"Steffano Millones","nat":"pe","region":"Americas","birth":"2001-10-23","age":24,"ageEstimated":false,"role":"控场","roles":["控场"],"peak":69,"peakYear":2023,"peakClub":"N2O","lastYear":2023,"lastClub":"N2O","tier1":false,"coach":false,"img":"Hv13848.webp"},{"id":"Hv2662","ign":"Br0die","real":"Jack Emmott","nat":"gb","region":"EMEA","birth":null,"age":21,"ageEstimated":true,"role":"先锋","roles":["先锋","控场"],"peak":69,"peakYear":2023,"peakClub":"ACE","lastYear":2023,"lastClub":"ACE","tier1":false,"coach":false,"img":"Hv2662.webp"},{"id":"Hv7883","ign":"silenttt","real":"Nuno Rodrigues","nat":"pt","region":"EMEA","birth":"2001-10-29","age":24,"ageEstimated":false,"role":"哨卫","roles":["哨卫","控场"],"peak":69,"peakYear":2023,"peakClub":"EGN","lastYear":2023,"lastClub":"EGN","tier1":false,"coach":false,"img":"Hv7883.webp"},{"id":"Hv2464","ign":"suther","real":"Tomás Zurita","nat":"cl","region":"Americas","birth":"2000-11-01","age":25,"ageEstimated":false,"role":"决斗者","roles":["决斗者","哨卫"],"peak":68,"peakYear":2024,"peakClub":"RETA","lastYear":2024,"lastClub":"RETA","tier1":false,"coach":false,"img":"Hv2464.webp"},{"id":"Hv402","ign":"Insider","real":"Артём Пузанов","nat":"ru","region":"EMEA","birth":"2001-01-25","age":24,"ageEstimated":false,"role":"哨卫","roles":["哨卫","先锋","控场"],"peak":68,"peakYear":2024,"peakClub":"KPI","lastYear":2024,"lastClub":"KPI","tier1":false,"coach":false,"img":"Hv402.webp"},{"id":"Hv1999","ign":"RND","real":"Ronaldo Kanashiro","nat":"br","region":"Americas","birth":null,"age":21,"ageEstimated":true,"role":"哨卫","roles":["哨卫","先锋","决斗者"],"peak":68,"peakYear":2023,"peakClub":"RED","lastYear":2023,"lastClub":"RED","tier1":false,"coach":false,"img":"Hv1999.webp"},{"id":"Hv6674","ign":"makiba","real":"宮本 暁","nat":"jp","region":"Americas","birth":"2003-02-03","age":22,"ageEstimated":false,"role":"控场","roles":["控场"],"peak":68,"peakYear":2023,"peakClub":"CR","lastYear":2023,"lastClub":"CR","tier1":false,"coach":false,"img":"Hv6674.webp"},{"id":"Hv4650","ign":"GANGAZI","real":"Choi Min-yong (최민용)","nat":"kr","region":"Pacific","birth":null,"age":21,"ageEstimated":true,"role":"哨卫","roles":["哨卫","决斗者","先锋"],"peak":68,"peakYear":2023,"peakClub":"Team","lastYear":2023,"lastClub":"Team","tier1":false,"coach":false,"img":"Hv4650.webp"},{"id":"Hv5639","ign":"Shalaby","real":"محمد شلبي","nat":"eg","region":"EMEA","birth":"2002-03-14","age":23,"ageEstimated":false,"role":"先锋","roles":["先锋","决斗者"],"peak":68,"peakYear":2025,"peakClub":"RAAD","lastYear":2025,"lastClub":"RAAD","tier1":false,"coach":false,"img":"Hv5639.webp"},{"id":"Hv24428","ign":"harambe","real":null,"nat":"lv","region":"EMEA","birth":null,"age":23,"ageEstimated":true,"role":"决斗者","roles":["决斗者"],"peak":68,"peakYear":2024,"peakClub":"RQM","lastYear":2024,"lastClub":"RQM","tier1":false,"coach":false,"img":"Hv24428.webp"},{"id":"Hv34032","ign":"grumble","real":"Ong Jing Zhou","nat":"sg","region":"Pacific","birth":null,"age":23,"ageEstimated":true,"role":"先锋","roles":["先锋"],"peak":68,"peakYear":2024,"peakClub":"LESS","lastYear":2024,"lastClub":"LESS","tier1":false,"coach":false,"img":"Hv34032.webp"},{"id":"Hv31390","ign":"Boogeyyy","real":"Khilo M. Azucena","nat":"ph","region":"Pacific","birth":"2005-05-07","age":20,"ageEstimated":false,"role":"哨卫","roles":["哨卫","先锋","决斗者"],"peak":68,"peakYear":2024,"peakClub":"NCG","lastYear":2024,"lastClub":"NCG","tier1":false,"coach":false,"img":"Hv31390.webp"},{"id":"Hv8573","ign":"Worship","real":"Ian Ga","nat":"ph","region":"Pacific","birth":null,"age":21,"ageEstimated":true,"role":"先锋","roles":["先锋","控场"],"peak":68,"peakYear":2024,"peakClub":"NCG","lastYear":2024,"lastClub":"NCG","tier1":false,"coach":false,"img":"Hv8573.webp"},{"id":"Hv2403","ign":"mizu","real":"Gabriel González","nat":"ar","region":"Americas","birth":"1999-10-05","age":26,"ageEstimated":false,"role":"决斗者","roles":["决斗者","哨卫","先锋"],"peak":68,"peakYear":2023,"peakClub":"9ZG","lastYear":2023,"lastClub":"9ZG","tier1":false,"coach":true,"img":"Hv2403.webp"},{"id":"Hv26792","ign":"Hax","real":null,"nat":"pt","region":"EMEA","birth":null,"age":24,"ageEstimated":true,"role":"决斗者","roles":["决斗者"],"peak":68,"peakYear":2023,"peakClub":"EGN","lastYear":2023,"lastClub":"EGN","tier1":false,"coach":false,"img":"Hv26792.webp"},{"id":"Hv10550","ign":"Xuto","real":"Renato Salazar","nat":"pe","region":"Americas","birth":"2002-02-05","age":23,"ageEstimated":false,"role":"决斗者","roles":["决斗者","哨卫"],"peak":66,"peakYear":2023,"peakClub":"N2O","lastYear":2024,"lastClub":"BMC","tier1":false,"coach":false,"img":"Hv10550.webp"},{"id":"Hv20251","ign":"vit9ine","real":"Vitor Hugo","nat":"br","region":"Americas","birth":null,"age":19,"ageEstimated":true,"role":"控场","roles":["控场","哨卫"],"peak":66,"peakYear":2024,"peakClub":"IMP","lastYear":2024,"lastClub":"IMP","tier1":false,"coach":false,"img":"Hv20251.webp"},{"id":"Hv7381","ign":"RedKoh","real":"Danial Hakim","nat":"sg","region":"Pacific","birth":"2000-07-05","age":25,"ageEstimated":false,"role":"控场","roles":["控场","哨卫","先锋"],"peak":66,"peakYear":2024,"peakClub":"LESS","lastYear":2024,"lastClub":"LESS","tier1":false,"coach":true,"img":"Hv7381.webp"},{"id":"Hv14435","ign":"XXXTACO","real":"Li Xu (许立)","nat":"cn","region":"China","birth":null,"age":20,"ageEstimated":true,"role":"先锋","roles":["先锋"],"peak":66,"peakYear":2024,"peakClub":"NOP","lastYear":2024,"lastClub":"NOP","tier1":false,"coach":false,"img":"Hv14435.webp"},{"id":"Hv1378","ign":"Addicted","real":"Eduardo Torres","nat":"pt","region":"EMEA","birth":"1996-06-08","age":29,"ageEstimated":false,"role":"先锋","roles":["先锋","控场"],"peak":66,"peakYear":2023,"peakClub":"SAW","lastYear":2023,"lastClub":"SAW","tier1":false,"coach":false,"img":"Hv1378.webp"},{"id":"Hv10661","ign":"Phantom","real":"中井 英明","nat":"jp","region":"Pacific","birth":"2000-04-04","age":25,"ageEstimated":false,"role":"哨卫","roles":["哨卫","先锋","控场"],"peak":66,"peakYear":2023,"peakClub":"FAV","lastYear":2023,"lastClub":"FAV","tier1":false,"coach":false,"img":"Hv10661.webp"},{"id":"Hv39494","ign":"Yueluo","real":"尹志炜","nat":"cn","region":"China","birth":"2005-01-30","age":20,"ageEstimated":false,"role":"先锋","roles":["先锋"],"peak":66,"peakYear":2023,"peakClub":"RA","lastYear":2023,"lastClub":"RA","tier1":false,"coach":false,"img":"Hv39494.webp"},{"id":"Hv38363","ign":"Zhelick","real":"Ari Arbieto","nat":"pe","region":"Americas","birth":"2004-02-09","age":21,"ageEstimated":false,"role":"先锋","roles":["先锋","决斗者"],"peak":66,"peakYear":2024,"peakClub":"RDY","lastYear":2024,"lastClub":"RDY","tier1":false,"coach":false,"img":"Hv38363.webp"},{"id":"Hv29638","ign":"Kotaro","real":null,"nat":"es","region":"Americas","birth":null,"age":29,"ageEstimated":true,"role":"哨卫","roles":["哨卫","控场"],"peak":66,"peakYear":2024,"peakClub":"IMP","lastYear":2024,"lastClub":"IMP","tier1":false,"coach":false,"img":"Hv29638.webp"},{"id":"Hv40858","ign":"raised","real":null,"nat":"br","region":"Americas","birth":null,"age":28,"ageEstimated":true,"role":"决斗者","roles":["决斗者"],"peak":66,"peakYear":2024,"peakClub":"BHS","lastYear":2024,"lastClub":"BHS","tier1":false,"coach":false,"img":"Hv40858.webp"},{"id":"Hv7726","ign":"Yanagi","real":"Jeremy Edward V.","nat":"ph","region":"Pacific","birth":"1997-11-10","age":28,"ageEstimated":false,"role":"哨卫","roles":["哨卫","决斗者"],"peak":66,"peakYear":2024,"peakClub":"NCG","lastYear":2024,"lastClub":"NCG","tier1":false,"coach":false,"img":"Hv7726.webp"},{"id":"Hv26808","ign":"fainz","real":"Pedro Monteiro","nat":"pt","region":"EMEA","birth":"1999-03-16","age":26,"ageEstimated":false,"role":"决斗者","roles":["决斗者","哨卫"],"peak":66,"peakYear":2023,"peakClub":"EGN","lastYear":2023,"lastClub":"EGN","tier1":false,"coach":false,"img":"Hv26808.webp"},{"id":"Hv12474","ign":"Tag","real":"Alessandro Voci","nat":"it","region":"EMEA","birth":"2004-04-03","age":21,"ageEstimated":false,"role":"决斗者","roles":["决斗者","先锋"],"peak":65,"peakYear":2023,"peakClub":"DSY","lastYear":2024,"lastClub":"DSY","tier1":false,"coach":false,"img":"Hv12474.webp"},{"id":"Hv36596","ign":"XJian","real":"Ma Lijian (马立健)","nat":"cn","region":"China","birth":null,"age":20,"ageEstimated":true,"role":"控场","roles":["控场"],"peak":65,"peakYear":2023,"peakClub":"GK","lastYear":2023,"lastClub":"GK","tier1":false,"coach":false,"img":"Hv36596.webp"},{"id":"Hv17216","ign":"UCc","real":"Wang Ziyi (王梓译)","nat":"tw","region":"China","birth":null,"age":24,"ageEstimated":true,"role":"控场","roles":["控场"],"peak":64,"peakYear":2025,"peakClub":"KBG","lastYear":2025,"lastClub":"KBG","tier1":false,"coach":false,"img":"Hv17216.webp"},{"id":"Hv4040","ign":"nEzz","real":"김범진","nat":"kr","region":"Americas","birth":null,"age":26,"ageEstimated":true,"role":"先锋","roles":["先锋"],"peak":64,"peakYear":2024,"peakClub":"NC","lastYear":2024,"lastClub":"NC","tier1":false,"coach":false,"img":"Hv4040.webp"},{"id":"Hv24003","ign":"W1chi","real":"Edgar Begazo","nat":"pe","region":"Americas","birth":null,"age":21,"ageEstimated":true,"role":"先锋","roles":["先锋","决斗者"],"peak":64,"peakYear":2023,"peakClub":"N2O","lastYear":2023,"lastClub":"N2O","tier1":false,"coach":false,"img":"Hv24003.webp"},{"id":"Hv51538","ign":"mika","real":"Shriniti Bhosale","nat":"in","region":"Pacific","birth":null,"age":27,"ageEstimated":true,"role":"哨卫","roles":["哨卫"],"peak":63,"peakYear":2025,"peakClub":"ORES","lastYear":2025,"lastClub":"ORES","tier1":false,"coach":false,"img":"Hv51538.webp"},{"id":"Hv41053","ign":"Snail","real":"朱东楠","nat":"cn","region":"China","birth":null,"age":20,"ageEstimated":true,"role":"先锋","roles":["先锋"],"peak":63,"peakYear":2025,"peakClub":"KBG","lastYear":2025,"lastClub":"KBG","tier1":false,"coach":false,"img":"Hv41053.webp"},{"id":"Hv5013","ign":"cxyy","real":"崔新宇","nat":"cn","region":"China","birth":"2001-02-02","age":24,"ageEstimated":false,"role":"控场","roles":["控场"],"peak":63,"peakYear":2024,"peakClub":"NWG","lastYear":2024,"lastClub":"NWG","tier1":false,"coach":false,"img":"Hv5013.webp"},{"id":"Hv23983","ign":"Feysend","real":"Felipe Andres Sanchez Rojas","nat":"cl","region":"Americas","birth":"1998-06-29","age":27,"ageEstimated":false,"role":"控场","roles":["控场"],"peak":61,"peakYear":2024,"peakClub":"BMC","lastYear":2024,"lastClub":"BMC","tier1":false,"coach":false,"img":"Hv23983.webp"},{"id":"Hv5541","ign":"tryst","real":"Jit Dutta Choudhury","nat":"in","region":"Pacific","birth":"2002-10-09","age":23,"ageEstimated":false,"role":"哨卫","roles":["哨卫","控场"],"peak":60,"peakYear":2025,"peakClub":"Miss","lastYear":2025,"lastClub":"Miss","tier1":false,"coach":false,"img":"Hv5541.webp"},{"id":"Hv2911","ign":"adi","real":"Marco Maureira","nat":"cl","region":"Americas","birth":"1994-12-29","age":31,"ageEstimated":false,"role":"先锋","roles":["先锋","哨卫"],"peak":60,"peakYear":2024,"peakClub":"BMC","lastYear":2024,"lastClub":"BMC","tier1":false,"coach":false,"img":"Hv2911.webp"},{"id":"Hv4311","ign":"Star1og","real":"Jun Chao Liang (梁竣超)","nat":"cn","region":"China","birth":null,"age":20,"ageEstimated":true,"role":"控场","roles":["控场"],"peak":60,"peakYear":2024,"peakClub":"NOP","lastYear":2024,"lastClub":"NOP","tier1":false,"coach":false,"img":"Hv4311.webp"},{"id":"Hv5600","ign":"Moh","real":"محمد عبدالعزيز","nat":"sa","region":"EMEA","birth":"2000-11-03","age":25,"ageEstimated":false,"role":"控场","roles":["控场","决斗者"],"peak":59,"peakYear":2024,"peakClub":"FLC","lastYear":2024,"lastClub":"FLC","tier1":false,"coach":false,"img":"Hv5600.webp"},{"id":"Hv1618","ign":"SpYzera","real":"عبد دوغان","nat":"lb","region":"EMEA","birth":"1999-08-16","age":26,"ageEstimated":false,"role":"决斗者","roles":["决斗者","先锋"],"peak":56,"peakYear":2024,"peakClub":"FLC","lastYear":2024,"lastClub":"FLC","tier1":false,"coach":false,"img":"Hv1618.webp"},{"id":"Hv5601","ign":"OuTLaW","real":"عبد الله سليمان السالم","nat":"sa","region":"EMEA","birth":"1999-09-02","age":26,"ageEstimated":false,"role":"控场","roles":["控场","先锋"],"peak":55,"peakYear":2024,"peakClub":"FLC","lastYear":2024,"lastClub":"FLC","tier1":false,"coach":false,"img":"Hv5601.webp"}]'),
+    ct = {
+        players: ot
+    },
+    t0 = ct.players ?? [],
+    ut = new Map(t0.map(e => [e.id, e])),
+    r0 = 6,
+    w0 = 300,
+    l0 = () => ({
+        day: null,
+        guesses: [],
+        paid: !1,
+        solved: !1,
+        done: !1,
+        streak: 0,
+        best: 0,
+        total: 0
+    }),
+    oe = ["player", "agent", "team", "player", "map", "team", "player"],
+    gt = e => Math.floor(Date.parse(`${e}T00:00:00Z`) / 864e5);
+
+function aa(e, a = "") {
+    const t = gt(e) + (a ? B(`kind:${a}`) : 0);
+    return oe[(t % oe.length + oe.length) % oe.length]
+}
+const A0 = new Set(P.filter(e => e.tier === 1).map(e => e.id)),
+    xe = e => Pa[e] ?? e,
+    pt = () => [...je.map(e => {
+        var a;
+        return {
+            id: e.id,
+            name: e.ign,
+            hint: `${((a=P.find(t=>t.id===e.teamId))==null?void 0:a.tag)??"自由"} · ${xe(e.region)}`
+        }
+    }), ...t0.map(e => ({
+        id: e.id,
+        name: e.ign,
+        hint: `退役 · ${xe(e.region)}`
+    }))],
+    dt = () => P.map(e => ({
+        id: e.id,
+        name: e.name,
+        hint: `${e.tag} · ${xe(e.region)}`
+    })),
+    ft = () => $0.map(e => ({
+        id: e,
+        name: q0(e),
+        hint: e
+    })),
+    bt = () => z0.map(e => ({
+        id: e,
+        name: K0(e),
+        hint: `${e}${we(e)?` · ${we(e)}`:""}`
+    }));
+
+function we(e) {
+    for (const [a, t] of Object.entries(Oa))
+        if (a !== "自由人" && t.includes(e)) return a;
+    return null
+}
+const mt = {
+    player: "选手",
+    team: "战队",
+    map: "地图",
+    agent: "英雄"
+};
+let Ie = null;
+
+function s0() {
+    return Ie || (Ie = [
+        ["player", pt()],
+        ["team", dt()],
+        ["map", ft()],
+        ["agent", bt()]
+    ].flatMap(([e, a]) => a.map(t => ({
+        ...t,
+        kind: e
+    })))), Ie
+}
+const ht = e => {
+    var a;
+    return ((a = s0().find(t => t.id === e)) == null ? void 0 : a.kind) ?? null
+};
+
+function ta(e) {
+    return e === "player" ? je.filter(a => {
+        var t, r;
+        return A0.has(a.teamId ?? "") && !!((r = (t = Ke.players) == null ? void 0 : t[a.id]) != null && r.img)
+    }).map(a => a.id).concat(t0.filter(a => a.tier1).map(a => a.id)) : e === "team" ? P.filter(a => A0.has(a.id)).map(a => a.id) : e === "map" ? $0.slice() : z0.slice()
+}
+
+function kt(e, a = "") {
+    const t = aa(e, a),
+        r = ta(t);
+    return r[B(`challenge:${t}:${e}:${a}`) % r.length]
+}
+const ce = (e, a, t) => e === a ? "hit" : Math.abs(e - a) <= t ? "near" : e < a ? "up" : "down",
+    N = (e, a) => e === a ? "hit" : "miss";
+
+function V(e, a) {
+    var t, r;
+    if (e === "player") {
+        const l = ((t = Ke.players) == null ? void 0 : t[a]) ?? ((r = Ke.hist) == null ? void 0 : r[a]);
+        return l != null && l.img ? `faces/${l.img}` : void 0
+    }
+    return e === "team" ? `logos/${a}.webp` : e === "map" ? `maps/${a}.webp` : `agents/${a.replace(/[^A-Za-z]/g,"")}.webp`
+}
+
+function S0(e) {
+    var r;
+    const a = je.find(l => l.id === e);
+    if (a) return {
+        id: a.id,
+        ign: a.ign,
+        region: a.region,
+        teamId: a.teamId,
+        teamTag: ((r = P.find(l => l.id === a.teamId)) == null ? void 0 : r.tag) ?? "自由",
+        role: a.role,
+        roles: a.roles,
+        nat: a.nat,
+        age: a.age,
+        overall: Ra(a.id, a.overall)
+    };
+    const t = ut.get(e);
+    return t ? {
+        id: t.id,
+        ign: t.ign,
+        region: t.region,
+        teamId: "retired",
+        teamTag: "退役",
+        role: t.role,
+        roles: t.roles,
+        nat: t.nat,
+        age: t.age,
+        overall: t.peak
+    } : null
+}
+
+function ra(e, a, t) {
+    var s;
+    const r = ht(t) ?? e,
+        l = {
+            label: "类型",
+            value: mt[r],
+            mark: N(r, e)
+        };
+    if (r !== e) {
+        const n = ((s = s0().find(i => i.id === t)) == null ? void 0 : s.name) ?? t;
+        return {
+            id: t,
+            name: n,
+            img: V(r, t),
+            cells: [l]
+        }
+    }
+    if (e === "player") {
+        const n = S0(a),
+            i = S0(t);
+        if (!n || !i) return {
+            id: t,
+            name: t,
+            cells: []
+        };
+        const o = new Set(i.roles ?? [i.role]),
+            c = (n.roles ?? [n.role]).some(u => o.has(u));
+        return {
+            id: i.id,
+            name: i.ign,
+            img: V("player", i.id),
+            cells: [l, {
+                label: "赛区",
+                value: String(i.region),
+                mark: N(i.region, n.region)
+            }, {
+                label: "战队",
+                value: i.teamTag,
+                mark: N(i.teamId, n.teamId)
+            }, {
+                label: "状态",
+                value: i.teamId === "retired" ? "退役" : "现役",
+                mark: N(i.teamId === "retired", n.teamId === "retired")
+            }, {
+                label: "位置",
+                value: String(i.role),
+                mark: i.role === n.role ? "hit" : c ? "near" : "miss"
+            }, {
+                label: "国籍",
+                value: B0(i.nat),
+                mark: N(i.nat, n.nat) === "hit" ? "hit" : me(i.nat) && me(i.nat) === me(n.nat) ? "near" : "miss"
+            }, {
+                label: "年龄",
+                value: String(i.age),
+                mark: ce(i.age, n.age, 1)
+            }, {
+                label: "能力",
+                value: i.teamId === "retired" ? `约${i.overall}` : String(i.overall),
+                mark: ce(i.overall, n.overall, 2)
+            }]
+        }
+    }
+    if (e === "team") {
+        const n = P.find(o => o.id === a),
+            i = P.find(o => o.id === t);
+        return !n || !i ? {
+            id: t,
+            name: t,
+            cells: []
+        } : {
+            id: i.id,
+            name: i.name,
+            img: V("team", i.id),
+            cells: [l, {
+                label: "赛区",
+                value: String(i.region),
+                mark: N(i.region, n.region)
+            }, {
+                label: "分级",
+                value: i.tier === 1 ? "VCT" : "次级",
+                mark: N(i.tier, n.tier)
+            }, {
+                label: "首字母",
+                value: i.tag.slice(0, 1),
+                mark: N(i.tag[0], n.tag[0])
+            }, {
+                label: "评分",
+                value: String(i.rating),
+                mark: ce(i.rating, n.rating, 2)
+            }, {
+                label: "声望",
+                value: String(Math.round(i.reputation)),
+                mark: ce(i.reputation, n.reputation, 4)
+            }]
+        }
+    }
+    if (e === "agent") {
+        const n = we(t);
+        return {
+            id: t,
+            name: K0(t),
+            img: V("agent", t),
+            cells: [l, {
+                label: "定位",
+                value: n ?? "?",
+                mark: N(n, we(a))
+            }]
+        }
+    }
+    return {
+        id: t,
+        name: q0(t),
+        img: V("map", t),
+        cells: [l]
+    }
+}
+const Zr = e => Math.min(1, e / (r0 - 1)),
+    Vr = e => e >= r0 - 1 ? 1 / 0 : Math.round(6 * 1.68 ** e),
+    i0 = 36e5,
+    la = 8 * i0,
+    Ue = e => new Date(e + la).toISOString().slice(0, 10),
+    Ct = e => {
+        const a = new Date(`${e}T00:00:00Z`);
+        return a.setUTCDate(a.getUTCDate() + 1), a.toISOString().slice(0, 10)
+    },
+    vt = e => typeof e == "number" && Number.isInteger(e) && e >= 0 && e <= 23;
+
+function sa(e, a) {
+    if (!e) return 0;
+    const t = e.hourFrom && a < e.hourFrom ? e.prevHour : e.hour;
+    return vt(t) ? t : 0
+}
+
+function jr(e, a) {
+    return Ue(a - sa(e, Ue(a)) * i0)
+}
+
+function Jr(e, a) {
+    const t = Ue(a),
+        r = s => Date.parse(`${s}T00:00:00Z`) - la + sa(e, s) * i0,
+        l = r(t);
+    return l > a ? l : r(Ct(t))
+}
+const Et = 7,
+    yt = (e, a) => {
+        const t = new Date(`${e}T00:00:00Z`);
+        return t.setUTCDate(t.getUTCDate() + a), t.toISOString().slice(0, 10)
+    };
+
+function Wr(e, a) {
+    if (!(e != null && e.hourSetAt)) return null;
+    const t = yt(e.hourSetAt, Et);
+    return a < t ? t : null
+}
+
+function Yt(e, a) {
+    if (e.day === a) return e;
+    const t = new Date(`${a}T00:00:00Z`);
+    t.setUTCDate(t.getUTCDate() - 1);
+    const r = e.day === t.toISOString().slice(0, 10) && e.solved;
+    return e.day = a, e.guesses = [], e.paid = !1, e.solved = !1, e.done = !1, r || (e.streak = 0), e
+}
+const Xr = e => Math.max(0, r0 - e.guesses.length);
+
+function Qr(e, a) {
+    const t = e.challenge;
+    if (!t) return null;
+    if (t.day === a && t.done) return "这道题已结束，等下一题。";
+    const r = t.day === a && t.paid ? 0 : w0;
+    return e.coins < r ? `金币不够，入场要 ${w0} 金币` : null
+}
+let _e = null;
+
+function el() {
+    if (_e) return _e;
+    const e = s0().map(a => {
+        const t = a.kind ?? "player",
+            r = ra(t, a.id, a.id);
+        return `${t}:${a.id}:${r.cells.map(l=>l.value).join("|")}`
+    });
+    for (const a of ["player", "team", "map", "agent"]) e.push(`${a}#${ta(a).join(",")}`);
+    return _e = (B(e.join(`
+`)) >>> 0).toString(36)
+}
+
+function al(e, a) {
+    const t = e.challenge ?? (e.challenge = l0());
+    Yt(t, a);
+    const r = kt(a, e.id),
+        l = aa(a, e.id);
+    return {
+        kind: l,
+        answer: r,
+        state: t,
+        rows: t.guesses.map(s => ra(l, r, s))
+    }
+}
+const T0 = [{
+        map: "ascent",
+        name: "A 区",
+        x: .16,
+        y: .03,
+        s: .5,
+        spots: [
+            [.22, .244],
+            [.22, .343],
+            [.22, .354],
+            [.22, .42],
+            [.22, .431],
+            [.22, .442],
+            [.22, .453],
+            [.22, .464],
+            [.231, .233],
+            [.231, .244],
+            [.231, .343],
+            [.231, .354],
+            [.231, .464],
+            [.242, .101],
+            [.242, .112],
+            [.242, .123],
+            [.242, .134],
+            [.242, .145],
+            [.242, .156],
+            [.242, .178],
+            [.242, .189],
+            [.242, .2],
+            [.242, .211],
+            [.242, .233],
+            [.242, .244],
+            [.242, .255],
+            [.242, .266],
+            [.242, .288],
+            [.242, .343],
+            [.242, .354],
+            [.253, .101],
+            [.253, .112],
+            [.253, .134],
+            [.253, .156],
+            [.253, .167],
+            [.253, .277],
+            [.253, .288],
+            [.253, .343],
+            [.253, .354],
+            [.264, .112],
+            [.264, .134],
+            [.264, .156],
+            [.264, .167],
+            [.264, .178],
+            [.264, .189],
+            [.264, .2],
+            [.264, .277],
+            [.264, .343],
+            [.264, .354],
+            [.275, .101],
+            [.275, .112],
+            [.275, .123],
+            [.275, .134],
+            [.275, .145],
+            [.275, .156],
+            [.275, .343],
+            [.275, .354],
+            [.286, .101],
+            [.286, .112],
+            [.286, .123],
+            [.286, .134],
+            [.286, .145],
+            [.286, .156],
+            [.286, .167],
+            [.286, .178],
+            [.286, .189],
+            [.286, .2],
+            [.286, .277],
+            [.286, .299],
+            [.286, .321],
+            [.286, .332],
+            [.286, .343],
+            [.286, .354],
+            [.297, .101],
+            [.297, .112],
+            [.297, .134],
+            [.297, .145],
+            [.297, .156],
+            [.297, .167],
+            [.297, .178],
+            [.297, .189],
+            [.297, .2],
+            [.297, .277],
+            [.297, .288],
+            [.297, .299],
+            [.297, .31],
+            [.297, .453],
+            [.297, .464],
+            [.308, .101],
+            [.308, .112],
+            [.308, .123],
+            [.308, .134],
+            [.308, .145],
+            [.308, .156],
+            [.308, .167],
+            [.308, .178],
+            [.308, .189],
+            [.308, .2],
+            [.308, .277],
+            [.308, .288],
+            [.308, .464],
+            [.319, .101],
+            [.319, .112],
+            [.319, .123],
+            [.319, .134],
+            [.319, .145],
+            [.319, .156],
+            [.319, .167],
+            [.319, .178],
+            [.319, .189],
+            [.319, .2],
+            [.319, .277],
+            [.319, .288],
+            [.319, .453],
+            [.319, .464],
+            [.33, .101],
+            [.33, .145],
+            [.33, .156],
+            [.33, .167],
+            [.33, .189],
+            [.33, .277],
+            [.33, .288],
+            [.33, .299],
+            [.341, .101],
+            [.341, .112],
+            [.341, .123],
+            [.341, .134],
+            [.341, .145],
+            [.341, .156],
+            [.341, .167],
+            [.341, .178],
+            [.341, .189],
+            [.341, .2],
+            [.341, .277],
+            [.341, .288],
+            [.341, .299],
+            [.352, .101],
+            [.352, .112],
+            [.352, .123],
+            [.352, .134],
+            [.352, .145],
+            [.352, .156],
+            [.352, .167],
+            [.352, .178],
+            [.352, .189],
+            [.352, .2],
+            [.363, .101],
+            [.363, .112],
+            [.363, .123],
+            [.363, .134],
+            [.363, .145],
+            [.363, .156],
+            [.363, .167],
+            [.363, .178],
+            [.363, .2],
+            [.374, .101],
+            [.374, .112],
+            [.374, .123],
+            [.374, .134],
+            [.374, .145],
+            [.374, .156],
+            [.374, .167],
+            [.374, .178],
+            [.374, .189],
+            [.374, .2],
+            [.374, .211],
+            [.374, .277],
+            [.374, .288],
+            [.385, .101],
+            [.385, .112],
+            [.385, .123],
+            [.385, .134],
+            [.385, .145],
+            [.385, .156],
+            [.385, .167],
+            [.385, .189],
+            [.385, .2],
+            [.385, .211],
+            [.385, .255],
+            [.385, .266],
+            [.385, .277],
+            [.385, .288],
+            [.385, .299],
+            [.385, .31],
+            [.385, .321],
+            [.385, .332],
+            [.385, .343],
+            [.396, .101],
+            [.396, .112],
+            [.396, .134],
+            [.396, .145],
+            [.396, .156],
+            [.396, .167],
+            [.396, .178],
+            [.396, .189],
+            [.396, .2],
+            [.396, .211],
+            [.396, .222],
+            [.396, .244],
+            [.396, .255],
+            [.396, .277],
+            [.396, .288],
+            [.396, .299],
+            [.396, .31],
+            [.396, .321],
+            [.396, .332],
+            [.396, .343],
+            [.396, .464],
+            [.407, .101],
+            [.407, .112],
+            [.407, .123],
+            [.407, .134],
+            [.407, .145],
+            [.407, .156],
+            [.407, .167],
+            [.407, .178],
+            [.407, .189],
+            [.407, .2],
+            [.407, .211],
+            [.407, .255],
+            [.407, .266],
+            [.407, .277],
+            [.407, .288],
+            [.407, .299],
+            [.407, .31],
+            [.407, .321],
+            [.407, .332],
+            [.407, .343],
+            [.407, .453],
+            [.407, .464],
+            [.418, .134],
+            [.418, .145],
+            [.418, .156],
+            [.418, .332],
+            [.429, .145],
+            [.429, .453],
+            [.429, .464],
+            [.44, .145],
+            [.44, .332],
+            [.451, .145],
+            [.451, .321],
+            [.451, .332],
+            [.451, .343],
+            [.451, .365],
+            [.451, .376],
+            [.451, .387],
+            [.451, .398],
+            [.451, .42],
+            [.451, .431],
+            [.451, .442],
+            [.451, .453],
+            [.451, .464],
+            [.462, .145],
+            [.462, .266],
+            [.462, .321],
+            [.462, .332],
+            [.462, .343],
+            [.462, .398],
+            [.462, .42],
+            [.462, .431],
+            [.462, .442],
+            [.462, .453],
+            [.462, .464],
+            [.473, .145],
+            [.473, .321],
+            [.473, .332],
+            [.473, .343],
+            [.473, .354],
+            [.473, .42],
+            [.473, .431],
+            [.473, .442],
+            [.473, .453],
+            [.473, .464],
+            [.484, .123],
+            [.484, .134],
+            [.484, .145],
+            [.484, .156],
+            [.484, .167],
+            [.484, .178],
+            [.484, .2],
+            [.484, .211],
+            [.484, .222],
+            [.484, .233],
+            [.484, .244],
+            [.484, .255],
+            [.484, .266],
+            [.484, .42],
+            [.484, .431],
+            [.484, .442],
+            [.484, .453],
+            [.484, .464],
+            [.495, .255],
+            [.495, .266],
+            [.506, .42],
+            [.506, .431],
+            [.506, .442],
+            [.506, .453],
+            [.506, .464],
+            [.517, .266],
+            [.517, .42],
+            [.517, .431],
+            [.517, .442],
+            [.517, .453],
+            [.517, .464],
+            [.528, .244],
+            [.528, .255],
+            [.528, .266],
+            [.528, .277],
+            [.528, .42],
+            [.528, .431],
+            [.528, .442],
+            [.528, .453],
+            [.528, .464],
+            [.539, .255],
+            [.539, .266],
+            [.539, .277],
+            [.539, .42],
+            [.539, .431],
+            [.539, .442],
+            [.539, .453],
+            [.539, .464],
+            [.55, .244],
+            [.55, .255],
+            [.55, .266],
+            [.55, .277],
+            [.55, .42],
+            [.55, .431],
+            [.55, .442],
+            [.55, .453],
+            [.55, .464],
+            [.561, .244],
+            [.561, .255],
+            [.561, .266],
+            [.561, .277],
+            [.561, .42],
+            [.561, .431],
+            [.561, .442],
+            [.561, .453],
+            [.561, .464],
+            [.572, .244],
+            [.572, .255],
+            [.572, .266],
+            [.572, .277],
+            [.572, .42],
+            [.572, .431],
+            [.572, .442],
+            [.572, .453],
+            [.583, .244],
+            [.583, .255],
+            [.583, .266],
+            [.583, .42],
+            [.583, .431],
+            [.583, .442],
+            [.594, .244],
+            [.594, .255],
+            [.594, .266],
+            [.594, .277],
+            [.594, .42],
+            [.594, .431],
+            [.594, .442]
+        ]
+    }, {
+        map: "ascent",
+        name: "B 区",
+        x: .12,
+        y: .42,
+        s: .5,
+        spots: [
+            [.18, .48],
+            [.18, .491],
+            [.18, .502],
+            [.18, .513],
+            [.18, .524],
+            [.18, .535],
+            [.18, .557],
+            [.18, .623],
+            [.18, .634],
+            [.18, .656],
+            [.18, .667],
+            [.202, .48],
+            [.202, .656],
+            [.224, .48],
+            [.224, .667],
+            [.224, .678],
+            [.224, .733],
+            [.224, .744],
+            [.224, .755],
+            [.224, .766],
+            [.224, .777],
+            [.224, .788],
+            [.224, .81],
+            [.224, .821],
+            [.235, .48],
+            [.235, .656],
+            [.235, .667],
+            [.235, .689],
+            [.235, .7],
+            [.235, .711],
+            [.235, .722],
+            [.235, .733],
+            [.235, .744],
+            [.235, .788],
+            [.235, .799],
+            [.235, .81],
+            [.235, .832],
+            [.235, .843],
+            [.246, .656],
+            [.246, .667],
+            [.246, .678],
+            [.246, .755],
+            [.246, .766],
+            [.246, .799],
+            [.246, .81],
+            [.246, .821],
+            [.246, .832],
+            [.257, .645],
+            [.257, .656],
+            [.257, .667],
+            [.257, .678],
+            [.257, .733],
+            [.257, .755],
+            [.257, .788],
+            [.257, .799],
+            [.257, .81],
+            [.257, .821],
+            [.268, .656],
+            [.268, .667],
+            [.268, .689],
+            [.268, .711],
+            [.268, .733],
+            [.268, .755],
+            [.268, .766],
+            [.268, .777],
+            [.268, .788],
+            [.268, .799],
+            [.268, .81],
+            [.268, .821],
+            [.279, .491],
+            [.279, .535],
+            [.279, .557],
+            [.279, .568],
+            [.279, .634],
+            [.279, .645],
+            [.279, .656],
+            [.279, .667],
+            [.279, .689],
+            [.279, .7],
+            [.279, .711],
+            [.279, .733],
+            [.279, .788],
+            [.279, .799],
+            [.279, .81],
+            [.279, .832],
+            [.29, .48],
+            [.29, .491],
+            [.29, .502],
+            [.29, .524],
+            [.29, .546],
+            [.29, .557],
+            [.29, .568],
+            [.29, .612],
+            [.29, .634],
+            [.29, .645],
+            [.29, .656],
+            [.29, .667],
+            [.29, .678],
+            [.29, .689],
+            [.29, .7],
+            [.29, .733],
+            [.29, .755],
+            [.29, .766],
+            [.29, .777],
+            [.29, .832],
+            [.29, .854],
+            [.301, .48],
+            [.301, .491],
+            [.301, .513],
+            [.301, .535],
+            [.301, .546],
+            [.301, .557],
+            [.301, .568],
+            [.301, .579],
+            [.301, .612],
+            [.301, .634],
+            [.301, .645],
+            [.301, .656],
+            [.301, .667],
+            [.301, .678],
+            [.301, .689],
+            [.301, .711],
+            [.301, .755],
+            [.301, .766],
+            [.301, .777],
+            [.301, .788],
+            [.301, .799],
+            [.301, .821],
+            [.301, .832],
+            [.301, .854],
+            [.312, .48],
+            [.312, .491],
+            [.312, .502],
+            [.312, .524],
+            [.312, .535],
+            [.312, .579],
+            [.312, .612],
+            [.312, .645],
+            [.312, .667],
+            [.312, .678],
+            [.312, .7],
+            [.312, .711],
+            [.312, .766],
+            [.312, .799],
+            [.312, .81],
+            [.312, .821],
+            [.323, .48],
+            [.323, .491],
+            [.323, .546],
+            [.323, .568],
+            [.323, .579],
+            [.323, .612],
+            [.323, .623],
+            [.323, .645],
+            [.323, .656],
+            [.323, .667],
+            [.323, .7],
+            [.323, .711],
+            [.323, .722],
+            [.323, .777],
+            [.323, .799],
+            [.323, .81],
+            [.323, .821],
+            [.323, .832],
+            [.334, .491],
+            [.334, .502],
+            [.334, .568],
+            [.334, .579],
+            [.334, .634],
+            [.334, .645],
+            [.334, .656],
+            [.334, .7],
+            [.334, .711],
+            [.334, .766],
+            [.334, .777],
+            [.334, .799],
+            [.334, .821],
+            [.345, .491],
+            [.345, .502],
+            [.345, .656],
+            [.345, .678],
+            [.345, .689],
+            [.345, .7],
+            [.345, .722],
+            [.345, .744],
+            [.345, .766],
+            [.345, .777],
+            [.345, .799],
+            [.345, .81],
+            [.345, .832],
+            [.356, .491],
+            [.356, .502],
+            [.356, .645],
+            [.356, .656],
+            [.367, .491],
+            [.367, .502],
+            [.378, .48],
+            [.378, .491],
+            [.378, .656],
+            [.389, .491],
+            [.389, .502],
+            [.389, .535],
+            [.389, .645],
+            [.389, .656],
+            [.389, .667],
+            [.389, .678],
+            [.389, .689],
+            [.389, .7],
+            [.389, .711],
+            [.389, .733],
+            [.389, .744],
+            [.4, .48],
+            [.4, .491],
+            [.4, .502],
+            [.4, .513],
+            [.4, .524],
+            [.4, .535],
+            [.4, .645],
+            [.4, .667],
+            [.4, .678],
+            [.4, .689],
+            [.4, .7],
+            [.4, .711],
+            [.4, .722],
+            [.4, .733],
+            [.4, .755],
+            [.411, .502],
+            [.411, .513],
+            [.411, .535],
+            [.411, .634],
+            [.411, .645],
+            [.411, .667],
+            [.411, .744],
+            [.411, .755],
+            [.422, .491],
+            [.422, .634],
+            [.422, .645],
+            [.422, .656],
+            [.422, .667],
+            [.422, .755],
+            [.433, .491],
+            [.433, .502],
+            [.433, .755],
+            [.444, .48],
+            [.444, .491],
+            [.444, .755],
+            [.455, .48],
+            [.455, .491],
+            [.455, .502],
+            [.466, .48],
+            [.466, .491],
+            [.466, .502],
+            [.466, .513],
+            [.466, .524],
+            [.466, .535],
+            [.466, .755],
+            [.477, .48],
+            [.477, .491],
+            [.477, .513],
+            [.477, .535],
+            [.477, .755],
+            [.488, .48],
+            [.488, .491],
+            [.488, .502],
+            [.488, .524],
+            [.488, .535],
+            [.488, .744],
+            [.488, .755],
+            [.488, .766],
+            [.499, .48],
+            [.499, .491],
+            [.499, .502],
+            [.499, .524],
+            [.499, .535],
+            [.499, .59],
+            [.499, .612],
+            [.499, .689],
+            [.499, .711],
+            [.499, .722],
+            [.499, .733],
+            [.499, .744],
+            [.499, .766],
+            [.51, .48],
+            [.51, .491],
+            [.51, .502],
+            [.51, .513],
+            [.51, .524],
+            [.51, .535],
+            [.51, .557],
+            [.51, .579],
+            [.51, .59],
+            [.51, .711],
+            [.51, .722],
+            [.51, .733],
+            [.51, .744],
+            [.51, .755],
+            [.51, .766],
+            [.521, .48],
+            [.521, .513],
+            [.521, .524],
+            [.521, .535],
+            [.521, .557],
+            [.521, .568],
+            [.521, .579],
+            [.521, .59],
+            [.521, .601],
+            [.521, .612],
+            [.521, .634],
+            [.521, .645],
+            [.521, .656],
+            [.521, .667],
+            [.521, .678],
+            [.521, .689],
+            [.521, .7],
+            [.521, .711],
+            [.521, .722],
+            [.521, .733],
+            [.521, .744],
+            [.521, .755],
+            [.521, .766],
+            [.532, .491],
+            [.532, .502],
+            [.532, .513],
+            [.532, .524],
+            [.532, .535],
+            [.532, .557],
+            [.532, .568],
+            [.532, .579],
+            [.532, .59],
+            [.532, .656],
+            [.532, .678],
+            [.532, .7],
+            [.532, .711],
+            [.532, .755],
+            [.543, .48],
+            [.543, .502],
+            [.543, .513],
+            [.543, .524],
+            [.543, .535],
+            [.543, .557],
+            [.543, .579],
+            [.543, .59],
+            [.543, .678],
+            [.543, .689],
+            [.543, .711],
+            [.543, .722],
+            [.543, .733],
+            [.543, .744],
+            [.543, .755],
+            [.554, .48],
+            [.554, .491],
+            [.554, .535],
+            [.554, .656],
+            [.554, .667],
+            [.554, .678],
+            [.554, .689],
+            [.554, .711],
+            [.554, .733],
+            [.554, .744],
+            [.554, .755]
+        ]
+    }, {
+        map: "bind",
+        name: "A 区",
+        x: .46,
+        y: .12,
+        s: .5,
+        spots: [
+            [.52, .521],
+            [.52, .532],
+            [.52, .543],
+            [.52, .554],
+            [.531, .521],
+            [.531, .532],
+            [.531, .543],
+            [.542, .521],
+            [.542, .532],
+            [.553, .521],
+            [.553, .532],
+            [.564, .521],
+            [.564, .532],
+            [.575, .521],
+            [.575, .532],
+            [.586, .202],
+            [.586, .323],
+            [.586, .356],
+            [.586, .367],
+            [.586, .521],
+            [.586, .532],
+            [.597, .202],
+            [.597, .323],
+            [.597, .367],
+            [.597, .455],
+            [.597, .466],
+            [.597, .521],
+            [.597, .532],
+            [.608, .202],
+            [.608, .367],
+            [.608, .444],
+            [.608, .455],
+            [.608, .466],
+            [.608, .521],
+            [.608, .532],
+            [.619, .202],
+            [.619, .367],
+            [.619, .378],
+            [.619, .389],
+            [.619, .4],
+            [.619, .411],
+            [.619, .422],
+            [.619, .433],
+            [.619, .444],
+            [.619, .455],
+            [.619, .466],
+            [.619, .477],
+            [.619, .488],
+            [.619, .499],
+            [.619, .51],
+            [.619, .521],
+            [.619, .532],
+            [.63, .202],
+            [.63, .389],
+            [.63, .4],
+            [.63, .411],
+            [.63, .422],
+            [.63, .477],
+            [.63, .488],
+            [.63, .499],
+            [.63, .51],
+            [.63, .521],
+            [.63, .532],
+            [.641, .202],
+            [.641, .367],
+            [.641, .389],
+            [.641, .4],
+            [.641, .411],
+            [.641, .532],
+            [.652, .202],
+            [.652, .279],
+            [.652, .367],
+            [.652, .378],
+            [.652, .389],
+            [.652, .4],
+            [.652, .411],
+            [.652, .532],
+            [.663, .202],
+            [.663, .279],
+            [.663, .356],
+            [.663, .367],
+            [.663, .378],
+            [.663, .389],
+            [.663, .4],
+            [.663, .411],
+            [.663, .532],
+            [.674, .202],
+            [.674, .279],
+            [.674, .29],
+            [.674, .301],
+            [.674, .312],
+            [.674, .323],
+            [.674, .334],
+            [.674, .345],
+            [.674, .356],
+            [.674, .367],
+            [.674, .378],
+            [.674, .389],
+            [.674, .4],
+            [.674, .411],
+            [.674, .532],
+            [.685, .202],
+            [.685, .279],
+            [.685, .29],
+            [.685, .301],
+            [.685, .312],
+            [.685, .323],
+            [.685, .334],
+            [.685, .345],
+            [.685, .356],
+            [.685, .367],
+            [.685, .378],
+            [.685, .389],
+            [.685, .4],
+            [.685, .411],
+            [.685, .532],
+            [.685, .543],
+            [.685, .554],
+            [.696, .202],
+            [.696, .279],
+            [.696, .29],
+            [.696, .301],
+            [.696, .312],
+            [.696, .323],
+            [.696, .334],
+            [.696, .345],
+            [.696, .356],
+            [.696, .367],
+            [.696, .378],
+            [.696, .389],
+            [.696, .4],
+            [.696, .411],
+            [.696, .521],
+            [.696, .532],
+            [.696, .543],
+            [.696, .554],
+            [.707, .202],
+            [.707, .279],
+            [.707, .29],
+            [.707, .301],
+            [.707, .312],
+            [.707, .323],
+            [.707, .334],
+            [.707, .345],
+            [.707, .356],
+            [.707, .367],
+            [.707, .521],
+            [.707, .532],
+            [.707, .543],
+            [.707, .554],
+            [.718, .279],
+            [.718, .29],
+            [.718, .301],
+            [.718, .312],
+            [.718, .334],
+            [.718, .356],
+            [.718, .367],
+            [.729, .202],
+            [.729, .213],
+            [.729, .279],
+            [.729, .29],
+            [.729, .301],
+            [.729, .312],
+            [.729, .323],
+            [.729, .334],
+            [.729, .345],
+            [.729, .356],
+            [.729, .367],
+            [.74, .202],
+            [.74, .213],
+            [.74, .279],
+            [.74, .29],
+            [.74, .301],
+            [.74, .312],
+            [.74, .367],
+            [.751, .202],
+            [.751, .213],
+            [.751, .268],
+            [.751, .279],
+            [.751, .29],
+            [.751, .301],
+            [.751, .312],
+            [.751, .323],
+            [.751, .334],
+            [.751, .345],
+            [.751, .356],
+            [.751, .367],
+            [.762, .202],
+            [.762, .213],
+            [.762, .257],
+            [.762, .268],
+            [.762, .279],
+            [.762, .29],
+            [.762, .301],
+            [.762, .312],
+            [.762, .323],
+            [.762, .334],
+            [.762, .345],
+            [.762, .356],
+            [.762, .367],
+            [.762, .378],
+            [.762, .389],
+            [.762, .4],
+            [.762, .422],
+            [.773, .202],
+            [.773, .213],
+            [.773, .224],
+            [.773, .257],
+            [.773, .268],
+            [.773, .279],
+            [.773, .29],
+            [.773, .301],
+            [.773, .312],
+            [.773, .323],
+            [.773, .334],
+            [.773, .345],
+            [.773, .356],
+            [.773, .367],
+            [.773, .378],
+            [.773, .389],
+            [.773, .4],
+            [.773, .422],
+            [.784, .202],
+            [.784, .213],
+            [.784, .268],
+            [.784, .279],
+            [.784, .29],
+            [.784, .301],
+            [.784, .367],
+            [.784, .378],
+            [.784, .4],
+            [.784, .422],
+            [.795, .268],
+            [.795, .279],
+            [.795, .29],
+            [.795, .301],
+            [.795, .367],
+            [.795, .378],
+            [.795, .4],
+            [.795, .422],
+            [.806, .422],
+            [.817, .422],
+            [.828, .422],
+            [.828, .433],
+            [.828, .554],
+            [.839, .422],
+            [.839, .433],
+            [.839, .444],
+            [.839, .455],
+            [.839, .466],
+            [.839, .477],
+            [.839, .51],
+            [.839, .521],
+            [.839, .532],
+            [.839, .543],
+            [.839, .554],
+            [.85, .422],
+            [.85, .433],
+            [.85, .444],
+            [.85, .455],
+            [.85, .521],
+            [.85, .532],
+            [.85, .543],
+            [.85, .554],
+            [.861, .422],
+            [.861, .433],
+            [.861, .444],
+            [.861, .521],
+            [.872, .521],
+            [.872, .532],
+            [.883, .51],
+            [.894, .499],
+            [.894, .51],
+            [.894, .521]
+        ]
+    }, {
+        map: "bind",
+        name: "B 区",
+        x: .06,
+        y: .12,
+        s: .5,
+        spots: [
+            [.153, .422],
+            [.153, .433],
+            [.164, .268],
+            [.164, .279],
+            [.164, .29],
+            [.164, .301],
+            [.164, .312],
+            [.164, .323],
+            [.164, .422],
+            [.164, .433],
+            [.164, .444],
+            [.175, .268],
+            [.175, .323],
+            [.175, .422],
+            [.175, .433],
+            [.175, .444],
+            [.186, .268],
+            [.186, .422],
+            [.186, .433],
+            [.186, .444],
+            [.186, .455],
+            [.186, .466],
+            [.186, .477],
+            [.186, .488],
+            [.186, .499],
+            [.186, .51],
+            [.186, .521],
+            [.186, .532],
+            [.186, .543],
+            [.197, .268],
+            [.197, .422],
+            [.197, .433],
+            [.197, .444],
+            [.197, .455],
+            [.197, .466],
+            [.197, .477],
+            [.197, .488],
+            [.197, .499],
+            [.197, .51],
+            [.197, .521],
+            [.197, .532],
+            [.197, .543],
+            [.197, .554],
+            [.208, .268],
+            [.208, .334],
+            [.208, .422],
+            [.208, .433],
+            [.208, .554],
+            [.219, .202],
+            [.219, .334],
+            [.219, .345],
+            [.219, .356],
+            [.219, .367],
+            [.219, .378],
+            [.219, .411],
+            [.219, .422],
+            [.219, .554],
+            [.23, .202],
+            [.23, .334],
+            [.23, .345],
+            [.23, .356],
+            [.23, .367],
+            [.23, .378],
+            [.23, .411],
+            [.23, .422],
+            [.23, .433],
+            [.23, .554],
+            [.241, .202],
+            [.241, .246],
+            [.241, .257],
+            [.241, .268],
+            [.241, .279],
+            [.241, .312],
+            [.241, .334],
+            [.241, .345],
+            [.241, .356],
+            [.241, .367],
+            [.241, .378],
+            [.241, .4],
+            [.241, .411],
+            [.241, .422],
+            [.241, .433],
+            [.241, .554],
+            [.252, .202],
+            [.252, .246],
+            [.252, .257],
+            [.252, .268],
+            [.252, .279],
+            [.252, .301],
+            [.252, .312],
+            [.252, .323],
+            [.252, .334],
+            [.252, .345],
+            [.252, .356],
+            [.252, .367],
+            [.252, .378],
+            [.252, .411],
+            [.252, .422],
+            [.252, .433],
+            [.252, .554],
+            [.263, .202],
+            [.263, .246],
+            [.263, .257],
+            [.263, .268],
+            [.263, .279],
+            [.263, .29],
+            [.263, .312],
+            [.263, .323],
+            [.263, .334],
+            [.263, .345],
+            [.263, .356],
+            [.263, .367],
+            [.263, .554],
+            [.274, .202],
+            [.274, .246],
+            [.274, .257],
+            [.274, .268],
+            [.274, .279],
+            [.274, .29],
+            [.274, .301],
+            [.274, .312],
+            [.274, .323],
+            [.274, .334],
+            [.274, .345],
+            [.274, .554],
+            [.285, .202],
+            [.285, .246],
+            [.285, .257],
+            [.285, .268],
+            [.285, .279],
+            [.285, .29],
+            [.285, .301],
+            [.285, .312],
+            [.285, .323],
+            [.285, .334],
+            [.285, .345],
+            [.285, .554],
+            [.296, .202],
+            [.296, .246],
+            [.296, .257],
+            [.296, .268],
+            [.296, .279],
+            [.296, .29],
+            [.296, .301],
+            [.296, .312],
+            [.296, .323],
+            [.296, .334],
+            [.296, .345],
+            [.307, .202],
+            [.307, .246],
+            [.307, .257],
+            [.307, .268],
+            [.307, .279],
+            [.307, .29],
+            [.307, .301],
+            [.307, .312],
+            [.307, .323],
+            [.307, .334],
+            [.307, .345],
+            [.307, .367],
+            [.307, .378],
+            [.307, .389],
+            [.307, .4],
+            [.307, .455],
+            [.318, .202],
+            [.318, .246],
+            [.318, .257],
+            [.318, .268],
+            [.318, .279],
+            [.318, .29],
+            [.318, .301],
+            [.318, .312],
+            [.318, .323],
+            [.318, .334],
+            [.318, .345],
+            [.318, .356],
+            [.318, .367],
+            [.318, .378],
+            [.318, .422],
+            [.318, .433],
+            [.318, .444],
+            [.318, .455],
+            [.318, .466],
+            [.329, .202],
+            [.329, .246],
+            [.329, .257],
+            [.329, .268],
+            [.329, .279],
+            [.329, .29],
+            [.329, .301],
+            [.329, .433],
+            [.329, .444],
+            [.34, .202],
+            [.34, .213],
+            [.34, .268],
+            [.34, .279],
+            [.34, .29],
+            [.34, .444],
+            [.351, .202],
+            [.351, .279],
+            [.351, .29],
+            [.351, .543],
+            [.362, .202],
+            [.362, .532],
+            [.362, .543],
+            [.373, .202],
+            [.373, .521],
+            [.373, .532],
+            [.373, .543],
+            [.384, .202],
+            [.384, .444],
+            [.384, .477],
+            [.384, .488],
+            [.384, .499],
+            [.384, .51],
+            [.384, .521],
+            [.384, .532],
+            [.384, .543],
+            [.395, .202],
+            [.395, .433],
+            [.395, .444],
+            [.395, .455],
+            [.395, .466],
+            [.395, .477],
+            [.395, .488],
+            [.395, .499],
+            [.395, .51],
+            [.395, .521],
+            [.395, .532],
+            [.395, .543],
+            [.395, .554],
+            [.406, .202],
+            [.406, .433],
+            [.406, .444],
+            [.406, .455],
+            [.406, .466],
+            [.406, .477],
+            [.406, .488],
+            [.406, .499],
+            [.406, .51],
+            [.406, .521],
+            [.406, .532],
+            [.406, .543],
+            [.406, .554],
+            [.417, .202],
+            [.417, .433],
+            [.417, .444],
+            [.417, .455],
+            [.428, .202],
+            [.428, .433],
+            [.428, .444],
+            [.428, .455],
+            [.439, .202],
+            [.439, .444],
+            [.45, .202],
+            [.45, .433],
+            [.45, .444],
+            [.45, .455],
+            [.461, .433],
+            [.461, .444],
+            [.461, .455],
+            [.472, .18],
+            [.472, .433],
+            [.472, .444],
+            [.472, .455]
+        ]
+    }, {
+        map: "haven",
+        name: "A / B 区",
+        x: .2,
+        y: .06,
+        s: .5,
+        spots: [
+            [.26, .329],
+            [.271, .318],
+            [.271, .329],
+            [.282, .142],
+            [.282, .153],
+            [.282, .318],
+            [.282, .329],
+            [.293, .142],
+            [.293, .153],
+            [.293, .164],
+            [.293, .219],
+            [.293, .241],
+            [.293, .296],
+            [.293, .318],
+            [.293, .329],
+            [.293, .494],
+            [.304, .153],
+            [.304, .164],
+            [.304, .219],
+            [.304, .307],
+            [.304, .318],
+            [.304, .329],
+            [.304, .494],
+            [.315, .23],
+            [.315, .483],
+            [.326, .219],
+            [.326, .23],
+            [.326, .329],
+            [.326, .483],
+            [.337, .131],
+            [.337, .142],
+            [.337, .164],
+            [.337, .208],
+            [.337, .219],
+            [.337, .23],
+            [.337, .45],
+            [.337, .461],
+            [.337, .472],
+            [.337, .494],
+            [.348, .12],
+            [.348, .131],
+            [.348, .142],
+            [.348, .153],
+            [.348, .164],
+            [.348, .175],
+            [.348, .186],
+            [.348, .197],
+            [.348, .208],
+            [.348, .219],
+            [.348, .23],
+            [.348, .329],
+            [.348, .439],
+            [.348, .45],
+            [.348, .461],
+            [.348, .483],
+            [.348, .494],
+            [.359, .12],
+            [.359, .131],
+            [.359, .142],
+            [.359, .153],
+            [.359, .164],
+            [.359, .186],
+            [.359, .197],
+            [.359, .208],
+            [.359, .219],
+            [.359, .23],
+            [.359, .241],
+            [.359, .252],
+            [.359, .263],
+            [.359, .318],
+            [.359, .329],
+            [.359, .439],
+            [.359, .45],
+            [.359, .461],
+            [.359, .494],
+            [.37, .131],
+            [.37, .142],
+            [.37, .175],
+            [.37, .197],
+            [.37, .208],
+            [.37, .219],
+            [.37, .23],
+            [.37, .252],
+            [.37, .318],
+            [.37, .329],
+            [.37, .439],
+            [.37, .45],
+            [.37, .461],
+            [.37, .472],
+            [.37, .483],
+            [.381, .12],
+            [.381, .142],
+            [.381, .153],
+            [.381, .164],
+            [.381, .186],
+            [.381, .208],
+            [.381, .219],
+            [.381, .23],
+            [.381, .241],
+            [.381, .252],
+            [.381, .318],
+            [.381, .329],
+            [.381, .34],
+            [.381, .351],
+            [.381, .362],
+            [.381, .373],
+            [.381, .384],
+            [.381, .395],
+            [.381, .439],
+            [.392, .12],
+            [.392, .131],
+            [.392, .153],
+            [.392, .164],
+            [.392, .175],
+            [.392, .186],
+            [.392, .23],
+            [.392, .252],
+            [.392, .263],
+            [.392, .318],
+            [.392, .329],
+            [.392, .351],
+            [.392, .362],
+            [.392, .373],
+            [.392, .384],
+            [.392, .395],
+            [.392, .428],
+            [.392, .439],
+            [.392, .461],
+            [.392, .472],
+            [.392, .483],
+            [.403, .12],
+            [.403, .131],
+            [.403, .142],
+            [.403, .153],
+            [.403, .164],
+            [.403, .186],
+            [.403, .197],
+            [.403, .208],
+            [.403, .219],
+            [.403, .23],
+            [.403, .241],
+            [.403, .252],
+            [.403, .263],
+            [.403, .318],
+            [.403, .329],
+            [.403, .34],
+            [.403, .351],
+            [.403, .362],
+            [.403, .373],
+            [.403, .384],
+            [.403, .395],
+            [.403, .439],
+            [.403, .461],
+            [.403, .472],
+            [.403, .494],
+            [.414, .12],
+            [.414, .131],
+            [.414, .142],
+            [.414, .164],
+            [.414, .175],
+            [.414, .186],
+            [.414, .197],
+            [.414, .23],
+            [.414, .252],
+            [.414, .263],
+            [.414, .45],
+            [.414, .461],
+            [.414, .483],
+            [.414, .494],
+            [.425, .12],
+            [.425, .142],
+            [.425, .153],
+            [.425, .164],
+            [.425, .175],
+            [.425, .186],
+            [.425, .197],
+            [.425, .208],
+            [.425, .219],
+            [.425, .23],
+            [.425, .241],
+            [.425, .263],
+            [.425, .439],
+            [.425, .461],
+            [.425, .472],
+            [.425, .494],
+            [.436, .12],
+            [.436, .142],
+            [.436, .164],
+            [.436, .197],
+            [.436, .219],
+            [.436, .23],
+            [.436, .439],
+            [.436, .45],
+            [.436, .461],
+            [.436, .472],
+            [.436, .483],
+            [.436, .494],
+            [.447, .12],
+            [.447, .131],
+            [.447, .142],
+            [.447, .164],
+            [.447, .175],
+            [.447, .197],
+            [.447, .208],
+            [.447, .45],
+            [.447, .461],
+            [.447, .483],
+            [.458, .131],
+            [.458, .142],
+            [.458, .197],
+            [.458, .208],
+            [.458, .219],
+            [.458, .23],
+            [.458, .362],
+            [.458, .373],
+            [.458, .384],
+            [.458, .395],
+            [.469, .186],
+            [.469, .197],
+            [.469, .208],
+            [.469, .219],
+            [.469, .23],
+            [.469, .318],
+            [.469, .373],
+            [.469, .384],
+            [.469, .395],
+            [.48, .197],
+            [.48, .307],
+            [.48, .318],
+            [.48, .351],
+            [.48, .362],
+            [.48, .373],
+            [.48, .384],
+            [.48, .395],
+            [.491, .186],
+            [.491, .197],
+            [.491, .208],
+            [.491, .362],
+            [.491, .384],
+            [.491, .483],
+            [.491, .494],
+            [.502, .197],
+            [.502, .208],
+            [.502, .373],
+            [.502, .384],
+            [.502, .483],
+            [.502, .494],
+            [.513, .483],
+            [.513, .494],
+            [.524, .373],
+            [.524, .483],
+            [.524, .494],
+            [.535, .142],
+            [.535, .384],
+            [.535, .483],
+            [.546, .12],
+            [.546, .131],
+            [.546, .142],
+            [.546, .153],
+            [.546, .384],
+            [.557, .12],
+            [.557, .131],
+            [.557, .142],
+            [.557, .164],
+            [.557, .175],
+            [.557, .373],
+            [.557, .384],
+            [.557, .483],
+            [.568, .12],
+            [.568, .131],
+            [.568, .142],
+            [.568, .153],
+            [.568, .175],
+            [.568, .186],
+            [.568, .384],
+            [.579, .12],
+            [.579, .142],
+            [.579, .164],
+            [.579, .175],
+            [.579, .186],
+            [.579, .197],
+            [.579, .208],
+            [.579, .384],
+            [.579, .483],
+            [.579, .494],
+            [.59, .175],
+            [.59, .186],
+            [.59, .197],
+            [.59, .208],
+            [.59, .219],
+            [.59, .23],
+            [.59, .307],
+            [.59, .318],
+            [.59, .384],
+            [.59, .483],
+            [.59, .494],
+            [.601, .197],
+            [.601, .219],
+            [.601, .23],
+            [.601, .252],
+            [.601, .263],
+            [.601, .274],
+            [.601, .285],
+            [.601, .296],
+            [.601, .307],
+            [.601, .318],
+            [.601, .351],
+            [.601, .373],
+            [.601, .384],
+            [.601, .395],
+            [.601, .406],
+            [.601, .45],
+            [.601, .461],
+            [.601, .472],
+            [.612, .219],
+            [.612, .23],
+            [.612, .241],
+            [.612, .252],
+            [.612, .263],
+            [.612, .274],
+            [.612, .296],
+            [.612, .307],
+            [.612, .318],
+            [.612, .329],
+            [.612, .351],
+            [.612, .362],
+            [.612, .384],
+            [.612, .395],
+            [.612, .406],
+            [.612, .45],
+            [.612, .461],
+            [.612, .472],
+            [.612, .483],
+            [.612, .494],
+            [.623, .241],
+            [.623, .252],
+            [.623, .263],
+            [.623, .274],
+            [.623, .285],
+            [.623, .296],
+            [.623, .307],
+            [.623, .318],
+            [.623, .351],
+            [.623, .362],
+            [.623, .373],
+            [.623, .384],
+            [.623, .395],
+            [.623, .406],
+            [.623, .472],
+            [.623, .483],
+            [.623, .494],
+            [.634, .307],
+            [.634, .362],
+            [.634, .373],
+            [.634, .384],
+            [.634, .406],
+            [.634, .45],
+            [.634, .461],
+            [.634, .472],
+            [.634, .483]
+        ]
+    }, {
+        map: "haven",
+        name: "C 区",
+        x: .25,
+        y: .42,
+        s: .5,
+        spots: [
+            [.31, .48],
+            [.31, .502],
+            [.31, .667],
+            [.31, .733],
+            [.31, .744],
+            [.31, .755],
+            [.321, .48],
+            [.321, .491],
+            [.321, .766],
+            [.332, .513],
+            [.332, .656],
+            [.332, .667],
+            [.332, .755],
+            [.332, .766],
+            [.332, .777],
+            [.332, .788],
+            [.332, .799],
+            [.332, .81],
+            [.332, .821],
+            [.332, .832],
+            [.332, .843],
+            [.332, .854],
+            [.343, .48],
+            [.343, .491],
+            [.343, .513],
+            [.343, .524],
+            [.343, .546],
+            [.343, .557],
+            [.343, .634],
+            [.343, .645],
+            [.343, .656],
+            [.343, .667],
+            [.343, .744],
+            [.343, .755],
+            [.343, .766],
+            [.343, .788],
+            [.343, .799],
+            [.343, .81],
+            [.343, .821],
+            [.343, .832],
+            [.354, .491],
+            [.354, .513],
+            [.354, .524],
+            [.354, .535],
+            [.354, .546],
+            [.354, .557],
+            [.354, .601],
+            [.354, .612],
+            [.354, .623],
+            [.354, .634],
+            [.354, .645],
+            [.354, .656],
+            [.354, .667],
+            [.354, .744],
+            [.354, .766],
+            [.354, .777],
+            [.354, .799],
+            [.354, .81],
+            [.354, .821],
+            [.354, .843],
+            [.365, .48],
+            [.365, .502],
+            [.365, .524],
+            [.365, .557],
+            [.365, .579],
+            [.365, .59],
+            [.365, .612],
+            [.365, .634],
+            [.365, .645],
+            [.365, .656],
+            [.365, .667],
+            [.365, .678],
+            [.365, .755],
+            [.365, .777],
+            [.365, .788],
+            [.365, .81],
+            [.365, .821],
+            [.365, .854],
+            [.376, .491],
+            [.376, .513],
+            [.376, .524],
+            [.376, .557],
+            [.376, .645],
+            [.376, .656],
+            [.376, .678],
+            [.376, .744],
+            [.376, .777],
+            [.376, .788],
+            [.376, .821],
+            [.376, .832],
+            [.387, .48],
+            [.387, .755],
+            [.398, .48],
+            [.398, .491],
+            [.398, .502],
+            [.398, .524],
+            [.398, .546],
+            [.398, .557],
+            [.398, .744],
+            [.398, .755],
+            [.398, .777],
+            [.398, .788],
+            [.398, .799],
+            [.398, .81],
+            [.398, .832],
+            [.398, .843],
+            [.409, .623],
+            [.409, .634],
+            [.409, .656],
+            [.409, .777],
+            [.409, .799],
+            [.409, .81],
+            [.409, .832],
+            [.409, .843],
+            [.42, .491],
+            [.42, .557],
+            [.42, .777],
+            [.42, .799],
+            [.42, .81],
+            [.42, .821],
+            [.42, .832],
+            [.431, .502],
+            [.431, .524],
+            [.431, .535],
+            [.431, .546],
+            [.431, .557],
+            [.431, .634],
+            [.431, .645],
+            [.431, .656],
+            [.431, .766],
+            [.431, .777],
+            [.431, .788],
+            [.431, .799],
+            [.431, .81],
+            [.431, .843],
+            [.431, .854],
+            [.442, .491],
+            [.442, .524],
+            [.442, .535],
+            [.442, .546],
+            [.442, .557],
+            [.442, .766],
+            [.442, .81],
+            [.442, .821],
+            [.442, .832],
+            [.442, .854],
+            [.453, .491],
+            [.453, .513],
+            [.453, .524],
+            [.453, .546],
+            [.453, .557],
+            [.453, .634],
+            [.453, .656],
+            [.453, .766],
+            [.453, .777],
+            [.453, .799],
+            [.453, .81],
+            [.453, .821],
+            [.453, .832],
+            [.464, .513],
+            [.464, .612],
+            [.464, .634],
+            [.464, .656],
+            [.464, .788],
+            [.464, .799],
+            [.464, .821],
+            [.464, .832],
+            [.464, .843],
+            [.464, .854],
+            [.475, .601],
+            [.475, .623],
+            [.475, .645],
+            [.475, .788],
+            [.475, .799],
+            [.475, .821],
+            [.475, .832],
+            [.475, .843],
+            [.475, .854],
+            [.486, .491],
+            [.486, .502],
+            [.486, .513],
+            [.486, .601],
+            [.486, .623],
+            [.486, .634],
+            [.486, .645],
+            [.486, .656],
+            [.486, .766],
+            [.486, .777],
+            [.486, .788],
+            [.486, .799],
+            [.486, .81],
+            [.486, .821],
+            [.486, .832],
+            [.486, .854],
+            [.497, .491],
+            [.497, .513],
+            [.497, .546],
+            [.497, .557],
+            [.497, .623],
+            [.497, .656],
+            [.497, .821],
+            [.497, .832],
+            [.508, .491],
+            [.508, .502],
+            [.508, .513],
+            [.508, .524],
+            [.508, .601],
+            [.508, .612],
+            [.508, .623],
+            [.508, .634],
+            [.508, .645],
+            [.508, .656],
+            [.508, .832],
+            [.508, .843],
+            [.519, .491],
+            [.519, .502],
+            [.519, .524],
+            [.519, .535],
+            [.519, .612],
+            [.519, .645],
+            [.519, .843],
+            [.53, .513],
+            [.53, .524],
+            [.53, .612],
+            [.53, .623],
+            [.53, .645],
+            [.53, .843],
+            [.541, .502],
+            [.541, .513],
+            [.541, .524],
+            [.541, .623],
+            [.541, .634],
+            [.541, .843],
+            [.552, .491],
+            [.552, .502],
+            [.552, .513],
+            [.552, .524],
+            [.552, .843],
+            [.563, .491],
+            [.563, .502],
+            [.563, .513],
+            [.563, .623],
+            [.563, .645],
+            [.563, .843],
+            [.574, .491],
+            [.574, .502],
+            [.574, .524],
+            [.574, .612],
+            [.574, .623],
+            [.574, .634],
+            [.585, .48],
+            [.585, .513],
+            [.585, .524],
+            [.585, .535],
+            [.585, .601],
+            [.585, .612],
+            [.585, .623],
+            [.585, .634],
+            [.585, .656],
+            [.585, .821],
+            [.585, .832],
+            [.585, .843],
+            [.596, .48],
+            [.596, .491],
+            [.596, .502],
+            [.596, .513],
+            [.596, .524],
+            [.596, .535],
+            [.596, .557],
+            [.596, .568],
+            [.596, .59],
+            [.596, .601],
+            [.596, .612],
+            [.596, .645],
+            [.596, .656],
+            [.596, .799],
+            [.596, .81],
+            [.596, .821],
+            [.596, .832],
+            [.596, .843],
+            [.607, .491],
+            [.607, .502],
+            [.607, .524],
+            [.607, .535],
+            [.607, .546],
+            [.607, .557],
+            [.607, .568],
+            [.607, .59],
+            [.607, .612],
+            [.607, .799],
+            [.607, .81],
+            [.618, .48],
+            [.618, .491],
+            [.618, .524],
+            [.618, .535],
+            [.618, .546],
+            [.618, .557],
+            [.618, .568],
+            [.618, .579],
+            [.618, .59],
+            [.618, .601],
+            [.618, .799],
+            [.618, .81],
+            [.618, .821],
+            [.618, .832],
+            [.618, .843],
+            [.629, .491],
+            [.629, .502],
+            [.629, .513],
+            [.629, .524],
+            [.629, .535],
+            [.629, .546],
+            [.629, .557],
+            [.629, .568],
+            [.629, .601],
+            [.629, .612],
+            [.629, .623],
+            [.629, .843],
+            [.64, .59],
+            [.64, .601],
+            [.64, .623],
+            [.64, .634],
+            [.64, .645],
+            [.64, .656],
+            [.651, .491],
+            [.651, .502],
+            [.651, .601],
+            [.651, .623],
+            [.651, .634],
+            [.651, .645],
+            [.651, .656],
+            [.651, .854],
+            [.662, .513],
+            [.662, .601],
+            [.662, .612],
+            [.662, .623],
+            [.662, .634],
+            [.662, .645],
+            [.662, .656],
+            [.673, .48],
+            [.673, .491],
+            [.673, .502],
+            [.673, .513],
+            [.673, .623],
+            [.673, .634],
+            [.673, .656],
+            [.673, .832],
+            [.673, .843],
+            [.673, .854],
+            [.684, .601],
+            [.684, .612],
+            [.684, .623],
+            [.684, .656],
+            [.684, .711],
+            [.684, .799],
+            [.684, .81],
+            [.684, .821],
+            [.684, .832],
+            [.684, .843],
+            [.684, .854]
+        ]
+    }],
+    tl = ["aim", "recon", "schulte"],
+    rl = {
+        aim: "决斗者",
+        recon: "先锋",
+        schulte: "哨卫"
+    },
+    ll = {
+        aim: "首杀反应",
+        recon: "侦察报点",
+        schulte: "舒尔特方格"
+    },
+    sl = 5,
+    ia = () => ({
+        day: null,
+        plays: 0,
+        live: null,
+        won: 0,
+        best: {}
+    }),
+    Ht = 25,
+    il = 500,
+    nl = e => new U((e ^ 23630) >>> 0).shuffle(Array.from({
+        length: Ht
+    }, (a, t) => t + 1)),
+    wt = 2e4,
+    M0 = 900;
+
+function ol(e) {
+    const a = new U((e ^ 41377) >>> 0),
+        t = [];
+    let r = 800;
+    for (; r + M0 <= wt;) t.push({
+        at: r,
+        x: .06 + a.next() * .82,
+        y: .06 + a.next() * .78
+    }), r += M0 + 200 + Math.round(a.next() * 450);
+    return t
+}
+const At = 4,
+    cl = 1e3,
+    ul = 260,
+    St = .09,
+    gl = {
+        ascent: "Ascent 亚海悬城",
+        bind: "Bind 源工重镇",
+        haven: "Haven 隐世修所"
+    };
+
+function pl(e) {
+    const a = new U((e ^ 24301) >>> 0),
+        t = a.int(0, T0.length - 1),
+        r = T0[t],
+        l = [];
+    for (const [s, n] of a.shuffle(r.spots.slice()))
+        if (l.every(i => Math.hypot(i.x - s, i.y - n) >= St) && l.push({
+                x: s,
+                y: n
+            }), l.length === At) break;
+    return {
+        window: r,
+        windowIndex: t,
+        enemies: l
+    }
+}
+const na = 1,
+    _ = ["China", "Pacific", "Americas", "EMEA"],
+    Ne = {
+        bangkok2025: {
+            kind: "bangkok2025",
+            name: "曼谷 2025 大师赛包",
+            pool: "bangkok2025",
+            blurb: "8 支战队 · 41 位登场选手。三张曼谷赛事卡，至少一张银卡，不出彩卡。",
+            cost: 3e3,
+            draws: 3,
+            mythic: 0,
+            gold: .12,
+            silver: .38,
+            floor: "silver",
+            shop: !0
+        },
+        retired: {
+            kind: "retired",
+            name: "退役选手包",
+            pool: "retired",
+            blurb: "三张退役选手卡，至少一张银卡，可能出退役彩卡（单独保底）。",
+            cost: 3e3,
+            draws: 3,
+            mythic: 4e-4,
+            gold: .16,
+            silver: .38,
+            floor: "silver",
+            shop: !0
+        },
+        seoul2024: {
+            kind: "seoul2024",
+            name: "首尔 2024 冠军赛包",
+            pool: "seoul2024",
+            blurb: "16 支战队 · 80 位登场选手。三张首尔赛事卡，至少一张银卡，不出彩卡。",
+            cost: 3e3,
+            draws: 3,
+            mythic: 0,
+            gold: .12,
+            silver: .38,
+            floor: "silver",
+            shop: !0
+        },
+        scout: {
+            kind: "scout",
+            name: "试训包",
+            pool: "player",
+            blurb: "一张选手卡。多是铜卡，也出金卡。",
+            cost: 750,
+            draws: 1,
+            mythic: 1e-4,
+            gold: .03,
+            silver: .26,
+            shop: !0
+        },
+        elite: {
+            kind: "elite",
+            name: "选拔包",
+            pool: "player",
+            blurb: "三张选手卡，至少一张银卡起。",
+            cost: 2400,
+            draws: 3,
+            mythic: 4e-4,
+            gold: .08,
+            silver: .38,
+            floor: "silver",
+            shop: !0
+        },
+        ten: {
+            kind: "ten",
+            name: "十连包",
+            pool: "player",
+            blurb: "十张选手卡，必出金卡，彩卡最多。不卖，通过升段、夺冠、连签、挑战和赛事预测等奖励获得。",
+            cost: 5e3,
+            draws: 10,
+            mythic: 6e-4,
+            gold: .06,
+            silver: .34,
+            floor: "gold",
+            shop: !1
+        },
+        cn: {
+            kind: "cn",
+            name: "中国包",
+            pool: "China",
+            blurb: "只出中国赛区的选手卡。三张，至少一张银卡起。",
+            cost: 2600,
+            draws: 3,
+            mythic: 4e-4,
+            gold: .08,
+            silver: .38,
+            floor: "silver",
+            shop: !0
+        },
+        pac: {
+            kind: "pac",
+            name: "太平洋包",
+            pool: "Pacific",
+            blurb: "只出太平洋赛区的选手卡。三张，至少一张银卡起。",
+            cost: 2600,
+            draws: 3,
+            mythic: 4e-4,
+            gold: .08,
+            silver: .38,
+            floor: "silver",
+            shop: !0
+        },
+        ame: {
+            kind: "ame",
+            name: "美洲包",
+            pool: "Americas",
+            blurb: "只出美洲赛区的选手卡。三张，至少一张银卡起。",
+            cost: 2600,
+            draws: 3,
+            mythic: 4e-4,
+            gold: .08,
+            silver: .38,
+            floor: "silver",
+            shop: !0
+        },
+        emea: {
+            kind: "emea",
+            name: "EMEA 包",
+            pool: "EMEA",
+            blurb: "只出欧非中东赛区的选手卡。三张，至少一张银卡起。",
+            cost: 2600,
+            draws: 3,
+            mythic: 4e-4,
+            gold: .08,
+            silver: .38,
+            floor: "silver",
+            shop: !0
+        },
+        legend: {
+            kind: "legend",
+            name: "彩卡包",
+            pool: "legend",
+            blurb: "一张彩卡，只出彩卡。收齐全图鉴的奖励，不卖。",
+            cost: 0,
+            draws: 1,
+            mythic: 1,
+            gold: 0,
+            silver: 0,
+            shop: !1
+        },
+        coach: {
+            kind: "coach",
+            name: "教练包",
+            pool: "coach",
+            blurb: "一名真实教练。带过阵容里的人，默契更高。",
+            cost: 1200,
+            draws: 1,
+            mythic: 4e-4,
+            gold: .12,
+            silver: .42,
+            shop: !0
+        },
+        duelist: {
+            kind: "duelist",
+            name: "决斗包",
+            pool: "决斗者",
+            blurb: "一张能打决斗者的选手卡。首杀反应打出来的。",
+            cost: 0,
+            draws: 1,
+            mythic: 0,
+            gold: .05,
+            silver: .32,
+            shop: !1
+        },
+        initiator: {
+            kind: "initiator",
+            name: "先锋包",
+            pool: "先锋",
+            blurb: "一张能打先锋的选手卡。侦察报点打出来的。",
+            cost: 0,
+            draws: 1,
+            mythic: 0,
+            gold: .05,
+            silver: .32,
+            shop: !1
+        },
+        controller: {
+            kind: "controller",
+            name: "控场包",
+            pool: "控场",
+            blurb: "一张能打控场的选手卡。控场小游戏还没上线。",
+            cost: 0,
+            draws: 1,
+            mythic: 0,
+            gold: .05,
+            silver: .32,
+            shop: !1
+        },
+        sentinel: {
+            kind: "sentinel",
+            name: "哨位包",
+            pool: "哨卫",
+            blurb: "一张能打哨卫的选手卡。舒尔特方格打出来的。",
+            cost: 0,
+            draws: 1,
+            mythic: 0,
+            gold: .05,
+            silver: .32,
+            shop: !1
+        }
+    },
+    dl = ["duelist", "initiator", "controller", "sentinel"],
+    fl = e => {
+        const a = Ne[e].pool;
+        return a === "决斗者" || a === "先锋" || a === "控场" || a === "哨卫" ? a : null
+    },
+    Tt = e => e === "cn" ? "China" : e === "pac" ? "Pacific" : e === "ame" ? "Americas" : e === "emea" ? "EMEA" : null,
+    bl = ["scout", "elite", "ten", "coach", "cn", "pac", "ame", "emea", "retired", "seoul2024", "bangkok2025"],
+    N0 = 25,
+    Mt = 45,
+    Nt = 1200,
+    Rt = 600,
+    G = 30,
+    Ot = {
+        ladder: 2,
+        cup: 5,
+        swap: 1
+    },
+    ml = 5,
+    ae = 1800 * 1e3,
+    Pt = (e = ae) => {
+        const a = Math.round(e / 6e4);
+        return a % 60 === 0 ? `${a/60} 小时` : `${a} 分钟`
+    },
+    hl = () => {
+        const e = Pt();
+        return e === "1 小时" ? "每小时回 1 点" : `每 ${e}回 1 点`
+    },
+    kl = () => Math.round(G * ae / 36e4) / 10,
+    Lt = (e, a) => a >= Mt - 1 ? 1 : a < N0 ? e : Math.min(1, e + (a - N0 + 1) * .055),
+    X = e => {
+        const a = typeof e == "number" || typeof e == "string" ? Number(e) : 0;
+        return Number.isFinite(a) ? Math.max(0, Math.min(Number.MAX_SAFE_INTEGER, Math.trunc(a))) : 0
+    },
+    oa = e => Math.min(I, X(e));
+
+function Dt(e) {
+    if (!e || typeof e != "object" || Array.isArray(e)) return {};
+    const a = {};
+    for (const [t, r] of Object.entries(e)) {
+        if (Object.prototype.hasOwnProperty.call(Object.prototype, t) || !r || typeof r != "object" || Array.isArray(r)) continue;
+        const l = r,
+            s = {
+                ...l,
+                id: t,
+                level: oa(l.level),
+                dupes: X(l.dupes),
+                seen: Math.max(1, X(l.seen))
+            },
+            n = (Array.isArray(l.spares) ? l.spares : []).map(c => X(c)).filter(c => c >= 1 && c <= I).sort((c, u) => c - u).slice(0, 99);
+        n.length ? s.spares = n : delete s.spares;
+        const i = He(l.evo);
+        i ? s.evo = i : delete s.evo;
+        const o = (Array.isArray(l.evoSpares) ? l.evoSpares : []).map(c => He(c)).filter(c => !!c).slice(0, 99);
+        o.length ? s.evoSpares = o : delete s.evoSpares, a[t] = s
+    }
+    return a
+}
+const M = ["青铜", "白银", "黄金", "铂金", "钻石", "大师"],
+    n0 = [3, 3, 3, 3, 4, 1],
+    Re = [1, 1, 2, 2, 2, 0],
+    Gt = ["I", "II", "III", "IV"],
+    R0 = e => {
+        const a = A(e, 0, M.length - 1);
+        return n0[a] * Re[a]
+    },
+    It = (e, a) => {
+        const t = A(e, 0, M.length - 1),
+            r = Re[t];
+        return r <= 0 ? 0 : A(Math.floor(a / r), 0, n0[t] - 1)
+    },
+    Cl = (e, a) => {
+        const t = A(e, 0, M.length - 1),
+            r = Re[t];
+        return r <= 0 ? 0 : a % r
+    },
+    vl = e => Re[A(e, 0, M.length - 1)],
+    _t = ["open", "gold", "silver", "bronze", "hof", "retired", "mixed"],
+    Ft = {
+        open: {
+            name: "公开赛",
+            blurb: "任何卡都能上。",
+            ceiling: null,
+            needMythic: 0,
+            oppBump: 0
+        },
+        gold: {
+            name: "金卡赛",
+            blurb: "金卡、银卡、铜卡都能上，彩卡不行。",
+            ceiling: "gold",
+            needMythic: 0,
+            oppBump: -3
+        },
+        silver: {
+            name: "银卡赛",
+            blurb: "只能上银卡和铜卡。",
+            ceiling: "silver",
+            needMythic: 0,
+            oppBump: -7
+        },
+        bronze: {
+            name: "铜卡赛",
+            blurb: "只能上铜卡。",
+            ceiling: "bronze",
+            needMythic: 0,
+            oppBump: -13
+        },
+        hof: {
+            name: "名人堂",
+            blurb: "至少两张彩卡才能入场，对手也更强。",
+            ceiling: null,
+            needMythic: 2,
+            oppBump: 2
+        },
+        retired: {
+            name: "传奇联赛",
+            blurb: "五名首发都要是退役选手。升段送退役选手包。",
+            ceiling: null,
+            needMythic: 0,
+            oppBump: -3,
+            needs: "retired"
+        },
+        mixed: {
+            name: "全系列赛",
+            blurb: "首发里现役普卡、首尔或曼谷卡、退役卡各至少一张。",
+            ceiling: null,
+            needMythic: 0,
+            oppBump: 0,
+            needs: "mixed"
+        }
+    },
+    Bt = () => ({
+        div: 0,
+        stars: 0,
+        best: 0,
+        wins: 0,
+        losses: 0,
+        streak: 0
+    });
+
+function ca(e, a = "open") {
+    var t;
+    return a === "open" ? e.ladder : ((t = e.leagues) == null ? void 0 : t[a]) ?? Bt()
+}
+
+function El(e, a) {
+    const t = Ft[a],
+        r = e.slots.map(l => l ? h(l) : void 0).filter(H);
+    if (t.needs === "retired") {
+        const l = r.filter(s => !s.retired);
+        if (l.length) return {
+            ok: !1,
+            why: `${t.name}五名首发都要是退役卡：${l.map(s=>ye(s)).join("、")}不是退役卡。`
+        }
+    } else {
+        const l = _a(e.slots);
+        if (!l.ok) return l
+    }
+    if (t.needs === "mixed") {
+        const l = [r.some(s => !s.event && !s.retired && s.rarity !== "mythic") ? "" : "现役普卡", r.some(s => s.event === "seoul-2024" || s.event === "bangkok-2025") ? "" : "首尔或曼谷卡", r.some(s => s.retired) ? "" : "退役卡"].filter(Boolean);
+        if (l.length) return {
+            ok: !1,
+            why: `${t.name}首发还缺：${l.join("、")}。`
+        }
+    }
+    if (t.ceiling) {
+        const l = q(t.ceiling),
+            s = e.coach ? h(e.coach) : void 0,
+            n = [...r, ...s ? [s] : []].filter(i => q(i.rarity) > l);
+        if (n.length) return {
+            ok: !1,
+            why: `${t.name}只能上${C0[t.ceiling]}以下：${n.map(i=>`${ye(i)}（${C0[i.rarity]}）`).join("、")}进不去。`
+        }
+    }
+    if (t.needMythic) {
+        const l = r.filter(s => s.rarity === "mythic").length;
+        if (l < t.needMythic) return {
+            ok: !1,
+            why: `${t.name}要至少 ${t.needMythic} 张彩卡，现在只有 ${l} 张。`
+        }
+    }
+    return {
+        ok: !0
+    }
+}
+const Kt = M.length - 1,
+    qt = [{
+        at: 2500,
+        name: "辐能"
+    }, {
+        at: 1e3,
+        name: "不朽"
+    }, {
+        at: 0,
+        name: "大师"
+    }],
+    $t = e => {
+        var a;
+        return ((a = qt.find(t => e >= t.at)) == null ? void 0 : a.name) ?? "大师"
+    };
+
+function yl(e, a, t = 0) {
+    return e >= Kt ? `${$t(t)} ${t}` : `${M[e]} ${Gt[n0[e]-1-It(e,a)]}`
+}
+const Yl = 375,
+    Hl = 2,
+    zt = {
+        play3: {
+            key: "play3",
+            label: "打 3 场天梯",
+            target: 3,
+            reward: 300
+        },
+        win2: {
+            key: "win2",
+            label: "赢 2 场天梯",
+            target: 2,
+            reward: 400
+        },
+        open2: {
+            key: "open2",
+            label: "开 2 个卡包",
+            target: 2,
+            reward: 250
+        },
+        upgrade1: {
+            key: "upgrade1",
+            label: "升级 1 张卡",
+            target: 1,
+            reward: 325
+        },
+        cup1: {
+            key: "cup1",
+            label: "打 1 轮杯赛",
+            target: 1,
+            reward: 375
+        }
+    },
+    ua = 24;
+
+function wl(e, a, t, r) {
+    const l = (e.friends ?? []).filter(i => i.code !== a.code),
+        s = (e.friends ?? []).find(i => i.code === a.code),
+        n = {
+            code: a.code,
+            name: a.name,
+            tag: a.tag,
+            wins: ((s == null ? void 0 : s.wins) ?? 0) + (t ? 1 : 0),
+            losses: ((s == null ? void 0 : s.losses) ?? 0) + (t ? 0 : 1),
+            at: r
+        };
+    return e.friends = [n, ...l].slice(0, ua), n
+}
+const Ze = 8,
+    Oe = e => Array.from({
+        length: Ze
+    }, (a, t) => {
+        var r;
+        return ((r = e.presets) == null ? void 0 : r[t]) ?? null
+    });
+
+function Al(e, a, t) {
+    var s;
+    const r = Oe(e),
+        l = {
+            name: (t ?? ((s = r[a]) == null ? void 0 : s.name) ?? `配置 ${a+1}`).slice(0, 12),
+            squad: {
+                slots: [...e.squad.slots],
+                coach: e.squad.coach
+            }
+        };
+    return r[a] = l, e.presets = r, ga(e, `保存了卡组配置「${l.name}」`), l
+}
+
+function Sl(e, a) {
+    const t = Oe(e)[a];
+    if (!t) return {
+        ok: !1,
+        missing: 0
+    };
+    let r = 0;
+    const l = i => i ? e.cards[i] ? i : (r++, null) : null,
+        s = t.squad.slots.slice(0, 5).map(l);
+    for (; s.length < 5;) s.push(null);
+    const n = [];
+    for (let i = 0; i < s.length; i++) {
+        const o = s[i];
+        if (!o) continue;
+        const c = u => {
+            const p = h(u);
+            return p ? S(p) : u
+        };
+        n.some(u => c(u) === c(o)) ? (s[i] = null, r++) : n.push(o)
+    }
+    return e.squad = {
+        slots: s,
+        coach: l(t.squad.coach)
+    }, {
+        ok: !0,
+        missing: r
+    }
+}
+
+function Tl(e, a, t) {
+    const r = Oe(e);
+    r[a] && (r[a] = {
+        ...r[a],
+        name: t.slice(0, 12) || `配置 ${a+1}`
+    }, e.presets = r)
+}
+
+function Ml(e, a) {
+    const t = Oe(e);
+    t[a] = null, e.presets = t
+}
+const xt = 3e3;
+
+function Nl(e, a, t) {
+    return {
+        version: na,
+        id: e,
+        name: a,
+        createdAt: t,
+        season: ma(t),
+        coins: xt,
+        cards: {},
+        packs: {
+            scout: 3,
+            elite: 1,
+            coach: 1
+        },
+        squad: Z0(),
+        pity: 0,
+        mythicDry: 0,
+        retiredDry: 0,
+        pulls: 0,
+        ladder: {
+            div: 0,
+            stars: 0,
+            best: 0,
+            wins: 0,
+            losses: 0,
+            streak: 0
+        },
+        challenge: l0(),
+        minigame: ia(),
+        cup: null,
+        daily: {
+            claimed: null,
+            streak: 0,
+            questDay: null,
+            picked: [],
+            progress: {},
+            taken: [],
+            stamina: G,
+            staminaAt: 0
+        },
+        log: [],
+        seed: B(e + t) >>> 0
+    }
+}
+
+function Ut(e) {
+    const a = new U(e.seed);
+    return a.next(), e.seed = a.state, {
+        rng: a,
+        done: () => {
+            e.seed = a.state
+        }
+    }
+}
+const ga = (e, a) => {
+        e.log.unshift({
+            at: new Date().toISOString(),
+            text: a
+        }), e.log.length > 60 && (e.log.length = 60)
+    },
+    Zt = (e, a) => {
+        var t;
+        return oa((t = e.cards[a]) == null ? void 0 : t.level)
+    },
+    pa = (e, a) => it(a, e.cards[a]),
+    ue = (e, a) => e.filter(t => t.region === a),
+    ge = e => ({
+        mythic: ue($e, e),
+        gold: ue(R.filter(a => a.rarity === "gold"), e),
+        silver: ue(R.filter(a => a.rarity === "silver"), e),
+        bronze: ue(R.filter(a => a.rarity === "bronze"), e)
+    }),
+    pe = e => ({
+        mythic: [],
+        gold: R.filter(a => a.rarity === "gold" && a.roles.includes(e)),
+        silver: R.filter(a => a.rarity === "silver" && a.roles.includes(e)),
+        bronze: R.filter(a => a.rarity === "bronze" && a.roles.includes(e))
+    }),
+    o0 = {
+        retired: {
+            mythic: J.filter(e => e.rarity === "mythic"),
+            gold: J.filter(e => e.rarity === "gold"),
+            silver: J.filter(e => e.rarity === "silver"),
+            bronze: J.filter(e => e.rarity === "bronze")
+        },
+        bangkok2025: {
+            mythic: [],
+            gold: he.filter(e => e.rarity === "gold"),
+            silver: he.filter(e => e.rarity === "silver"),
+            bronze: he.filter(e => e.rarity === "bronze")
+        },
+        seoul2024: {
+            mythic: [],
+            gold: ke.filter(e => e.rarity === "gold"),
+            silver: ke.filter(e => e.rarity === "silver"),
+            bronze: ke.filter(e => e.rarity === "bronze")
+        },
+        决斗者: pe("决斗者"),
+        先锋: pe("先锋"),
+        控场: pe("控场"),
+        哨卫: pe("哨卫"),
+        player: {
+            mythic: $e,
+            gold: R.filter(e => e.rarity === "gold"),
+            silver: R.filter(e => e.rarity === "silver"),
+            bronze: R.filter(e => e.rarity === "bronze")
+        },
+        China: ge("China"),
+        Pacific: ge("Pacific"),
+        Americas: ge("Americas"),
+        EMEA: ge("EMEA"),
+        legend: {
+            mythic: [...$e, ...v0],
+            gold: [],
+            silver: [],
+            bronze: []
+        },
+        coach: {
+            mythic: v0,
+            gold: be.filter(e => e.rarity === "gold"),
+            silver: be.filter(e => e.rarity === "silver"),
+            bronze: be.filter(e => e.rarity === "bronze")
+        }
+    };
+
+function Rl(e, a, t, r) {
+    if (!Vt(a)) throw new Error("没有这种卡包");
+    const l = Ne[a];
+    {
+        if ((e.packs[a] ?? 0) < 1) throw new Error("没有这种卡包");
+        e.packs[a] = (e.packs[a] ?? 0) - 1
+    }
+    const {
+        rng: s,
+        done: n
+    } = Ut(e), i = o0[l.pool], o = l.mythic >= 1, c = [];
+    for (let f = 0; f < l.draws; f++) {
+        const m = s.next();
+        let b;
+        const k = l.pool === "retired",
+            v = l.mythic > 0 && (k ? (e.retiredDry ?? 0) >= Rt : e.mythicDry >= Nt);
+        if (o) b = "mythic";
+        else if (v || m < l.mythic) b = "mythic";
+        else {
+            const D = Lt(l.gold, e.pity),
+                K = (m - l.mythic) / Math.max(1e-9, 1 - l.mythic);
+            K < D ? b = "gold" : K < D + l.silver ? b = "silver" : b = "bronze"
+        }
+        o || (b === "mythic" ? (k ? e.retiredDry = 0 : e.mythicDry = 0, e.pity = 0) : (l.mythic > 0 && k ? e.retiredDry = (e.retiredDry ?? 0) + 1 : l.mythic > 0 && (e.mythicDry = (e.mythicDry ?? 0) + 1), b === "gold" ? e.pity = 0 : e.pity++)), c.push(b)
+    }
+    if (l.floor) {
+        const f = c.reduce((m, b, k) => q(b) > q(c[m]) ? k : m, 0);
+        q(c[f]) < q(l.floor) && (c[f] = l.floor)
+    }
+    const u = [];
+    for (const f of s.shuffle(c)) {
+        const m = i[f].length ? i[f] : i.bronze,
+            b = s.pick(m),
+            k = e.cards[b.id];
+        k ? (k.dupes++, k.seen++) : e.cards[b.id] = {
+            id: b.id,
+            level: 0,
+            dupes: 0,
+            seen: 1,
+            got: new Date().toISOString().slice(0, 10)
+        }, u.push({
+            card: b,
+            dupe: !!k,
+            salvage: U0[b.rarity]
+        })
+    }
+    e.pulls += l.draws, kr(e, "open2", 1), n();
+    const p = f => f.kind === "player" ? f.ign : f.name,
+        d = u.filter(f => f.card.rarity === "mythic"),
+        g = u.filter(f => f.card.rarity === "gold");
+    return ga(e, d.length ? `${l.name}：★ 彩卡 ${d.map(f=>H(f.card)&&f.card.legend?f.card.legend.title:p(f.card)).join("、")}` : g.length ? `${l.name}：抽到 ${g.map(f=>p(f.card)).join("、")}（金卡）` : `${l.name}：${l.draws} 张，没有金卡`), u
+}
+const Ol = 10,
+    Vt = e => typeof e == "string" && Object.prototype.hasOwnProperty.call(Ne, e),
+    jt = ["bronze", "silver", "gold"];
+
+function Pl(e, a) {
+    var s;
+    const t = new Set((a.rarities ?? []).filter(n => jt.includes(n))),
+        r = (s = a.cardIds) != null && s.length ? new Set(a.cardIds) : null;
+    if (!t.size && !r) return [];
+    const l = [];
+    for (const n of Object.values(e.cards)) {
+        if (n.dupes <= 0) continue;
+        const i = h(n.id);
+        if (!i || !(r != null && r.has(n.id)) && !t.has(i.rarity)) continue;
+        const o = Math.max(0, Math.trunc(Number(n.level) || 0)),
+            c = a.keepForUpgrade && o < I ? x0[o] : 0,
+            u = n.dupes - c;
+        u <= 0 || l.push({
+            cardId: n.id,
+            count: u,
+            coins: U0[i.rarity] * u
+        })
+    }
+    return l
+}
+
+function Ll(e, a) {
+    const t = e.cards[a];
+    if (!t || typeof t != "object" || Array.isArray(t) || !h(a)) return {
+        dupes: 0,
+        coins: 0,
+        to: null,
+        can: !1,
+        why: "还没有这张卡"
+    };
+    const r = Zt(e, a);
+    if (r >= I) return {
+        dupes: 0,
+        coins: 0,
+        to: null,
+        can: !1,
+        why: "已经满级"
+    };
+    const l = x0[r],
+        s = La[r],
+        n = X(t.dupes),
+        i = n >= l && Number.isFinite(e.coins) && e.coins >= s;
+    return {
+        dupes: l,
+        coins: s,
+        to: r + 1,
+        can: i,
+        why: i ? void 0 : n < l ? `还差 ${l-n} 张重复卡` : "金币不够"
+    }
+}
+
+function O0(e) {
+    return Object.entries(e.cards).map(([a, t]) => {
+        if (!t || typeof t != "object" || Array.isArray(t)) return null;
+        const r = h(a);
+        return r ? {
+            card: r,
+            owned: t,
+            rating: qe(r.rating, pa(e, a))
+        } : null
+    }).filter(a => !!a).sort((a, t) => t.rating - a.rating)
+}
+const Dl = e => ({
+    owned: Object.keys(e.cards).length,
+    total: Je.length
+});
+(() => {
+    const e = new Map;
+    for (const a of Je) {
+        if (!H(a) || a.rarity === "mythic" || a.event || !a.clubId) continue;
+        const t = e.get(a.clubId) ?? [];
+        t.push(a), e.set(a.clubId, t)
+    }
+    for (const a of e.values()) a.sort((t, r) => r.rating - t.rating);
+    return e
+})();
+const de = [{
+        at: .25,
+        coins: 1500,
+        label: "+1500 金币"
+    }, {
+        at: .5,
+        coins: 1500,
+        pack: "elite",
+        label: "选拔包 ×1，+1500 金币"
+    }, {
+        at: .75,
+        coins: 5e3,
+        label: "+5000 金币"
+    }, {
+        at: .9,
+        coins: 0,
+        pack: "self",
+        count: 2,
+        label: "本赛区包 ×2"
+    }, {
+        at: 1,
+        coins: 15e3,
+        pack: "ten",
+        label: "十连包 ×1，+15000 金币"
+    }],
+    P0 = Object.fromEntries(_.map(e => {
+        const a = o0[e];
+        return [e, new Set([...a.gold, ...a.silver, ...a.bronze].map(t => t.id))]
+    })),
+    L0 = Object.fromEntries(_.map(e => [e, new Set(o0[e].mythic.map(a => a.id))])),
+    Jt = {
+        China: "cn",
+        Pacific: "pac",
+        Americas: "ame",
+        EMEA: "emea"
+    },
+    Wt = .2;
+
+function Xt(e) {
+    const a = Math.floor(Date.parse(`${e}T00:00:00Z`) / 864e5),
+        t = Math.floor((a - 4) / 7);
+    return _[(t % _.length + _.length) % _.length]
+}
+const Qt = "2026-10-01",
+    er = "2026-10-03",
+    ar = .15,
+    tr = "2026-10-07",
+    rr = e => !!e && e >= Qt && e <= er,
+    lr = "2026-10-11",
+    sr = [{
+        last: "2026-10-13",
+        off: .15
+    }, {
+        last: "2026-10-17",
+        off: .1
+    }],
+    ir = e => !e || e < lr ? null : sr.find(a => e <= a.last) ?? null,
+    Gl = (e, a) => e === "seoul2024" && !!a && a > tr;
+
+function Il(e, a) {
+    const t = Ne[e].cost;
+    if (!a) return t;
+    if (e === "bangkok2025") return rr(a) ? Math.round(t * (1 - ar)) : t;
+    if (e === "retired") {
+        const l = ir(a);
+        return l ? Math.round(t * (1 - l.off)) : t
+    }
+    const r = Tt(e);
+    return !r || r !== Xt(a) ? t : Math.round(t * (1 - Wt))
+}
+const $ = (e, a) => Math.ceil(e.at * a);
+
+function _l(e) {
+    const a = Object.keys(e.cards);
+    return _.map(t => {
+        var c;
+        const r = P0[t].size,
+            l = a.filter(u => P0[t].has(u)).length,
+            s = ((c = e.series) == null ? void 0 : c[t]) ?? 0,
+            n = de.filter((u, p) => p >= s && l >= $(u, r)),
+            i = de.findIndex(u => l < $(u, r)),
+            o = i < 0 ? null : {
+                ...de[i],
+                need: $(de[i], r) - l
+            };
+        return {
+            region: t,
+            owned: l,
+            total: r,
+            pack: Jt[t],
+            ready: n,
+            next: o,
+            legends: a.filter(u => L0[t].has(u)).length,
+            legendsTotal: L0[t].size
+        }
+    })
+}
+const da = ["retired", "seoul2024", "bangkok2025"],
+    nr = {
+        retired: "退役选手",
+        seoul2024: "首尔 2024",
+        bangkok2025: "曼谷 2025"
+    },
+    fa = {
+        retired: [{
+            at: .25,
+            coins: 1500,
+            label: "+1500 金币"
+        }, {
+            at: .5,
+            coins: 1500,
+            pack: "elite",
+            label: "选拔包 ×1，+1500 金币"
+        }, {
+            at: .75,
+            coins: 5e3,
+            label: "+5000 金币"
+        }, {
+            at: .9,
+            coins: 0,
+            pack: "retired",
+            count: 2,
+            label: "退役选手包 ×2"
+        }, {
+            at: 1,
+            coins: 25e3,
+            pack: "ten",
+            label: "十连包 ×1，+25000 金币"
+        }],
+        seoul2024: [{
+            at: .25,
+            coins: 1500,
+            label: "+1500 金币"
+        }, {
+            at: .5,
+            coins: 1500,
+            pack: "elite",
+            label: "选拔包 ×1，+1500 金币"
+        }, {
+            at: .75,
+            coins: 5e3,
+            label: "+5000 金币"
+        }, {
+            at: .9,
+            coins: 0,
+            pack: "seoul2024",
+            count: 2,
+            label: "首尔包 ×2"
+        }, {
+            at: 1,
+            coins: 1e4,
+            pack: "retired",
+            count: 3,
+            label: "退役选手包 ×3，+10000 金币"
+        }],
+        bangkok2025: [{
+            at: .5,
+            coins: 1500,
+            label: "+1500 金币"
+        }, {
+            at: .9,
+            coins: 0,
+            pack: "bangkok2025",
+            count: 1,
+            label: "曼谷包 ×1"
+        }, {
+            at: 1,
+            coins: 3e3,
+            pack: "retired",
+            count: 1,
+            label: "退役选手包 ×1，+3000 金币"
+        }]
+    },
+    or = {
+        retired: new Set(J.filter(e => e.rarity !== "mythic").map(e => e.id)),
+        seoul2024: new Set(ke.filter(e => e.rarity !== "mythic").map(e => e.id)),
+        bangkok2025: new Set(he.filter(e => e.rarity !== "mythic").map(e => e.id))
+    };
+
+function cr(e) {
+    const a = {};
+    if (e && typeof e == "object" && !Array.isArray(e))
+        for (const t of da) {
+            const r = Math.trunc(Number(e[t]) || 0);
+            r > 0 && (a[t] = Math.min(r, fa[t].length))
+        }
+    return a
+}
+
+function Fl(e) {
+    return da.map(a => {
+        var c;
+        const t = or[a],
+            r = t.size;
+        let l = 0;
+        for (const u of Object.keys(e.cards)) t.has(u) && l++;
+        const s = fa[a],
+            n = ((c = e.collect) == null ? void 0 : c[a]) ?? 0,
+            i = s.filter((u, p) => p >= n && l >= $(u, r)),
+            o = s.findIndex(u => l < $(u, r));
+        return {
+            series: a,
+            name: nr[a],
+            owned: l,
+            total: r,
+            ready: i,
+            claimed: n,
+            next: o < 0 ? null : {
+                ...s[o],
+                need: $(s[o], r) - l
+            }
+        }
+    })
+}
+const D0 = new Set(Je.filter(e => e.rarity !== "mythic" && !(e.kind === "player" && e.event)).map(e => e.id)),
+    Bl = {
+        pack: "legend",
+        count: 1
+    };
+
+function Kl(e) {
+    let a = 0;
+    for (const l of Object.keys(e.cards)) D0.has(l) && a++;
+    const t = D0.size,
+        r = (e.fullSet ?? 0) >= 1;
+    return {
+        owned: a,
+        total: t,
+        ready: !r && a >= t,
+        claimed: r
+    }
+}
+
+function ur(e) {
+    const a = P.slice().sort((s, n) => s.rating - n.rating),
+        t = a.length / M.length,
+        r = Math.floor(e * t),
+        l = Math.min(a.length, Math.ceil((e + 1) * t) + 4);
+    return a.slice(r, l).map(s => s.id)
+}
+const gr = e => e.wins + e.losses,
+    ql = (e, a = "open") => {
+        const t = ca(e, a);
+        return t.pending && t.pending.at === gr(t) ? t.pending : null
+    };
+
+function $l(e, a = "open") {
+    const t = ca(e, a),
+        r = ur(t.div);
+    return new U((e.seed ^ B(`lad${a}${t.wins}${t.losses}`)) >>> 0).pick(r)
+}
+const zl = e => A(Math.floor(Math.max(0, e) / 250), 0, 10),
+    xl = 6,
+    c0 = "2026-09-28",
+    u0 = 28,
+    z = e => Math.floor(Date.parse(`${e}T00:00:00Z`) / 864e5),
+    ba = e => new Date(e * 864e5).toISOString().slice(0, 10),
+    ma = e => {
+        const a = z(e) - z(c0);
+        return Number.isFinite(a) && a >= 0 ? Math.floor(a / u0) + 1 : 0
+    },
+    Ul = e => ba(z(c0) + (Math.max(1, e) - 1) * u0),
+    pr = e => ba(z(c0) + Math.max(0, e) * u0 - 1),
+    Zl = e => z(pr(ma(e))) - z(e) + 1,
+    Vl = e => e > 0 ? `S${e}` : "赛季前",
+    jl = 3,
+    Jl = 5,
+    Wl = e => 100 + 150 * e,
+    Xl = e => 600 + 300 * e,
+    Ql = (e, a) => a >= e - 1 ? "决赛" : `${2**(e-a)}强`,
+    es = e => !e.lower && e.round >= e.path.length - 1 ? 5 : 3;
+
+function as(e) {
+    const a = [...e.slots, e.coach];
+    if (a.some(l => !l)) return {
+        why: "国家队杯要五名选手加一名教练，六个人都要上"
+    };
+    const t = a.map(l => {
+        var s;
+        return me(((s = h(l)) == null ? void 0 : s.nat) ?? null)
+    });
+    if (t.some(l => !l)) return {
+        why: "阵容里有国籍不明的人，不能参加国家队杯"
+    };
+    const r = [...new Set(t)];
+    return r.length > 1 ? {
+        why: `国家队杯要六个人同一国籍，现在有 ${r.map(l=>B0(l)).join("、")}`
+    } : {
+        nat: r[0]
+    }
+}
+const dr = e => !!e && Array.isArray(e.slots) && e.slots.length === 5 && e.slots.every(a => typeof a == "string" && !!h(a)) && typeof e.coach == "string" && !!h(e.coach);
+
+function G0(e, a = Ye) {
+    const t = new Map(a.map(n => [n.id, n.rating])),
+        r = new Set([...e.path, ...e.legs.map(n => n.opponent)]),
+        l = t.get(e.path[e.round]) ?? 70;
+    return (a.filter(n => !r.has(n.id)).sort((n, i) => Math.abs(n.rating - l) - Math.abs(i.rating - l) || n.id.localeCompare(i.id))[0] ?? a[0]).id
+}
+const fr = (e, a) => a === "enc" ? e.enc ?? null : e.cup,
+    ts = (e, a = "club") => {
+        const t = fr(e, a);
+        return t && !t.done ? t.double && t.lower || (t.path[t.round] ?? null) : null
+    };
+
+function br(e) {
+    const a = e.cup;
+    if (!a || !Array.isArray(a.path)) return;
+    const t = new Map(Ye.map(l => [l.id, l.rating]));
+    if (a.path.every(l => t.has(l))) {
+        a.lower && !t.has(a.lower) && !a.done && (a.lower = G0(a));
+        return
+    }
+    const r = new Set(a.path.filter(l => t.has(l)));
+    a.path = a.path.map((l, s) => {
+        if (t.has(l)) return l;
+        const n = a.path.slice(0, s).map(d => t.get(d)).filter(d => d !== void 0),
+            i = a.path.slice(s + 1).map(d => t.get(d)).filter(d => d !== void 0),
+            o = n.length ? Math.max(...n) : null,
+            c = i.length ? Math.min(...i) : null,
+            u = o !== null && c !== null ? (o + c) / 2 : o !== null ? o + 2 : c !== null ? c - 2 : 60,
+            p = Ye.filter(d => !r.has(d.id)).sort((d, g) => Math.abs(d.rating - u) - Math.abs(g.rating - u) || d.id.localeCompare(g.id))[0];
+        return r.add(p.id), p.id
+    }), a.lower && !t.has(a.lower) && !a.done && (a.lower = G0(a))
+}
+const mr = Object.keys(zt);
+
+function hr(e, a) {
+    return new U(B(e + a) >>> 0).shuffle(mr.slice()).slice(0, 3)
+}
+
+function rs(e, a) {
+    e.daily.questDay !== a && (e.daily.questDay = a, e.daily.picked = hr(a, e.id), e.daily.progress = {}, e.daily.taken = [])
+}
+const ha = (e, a) => e.daily.staminaAt || a;
+
+function ka(e, a) {
+    const t = ha(e, a),
+        r = Math.max(0, Math.min(G, e.daily.stamina ?? G)),
+        l = Math.floor(Math.max(0, a - t) / ae);
+    return Math.min(G, r + l)
+}
+
+function ls(e, a) {
+    if (ka(e, a) >= G) return 0;
+    const t = ha(e, a),
+        r = Math.max(0, a - t);
+    return ae - r % ae
+}
+const ss = (e, a, t) => ka(e, t) >= Ot[a],
+    is = 5;
+
+function kr(e, a, t) {
+    e.daily.picked.includes(a) && (e.daily.progress[a] = (e.daily.progress[a] ?? 0) + t)
+}
+
+function ns(e, a, t) {
+    if (!(a < 0 || a >= e.squad.slots.length)) {
+        if (t) {
+            const r = e.squad.slots.indexOf(t);
+            if (r >= 0) e.squad.slots[r] = e.squad.slots[a];
+            else {
+                const l = h(t);
+                l && e.squad.slots.forEach((s, n) => {
+                    if (n === a || !s) return;
+                    const i = h(s);
+                    i && S(i) === S(l) && (e.squad.slots[n] = null)
+                })
+            }
+        }
+        e.squad.slots[a] = t
+    }
+}
+
+function os(e, a, t = -1) {
+    const r = h(a);
+    return r ? e.squad.slots.some((l, s) => {
+        if (s === t || !l || l === a) return !1;
+        const n = h(l);
+        return !!n && S(n) === S(r)
+    }) : !1
+}
+const I0 = e => e.slots.some(a => {
+        const t = a ? h(a) : void 0;
+        return H(t) && t.isIgl
+    }),
+    _0 = (e, a, t) => {
+        const r = h(a);
+        return r ? e.slots.some((l, s) => s !== t && !!l && l !== a && S(h(l)) === S(r)) : !1
+    };
+
+function cs(e) {
+    const a = g => pa(e, g),
+        t = O0(e).filter(g => H(g.card)),
+        r = Z0(),
+        l = new Set;
+    j.forEach((g, f) => {
+        const m = v => !l.has(S(v.card)),
+            k = t.find(v => m(v) && H(v.card) && v.card.roles.includes(g)) ?? t.find(m);
+        k && (l.add(S(k.card)), r.slots[f] = k.card.id)
+    });
+    const s = t.filter(g => H(g.card) && g.card.isIgl),
+        n = s.find(g => !l.has(S(g.card)));
+    if (n && H(n.card) && !I0(r)) {
+        const g = n.card.roles,
+            f = j.map((v, D) => D).filter(v => !_0(r, n.card.id, v)),
+            m = f.filter(v => j[v] === "自由人" || g.includes(j[v])),
+            b = v => v.slice().sort((D, K) => {
+                var f0, b0;
+                const wa = r.slots[D] ? qe(((f0 = h(r.slots[D])) == null ? void 0 : f0.rating) ?? 0, a(r.slots[D])) : -1,
+                    Aa = r.slots[K] ? qe(((b0 = h(r.slots[K])) == null ? void 0 : b0.rating) ?? 0, a(r.slots[K])) : -1;
+                return wa - Aa
+            })[0],
+            k = m.length ? b(m) : b(f);
+        k !== void 0 && (r.slots[k] = n.card.id)
+    }
+    const i = [...new Set([...t.slice(0, 60), ...s].map(g => g.card.id))],
+        o = s.length > 0;
+    let c = Be(r, a);
+    for (let g = 0; g < 3; g++) {
+        let f = !1;
+        for (let m = 0; m < r.slots.length; m++) {
+            let b = r.slots[m];
+            for (const k of i) {
+                if (k === b || r.slots.includes(k) || _0(r, k, m)) continue;
+                if (r.slots[m] = k, o && !I0(r)) {
+                    r.slots[m] = b;
+                    continue
+                }
+                const v = Be(r, a);
+                v > c ? (c = v, b = k, f = !0) : r.slots[m] = b
+            }
+        }
+        if (!f) break
+    }
+    const u = O0(e).filter(g => g.card.kind === "coach");
+    let p = null,
+        d = k0(r, a);
+    for (const g of u) {
+        r.coach = g.card.id;
+        const f = k0(r, a);
+        f > d && (p = g.card.id, d = f)
+    }
+    return r.coach = p, r
+}
+const Cr = e => {
+    e.coins = Math.max(0, Math.round(e.coins));
+    for (const a of [e.ladder, ...Object.values(e.leagues ?? {})]) a && (a.div = A(Math.round(a.div), 0, M.length - 1), a.stars = A(Math.round(a.stars), 0, R0(a.div)), a.points = Math.max(0, Math.round(a.points ?? 0)), a.bestPoints = Math.max(a.bestPoints ?? 0, a.points));
+    return e.ladder.div = A(Math.round(e.ladder.div), 0, M.length - 1), e.ladder.stars = A(Math.round(e.ladder.stars), 0, R0(e.ladder.div)), e.ladder.points = Math.max(0, Math.round(e.ladder.points ?? 0)), e.ladder.bestPoints = Math.max(e.ladder.bestPoints ?? 0, e.ladder.points), e
+};
+
+function x(e, a) {
+    var l, s, n, i, o, c, u;
+    const t = e;
+    if (t.version = na, t.id = a, t.name = typeof t.name == "string" ? t.name : "经理", t.createdAt = typeof t.createdAt == "string" ? t.createdAt : new Date().toISOString().slice(0, 10), t.coins = typeof t.coins == "number" && Number.isFinite(t.coins) ? t.coins : 0, t.cards = Dt(t.cards), t.packs = t.packs && typeof t.packs == "object" ? t.packs : {}, t.pity = typeof t.pity == "number" ? t.pity : 0, t.mythicDry ?? (t.mythicDry = 0), t.retiredDry = typeof t.retiredDry == "number" && Number.isFinite(t.retiredDry) ? Math.max(0, Math.trunc(t.retiredDry)) : 0, t.leagues && typeof t.leagues == "object") {
+        const p = {};
+        for (const d of _t) {
+            if (d === "open") continue;
+            const g = t.leagues[d];
+            !g || typeof g != "object" || (p[d] = {
+                div: A(Math.round(Number(g.div) || 0), 0, M.length - 1),
+                stars: Math.max(0, Math.round(Number(g.stars) || 0)),
+                best: Math.max(0, Math.trunc(Number(g.best) || 0)),
+                wins: Math.max(0, Math.trunc(Number(g.wins) || 0)),
+                losses: Math.max(0, Math.trunc(Number(g.losses) || 0)),
+                streak: Math.trunc(Number(g.streak) || 0),
+                points: Math.max(0, Math.round(Number(g.points) || 0)),
+                bestPoints: Math.max(0, Math.round(Number(g.bestPoints) || 0)),
+                ...g.peak != null ? {
+                    peak: Math.max(0, Math.trunc(Number(g.peak) || 0))
+                } : {},
+                ...g.peakPoints != null ? {
+                    peakPoints: Math.max(0, Math.round(Number(g.peakPoints) || 0))
+                } : {},
+                ...g.sWins != null ? {
+                    sWins: Math.max(0, Math.trunc(Number(g.sWins) || 0))
+                } : {},
+                ...g.sLosses != null ? {
+                    sLosses: Math.max(0, Math.trunc(Number(g.sLosses) || 0))
+                } : {},
+                pending: g.pending
+            })
+        }
+        t.leagues = p
+    } else delete t.leagues;
+    for (t.pulls = typeof t.pulls == "number" && Number.isFinite(t.pulls) ? t.pulls : 0, t.log = Array.isArray(t.log) ? t.log : [], t.squad ?? (t.squad = {
+            slots: [null, null, null, null, null],
+            coach: null
+        }), t.squad.slots = Array.isArray(t.squad.slots) ? t.squad.slots.slice(0, 5) : []; t.squad.slots.length < 5;) t.squad.slots.push(null);
+    if (t.squad.coach = typeof t.squad.coach == "string" ? t.squad.coach : null, t.ladder ?? (t.ladder = {
+            div: 0,
+            stars: 0,
+            best: 0,
+            wins: 0,
+            losses: 0,
+            streak: 0
+        }), t.ladder.wins = Math.max(0, Math.trunc(Number(t.ladder.wins) || 0)), t.ladder.losses = Math.max(0, Math.trunc(Number(t.ladder.losses) || 0)), t.ladder.streak = Math.trunc(Number(t.ladder.streak) || 0), t.ladder.best = Math.max(0, Math.trunc(Number(t.ladder.best) || 0)), (l = t.ladder).points ?? (l.points = 0), (s = t.ladder).bestPoints ?? (s.bestPoints = t.ladder.points), t.daily ?? (t.daily = {
+            claimed: null,
+            streak: 0,
+            questDay: null,
+            picked: [],
+            progress: {},
+            taken: [],
+            stamina: G,
+            staminaAt: 0
+        }), (n = t.daily).picked ?? (n.picked = []), (i = t.daily).progress ?? (i.progress = {}), (o = t.daily).taken ?? (o.taken = []), (c = t.daily).stamina ?? (c.stamina = G), (u = t.daily).staminaAt ?? (u.staminaAt = 0), t.challenge ?? (t.challenge = l0()), t.minigame ?? (t.minigame = ia()), t.series ?? (t.series = {}), t.collect = cr(t.collect), t.fullSet !== void 0) {
+        const p = t.fullSet;
+        p === 1 || p === !0 ? t.fullSet = 1 : delete t.fullSet
+    }
+    t.friends ?? (t.friends = []), t.presets ?? (t.presets = void 0);
+    const r = Ja(t.predict);
+    return r ? t.predict = r : delete t.predict, br(t), (t.enc && !t.enc.rivals || t.enc && !t.enc.done && t.enc.path.some(p => !dr(t.enc.rivals[p]))) && delete t.enc, t.seed = typeof t.seed == "number" && Number.isFinite(t.seed) ? t.seed >>> 0 : B(a + t.createdAt) >>> 0, Cr(t)
+}
+const vr = ["version", "createdAt", "coins", "cards", "packs", "pity", "mythicDry", "retiredDry", "pulls", "ladder", "leagues", "cup", "daily", "challenge", "minigame", "series", "collect", "fullSet", "mail", "log", "seed", "predict", "seoulRoute", "bangkokRoute", "history", "season", "lastSeason", "enc", "nameAt"],
+    Er = 7,
+    yr = e => typeof e.nameAt == "number" && Number.isFinite(e.nameAt) ? e.nameAt + Er * 864e5 : 0,
+    Yr = ["name", "squad", "presets", "friends"];
+
+function g0(e, a, t = Date.now()) {
+    var r;
+    if (typeof a.name == "string") {
+        const l = a.name.slice(0, 40);
+        l !== e.name && yr(e) <= t && (e.name = l, e.nameAt = t)
+    }
+    if (a.squad && typeof a.squad == "object") {
+        const l = Array.isArray(a.squad.slots) ? a.squad.slots.slice(0, 5) : [],
+            s = new Set,
+            n = l.map(o => {
+                if (typeof o != "string" || !e.cards[o]) return null;
+                const c = h(o);
+                if (!c || !H(c)) return null;
+                const u = S(c);
+                return s.has(u) ? null : (s.add(u), o)
+            });
+        for (; n.length < 5;) n.push(null);
+        const i = typeof a.squad.coach == "string" && e.cards[a.squad.coach] && ((r = h(a.squad.coach)) == null ? void 0 : r.kind) === "coach" ? a.squad.coach : null;
+        e.squad = {
+            slots: n,
+            coach: i
+        }
+    }
+    if (Array.isArray(a.presets)) {
+        const l = e.presets ?? [],
+            s = a.presets.slice(0, Ze);
+        e.presets = Array.from({
+            length: Math.max(s.length, Math.min(l.length, Ze))
+        }, (n, i) => {
+            if (i >= s.length) return l[i] ?? null;
+            const o = s[i];
+            if (!o || typeof o != "object" || !o.squad) return null;
+            const c = (Array.isArray(o.squad.slots) ? o.squad.slots.slice(0, 5) : []).map(u => typeof u == "string" ? u.slice(0, 40) : null);
+            for (; c.length < 5;) c.push(null);
+            return {
+                name: String(o.name ?? "").slice(0, 12) || "配置",
+                squad: {
+                    slots: c,
+                    coach: typeof o.squad.coach == "string" ? o.squad.coach.slice(0, 40) : null
+                }
+            }
+        }), e.presets.some(Boolean) || (e.presets = void 0)
+    }
+    return Array.isArray(a.friends) && (e.friends = a.friends.slice(0, ua).filter(l => l && typeof l == "object").map(l => ({
+        code: String(l.code ?? "").slice(0, 8),
+        name: String(l.name ?? "").slice(0, 40),
+        tag: String(l.tag ?? "").slice(0, 8),
+        wins: Math.max(0, Math.trunc(Number(l.wins) || 0)),
+        losses: Math.max(0, Math.trunc(Number(l.losses) || 0)),
+        at: String(l.at ?? "").slice(0, 10)
+    }))), e
+}
+
+function Ca(e, a) {
+    for (const t of vr) e[t] = a[t];
+    return a.squad && (e.squad = a.squad), e
+}
+const Hr = {},
+    va = "valmanager:card:state:",
+    Ea = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+
+function wr() {
+    const e = new Uint8Array(20);
+    crypto.getRandomValues(e);
+    const a = Array.from(e, t => Ea[t % 32]).join("");
+    return `VM-${a.slice(0,4)}-${a.slice(4,8)}-${a.slice(8,12)}-${a.slice(12,16)}-${a.slice(16,20)}`
+}
+
+function Ar(e) {
+    const a = e.toUpperCase().replace(/[^0-9A-Z]/g, "").replace(/O/g, "0").replace(/I/g, "1").replace(/L/g, "1").replace(/U/g, "V"),
+        t = a.startsWith("VM") ? a.slice(2) : a;
+    return t.length !== 20 || [...t].some(r => !Ea.includes(r)) ? null : `VM-${t.slice(0,4)}-${t.slice(4,8)}-${t.slice(8,12)}-${t.slice(12,16)}-${t.slice(16,20)}`
+}
+const Ae = e => {
+        try {
+            const a = localStorage.getItem(va + e);
+            if (!a) return null;
+            const t = JSON.parse(a);
+            return t && typeof t == "object" && "state" in t ? t : {
+                state: t,
+                rev: null,
+                dirty: !0
+            }
+        } catch {
+            return null
+        }
+    },
+    T = (e, a) => {
+        try {
+            const t = {
+                state: e,
+                rev: C,
+                dirty: a
+            };
+            localStorage.setItem(va + e.id, JSON.stringify(t))
+        } catch {}
+    };
+let ya = 0;
+const re = e => {
+        typeof e == "number" && Number.isFinite(e) && (ya = e - Date.now())
+    },
+    Sr = () => Date.now() + ya;
+let C = null,
+    Z = null;
+const us = () => Z;
+let ve = null;
+const gs = e => {
+        ve = e
+    },
+    Tr = typeof Hr < "u" ? "./" : "/",
+    E = e => `${Tr}api/card/${e}`.replace(/([^:])\/\//g, "$1/"),
+    Pe = e => {
+        const a = {},
+            t = e;
+        for (const r of Yr) a[r] = t[r];
+        return a
+    };
+let w = 0,
+    O = 0;
+const te = () => w !== O,
+    Ve = e => JSON.stringify(e, (a, t) => t && typeof t == "object" && !Array.isArray(t) ? Object.fromEntries(Object.keys(t).sort().map(r => [r, t[r]])) : t),
+    L = e => Ve(Pe(e));
+let le = null;
+const se = new Map;
+let F0 = 0;
+const Ya = e => (se.set(++F0, e), F0);
+let Le = null;
+const Mr = e => e === le || e === Le || [...se.values()].includes(e),
+    Ha = e => {
+        w = 0, O = 0, se.clear(), Le = null, le = L(e)
+    };
+
+function Q(e, a, t, r = O) {
+    if (!a || typeof a != "object" || typeof t == "number" && C != null && t < C) return null;
+    const l = x(a, e.id),
+        s = e.squad;
+    return Ca(e, l), typeof t == "number" && (C = t), le = L(l), w !== r ? e.squad = s : O = r, l
+}
+
+function p0(e, a, t = O) {
+    if (a && w !== t && L(a) !== L(e)) {
+        O = -1, d0(e);
+        return
+    }
+    T(e, te())
+}
+
+function ps(e, a, t) {
+    const r = Q(e, a, t);
+    return r ? (p0(e, r), !0) : !1
+}
+async function ds(e, a, t = {}) {
+    const r = Or(),
+        l = w,
+        s = Ya(L(e)),
+        n = JSON.stringify({
+            id: e.id,
+            action: a,
+            args: t,
+            requestId: r,
+            client: Pe(e)
+        }),
+        i = async () => {
+            const p = typeof AbortController < "u" ? new AbortController : null,
+                d = p ? setTimeout(() => p.abort(), Nr) : null;
+            try {
+                const g = await fetch(E("act"), {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: n,
+                    signal: p == null ? void 0 : p.signal
+                });
+                return {
+                    status: g.status,
+                    j: await g.json().catch(() => null)
+                }
+            } finally {
+                d && clearTimeout(d)
+            }
+        }, o = (p, d) => {
+            if (re(d.now), typeof d.code == "string" && (Z = d.code), d.state) {
+                const g = Q(e, d.state, d.rev, l);
+                g && p0(e, g, l)
+            } else typeof d.rev == "number" && (C == null || d.rev > C) && (C = d.rev);
+            return d.ok && d.trimmed && d.result === void 0 ? {
+                ok: !1,
+                why: "这一步已经成功，账号已更新。"
+            } : d.ok ? {
+                ok: !0,
+                result: d.result,
+                replayed: d.replayed === !0
+            } : d.offline ? {
+                ok: !1,
+                why: "服务器暂时不可用，稍后再试。",
+                offline: !0
+            } : {
+                ok: !1,
+                why: d.why ?? (p === 429 ? "操作太快了，等一下。" : "没成功，等会儿再试。")
+            }
+        }, c = p => !p || p.status >= 500 || !p.j && p.status !== 429;
+    let u = null;
+    for (let p = 0; p < 2; p++) {
+        p && await new Promise(d => setTimeout(d, Rr));
+        try {
+            u = await i()
+        } catch {
+            u = null
+        }
+        if (!c(u)) break
+    }
+    try {
+        return u ? u.j ? o(u.status, u.j) : {
+            ok: !1,
+            why: `服务器没有回应（${u.status}）`,
+            unknown: u.status >= 500
+        } : {
+            ok: !1,
+            why: "连不上服务器，结果还不确定，请刷新后核对。",
+            offline: !0,
+            unknown: !0
+        }
+    } finally {
+        se.delete(s)
+    }
+}
+const Nr = 25e3,
+    Rr = 1200;
+
+function Or() {
+    const e = new Uint8Array(16);
+    try {
+        crypto.getRandomValues(e)
+    } catch {
+        for (let t = 0; t < e.length; t++) e[t] = Math.floor(Math.random() * 256)
+    }
+    let a = "";
+    for (let t = 0; t < e.length; t++) a += (e[t] < 16 ? "0" : "") + e[t].toString(16);
+    return a
+}
+async function fs(e = "open") {
+    try {
+        const a = await fetch(E("top"), {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                id: We(),
+                league: e
+            })
+        });
+        if (!a.ok) return null;
+        const t = await a.json();
+        return t.ok && Array.isArray(t.rows) ? t.rows : null
+    } catch {
+        return null
+    }
+}
+async function bs(e = "open") {
+    try {
+        const a = await fetch(E("top_last"), {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                id: We(),
+                league: e
+            })
+        });
+        if (!a.ok) return null;
+        const t = await a.json();
+        return t.ok && Array.isArray(t.rows) ? {
+            season: t.season ?? null,
+            rows: t.rows,
+            mine: t.mine ?? null
+        } : null
+    } catch {
+        return null
+    }
+}
+async function ms(e) {
+    try {
+        const a = await fetch(E("predict_top"), {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                id: We(),
+                event: e
+            })
+        });
+        if (!a.ok) return null;
+        const t = await a.json();
+        return t.ok && Array.isArray(t.rows) ? {
+            players: t.players ?? 0,
+            total: t.total ?? 0,
+            rows: t.rows,
+            mine: t.mine ?? null
+        } : null
+    } catch {
+        return null
+    }
+}
+async function hs(e) {
+    const a = e.trim().toLowerCase().replace(/[^0-9a-f]/g, "");
+    if (a.length !== 8) return {
+        ok: !1,
+        why: "bad"
+    };
+    try {
+        const t = await fetch(E("friend"), {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                code: a
+            })
+        });
+        if (!t.ok) return {
+            ok: !1,
+            why: "offline"
+        };
+        const r = await t.json();
+        return r.ok && r.friend && Array.isArray(r.friend.slots) && r.friend.slots.filter(Boolean).length === 5 ? {
+            ok: !0,
+            friend: r.friend
+        } : {
+            ok: !1,
+            why: r.bad ? "bad" : r.empty ? "empty" : r.clash ? "clash" : r.missing ? "missing" : "offline"
+        }
+    } catch {
+        return {
+            ok: !1,
+            why: "offline"
+        }
+    }
+}
+async function ks(e) {
+    const a = e.trim().toLowerCase().replace(/[^0-9a-f]/g, "");
+    if (a.length !== 8) return {
+        ok: !1,
+        why: "bad"
+    };
+    try {
+        const t = await fetch(E("friend_cards"), {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                code: a
+            })
+        });
+        if (!t.ok) return {
+            ok: !1,
+            why: "offline"
+        };
+        const r = await t.json();
+        return r.ok && Array.isArray(r.cards) ? {
+            ok: !0,
+            name: r.name ?? "",
+            tag: r.tag ?? "",
+            code: a.toUpperCase(),
+            cards: r.cards
+        } : {
+            ok: !1,
+            why: r.bad ? "bad" : r.clash ? "clash" : r.missing ? "missing" : "offline"
+        }
+    } catch {
+        return {
+            ok: !1,
+            why: "offline"
+        }
+    }
+}
+async function Cs() {
+    try {
+        const a = await (await fetch(E("day"), {
+            cache: "no-store"
+        })).json();
+        if (re(a == null ? void 0 : a.now), a != null && a.today) return {
+            today: a.today,
+            cloud: !!a.cloud
+        }
+    } catch {}
+    return {
+        today: Se(),
+        cloud: !1
+    }
+}
+const Pr = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Shanghai",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+    }),
+    Lr = e => Pr.format(new Date(e)),
+    Se = () => Lr(Sr());
+async function vs(e) {
+    const a = Ar(e);
+    if (!a) return {
+        ok: !1,
+        reason: "bad",
+        today: Se()
+    };
+    let t = Se();
+    try {
+        const s = await (await fetch(E("load"), {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                id: a
+            })
+        })).json();
+        if (re(s == null ? void 0 : s.now), typeof(s == null ? void 0 : s.rev) == "number" && (C = s.rev), typeof(s == null ? void 0 : s.code) == "string" && (Z = s.code), s != null && s.today && (t = s.today), s != null && s.ok && s.state) {
+            const n = x(s.state, a);
+            Ha(n);
+            const i = Ae(a);
+            return i != null && i.dirty && i.state && (i.rev == null || i.rev === C) ? (g0(n, i.state), T(n, !0), Dr(n, !0)) : T(n, !1), {
+                ok: !0,
+                state: n,
+                today: t,
+                cloud: !0,
+                verified: s.verified === !0,
+                phone: typeof s.phone == "string" ? s.phone : null
+            }
+        }
+        if (s != null && s.missing) return {
+            ok: !1,
+            reason: "missing",
+            today: t
+        }
+    } catch {}
+    const r = Ae(a);
+    return r ? {
+        ok: !0,
+        state: x(r.state, a),
+        today: t,
+        cloud: !1,
+        verified: !0,
+        phone: null
+    } : {
+        ok: !1,
+        reason: "offline",
+        today: t
+    }
+}
+async function Es(e) {
+    const a = e.trim().slice(0, 20) || "经理";
+    for (let t = 0; t < 3; t++) {
+        const r = wr();
+        try {
+            const s = await (await fetch(E("claim"), {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    id: r,
+                    name: a
+                })
+            })).json();
+            if (re(s == null ? void 0 : s.now), s != null && s.taken) continue;
+            if (!(s != null && s.ok) || !s.state) return {
+                ok: !1,
+                why: s != null && s.offline ? "服务器暂时不可用，建不了账号。" : "服务器没接受，等会儿再试。"
+            };
+            typeof s.rev == "number" && (C = s.rev), typeof s.code == "string" && (Z = s.code);
+            const n = x(s.state, r);
+            return Ha(n), Da(r), T(n, !1), {
+                ok: !0,
+                state: n,
+                today: s.today ?? Se()
+            }
+        } catch {
+            return {
+                ok: !1,
+                why: "连不上服务器，建账号需要联网。"
+            }
+        }
+    }
+    return {
+        ok: !1,
+        why: "生成账号失败，再试一次。"
+    }
+}
+let Y = null,
+    Fe = !1,
+    Ee = 0;
+
+function Dr(e, a = !1) {
+    return w++, d0(e, a)
+}
+let fe = 0;
+
+function d0(e, a = !1) {
+    T(e, !0), Y && (clearTimeout(Y), Y = null);
+    const t = async () => {
+        if (Fe) {
+            Y = window.setTimeout(t, 400);
+            return
+        }
+        Fe = !0;
+        const r = w,
+            l = Pe(e),
+            s = Ve(l),
+            n = Ya(s);
+        try {
+            const i = await fetch(E("save"), {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        id: e.id,
+                        name: e.name,
+                        client: l,
+                        baseRev: C,
+                        lean: !0
+                    })
+                }),
+                o = await i.json().catch(() => null);
+            if (typeof(o == null ? void 0 : o.code) == "string" && (Z = o.code), typeof(o == null ? void 0 : o.rev) == "number" && C != null && o.rev < C && (o != null && o.stale || i.ok)) i.ok && (Ee = 0), te() && !Y && (Y = window.setTimeout(t, 0));
+            else if (o != null && o.stale && o.state) {
+                const u = x(o.state, e.id),
+                    p = L(u);
+                Mr(p) ? (Q(e, o.state, o.rev, -1), L(e) === p ? (O = w, fe = 0, T(e, !1)) : (Y && clearTimeout(Y), Y = window.setTimeout(t, ++fe > 4 ? 1500 : 0))) : (fe = 0, Q(e, o.state, o.rev, w), g0(e, u), O = w, T(e, !1), ve == null || ve(e))
+            } else if (i.ok)
+                if (Ee = 0, fe = 0, Le = null, o != null && o.state) p0(e, Q(e, o.state, o.rev, r), r);
+                else {
+                    typeof(o == null ? void 0 : o.rev) == "number" && (C == null || o.rev > C) && (C = o.rev);
+                    const u = o == null ? void 0 : o.squad,
+                        p = u && typeof u == "object" && Array.isArray(u.slots) ? u : l.squad;
+                    le = Ve({
+                        ...l,
+                        squad: p
+                    }), w === r && (p && (e.squad = p), O = r), T(e, te())
+                }
+            else throw new Error(`save ${i.status}`)
+        } catch {
+            const i = Math.min(3e4, 1500 * 2 ** Ee++);
+            Y = window.setTimeout(t, i)
+        } finally {
+            se.delete(n), Fe = !1
+        }
+    };
+    return a ? t() : (Y = window.setTimeout(t, 1200), Promise.resolve())
+}
+async function ys(e) {
+    const a = Ae(e.id);
+    if (a != null && a.dirty || te()) return !1;
+    const t = typeof(a == null ? void 0 : a.rev) == "number" ? a.rev : C;
+    try {
+        const l = await (await fetch(E("load"), {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                id: e.id
+            })
+        })).json();
+        if (re(l == null ? void 0 : l.now), !(l != null && l.ok) || !l.state || typeof l.rev != "number" || (typeof l.code == "string" && (Z = l.code), te() || C != null && l.rev < C)) return !1;
+        if (l.rev === t) return C = l.rev, !1;
+        C = l.rev;
+        const s = x(l.state, e.id);
+        return Ca(e, s), g0(e, s), le = L(s), T(e, !1), !0
+    } catch {
+        return !1
+    }
+}
+
+function Ys(e) {
+    var a;
+    Y && (clearTimeout(Y), Y = null), T(e, !0), Le = L(e);
+    try {
+        const t = JSON.stringify({
+                id: e.id,
+                name: e.name,
+                client: Pe(e),
+                baseRev: C
+            }),
+            r = new Blob([t], {
+                type: "application/json"
+            });
+        if ((a = navigator.sendBeacon) != null && a.call(navigator, E("save"), r)) return;
+        fetch(E("save"), {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: t,
+            keepalive: !0
+        }).catch(() => {})
+    } catch {}
+}
+
+function Hs(e) {
+    const a = Ae(e.id);
+    a != null && a.dirty && (Ee = 0, d0(e, !0))
+}
+async function ws(e, a) {
+    try {
+        return await (await fetch(E("phone/send"), {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                phone: e,
+                for: a.for,
+                id: a.id
+            })
+        })).json()
+    } catch {
+        return {
+            ok: !1,
+            why: "连不上服务器。"
+        }
+    }
+}
+async function As(e, a, t) {
+    try {
+        return await (await fetch(E("phone/bind"), {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                id: e,
+                phone: a,
+                code: t
+            })
+        })).json()
+    } catch {
+        return {
+            ok: !1,
+            why: "连不上服务器。"
+        }
+    }
+}
+async function Ss(e, a) {
+    try {
+        return await (await fetch(E("phone/login"), {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                phone: e,
+                code: a
+            })
+        })).json()
+    } catch {
+        return {
+            ok: !1,
+            why: "连不上服务器。"
+        }
+    }
+}
+export {
+    xr as $, Qr as A, er as B, Yl as C, Hl as D, Ue as E, Bl as F, sa as G, Mt as H, Jr as I, Wr as J, ra as K, Zr as L, Ol as M, Vr as N, E as O, Ne as P, zt as Q, Rt as R, is as S, el as T, w0 as U, Et as V, mt as W, r0 as X, He as Y, lt as Z, pa as _, _l as a, _t as a$, ze as a0, Ll as a1, _ as a2, O0 as a3, jt as a4, Pl as a5, it as a6, us as a7, Oe as a8, Tl as a9, G as aA, hl as aB, Hs as aC, ys as aD, Es as aE, t0 as aF, sl as aG, tl as aH, rl as aI, ll as aJ, nl as aK, ol as aL, wt as aM, M0 as aN, pl as aO, gl as aP, At as aQ, cl as aR, ul as aS, il as aT, pr as aU, $l as aV, ca as aW, El as aX, zl as aY, Ft as aZ, ql as a_, Ml as aa, Al as ab, Sl as ac, cs as ad, ns as ae, os as af, yr as ag, Er as ah, M as ai, Kt as aj, $t as ak, Nl as al, Rl as am, Lr as an, Dr as ao, Cs as ap, vs as aq, gs as ar, ds as as, yl as at, Cl as au, vl as av, Ys as aw, ka as ax, ls as ay, Ot as az, As as b, Vl as b0, Zl as b1, Ul as b2, qt as b3, u0 as b4, ss as b5, ml as b6, xl as b7, kl as b8, ma as b9, Y0 as bA, at as bB, Xa as bC, tt as bD, zr as bE, Fr as bF, ms as bG, Br as bH, W0 as bI, qr as bJ, ja as bK, $r as bL, ga as bM, nt as bN, De as bO, Ur as bP, st as bQ, Ge as bR, Q0 as bS, fs as ba, bs as bb, ks as bc, ps as bd, hs as be, wl as bf, Zt as bg, as as bh, jl as bi, Jl as bj, Xl as bk, Wl as bl, _r as bm, Ql as bn, es as bo, ts as bp, Za as bq, a0 as br, Kr as bs, X0 as bt, Qe as bu, j0 as bv, za as bw, Xe as bx, J0 as by, qa as bz, Dl as c, Fl as d, ir as e, Kl as f, sr as g, bl as h, Tt as i, N0 as j, dl as k, Ss as l, fl as m, Xt as n, Gl as o, Il as p, rr as q, rs as r, ws as s, tr as t, Nt as u, Sr as v, jr as w, al as x, s0 as y, Xr as z
+};

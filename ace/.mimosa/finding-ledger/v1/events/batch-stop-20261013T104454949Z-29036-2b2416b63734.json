@@ -1,0 +1,277 @@
+{
+  "schemaVersion": "mimosa-finding-ledger-batch/v1",
+  "batchId": "stop-20261013T104454949Z-29036-2b2416b63734",
+  "runId": "20261013T104454949Z-29036-2b2416b63734",
+  "runStatus": "inconclusive",
+  "coverage": {
+    "status": "partial",
+    "reasons": [
+      {
+        "code": "baseline_partial",
+        "stage": "baseline",
+        "target": ".",
+        "detail": "baseline capture had enumeration or snapshot errors",
+        "affectsCompletion": true
+      },
+      {
+        "code": "project_check_failed",
+        "stage": "baseline",
+        "target": ".",
+        "detail": "baseline_partial: baseline capture had enumeration or snapshot errors",
+        "affectsCompletion": true
+      }
+    ]
+  },
+  "source": {
+    "component": "zcode-hook",
+    "operationId": "Stop"
+  },
+  "revision": null,
+  "diffHash": "b60952e0cf841afddac89d522e2119ee74444fda386649b3c5de666839275f9f",
+  "rulesVersion": "unavailable",
+  "sessionHash": "b360dcfa0d79b363ea4ef7b6c71d734e397f264a8f80b0c74cf1600802380e7a",
+  "reportRef": ".mimosa/reports/task-review-sess_5488cb30-3613-4a9e-b77d-65e936fca663-20261013T104454949Z-29036-2b2416b63734.json",
+  "events": [
+    {
+      "eventId": "hook-ad84ea13dbce5ac900fc80345d4c82ad",
+      "findingId": "mimosa-68f9ef0536525f62ee87e9fb",
+      "type": "finding_observed",
+      "at": "2026-10-13T10:31:02.455Z",
+      "identity": {
+        "projectRelativeFile": "src/app/components/StartScreen.tsx",
+        "ruleId": "security",
+        "codeEvidenceHash": "b6348b8d4d08151bb06dc299c14325e6c4fbf8cfd9e3e338fec904a89cc9b3bc",
+        "confidence": "stable"
+      },
+      "scope": "direct",
+      "line": 6,
+      "endLine": 6,
+      "reasonCode": "advisory",
+      "reportedToAgent": true,
+      "evidence": {
+        "kind": "source",
+        "boundary": "candidate",
+        "producer": "deterministic",
+        "evidenceHash": "b6348b8d4d08151bb06dc299c14325e6c4fbf8cfd9e3e338fec904a89cc9b3bc"
+      },
+      "sequence": 0
+    },
+    {
+      "eventId": "hook-93367a643e4a5c57eb46f4eb6f4158ac",
+      "findingId": "mimosa-039aafe13e26e4c4601cbcc3",
+      "type": "finding_observed",
+      "at": "2026-10-13T10:31:02.455Z",
+      "identity": {
+        "projectRelativeFile": "src/app/components/StartScreen.tsx",
+        "ruleId": "security",
+        "codeEvidenceHash": "e17daa1b66a5140c009e18e32606a0860d2cb8e0ba2b6213dc071899a5265179",
+        "confidence": "stable"
+      },
+      "scope": "direct",
+      "line": 48,
+      "endLine": 48,
+      "reasonCode": "advisory",
+      "reportedToAgent": true,
+      "evidence": {
+        "kind": "source",
+        "boundary": "candidate",
+        "producer": "deterministic",
+        "evidenceHash": "e17daa1b66a5140c009e18e32606a0860d2cb8e0ba2b6213dc071899a5265179"
+      },
+      "sequence": 1
+    },
+    {
+      "eventId": "hook-201c549ca9d035089895c7c54c3a5f13",
+      "findingId": "mimosa-68f9ef0536525f62ee87e9fb",
+      "type": "finding_observed",
+      "at": "2026-10-13T10:32:03.295Z",
+      "identity": {
+        "projectRelativeFile": "src/app/components/StartScreen.tsx",
+        "ruleId": "security",
+        "codeEvidenceHash": "b6348b8d4d08151bb06dc299c14325e6c4fbf8cfd9e3e338fec904a89cc9b3bc",
+        "confidence": "stable"
+      },
+      "scope": "direct",
+      "line": 7,
+      "endLine": 7,
+      "reasonCode": "advisory",
+      "reportedToAgent": true,
+      "evidence": {
+        "kind": "source",
+        "boundary": "candidate",
+        "producer": "deterministic",
+        "evidenceHash": "b6348b8d4d08151bb06dc299c14325e6c4fbf8cfd9e3e338fec904a89cc9b3bc"
+      },
+      "sequence": 2
+    },
+    {
+      "eventId": "hook-4d1adb911f2387122d02bae737eaabe2",
+      "findingId": "mimosa-039aafe13e26e4c4601cbcc3",
+      "type": "finding_observed",
+      "at": "2026-10-13T10:32:03.295Z",
+      "identity": {
+        "projectRelativeFile": "src/app/components/StartScreen.tsx",
+        "ruleId": "security",
+        "codeEvidenceHash": "e17daa1b66a5140c009e18e32606a0860d2cb8e0ba2b6213dc071899a5265179",
+        "confidence": "stable"
+      },
+      "scope": "direct",
+      "line": 49,
+      "endLine": 49,
+      "reasonCode": "advisory",
+      "reportedToAgent": true,
+      "evidence": {
+        "kind": "source",
+        "boundary": "candidate",
+        "producer": "deterministic",
+        "evidenceHash": "e17daa1b66a5140c009e18e32606a0860d2cb8e0ba2b6213dc071899a5265179"
+      },
+      "sequence": 3
+    },
+    {
+      "eventId": "hook-0e11c978c5bc7a02fa7a8a5caf9ebf24",
+      "findingId": "mimosa-68f9ef0536525f62ee87e9fb",
+      "type": "finding_observed",
+      "at": "2026-10-13T10:44:54.949Z",
+      "identity": {
+        "projectRelativeFile": "src/app/components/StartScreen.tsx",
+        "ruleId": "security",
+        "codeEvidenceHash": "b6348b8d4d08151bb06dc299c14325e6c4fbf8cfd9e3e338fec904a89cc9b3bc",
+        "confidence": "stable"
+      },
+      "scope": "direct",
+      "line": 7,
+      "endLine": 7,
+      "reasonCode": "observe",
+      "reportedToAgent": false,
+      "evidence": {
+        "kind": "source",
+        "boundary": "candidate",
+        "producer": "deterministic",
+        "evidenceHash": "b6348b8d4d08151bb06dc299c14325e6c4fbf8cfd9e3e338fec904a89cc9b3bc"
+      },
+      "sequence": 4
+    },
+    {
+      "eventId": "hook-58b61aa0ad46abc443af30a66bc78aa7",
+      "findingId": "mimosa-039aafe13e26e4c4601cbcc3",
+      "type": "finding_observed",
+      "at": "2026-10-13T10:44:54.949Z",
+      "identity": {
+        "projectRelativeFile": "src/app/components/StartScreen.tsx",
+        "ruleId": "security",
+        "codeEvidenceHash": "e17daa1b66a5140c009e18e32606a0860d2cb8e0ba2b6213dc071899a5265179",
+        "confidence": "stable"
+      },
+      "scope": "direct",
+      "line": 49,
+      "endLine": 49,
+      "reasonCode": "observe",
+      "reportedToAgent": false,
+      "evidence": {
+        "kind": "source",
+        "boundary": "candidate",
+        "producer": "deterministic",
+        "evidenceHash": "e17daa1b66a5140c009e18e32606a0860d2cb8e0ba2b6213dc071899a5265179"
+      },
+      "sequence": 5
+    }
+  ],
+  "observedFindingIds": [
+    "mimosa-68f9ef0536525f62ee87e9fb",
+    "mimosa-039aafe13e26e4c4601cbcc3"
+  ],
+  "verifiedFiles": [
+    {
+      "file": "src/core/types.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/core/sim/match.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/core/sim/day.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/core/worldgen.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "vite.config.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/app/save.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/app/worker/sim.worker.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/app/store.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/app/main.tsx",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/app/App.tsx",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/app/components/StartScreen.tsx",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/app/components/Overview.tsx",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/app/components/Schedule.tsx",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/app/components/Squad.tsx",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/app/components/Tactics.tsx",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/app/components/Training.tsx",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/app/components/MatchPlayer.tsx",
+      "direct": "complete",
+      "projectContext": "partial"
+    },
+    {
+      "file": "src/core/sim/strength.ts",
+      "direct": "complete",
+      "projectContext": "partial"
+    }
+  ],
+  "recordedAt": "2026-10-13T10:44:55.357Z"
+}
