@@ -242,6 +242,8 @@ export interface Fixture {
   played: boolean;
   /** 玩家手动 BP 锁定的图序列（赛前准备写入，引擎优先于自动 BP） */
   mapLock?: string[];
+  /** 赛前准备的每图英雄分配（mapId → 选手 id → 英雄 id）；随比赛走，不污染预案库 */
+  agentLock?: Record<string, Record<string, string>>;
   /** 淘汰赛胜者去向（下一轮 fixtureId），杯赛用 */
   nextFixtureId?: string;
   /** 淘汰赛 slot 标记（teamA/teamB 待定时的占位） */

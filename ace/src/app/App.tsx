@@ -75,9 +75,6 @@ export function App() {
         </main>
       </div>
 
-      {/* 事件卡优先于一切弹窗（GDD §9.3：待决策队列逐张处理） */}
-      {state.pendingEvents.length > 0 && <EventCardModal />}
-
       {held && (
         <PreMatch
           state={state}
@@ -98,6 +95,9 @@ export function App() {
           onClose={closeViewer}
         />
       )}
+
+      {/* 事件卡最优先（GDD §9.3）：待决策队列逐张处理，盖在其他弹窗之上 */}
+      {state.pendingEvents.length > 0 && <EventCardModal />}
       {toast && (
         <div
           style={{

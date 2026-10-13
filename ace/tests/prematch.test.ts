@@ -56,6 +56,11 @@ test("赛前准备：mineHold 拦截我的比赛，AI 比赛照常；playHeldMat
   assert.ok(rec!.maps.some((m) => m.lines[benchId] !== undefined), `替补 ${bench.ign} 应上场`);
   // 赛后：疲劳/生涯已累计
   assert.ok(bench.career.maps > 0);
+  // agentLock 不污染预案库（v1.9 检错：__prematch__ 曾被永久写入用户预案列表）
+  for (const mapId of manualMaps) {
+    const list = team.presets[mapId] ?? [];
+    assert.ok(list.every((p) => p.name !== "__prematch__"), "临时英雄选择不应写入预案库");
+  }
 });
 
 test("赛前准备：不带 mineHold 的旧调用路径行为不变（我的比赛自动打完）", () => {

@@ -2,7 +2,7 @@
 import { generateWorld, resetPlayerSeq, salaryFor, spawnFreeAgents } from "../../core/worldgen.ts";
 import { initSeasonFixtures, advanceDay, playHeldMatch } from "../../core/sim/day.ts";
 import { spawnDailyEvents, spawnBirthdays, resolveEvent } from "../../core/sim/events.ts";
-import { startNegotiation, reNegotiate, finalizeOffer, completeTransfer, releasePlayer } from "../../core/sim/transfer.ts";
+import { startNegotiation, reNegotiate, finalizeOffer, completeTransfer, releasePlayer, inTransferWindow, graceRemain } from "../../core/sim/transfer.ts";
 import { Rng, hashString } from "../../core/rng.ts";
 import type { GameState, MatchRecord, Preset, TransferOffer } from "../../core/types.ts";
 
@@ -222,20 +222,38 @@ self.onmessage = (e: MessageEvent) => {
     if (state) message = releasePlayer(state, msg.pid as string);
     reply({ type: "snapshot", ...snapshot(), message });
   } else if (type === "respondBid") {
-      if (state) {
+    if (!state) return reply({ type: "snapshot", state: null, records: {} });
+    const st = state;
+    {
       const id = msg.offerId as string;
-      const idx = state.incomingBids.findIndex((b) => b.id === id);
+      const idx = st.incomingBids.findIndex((b) => b.id === id);
       if (idx >= 0) {
-        const bid = state.incomingBids[idx] as TransferOffer;
+        const bid = st.incomingBids[idx] as TransferOffer;
         const buyer = bid.fromTeam as string;
         if (msg.accept) {
-          completeTransfer(state, { ...bid, toTeam: buyer }, new Rng(hashString(`${state.seed}:bid:${id}`)));
+          // 买方满员 → 先把其最低分的选手转为自由人腾位（无替补可腾时让首发让位）
+          const buyerTeam = st.teams[buyer];
+          if (buyerTeam && buyerTeam.roster.length >= 7) {
+            const candidates = buyerTeam.roster
+              .map((pid) => st.players[pid])
+              .filter((p): p is NonNullable<typeof p> => !!p)
+              .sort((a, b) => a.overall - b.overall);
+            const victim = candidates[0];
+            if (victim) {
+              buyerTeam.roster = buyerTeam.roster.filter((pid) => pid !== victim.id);
+              buyerTeam.starters = buyerTeam.starters.filter((pid) => pid !== victim.id);
+              victim.teamId = null;
+              victim.contractYears = 0;
+              victim.benchedWeeks = 0;
+            }
+          }
+          completeTransfer(st, { ...bid, toTeam: buyer }, new Rng(hashString(`${st.seed}:bid:${id}`)));
         } else {
-          const p = state.players[bid.playerId];
+          const p = st.players[bid.playerId];
           if (p) p.morale = Math.max(10, p.morale - 4);
-          state.news.push({ day: state.day, kind: "transfer", text: `已拒绝 ${state.teams[buyer]?.name ?? "对方"} 对 ${p?.ign ?? "?"} 的报价（士气 -4）。` });
+          st.news.push({ day: st.day, kind: "transfer", text: `已拒绝 ${st.teams[buyer]?.name ?? "对方"} 对 ${p?.ign ?? "?"} 的报价（士气 -4）。` });
         }
-        state.incomingBids.splice(idx, 1);
+        st.incomingBids.splice(idx, 1);
       }
     }
     reply({ type: "snapshot", ...snapshot() });
@@ -243,6 +261,14 @@ self.onmessage = (e: MessageEvent) => {
     if (!state) return reply({ type: "negotiation", state: null });
     if (state.actionPoints < 1) {
       return reply({ type: "negotiation", error: "行动力不足：对外事务每天各花 1 点。", ...snapshot() });
+    }
+    // 转会窗强制（GDD §8.2）：窗内可谈；关窗宽限 3 天内只可完成在谈交易，不能再开新谈判
+    if (!inTransferWindow(state.day)) {
+      const grace = graceRemain(state);
+      return reply({ type: "negotiation", error: grace ? "转会窗已关闭（宽限期内只能完成在谈交易）。" : "转会窗未开启。", ...snapshot() });
+    }
+    if ((state.teams[state.myTeamId as string]?.roster.length ?? 7) >= 7) {
+      return reply({ type: "negotiation", error: "名单已满（7/7），先放走一人再签。", ...snapshot() });
     }
     state.actionPoints--;
     const offer: TransferOffer = {
@@ -275,6 +301,12 @@ self.onmessage = (e: MessageEvent) => {
     }
   } else if (type === "finalizeNegotiation") {
     if (state && negSession) {
+      // 名单上限校验（谈判期间名单可能已满）
+      const myTeam = state.myTeamId ? state.teams[state.myTeamId] : null;
+      if (myTeam && myTeam.roster.length >= 7) {
+        negSession = null;
+        return reply({ type: "negotiationFinal", ...snapshot(), accepted: false, reason: "名单已满（7/7），签约取消。" });
+      }
       const rng = new Rng(hashString(`${state.seed}:neg:${negSession.playerId}:${state.day}`));
       const r = finalizeOffer(state, negSession, rng);
       if (r.accepted) completeTransfer(state, negSession, rng);

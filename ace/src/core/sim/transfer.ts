@@ -121,7 +121,7 @@ export function finalizeOffer(state: GameState, offer: TransferOffer, rng: Rng):
     : { accepted: false, reason: `${p.ign} 拒绝了报价：${offer.demand || "他对条款不满意"}。` };
 }
 
-/** 完成转会：资金/名单/新闻（含卖方 <5 人自动紧急补位，GDD §8.2 继承清单） */
+/** 完成转会：资金/名单/新闻（含卖方 <5 人自动紧急补位，GDD §8.2 继承清单；买方名单上限 7） */
 export function completeTransfer(state: GameState, offer: TransferOffer, rng: Rng): string[] {
   const notes: string[] = [];
   const p = state.players[offer.playerId] as Player;
@@ -189,6 +189,7 @@ export function aiWeeklyTransfers(state: GameState, rng: Rng, onBid: (offer: Tra
       .map((p) => ({ p, w: 1 + Math.min(6, p.benchedWeeks) * 1.2 + Math.max(0, p.overall - 74) * 0.4 + (p.listed ? 3 : 0) }));
     if (candidates.length && rng.chance(0.25)) {
       const target = candidates[rng.weightedIndex(candidates.map((c) => c.w))]!.p;
+      // 挖角不限买方名单（接受时满员会自动腾位，见 worker respondBid）；只看预算与意愿
       const suitors = Object.values(state.teams).filter((t) => t.id !== myId && t.tier === team.tier && t.budget > marketValue(target, team.tier));
       if (suitors.length) {
         const from = rng.pick(suitors);

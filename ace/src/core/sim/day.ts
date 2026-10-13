@@ -258,8 +258,8 @@ export function advanceDay(
   const overdue = state.fixtures.filter((f) => !f.played && f.day < state.day && f.teamA !== "" && f.teamB !== "");
   for (const f of overdue) {
     const mine = f.teamA === state.myTeamId || f.teamB === state.myTeamId;
-    const seed = hashString(`${state.seed}:${f.id}`);
-    const rec = simMatch(state, f.teamA, f.teamB, f.bo, seed, f.id, f.mapLock);
+  const seed = hashString(`${state.seed}:${f.id}`);
+  const rec = simMatch(state, f.teamA, f.teamB, f.bo, seed, f.id, f.mapLock, f.agentLock);
     f.played = true;
     onMatch?.(rec, f.id, mine);
     applyStandings(state, f.comp, f.teamA, f.teamB, rec.score, rec.maps);
@@ -291,7 +291,7 @@ export function advanceDay(
       continue; // 暂停：等玩家完成赛前准备后由 playHeldMatch 重放
     }
     const seed = hashString(`${state.seed}:${f.id}`);
-    const rec = simMatch(state, f.teamA, f.teamB, f.bo, seed, f.id);
+    const rec = simMatch(state, f.teamA, f.teamB, f.bo, seed, f.id, f.mapLock, f.agentLock);
     f.played = true;
     onMatch?.(rec, f.id, mine);
     applyStandings(state, f.comp, f.teamA, f.teamB, rec.score, rec.maps);
@@ -363,7 +363,7 @@ export function advanceDay(
   return { day: state.day, notes: notes.map((n) => n.text), playedMine, seasonEnded };
 }
 
-/** 赛前准备完成后重放"被拦截的我的比赛"（玩家 BP/英雄/首发生效） */
+/** 赛前准备完成后重放"被拦截的我的比赛"（玩家 BP/英雄/首发生效；写入 fixture 不污染预案库） */
 export function playHeldMatch(
   state: GameState,
   fixtureId: string,
@@ -377,27 +377,16 @@ export function playHeldMatch(
     const team = state.teams[state.myTeamId];
     if (team) team.starters = opts.starters;
   }
-  // 手动 BP → 覆盖该场图池（写回 fixture 级 mapLock；引擎经 vetoOverride 读取）
+  // 手动 BP → 覆盖该场图池（引擎优先读取）
   if (opts.maps && opts.maps.length > 0) {
     f.mapLock = opts.maps.slice();
   }
-  // 每图英雄 → 临时预案（preferred 标记，引擎 presetAgents 读取）
-  if (opts.agentPicks && state.myTeamId) {
-    const team = state.teams[state.myTeamId];
-    if (team) {
-      for (const [mapId, assign] of Object.entries(opts.agentPicks)) {
-        const list = (team.presets[mapId] ?? []).slice();
-        const name = "__prematch__";
-        const existing = list.findIndex((p) => p.name === name);
-        if (existing >= 0) list[existing] = { name, agents: assign, preferred: true };
-        else list.push({ name, agents: assign, preferred: true });
-        for (const p of list) if (p.name !== name) p.preferred = false;
-        team.presets[mapId] = list;
-      }
-    }
+  // 每图英雄 → 挂到 fixture 上（随比赛走，不污染用户预案库——v0.5-2 检错）
+  if (opts.agentPicks && Object.keys(opts.agentPicks).length > 0) {
+    f.agentLock = opts.agentPicks;
   }
   const seed = hashString(`${state.seed}:${f.id}`);
-  const rec = simMatch(state, f.teamA, f.teamB, f.bo, seed, f.id, f.mapLock);
+  const rec = simMatch(state, f.teamA, f.teamB, f.bo, seed, f.id, f.mapLock, f.agentLock);
   f.played = true;
   // 与 advanceDay 同样的赛后处理
   const notes: NewsItem[] = [];

@@ -91,14 +91,20 @@ function addUlt(ult: Map<string, number>, pid: string, n: number, team: SimTeam,
   }
 }
 
-function simMap(state: GameState, mapId: string, A: SimTeam, B: SimTeam, rng: Rng): MapRecord {
+function simMap(state: GameState, mapId: string, A: SimTeam, B: SimTeam, rng: Rng, agentLock?: Record<string, Record<string, string>>): MapRecord {
   const map = MAP_BY_ID.get(mapId) ?? MAPS[0]!;
   // 每图重算强度（图池熟练/meta/玩家预案英雄随图变化）
   // 针对准备（GDD §7.2）：我方对对手的情报点 → 针对加成（×0.22，最高 +2.2）；AI 侧 v0.5 不启用情报
   const intelA = A.team.id === state.myTeamId ? intelOf(state, B.team.id) : 0;
   const intelB = B.team.id === state.myTeamId ? intelOf(state, A.team.id) : 0;
-  A.str = computeSide({ team: A.team, players: state.players, map, day: state.day, agentAssign: presetAgents(state, A.team, mapId), intel: intelA });
-  B.str = computeSide({ team: B.team, players: state.players, map, day: state.day, agentAssign: presetAgents(state, B.team, mapId), intel: intelB });
+  // 英雄分配：首选预案打底，赛前准备的手动选择（agentLock[mapId]）最高优先；都没有则引擎自动分配
+  const assignFor = (team: Team) => {
+    const preset = presetAgents(state, team, mapId);
+    const lock = agentLock?.[mapId];
+    return lock ? { ...(preset ?? {}), ...lock } : preset;
+  };
+  A.str = computeSide({ team: A.team, players: state.players, map, day: state.day, agentAssign: assignFor(A.team), intel: intelA });
+  B.str = computeSide({ team: B.team, players: state.players, map, day: state.day, agentAssign: assignFor(B.team), intel: intelB });
 
   const lines: Record<string, PlayerLine> = {};
   const allPlayers = [...A.players, ...B.players];
@@ -347,11 +353,11 @@ function presetAgents(state: GameState, team: Team, mapId: string): Record<strin
   const presets = team.presets[mapId];
   if (!presets || presets.length === 0) return undefined;
   const preferred = presets.find((p) => p.preferred) ?? presets[0];
-  return preferred.agents;
+  return preferred?.agents;
 }
 
-/** 模拟一场比赛（含 BP；fixture.mapLock 优先——玩家手动 BP）。会累计生涯与赛后状态。 */
-export function simMatch(state: GameState, teamAId: string, teamBId: string, bo: 1 | 3 | 5, seed: number, matchId: string, mapLock?: string[]): MatchRecord {
+/** 模拟一场比赛（含 BP；mapLock/agentLock 优先——玩家赛前手动指定）。会累计生涯与赛后状态。 */
+export function simMatch(state: GameState, teamAId: string, teamBId: string, bo: 1 | 3 | 5, seed: number, matchId: string, mapLock?: string[], agentLock?: Record<string, Record<string, string>>): MatchRecord {
   const rng = new Rng(seed);
   const teamA = state.teams[teamAId] as Team;
   const teamB = state.teams[teamBId] as Team;
@@ -389,7 +395,7 @@ export function simMatch(state: GameState, teamAId: string, teamBId: string, bo:
 
   for (const mapId of veto.maps) {
     if (wins.A >= Math.ceil(bo / 2) || wins.B >= Math.ceil(bo / 2)) break;
-    const mapRec = simMap(state, mapId, A, B, rng);
+    const mapRec = simMap(state, mapId, A, B, rng, agentLock);
     if (mapRec.score[0] > mapRec.score[1]) wins.A++;
     else if (mapRec.score[1] > mapRec.score[0]) wins.B++;
     maps.push(mapRec);
