@@ -100,13 +100,24 @@ function weeklyTick(state: GameState, rng: Rng): void {
   const myTeam = state.myTeamId ? state.teams[state.myTeamId] : null;
   const myPlayers = myTeam ? myTeam.roster.map((id) => state.players[id]).filter((p): p is NonNullable<typeof p> => !!p) : [];
   const trainDays = state.teamSchedule.filter((s) => s !== "rest").length;
+  // 比赛日占槽（GDD §6.3 v1.9 检错）：本周我的正式比赛天数折减训练收益
+  const myId = state.myTeamId ?? "";
+  const weekStart = state.day - 6;
+  const myMatchDays = myTeam
+    ? new Set(
+        state.fixtures
+          .filter((f) => f.played && f.day >= weekStart && f.day <= state.day && (f.teamA === myId || f.teamB === myId))
+          .map((f) => f.day),
+      ).size
+    : 0;
+  const matchFactor = (7 - Math.min(7, myMatchDays)) / 7; // 比赛日越多，训练收益越低
 
   // ── 团队层：跑图涨图池熟练（每天 +0.4，浮点累进——round 会吃掉小数增量）──
   if (myTeam) {
     for (const slot of state.teamSchedule) {
       if (slot === "map") {
         for (const mid of state.trainingMaps) {
-          myTeam.mapPref[mid] = clamp((myTeam.mapPref[mid] ?? 50) + 0.4, 20, 95);
+          myTeam.mapPref[mid] = clamp((myTeam.mapPref[mid] ?? 50) + 0.4 * matchFactor, 20, 95);
         }
       }
     }
@@ -125,9 +136,11 @@ function weeklyTick(state: GameState, rng: Rng): void {
         p.xp.communication = (p.xp.communication ?? 0) + reviewDays * 0.6;
       }
       // ── 个人层（并行）：每周一个项目，非休息日按天积累经验（GDD §6.3）──
+      // 比赛日占槽：训练日按比赛天数折减
       const focus = state.schedules[p.id] ?? "rest";
       const opt = OPTION_BY_KEY.get(focus);
-      if (opt && opt.attr && trainDays > 0) {
+      const effTrainDays = Math.max(0, trainDays - myMatchDays);
+      if (opt && opt.attr && effTrainDays > 0) {
         const attrCap = Math.min(99, p.potential + 5);
         if (p.attrs[opt.attr] < attrCap) {
           const moraleF = 0.75 + p.morale / 200;
@@ -135,7 +148,7 @@ function weeklyTick(state: GameState, rng: Rng): void {
           const coachF = 1 + (myTeam.coach.development - 55) / 100;
           const commF = 1 - 0.25 * Math.min(2, p.commercialDays ?? 0); // 商务占用惩罚（GDD §8.4）
           const staffF = 1 + ((myTeam.staff?.training?.value ?? 0) * 0.004); // 训练助教（GDD §8.3：99 点 ≈ ×1.40）
-          const gain = rng.range(XP_PER_DAY[0], XP_PER_DAY[1]) * trainDays * moraleF * fatigueF * coachF * commF * staffF;
+          const gain = rng.range(XP_PER_DAY[0], XP_PER_DAY[1]) * effTrainDays * moraleF * fatigueF * coachF * commF * staffF;
           p.xp[opt.attr] = (p.xp[opt.attr] ?? 0) + gain;
         }
       } else if (focus === "rest") {
@@ -308,6 +321,11 @@ export function advanceDay(
     onMatch?.(rec, f.id, mine);
     applyStandings(state, f.comp, f.teamA, f.teamB, rec.score, rec.maps);
     fillNextSlot(state.fixtures, f, rec.winner === "A" ? f.teamA : f.teamB);
+    // 招牌战术反向泄露的源头累计（GDD §6.4）：我方正式比赛逐图 +1
+    if (mine && state.myTeamId) {
+      const mt = state.teams[state.myTeamId] as GameState["teams"][string] | undefined;
+      if (mt) for (const m of rec.maps) mt.patternUsage[m.map] = (mt.patternUsage[m.map] ?? 0) + 1;
+    }
     const tagA = (state.teams[f.teamA] as GameState["teams"][string]).tag;
     const tagB = (state.teams[f.teamB] as GameState["teams"][string]).tag;
     const line = `${f.label}｜${tagA} ${rec.score[0]}-${rec.score[1]} ${tagB}`;
@@ -433,6 +451,11 @@ export function playHeldMatch(
   const seed = hashString(`${state.seed}:${f.id}`);
   const rec = simMatch(state, f.teamA, f.teamB, f.bo, seed, f.id, f.mapLock, f.agentLock);
   f.played = true;
+  // 招牌战术反向泄露的源头累计（GDD §6.4）：我的赛前准备场次同样逐图 +1
+  if (state.myTeamId) {
+    const mt = state.teams[state.myTeamId] as GameState["teams"][string] | undefined;
+    if (mt) for (const m of rec.maps) mt.patternUsage[m.map] = (mt.patternUsage[m.map] ?? 0) + 1;
+  }
   // 与 advanceDay 同样的赛后处理
   const notes: NewsItem[] = [];
   applyStandings(state, f.comp, f.teamA, f.teamB, rec.score, rec.maps);

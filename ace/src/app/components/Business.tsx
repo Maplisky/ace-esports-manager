@@ -15,7 +15,6 @@ export function BusinessPage(props: { state: GameState }) {
   if (!team) return null;
   const rep = team.reputation;
   const slots = rep >= 60 ? 4 : rep >= 35 ? 3 : 2;
-  const weeklyBiz = state.finances.log.filter((l) => l.label.includes("商务周收入")).slice(-1)[0]?.amount ?? 0;
 
   return (
     <div>
@@ -29,7 +28,9 @@ export function BusinessPage(props: { state: GameState }) {
             <span className="tag red">{TIER_NAME[s.tier]}</span>
             <span className="muted small" style={{ width: 160 }}>{fmt(s.perSeason)}/赛季</span>
             <span className="muted small" style={{ width: 90 }}>{s.years} 年</span>
-            <span className="muted small" style={{ width: 110 }}>{2026 + s.signedYear - state.year} 年后续约</span>
+            <span className="muted small" style={{ width: 110 }}>
+              剩 {Math.max(0, s.years - (state.year - s.signedYear))} 年
+            </span>
             <span className="grow" />
             <button className="small" onClick={() => void cancelSponsor(s.id)}>解约（声望 -2）</button>
           </div>

@@ -137,27 +137,29 @@ export function SquadPage(props: { state: GameState }) {
       <div className="card">
         <h3>🔄 轮换沟通（GDD §6.4② · 本周 {state.rotationTalks.used}/2 次）</h3>
         <div className="muted small" style={{ marginBottom: 8 }}>
-          赛前与被轮换选手沟通（每周 2 次）：成功后他本周不因轮换扣士气。核心/首发承诺的选手坐板凳，每周士气 −3。
+          赛前与将被轮换的选手沟通（每周 2 次）：沟通后他本周不因轮换扣士气。核心/首发承诺的选手坐板凳，每周士气 −3。
         </div>
-        {team.starters.map((pid) => {
-          const p = state.players[pid]!;
-          const waived = state.rotationWaive.includes(pid);
-          return (
-            <div key={pid} className="row" style={{ padding: "5px 0", borderBottom: "1px dashed var(--line)" }}>
-              <b style={{ width: 100 }}>{p.ign}</b>
-              <span className="muted small grow">
-                {waived ? "✅ 本周已沟通轮换" : `承诺：${ROLE_CN[p.promisedRole] ?? p.promisedRole} · 疲劳 ${Math.round(p.fatigue)}`}
-              </span>
-              <button
-                className="small"
-                disabled={waived || state.rotationTalks.used >= 2}
-                onClick={() => void requestRotationTalk(pid)}
-              >
-                轮换沟通
-              </button>
-            </div>
-          );
-        })}
+        {team.roster
+          .filter((pid) => !team.starters.includes(pid))
+          .map((pid) => {
+            const p = state.players[pid]!;
+            const waived = state.rotationWaive.includes(pid);
+            return (
+              <div key={pid} className="row" style={{ padding: "5px 0", borderBottom: "1px dashed var(--line)" }}>
+                <b style={{ width: 100 }}>{p.ign}</b>
+                <span className="muted small grow">
+                  {waived ? "✅ 本周已沟通轮换" : `承诺：${ROLE_CN[p.promisedRole] ?? p.promisedRole} · 疲劳 ${Math.round(p.fatigue)}`}
+                </span>
+                <button
+                  className="small"
+                  disabled={waived || state.rotationTalks.used >= 2}
+                  onClick={() => void requestRotationTalk(pid)}
+                >
+                  轮换沟通
+                </button>
+              </div>
+            );
+          })}
       </div>
     </div>
   );
