@@ -12,11 +12,11 @@ test("生日：当日生成祝福卡，选项结算士气/预算并移出队列"
   state.myTeamId = "T0";
   const team = state.teams["T0"]!;
   const p = state.players[team.starters[0]!]!;
-  state.day = p.birthdayDay - 1;
+  state.day = Math.max(2, p.birthdayDay); // 直接落在生日当天做单元级验证
   const moraleBefore = p.morale;
   const budgetBefore = team.budget;
 
-  advanceDay(state); // 生日当天：spawnBirthdays 生成卡片
+  spawnBirthdays(state);
   const card = state.pendingEvents.find((e) => e.cardId === "birthday" && e.targetPlayerId === p.id);
   assert.ok(card, "生日卡应生成");
   assert.equal(card.options.length, 3);
@@ -26,9 +26,7 @@ test("生日：当日生成祝福卡，选项结算士气/预算并移出队列"
   const r = resolveEvent(state, card.uid, idx, new Rng(1));
   assert.ok(r && r.result.includes(p.ign));
   assert.equal(state.pendingEvents.some((e) => e.uid === card.uid), false, "结算后移出队列");
-  // 士气 +5（当日叠加比赛胜负/回归/随机漫步，放宽到 +2~+12）
-  const moraleGain = p.morale - moraleBefore;
-  assert.ok(moraleGain >= 2 && moraleGain <= 12, `士气增益 ${moraleGain} 应在 2-12`);
+  assert.equal(p.morale, Math.min(100, moraleBefore + 5), "礼物士气 +5 应精确");
   assert.equal(team.budget, budgetBefore - 200);
 });
 

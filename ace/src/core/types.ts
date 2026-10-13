@@ -139,6 +139,14 @@ export interface Team {
   bond: number;
   /** 赞助商（GDD §8.4） */
   sponsors: Sponsor[];
+  /** 教练组（GDD §8.3 v1.7：训练/地图战术/比赛三类助教，主数值 0-99） */
+  staff: {
+    training?: { name: string; value: number };
+    mapTactics?: { name: string; value: number };
+    match?: { name: string; value: number };
+  };
+  /** 招牌战术使用计数（key = mapId；对手针对性准备的泄露来源，GDD §6.4） */
+  patternUsage: Record<string, number>;
   /** 玩家可用预案：每图多套（key = mapId）；v0.1 core 仅存储，由战术层消费 */
   presets: Record<string, Preset[]>;
 }
@@ -214,20 +222,21 @@ export interface PlayerLine {
   acs: number;
 }
 
-/** 单边强度修正分解（GDD §5.2 edge，§10.2 归因条数据源） */
-export interface EdgeBreakdown {
-  base: number;
-  igl: number;
-  chem: number;
-  coach: number;
-  meta: number;
-  map: number;
-  prep: number;
-  familiarity: number;
-  shortHanded: number;
-  aim: number;
-  awareness: number;
-}
+  /** 单边强度修正分解（GDD §5.2 edge，§10.2 归因条数据源） */
+  export interface EdgeBreakdown {
+    base: number;
+    igl: number;
+    chem: number;
+    coach: number;
+    meta: number;
+    map: number;
+    prep: number;
+    familiarity: number;
+    shortHanded: number;
+    aim: number;
+    awareness: number;
+    mapTactics: number;
+  }
 
 export interface MapRecord {
   map: string;
@@ -398,6 +407,9 @@ export interface GameState {
   transferFeed: TransferFeedItem[];
   /** 待答复的 AI 报价（挖角我方；7 天答复窗） */
   incomingBids: TransferOffer[];
+  /** 轮换沟通豁免（本周已沟通的选手 id；周重置，每周 2 次） */
+  rotationWaive: string[];
+  rotationTalks: { week: number; used: number };
   /** 待决策事件卡队列（先进先出，玩家逐张处理；GDD §9.3） */
   pendingEvents: PendingEventCard[];
   /** 上次事件日（空回合补偿用） */

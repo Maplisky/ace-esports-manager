@@ -104,13 +104,12 @@ export function TransferPage(props: { state: GameState }) {
 
       {/* 自由市场 */}
       <div className="card">
-        <h3>🛒 自由市场（{freeAgents.length} 人 · 报价花 1 行动力）</h3>
-        <table>
+        <h3>🛒 自由市场（{freeAgents.length} 人 · 报价花 1 行动力）</h3>        <table>
           <thead>
             <tr><th>选手</th><th>位置倾向</th><th>能力</th><th>潜力</th><th>年龄</th><th>身价参考</th><th></th></tr>
           </thead>
           <tbody>
-            {freeAgents.slice(0, 14).map((p) => {
+            {freeAgents.map((p) => {
               const names = p.agentPool.map((a) => AGENT_BY_ID.get(a)?.name ?? a).join(" / ");
               return (
               <tr key={p.id}>

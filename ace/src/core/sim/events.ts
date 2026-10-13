@@ -120,7 +120,8 @@ export function resolveEvent(state: GameState, uid: string, optionIndex: number,
 
   state.pendingEvents.splice(idx, 1);
   state.lastEventDay = state.day;
-  const result = fill(opt.result, target?.ign ?? "", myTeam?.name ?? "");
+  let result = fill(opt.result, target?.ign ?? "", myTeam?.name ?? "");
+  if (target && !targetOnMyTeam) result += "（注：他已离队，选手向效果作废。）";
   void rng;
   return { result, note: `【${card.title}】${result}` };
 }

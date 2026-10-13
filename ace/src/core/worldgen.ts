@@ -221,6 +221,12 @@ function makeTeam(rng: Rng, id: string, name: string, tag: string, tier: 1 | 2, 
     reputation: tier === 1 ? rng.int(50, 80) : rng.int(30, 50),
     personality: rng.pick(personalities),
     sponsors: [],
+    staff: {
+      training: { name: rng.pick(COACH_NAMES) + "（训练）", value: clamp(Math.round(rng.clampNorm(tier === 1 ? 58 : 50, 12, 20, 90)), 20, 90) },
+      mapTactics: { name: rng.pick(COACH_NAMES) + "（战术）", value: clamp(Math.round(rng.clampNorm(tier === 1 ? 60 : 52, 12, 20, 90)), 20, 90) },
+      match: { name: rng.pick(COACH_NAMES) + "（比赛）", value: clamp(Math.round(rng.clampNorm(tier === 1 ? 58 : 50, 12, 20, 90)), 20, 90) },
+    },
+    patternUsage: {},
     mapPref,
     bond: rng.int(45, 65),
     presets: {},
@@ -271,7 +277,9 @@ export function generateWorld(seed: number): GameState {
     incomingBids: [],
     sponsorOffers: [],
     gigOffers: [],
-    finances: { log: [] },    manager: {
+    finances: { log: [] },
+    rotationWaive: [],
+    rotationTalks: { week: 0, used: 0 },    manager: {
       name: "经理",
       reputation: 40,
       skills: { training: 50, negotiation: 50, tactics: 50, scouting: 50, medical: 50, business: 50, locker: 50, youth: 50 },
@@ -329,6 +337,12 @@ export function makeSyntheticTeam(id: string, tag: string, targetOverall: number
     facilities: 60, budget: 5_000_000, reputation: 60,
     personality: "steady", mapPref, bond: 50, presets: {},
     sponsors: [],
+    staff: {
+      training: { name: "合成训练", value: 50 },
+      mapTactics: { name: "合成战术", value: 50 },
+      match: { name: "合成比赛", value: 50 },
+    },
+    patternUsage: {},
   };
   return { team, players };
 }

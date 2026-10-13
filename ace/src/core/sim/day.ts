@@ -134,7 +134,8 @@ function weeklyTick(state: GameState, rng: Rng): void {
           const fatigueF = p.fatigue > 70 ? 0.5 : p.fatigue > 45 ? 0.8 : 1;
           const coachF = 1 + (myTeam.coach.development - 55) / 100;
           const commF = 1 - 0.25 * Math.min(2, p.commercialDays ?? 0); // 商务占用惩罚（GDD §8.4）
-          const gain = rng.range(XP_PER_DAY[0], XP_PER_DAY[1]) * trainDays * moraleF * fatigueF * coachF * commF;
+          const staffF = 1 + ((myTeam.staff?.training?.value ?? 0) * 0.004); // 训练助教（GDD §8.3：99 点 ≈ ×1.40）
+          const gain = rng.range(XP_PER_DAY[0], XP_PER_DAY[1]) * trainDays * moraleF * fatigueF * coachF * commF * staffF;
           p.xp[opt.attr] = (p.xp[opt.attr] ?? 0) + gain;
         }
       } else if (focus === "rest") {
@@ -150,6 +151,14 @@ function weeklyTick(state: GameState, rng: Rng): void {
         }
       }
       p.overall = computeOverall(p.attrs);
+      // 出场期望（GDD §6.4①）：核心/首发承诺坐板凳 → 周士气惩罚；轮换/替补获得首发 → 安心
+      // 轮换沟通豁免（GDD §6.4②）：本周已沟通的选手不受罚
+      const waive = state.rotationWaive.includes(p.id);
+      if ((p.promisedRole === "core" || p.promisedRole === "starter") && !myTeam.starters.includes(p.id) && p.injuredUntilDay <= state.day && !waive) {
+        p.morale = clamp(p.morale - 3, 10, 100);
+      } else if ((p.promisedRole === "rotation" || p.promisedRole === "bench") && myTeam.starters.includes(p.id)) {
+        p.morale = clamp(p.morale + 2, 10, 100);
+      }
       // 团队课表的体能效果
       for (const slot of state.teamSchedule) {
         if (slot === "scrim") p.fatigue = clamp(p.fatigue + 5, 0, 100);
@@ -325,6 +334,12 @@ export function advanceDay(
     weeklyTick(state, rng);
     refreshCommercialWeek(state, rng);
     decayIntel(state); // 情报过时衰减（GDD §7.2）
+    // 轮换沟通周重置（GDD §6.4②：每周 2 次，跨周清空豁免名单）
+    const weekIdx = Math.floor(state.day / 7);
+    if (state.rotationTalks.week !== weekIdx) {
+      state.rotationWaive = [];
+      state.rotationTalks = { week: weekIdx, used: 0 };
+    }
     // 商务周结算：赞助/直播收入入账 + 邀约刷新（GDD §8.4）
     const bizIncome = weeklySponsorIncome(state);
     if (bizIncome > 0 && state.myTeamId) {
@@ -370,6 +385,7 @@ export function advanceDay(
       p.age++;
       if (p.contractYears > 0) p.contractYears--;
       p.lastEventDay = 0;
+      if (p.stream && p.stream.untilDay <= state.day) p.stream = null; // 到期直播合同清理
     }
     state.lastEventDay = 0;
     state.day = 1;

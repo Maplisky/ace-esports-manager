@@ -248,9 +248,27 @@ self.onmessage = (e: MessageEvent) => {
   } else if (type === "cancelStream") {
     if (state) cancelStream(state, msg.playerId as string);
     reply({ type: "snapshot", ...snapshot() });
+  } else if (type === "requestRotationTalk") {
+    if (state && state.myTeamId) {
+      const weekIdx = Math.floor(state.day / 7);
+      if (state.rotationTalks.week !== weekIdx) {
+        state.rotationTalks = { week: weekIdx, used: 0 };
+        state.rotationWaive = [];
+      }
+      let message: string;
+      if (state.rotationTalks.used >= 2) {
+        message = "本周沟通次数已用完（每周 2 次）。";
+      } else {
+        state.rotationTalks.used++;
+        state.rotationWaive.push(msg.playerId as string);
+        const p = state.players[msg.playerId as string];
+        message = `已与 ${p?.ign ?? "选手"} 沟通轮换（本周 ${state.rotationTalks.used}/2 次），他不因轮换扣士气。`;
+      }
+      reply({ type: "snapshot", ...snapshot(), message });
+      return;
+    }
+    reply({ type: "snapshot", state: null, records: {} });
   } else if (type === "getSnapshot") {
-    reply({ type: "snapshot", ...snapshot() });
-  } else if (type === "listPlayer") {
     if (state) {
       const p = state.players[msg.pid as string];
       if (p) {

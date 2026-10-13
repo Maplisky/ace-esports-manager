@@ -73,6 +73,7 @@ interface AppStore {
   declineGig: (gigId: string) => Promise<void>;
   signStream: (playerId: string) => Promise<void>;
   cancelStream: (playerId: string) => Promise<void>;
+  requestRotationTalk: (playerId: string) => Promise<void>;
 }
 
 let worker: Worker | null = null;
@@ -298,6 +299,15 @@ export const useStore = create<AppStore>((set, get) => ({
     records = res.records ?? get().records;
     set({ state: res.state, records });
     get().showToast(`侦察完成：情报等级 ${res.intel ?? 0}/10`);
+  },
+
+  requestRotationTalk: async (playerId) => {
+    const res = await call<{ state?: GameState; records?: Record<string, MatchRecord>; message?: string }>({ type: "requestRotationTalk", playerId });
+    if (res.state) {
+      records = res.records ?? get().records;
+      set({ state: res.state, records });
+      if (res.message) get().showToast(res.message);
+    }
   },
 
   signSponsor: async (offerId) => {

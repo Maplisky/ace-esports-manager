@@ -4,6 +4,7 @@ import { AGENT_BY_ID } from "../../core/data/agents.ts";
 import { useStore } from "../store.ts";
 
 const DUTY_CN: Record<string, string> = { duelist: "决斗者", initiator: "先锋", controller: "控场", sentinel: "哨卫" };
+const ROLE_CN: Record<string, string> = { core: "核心", starter: "首发", rotation: "轮换", bench: "替补" };
 
 function dutyOf(state: GameState, playerId: string): string {
   const p = state.players[playerId]!;
@@ -39,6 +40,7 @@ function VitalBar({ v, color }: { v: number; color: string }) {
 export function SquadPage(props: { state: GameState }) {
   const { state } = props;
   const setStarters = useStore((s) => s.setStarters);
+  const requestRotationTalk = useStore((s) => s.requestRotationTalk);
   const myId = state.myTeamId ?? "";
   const team = state.teams[myId];
   const [swapTarget, setSwapTarget] = useState<string | null>(null);
@@ -128,7 +130,34 @@ export function SquadPage(props: { state: GameState }) {
         </table>
         <div className="muted small" style={{ marginTop: 8 }}>
           名单上限 7 人 · 替补长期坐板凳会被其他俱乐部盯上
+          {state.rotationTalks.used > 0 && <> · 本周已沟通 {state.rotationTalks.used}/2 次</>}
         </div>
+      </div>
+
+      <div className="card">
+        <h3>🔄 轮换沟通（GDD §6.4② · 本周 {state.rotationTalks.used}/2 次）</h3>
+        <div className="muted small" style={{ marginBottom: 8 }}>
+          赛前与被轮换选手沟通（每周 2 次）：成功后他本周不因轮换扣士气。核心/首发承诺的选手坐板凳，每周士气 −3。
+        </div>
+        {team.starters.map((pid) => {
+          const p = state.players[pid]!;
+          const waived = state.rotationWaive.includes(pid);
+          return (
+            <div key={pid} className="row" style={{ padding: "5px 0", borderBottom: "1px dashed var(--line)" }}>
+              <b style={{ width: 100 }}>{p.ign}</b>
+              <span className="muted small grow">
+                {waived ? "✅ 本周已沟通轮换" : `承诺：${ROLE_CN[p.promisedRole] ?? p.promisedRole} · 疲劳 ${Math.round(p.fatigue)}`}
+              </span>
+              <button
+                className="small"
+                disabled={waived || state.rotationTalks.used >= 2}
+                onClick={() => void requestRotationTalk(pid)}
+              >
+                轮换沟通
+              </button>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

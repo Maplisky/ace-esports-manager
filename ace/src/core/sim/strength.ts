@@ -81,6 +81,7 @@ export interface SideStrength {
     shortHanded: number;
     aim: number;
     awareness: number;
+    mapTactics: number;
   };
   lineup: Player[];
   agents: Record<string, string>;
@@ -232,9 +233,11 @@ export function computeSide(input: TeamMapInput): SideStrength {
   const aimMod = (avg("aim") - 65) * 0.05;
   const awareMod = (avg("awareness") - 65) * 0.05;
   const scaledBase = base * ROUND_BASE_SCALE;
+  // 地图战术助教（GDD §8.3 v1.7）：预案质量折算攻防修正（最高 +1.2）
+  const mapTacticsMod = team.staff?.mapTactics ? clamp((team.staff.mapTactics.value - 60) * 0.02, 0, 1.2) : 0;
 
-  const atk = scaledBase + iglMod + chemMod + coachMod + mapMod + prepMod + metaMod + familiarityMod + shortHandedMod + styleAtk + aimMod;
-  const def = scaledBase + iglMod + chemMod + coachMod + mapMod + prepMod + metaMod + familiarityMod + shortHandedMod + styleDef + awareMod + DEF_BONUS;
+  const atk = scaledBase + iglMod + chemMod + coachMod + mapMod + prepMod + metaMod + familiarityMod + shortHandedMod + styleAtk + aimMod + mapTacticsMod;
+  const def = scaledBase + iglMod + chemMod + coachMod + mapMod + prepMod + metaMod + familiarityMod + shortHandedMod + styleDef + awareMod + DEF_BONUS + mapTacticsMod;
   const mid = (avg("clutch") - 65) * 0.05 + iglAttr * 0.06;
 
   return {
@@ -246,7 +249,7 @@ export function computeSide(input: TeamMapInput): SideStrength {
     edge: {
       base: scaledBase, igl: iglMod, chem: chemMod, coach: coachMod, meta: metaMod,
       map: mapMod, prep: prepMod, familiarity: familiarityMod, shortHanded: shortHandedMod,
-      aim: aimMod, awareness: awareMod,
+      aim: aimMod, awareness: awareMod, mapTactics: mapTacticsMod,
     },
     lineup,
     agents,

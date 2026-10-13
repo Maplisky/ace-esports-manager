@@ -97,6 +97,9 @@ function simMap(state: GameState, mapId: string, A: SimTeam, B: SimTeam, rng: Rn
   // 针对准备（GDD §7.2）：我方对对手的情报点 → 针对加成（×0.22，最高 +2.2）；AI 侧 v0.5 不启用情报
   const intelA = A.team.id === state.myTeamId ? intelOf(state, B.team.id) : 0;
   const intelB = B.team.id === state.myTeamId ? intelOf(state, A.team.id) : 0;
+  // 招牌战术反向泄露（GDD §6.4）：我方重复使用同一图预案 → 对手针对性准备提升
+  const leakToB = A.team.id === state.myTeamId ? Math.min(1.2, (A.team.patternUsage[mapId] ?? 0) * 0.12) : 0;
+  const leakToA = B.team.id === state.myTeamId ? Math.min(1.2, (B.team.patternUsage[mapId] ?? 0) * 0.12) : 0;
   // 英雄分配：首选预案打底，赛前准备的手动选择（agentLock[mapId]）最高优先；都没有则引擎自动分配
   const assignFor = (team: Team) => {
     const preset = presetAgents(state, team, mapId);
@@ -175,7 +178,7 @@ function simMap(state: GameState, mapId: string, A: SimTeam, B: SimTeam, rng: Rn
       (atkSide === "A" ? defStr + BUY_MOD[buyB] + callMod(B, false) + swingB : defStr + BUY_MOD[buyA] + callMod(A, false) + swingA);
     const trailing: "A" | "B" | null = a > b ? "B" : b > a ? "A" : null;
     const comeback = trailing ? 0.35 * sideOf({ A, B }, trailing).str!.mid : 0;
-    const m = atkTerms - defTerms + (trailing === atkSide ? comeback : trailing ? -comeback : 0);
+    const m = atkTerms - defTerms + (trailing === atkSide ? comeback : trailing ? -comeback : 0) + (atkSide === "A" ? leakToA : leakToB);
 
     const pAtk = 1 / (1 + Math.exp(-m / LOGISTIC_K));
     const attackerWins = rng.chance(pAtk);
@@ -381,7 +384,7 @@ export function simMatch(state: GameState, teamAId: string, teamBId: string, bo:
       lossStreak: 0,
       score: 0,
       ultReady: new Set(),
-      timeouts: 2,
+      timeouts: 2 + ((team.staff?.match?.value ?? 0) >= 85 ? 1 : 0),
       call: null,
     };
   };

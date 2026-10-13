@@ -66,6 +66,7 @@ export function sponsorSignChance(state: GameState, tier: 1 | 2 | 3): number {
 export function signSponsorOffer(state: GameState, offer: SponsorOffer, rng: Rng): { ok: boolean; text: string } {
   const myTeam = state.myTeamId ? state.teams[state.myTeamId] : null;
   if (!myTeam) return { ok: false, text: "无俱乐部。" };
+  if (offer.expires <= state.day) return { ok: false, text: "该赞助意向已过期。" };
   if (myTeam.sponsors.length >= sponsorSlotsFor(myTeam.reputation)) return { ok: false, text: "赞助栏位已满。" };
   const chance = sponsorSignChance(state, offer.tier);
   if (!rng.chance(chance)) return { ok: false, text: `${offer.name} 婉拒了合作（态度 + 档位门槛）。` };
