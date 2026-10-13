@@ -402,6 +402,8 @@ export interface GameState {
     name: string;
     reputation: number;
     skills: Record<string, number>;
+    /** 个人生活（v0.5-5 教练个人经济）：钱包/饱腹/心情，只影响经理自身效率 */
+    life: { wallet: number; hunger: number; mood: number };
   };
   /** 转会动态（最近 300 条） */
   transferFeed: TransferFeedItem[];

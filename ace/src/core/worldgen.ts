@@ -283,6 +283,7 @@ export function generateWorld(seed: number): GameState {
       name: "经理",
       reputation: 40,
       skills: { training: 50, negotiation: 50, tactics: 50, scouting: 50, medical: 50, business: 50, locker: 50, youth: 50 },
+      life: { wallet: 2000, hunger: 80, mood: 70 },
     },
     boardConfidence: 62,
     objective: null,

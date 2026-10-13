@@ -148,7 +148,8 @@ function weeklyTick(state: GameState, rng: Rng): void {
           const coachF = 1 + (myTeam.coach.development - 55) / 100;
           const commF = 1 - 0.25 * Math.min(2, p.commercialDays ?? 0); // 商务占用惩罚（GDD §8.4）
           const staffF = 1 + ((myTeam.staff?.training?.value ?? 0) * 0.004); // 训练助教（GDD §8.3：99 点 ≈ ×1.40）
-          const gain = rng.range(XP_PER_DAY[0], XP_PER_DAY[1]) * effTrainDays * moraleF * fatigueF * coachF * commF * staffF;
+          const moodF = (state.manager?.life?.mood ?? 70) < 30 ? 0.9 : 1; // 教练心情低落 → 训练收益 -10%（GDD v0.5-5）
+          const gain = rng.range(XP_PER_DAY[0], XP_PER_DAY[1]) * effTrainDays * moraleF * fatigueF * coachF * commF * staffF * moodF;
           p.xp[opt.attr] = (p.xp[opt.attr] ?? 0) + gain;
         }
       } else if (focus === "rest") {
@@ -248,6 +249,14 @@ export function advanceDay(
   const playedMine: string[] = [];
   let seasonEnded = false;
   let held = false;
+
+  // 教练个人生活（GDD v0.5-5）：饥饿/心情每日衰减 + 月薪入个人钱包（v0.1 无合同字段，按 7 万年薪计）
+  if (state.manager?.life) {
+    const life = state.manager.life;
+    life.hunger = clamp(life.hunger - 3, 0, 100);
+    life.mood = clamp(life.mood - 1, 10, 100);
+    if (state.day % 30 === 0) life.wallet += 5_833; // 70K 年薪 / 12
+  }
 
   // 阶段切换
   if (state.day === CALENDAR.cupStart) {

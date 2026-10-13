@@ -5,7 +5,7 @@ import { loadGame, saveGame, type SavedGame } from "./save.ts";
 import type { PreMatchResult } from "./components/PreMatch.tsx";
 
 type Screen = "start" | "main";
-type Page = "overview" | "schedule" | "squad" | "tactics" | "training" | "transfer" | "business";
+type Page = "overview" | "schedule" | "squad" | "tactics" | "training" | "transfer" | "business" | "manager";
 
 export interface NegotiationState {
   offer: TransferOffer;
@@ -74,6 +74,7 @@ interface AppStore {
   signStream: (playerId: string) => Promise<void>;
   cancelStream: (playerId: string) => Promise<void>;
   requestRotationTalk: (playerId: string) => Promise<void>;
+  managerLife: (kind: "meal" | "feast" | "fun") => Promise<void>;
 }
 
 let worker: Worker | null = null;
@@ -345,5 +346,14 @@ export const useStore = create<AppStore>((set, get) => ({
   cancelStream: async (playerId) => {
     const res = await call<{ state?: GameState; records?: Record<string, MatchRecord> }>({ type: "cancelStream", playerId });
     if (res.state) set({ state: res.state, records: res.records ?? get().records });
+  },
+
+  managerLife: async (kind) => {
+    const res = await call<{ state?: GameState; records?: Record<string, MatchRecord>; message?: string }>({ type: "managerLife", kind });
+    if (res.state) {
+      records = res.records ?? get().records;
+      set({ state: res.state, records });
+      if (res.message) get().showToast(res.message);
+    }
   },
 }));

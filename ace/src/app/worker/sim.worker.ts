@@ -74,7 +74,9 @@ function migrate(state: GameState): GameState {
     name: "经理",
     reputation: 40,
     skills: { training: 50, negotiation: 50, tactics: 50, scouting: 50, medical: 50, business: 50, locker: 50, youth: 50 },
+    life: { wallet: 2000, hunger: 80, mood: 70 },
   };
+  state.manager.life ??= { wallet: 2000, hunger: 80, mood: 70 };
   state.trainingMaps ??= ["jingjie"];
   state.schedules ??= {};
   for (const p of Object.values(state.players)) {
@@ -248,6 +250,29 @@ self.onmessage = (e: MessageEvent) => {
   } else if (type === "cancelStream") {
     if (state) cancelStream(state, msg.playerId as string);
     reply({ type: "snapshot", ...snapshot() });
+  } else if (type === "managerLife") {
+    let message = "";
+    if (state?.manager?.life) {
+      const life = state.manager.life;
+      const kind = msg.kind as string;
+      if (kind === "meal" && life.wallet >= 30) {
+        life.wallet -= 30;
+        life.hunger = Math.min(100, life.hunger + 35);
+        message = "简单吃了一顿，饱腹 +35。";
+      } else if (kind === "feast" && life.wallet >= 120) {
+        life.wallet -= 120;
+        life.hunger = Math.min(100, life.hunger + 60);
+        life.mood = Math.min(100, life.mood + 10);
+        message = "好好吃了一顿，饱腹 +60、心情 +10。";
+      } else if (kind === "fun" && life.wallet >= 300) {
+        life.wallet -= 300;
+        life.mood = Math.min(100, life.mood + 20);
+        message = "娱乐放松了一下，心情 +20。";
+      } else {
+        message = "个人钱包不够。";
+      }
+    }
+    reply({ type: "snapshot", ...snapshot(), message });
   } else if (type === "requestRotationTalk") {
     if (state && state.myTeamId) {
       const weekIdx = Math.floor(state.day / 7);
