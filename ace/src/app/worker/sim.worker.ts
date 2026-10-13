@@ -230,6 +230,12 @@ self.onmessage = (e: MessageEvent) => {
       if (idx >= 0) {
         const bid = st.incomingBids[idx] as TransferOffer;
         const buyer = bid.fromTeam as string;
+        // 过期守卫：选手已不在我方阵容（转会/解约）→ 报价作废
+        const target = st.players[bid.playerId];
+        if (!target || target.teamId !== st.myTeamId) {
+          st.incomingBids.splice(idx, 1);
+          return reply({ type: "snapshot", ...snapshot(), result: "报价已失效（选手不在阵中）。" });
+        }
         if (msg.accept) {
           // 买方满员 → 先把其最低分的选手转为自由人腾位（无替补可腾时让首发让位）
           const buyerTeam = st.teams[buyer];

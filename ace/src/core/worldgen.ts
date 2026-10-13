@@ -265,8 +265,7 @@ export function generateWorld(seed: number): GameState {
     lastEventDay: 0,
     scouting: {},
     transferFeed: [],
-    incomingBids: [],
-    manager: {
+    incomingBids: [],    manager: {
       name: "经理",
       reputation: 40,
       skills: { training: 50, negotiation: 50, tactics: 50, scouting: 50, medical: 50, business: 50, locker: 50, youth: 50 },
@@ -279,6 +278,8 @@ export function generateWorld(seed: number): GameState {
     teamSchedule: ["map", "map", "review", "scrim", "individual", "individual", "rest"],
     trainingMaps: ["jingjie", "xueyuan"],
   };
+  // 自由市场：14 名自由人（新开局即有可签目标；GDD §6.5）
+  spawnFreeAgents(state, rng, 14);
   return state;
 }
 

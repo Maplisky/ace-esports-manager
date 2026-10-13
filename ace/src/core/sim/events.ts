@@ -101,8 +101,10 @@ export function resolveEvent(state: GameState, uid: string, optionIndex: number,
   if (!opt) return null;
   const myTeam = state.myTeamId ? state.teams[state.myTeamId] : null;
   const target = card.targetPlayerId ? state.players[card.targetPlayerId] : null;
+  // 目标已离队（转会/解约）→ 选手向效果作废，卡仍按俱乐部层结算移出
+  const targetOnMyTeam = target != null && target.teamId === state.myTeamId;
 
-  if (opt.morale && target) target.morale = clamp(target.morale + opt.morale, 10, 100);
+  if (opt.morale && target && targetOnMyTeam) target.morale = clamp(target.morale + opt.morale, 10, 100);
   if (card.negative && target) target.lastEventDay = state.day; // 负面抑制器起点（14 天内不再当负面主角）
   if (opt.teamMorale && myTeam) {
     for (const pid of myTeam.roster) {
@@ -113,7 +115,7 @@ export function resolveEvent(state: GameState, uid: string, optionIndex: number,
   if (opt.budget && myTeam) myTeam.budget += opt.budget;
   if (opt.reputation && myTeam) myTeam.reputation = clamp(myTeam.reputation + opt.reputation, 20, 99);
   if (opt.bond && myTeam) myTeam.bond = clamp(myTeam.bond + opt.bond, 0, 100);
-  if (opt.fatigue && target) target.fatigue = clamp(target.fatigue + opt.fatigue, 0, 100);
+  if (opt.fatigue && target && targetOnMyTeam) target.fatigue = clamp(target.fatigue + opt.fatigue, 0, 100);
   if (opt.boardConfidence) state.boardConfidence = clamp(state.boardConfidence + opt.boardConfidence, 0, 100);
 
   state.pendingEvents.splice(idx, 1);

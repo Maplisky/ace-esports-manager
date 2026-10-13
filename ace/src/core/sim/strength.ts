@@ -7,6 +7,7 @@
  */
 import { clamp } from "../rng.ts";
 import { AGENT_BY_ID, ULT_TIER_BONUS } from "../data/agents.ts";
+import { computeFit } from "./fit.ts";
 import type { MapDef, Player, Team, DutyVector } from "../types.ts";
 
 export const LINEUP_WEIGHTS = [1.22, 1.10, 1.00, 0.90, 0.78] as const;
@@ -209,7 +210,7 @@ export function computeSide(input: TeamMapInput): SideStrength {
     const agentId = agents[p.id];
     if (!agentId) continue;
     const a = AGENT_BY_ID.get(agentId);
-    fitSum += a ? fitOf(agentId, map) : 1;
+    fitSum += a ? computeFit(agentId, map) : 1;
     fitN++;
     proSum += p.agentPro[agentId] ?? 50;
   }
@@ -254,20 +255,7 @@ export function computeSide(input: TeamMapInput): SideStrength {
   };
 }
 
-// 防止循环依赖：fit 的轻量实现（与 fit.ts 同公式，避免 import 环）
-function fitOf(agentId: string, map: MapDef): number {
-  const agent = AGENT_BY_ID.get(agentId);
-  if (!agent) return 1;
-  let fit = 1;
-  const has = (t: string) => agent.mechTags.includes(t);
-  if (has("recon")) fit += (map.openness - 0.5) * 0.5;
-  if (has("smoke")) fit += map.sites === 3 ? 0.08 : 0.04;
-  if (has("anchor")) fit += (0.5 - map.corridor) * 0.4;
-  if (has("mobility")) fit += (map.openness - 0.5) * 0.3 + (map.sites === 3 ? 0.06 : 0);
-  if (has("entry") || has("area")) fit += (0.5 - map.corridor) * 0.15;
-  if (map.vertical > 0.6 && (has("mobility") || has("recon"))) fit += 0.05;
-  return Math.min(1.3, Math.max(0.7, Math.round(fit * 100) / 100));
-}
+// fit 计算统一走 fit.ts（单一实现，GDD §4.3）
 
 /** 大招就绪队伍加成（GDD §5.4）：按档位求和，上限 +2.5 */
 export function ultReadyBonus(readies: { tier: string }[]): number {
