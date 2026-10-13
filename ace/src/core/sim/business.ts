@@ -71,10 +71,8 @@ export function signSponsorOffer(state: GameState, offer: SponsorOffer, rng: Rng
   if (!rng.chance(chance)) return { ok: false, text: `${offer.name} 婉拒了合作（态度 + 档位门槛）。` };
   const sponsor: Sponsor = { ...offer, signedYear: state.year };
   myTeam.sponsors.push(sponsor);
-  const first = Math.round(sponsor.perSeason / 4);
-  myTeam.budget += first;
-  state.finances.log.push({ day: state.day, label: `赞助 · ${offer.name}（首期）`, amount: first });
-  return { ok: true, text: `与 ${offer.name} 签下 ${offer.years} 年赞助（${fmtMoney(sponsor.perSeason)}/赛季），首期 ${fmtMoney(first)} 到账。` };
+  // 收入走周结算细水长流（首期+周薪双重发放曾致首年超发 25%——检错移除）
+  return { ok: true, text: `与 ${offer.name} 签下 ${offer.years} 年赞助（${fmtMoney(sponsor.perSeason)}/赛季），周收入即刻生效。` };
 }
 
 export function cancelSponsorById(state: GameState, sponsorId: string): string {

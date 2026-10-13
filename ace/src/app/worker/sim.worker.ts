@@ -90,7 +90,17 @@ function migrate(state: GameState): GameState {
     // 事件卡字段（v0.5-2）
     p.birthdayDay ??= (hashString(p.id) % 365) + 1;
     p.lastEventDay ??= 0;
+    // 商务字段（v0.5-4）：旧档缺失即崩（Business 页/周结算直接读）
+    p.commercialDays ??= 0;
+    p.stream ??= null;
   }
+  for (const t of Object.values(state.teams)) {
+    t.sponsors ??= [];
+    t.presets ??= {};
+  }
+  state.finances ??= { log: [] };
+  state.sponsorOffers ??= [];
+  state.gigOffers ??= [];
   // 旧档无自由人池 → 注入 14 名自由人（自由市场/紧急补位的来源）
   if (!Object.values(state.players).some((p) => !p.teamId)) {
     spawnFreeAgents(state, new Rng((state.seed ^ 0xfaee) >>> 0), 14);
@@ -268,6 +278,7 @@ self.onmessage = (e: MessageEvent) => {
         const target = st.players[bid.playerId];
         if (!target || target.teamId !== st.myTeamId) {
           st.incomingBids.splice(idx, 1);
+          st.news.push({ day: st.day, kind: "transfer", text: `⌛ ${target?.ign ?? "选手"} 已不在阵中，报价自动失效。` });
           return reply({ type: "snapshot", ...snapshot(), result: "报价已失效（选手不在阵中）。" });
         }
         if (msg.accept) {

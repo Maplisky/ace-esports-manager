@@ -354,6 +354,18 @@ export function advanceDay(
     notes.push({ day: state.day, kind: "league", important: true, text: `—— ${state.year} 赛季收官 ——` });
     // 翻年：年龄 +1 / 合同 −1 / 抑制器与事件状态重置（旧年 lastEventDay 会让新年负面事件被错误抑制） / 新赛季赛程
     state.year++;
+    // 赞助合同到期：年限 −1，归零移除（休赛期窗口 C 内可续签）
+    for (const t of Object.values(state.teams)) {
+      const expired: string[] = [];
+      for (const s of t.sponsors) {
+        s.years--;
+        if (s.years <= 0) expired.push(s.name);
+      }
+      t.sponsors = t.sponsors.filter((s) => s.years > 0);
+      if (expired.length) {
+        notes.push({ day: 1, kind: "transfer", text: `📢 ${t.name} 的赞助合同到期：${expired.join("、")}。` });
+      }
+    }
     for (const p of Object.values(state.players)) {
       p.age++;
       if (p.contractYears > 0) p.contractYears--;
