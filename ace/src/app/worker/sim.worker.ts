@@ -1,6 +1,7 @@
 /** 模拟 Worker（GDD §11.1）：权威 state 常驻此处，主线程只拿快照渲染。 */
 import { generateWorld, resetPlayerSeq, salaryFor, spawnFreeAgents } from "../../core/worldgen.ts";
 import { initSeasonFixtures, advanceDay, playHeldMatch } from "../../core/sim/day.ts";
+import { spawnDailyEvents, spawnBirthdays, resolveEvent } from "../../core/sim/events.ts";
 import { startNegotiation, reNegotiate, finalizeOffer, completeTransfer, releasePlayer } from "../../core/sim/transfer.ts";
 import { Rng, hashString } from "../../core/rng.ts";
 import type { GameState, MatchRecord, Preset, TransferOffer } from "../../core/types.ts";
@@ -85,11 +86,16 @@ function migrate(state: GameState): GameState {
     // v0.5 检错修复：旧档薪资被 salaryFor 旧公式放大 1000 倍，按面板整体重算
     const tier = p.teamId ? state.teams[p.teamId]?.tier ?? 1 : 2;
     if (p.salary > 5_000_000) p.salary = salaryFor(p.overall, tier as 1 | 2);
+    // 事件卡字段（v0.5-2）
+    p.birthdayDay ??= (hashString(p.id) % 340) + 1;
+    p.lastEventDay ??= 0;
   }
   // 旧档无自由人池 → 注入 14 名自由人（自由市场/紧急补位的来源）
   if (!Object.values(state.players).some((p) => !p.teamId)) {
     spawnFreeAgents(state, new Rng((state.seed ^ 0xfaee) >>> 0), 14);
   }
+  state.pendingEvents ??= [];
+  state.lastEventDay ??= 0;
   return state;
 }
 
@@ -175,6 +181,13 @@ self.onmessage = (e: MessageEvent) => {
       reply({ type: "played", ...snapshot(), record: rec ? structuredClone(rec) : null });
     } else {
       reply({ type: "played", state: null, records: {}, record: null });
+    }
+  } else if (type === "resolveEvent") {
+    if (state) {
+      const r = resolveEvent(state, msg.uid as string, msg.optionIndex as number, new Rng(hashString(`${state.seed}:ev:${msg.uid}`)));
+      reply({ type: "snapshot", ...snapshot(), result: r?.result ?? null });
+    } else {
+      reply({ type: "snapshot", state: null, records: {}, result: null });
     }
   } else if (type === "getSnapshot") {
     reply({ type: "snapshot", ...snapshot() });

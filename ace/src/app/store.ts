@@ -65,6 +65,7 @@ interface AppStore {
   listToggle: (pid: string, listed: boolean) => Promise<void>;
   releasePlayer: (pid: string) => Promise<void>;
   respondBid: (offerId: string, accept: boolean) => Promise<void>;
+  resolveEvent: (uid: string, optionIndex: number) => Promise<void>;
 }
 
 let worker: Worker | null = null;
@@ -272,5 +273,12 @@ export const useStore = create<AppStore>((set, get) => ({
     records = res.records;
     set({ state: res.state, records });
     get().showToast(accept ? "转会完成" : "已拒绝报价");
+  },
+
+  resolveEvent: async (uid, optionIndex) => {
+    const res = await call<{ state: GameState; records: Record<string, MatchRecord>; result: string | null }>({ type: "resolveEvent", uid, optionIndex });
+    records = res.records;
+    set({ state: res.state, records });
+    if (res.result) get().showToast(res.result.slice(0, 60));
   },
 }));

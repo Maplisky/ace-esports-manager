@@ -9,6 +9,7 @@ import { TrainingPage } from "./components/Training.tsx";
 import { TransferPage } from "./components/Transfer.tsx";
 import { MatchPlayer } from "./components/MatchPlayer.tsx";
 import { PreMatch } from "./components/PreMatch.tsx";
+import { EventCardModal } from "./components/EventCards.tsx";
 
 const PAGES: { key: "overview" | "schedule" | "squad" | "tactics" | "training" | "transfer"; label: string }[] = [
   { key: "overview", label: "总览" },
@@ -72,6 +73,9 @@ export function App() {
           {page === "transfer" && <TransferPage state={state} />}
         </main>
       </div>
+
+      {/* 事件卡优先于一切弹窗（GDD §9.3：待决策队列逐张处理） */}
+      {state.pendingEvents.length > 0 && <EventCardModal />}
 
       {held && (
         <PreMatch

@@ -6,6 +6,7 @@
 import { Rng, clamp, hashString } from "../rng.ts";
 import { computeOverall } from "../worldgen.ts";
 import { OPTION_BY_KEY, XP_PER_ATTR_POINT, XP_PER_DAY } from "../data/training.ts";
+import { spawnDailyEvents, spawnBirthdays, resolveEvent } from "./events.ts";
 import { aiWeeklyTransfers } from "./transfer.ts";
 import type { PlayerAttrs } from "../types.ts";
 import { simMatch } from "./match.ts";
@@ -283,6 +284,10 @@ export function advanceDay(
       notes.push({ day: state.day, kind: "league", important: true, text: `🏆 ${champTeam.name} 夺得揭幕杯冠军！` });
     }
   }
+
+  // 事件卡：生日 + 每日抽取（队列上限 4，抑制器与空档补偿，GDD §9.3）
+  spawnBirthdays(state);
+  spawnDailyEvents(state, rng);
 
   // 周结算
   if (state.day % 7 === 0) {

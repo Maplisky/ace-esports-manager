@@ -151,6 +151,8 @@ function makePlayer(
     injuredUntilDay: 0,
     homegrown,
     benchedWeeks: 0,
+    birthdayDay: rng.int(1, 340),
+    lastEventDay: 0,
     career: { maps: 0, rounds: 0, kills: 0, deaths: 0, assists: 0, firstKills: 0, firstDeaths: 0, clutches: 0, mvps: 0, titles: 0, clubs: teamId ? [teamId] : [] },
   };
 }
@@ -259,6 +261,8 @@ export function generateWorld(seed: number): GameState {
     fixtures: [],
     comps: {},
     news: [],
+    pendingEvents: [],
+    lastEventDay: 0,
     transferFeed: [],
     incomingBids: [],
     manager: {

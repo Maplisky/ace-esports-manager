@@ -101,6 +101,10 @@ export interface Player {
   homegrown: boolean;
   /** 生涯累计缺场周数（挖角倾向参考） */
   benchedWeeks: number;
+  /** 生日（赛季内第 N 天，seeded 生成；当日开 7 天祝福窗口） */
+  birthdayDay: number;
+  /** 上次成为负面事件主角的天（14 天抑制器） */
+  lastEventDay: number;
   career: PlayerCareer;
 }
 
@@ -307,6 +311,36 @@ export interface NegotiationSession {
   settled: false;
 }
 
+/** 事件卡选项（GDD §9.3） */
+export interface PendingEventOption {
+  label: string;
+  /** 结果文本（选定后展示） */
+  result: string;
+  /** 数值效果 */
+  morale?: number; // 目标选手士气
+  teamMorale?: number; // 全队士气
+  budget?: number;
+  reputation?: number;
+  trust?: number;
+  grievance?: number;
+  fatigue?: number;
+  bond?: number;
+  boardConfidence?: number;
+}
+
+/** 待决策事件卡实例（抽取时已绑定目标选手） */
+export interface PendingEventCard {
+  uid: string;
+  cardId: string;
+  title: string;
+  text: string;
+  /** 负面卡（抑制器计数用） */
+  negative: boolean;
+  targetPlayerId?: string;
+  day: number;
+  options: PendingEventOption[];
+}
+
 export interface Objective {
   stage: Fixture["stage"];
   placeAtLeast: number;
@@ -335,6 +369,10 @@ export interface GameState {
   transferFeed: TransferFeedItem[];
   /** 待答复的 AI 报价（挖角我方；7 天答复窗） */
   incomingBids: TransferOffer[];
+  /** 待决策事件卡队列（先进先出，玩家逐张处理；GDD §9.3） */
+  pendingEvents: PendingEventCard[];
+  /** 上次事件日（空回合补偿用） */
+  lastEventDay: number;
   boardConfidence: number;
   objective: Objective | null;
   /** 行动力（v0.1：3/天） */
