@@ -253,6 +253,33 @@ export function advanceDay(
     notes.push({ day: state.day, kind: "league", text: "—— 进入休赛期 ——" });
   }
 
+  // 逾期清扫（v1.9 检错修复：PreMatch 停车期间刷新存档 → 我的比赛 day 已过、永不匹配）
+  // 过期未打的比赛按"错过准备"自动补打：不再拦截，避免赛程/杯赛树永久卡死
+  const overdue = state.fixtures.filter((f) => !f.played && f.day < state.day && f.teamA !== "" && f.teamB !== "");
+  for (const f of overdue) {
+    const mine = f.teamA === state.myTeamId || f.teamB === state.myTeamId;
+    const seed = hashString(`${state.seed}:${f.id}`);
+    const rec = simMatch(state, f.teamA, f.teamB, f.bo, seed, f.id, f.mapLock);
+    f.played = true;
+    onMatch?.(rec, f.id, mine);
+    applyStandings(state, f.comp, f.teamA, f.teamB, rec.score, rec.maps);
+    fillNextSlot(state.fixtures, f, rec.winner === "A" ? f.teamA : f.teamB);
+    const tagA = (state.teams[f.teamA] as GameState["teams"][string]).tag;
+    const tagB = (state.teams[f.teamB] as GameState["teams"][string]).tag;
+    const line = `${f.label}（补赛）｜${tagA} ${rec.score[0]}-${rec.score[1]} ${tagB}`;
+    notes.push({ day: state.day, kind: "match", text: line, important: mine });
+    if (mine) playedMine.push(f.id);
+    if (f.label.includes("总决赛") && state.day >= CALENDAR.cupStart && state.day <= CALENDAR.cupEnd) {
+      const champ = rec.winner === "A" ? f.teamA : f.teamB;
+      const champTeam = state.teams[champ] as GameState["teams"][string];
+      for (const pid of champTeam.roster) {
+        const p = state.players[pid];
+        if (p) p.career.titles++;
+      }
+      notes.push({ day: state.day, kind: "league", important: true, text: `🏆 ${champTeam.name} 夺得揭幕杯冠军！` });
+    }
+  }
+
   // 当日比赛
   const todays = state.fixtures.filter((f) => f.day === state.day && !f.played && f.teamA !== "" && f.teamB !== "");
   for (const f of todays) {

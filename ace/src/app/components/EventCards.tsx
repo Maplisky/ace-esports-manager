@@ -25,8 +25,8 @@ export function EventCardModal() {
               onClick={() => void resolveEvent(card.uid, i)}
             >
               <b>{o.label}</b>
-              {o.morale !== undefined && <span className={`tag${o.morale >= 0 ? " green" : " red"}`} style={{ marginLeft: 8 }}>士气{o.morale >= 0 ? "+" : ""}{o.morale}</span>}
-              {o.budget !== undefined && <span className={`tag${o.budget >= 0 ? " green" : " red"}`} style={{ marginLeft: 6 }}>{o.budget >= 0 ? "+" : ""}{fmtMoney(o.budget)}</span>}
+              {o.morale !== undefined && o.morale !== 0 && <span className={`tag${o.morale >= 0 ? " green" : " red"}`} style={{ marginLeft: 8 }}>士气{o.morale >= 0 ? "+" : ""}{o.morale}</span>}
+              {o.budget !== undefined && o.budget !== 0 && <span className={`tag${o.budget >= 0 ? " green" : " red"}`} style={{ marginLeft: 6 }}>{o.budget >= 0 ? "+" : "-"}{fmtMoney(Math.abs(o.budget))}</span>}
               {o.fatigue !== undefined && o.fatigue !== 0 && <span className="tag" style={{ marginLeft: 6 }}>体能{o.fatigue > 0 ? "+" : ""}{o.fatigue}</span>}
               {o.teamMorale !== undefined && <span className="tag green" style={{ marginLeft: 6 }}>全队士气 +{o.teamMorale}</span>}
               {o.bond !== undefined && o.bond !== 0 && <span className="tag" style={{ marginLeft: 6 }}>羁绊 +{o.bond}</span>}

@@ -1,4 +1,4 @@
-/** 赛前准备回归（GDD §5.5/§7.1）：mineHold 拦截、playHeldMatch 回放、mapLock/首发生效 */
+/** 赛前准备回归（GDD §5.5/§7.1）：mineHold 拦截、playHeldMatch 回放、mapLock/首发生效、逾期补赛 */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { generateWorld } from "../src/core/worldgen.ts";
@@ -66,4 +66,23 @@ test("赛前准备：不带 mineHold 的旧调用路径行为不变（我的比�
   advanceDay(state);
   const qfPlayed = state.fixtures.filter((f) => f.label.includes("四分之一决赛") && f.played);
   assert.equal(qfPlayed.length, 4, "无拦截时 4 场 QF 全部自动打完（含我的比赛）");
+});
+
+test("逾期补赛：停车期间跳过推进的日子，比赛自动补打而不消失", () => {
+  const state = generateWorld(41);
+  initSeasonFixtures(state);
+  const myId = state.comps["cup"]!.teamIds[0]!;
+  state.myTeamId = myId;
+  state.day = 25;
+  // 拦截 QF（day 26）
+  advanceDay(state, [], undefined, () => true);
+  assert.equal(state.day, 26);
+  // 模拟"停车期间刷新后跳过"：直接推进两天（26→28），不过预赛准备
+  advanceDay(state); // 26→27，逾期清扫应补打 QF
+  const myQF = state.fixtures.find((f) => f.id === state.fixtures.find((x) => x.teamA === myId || x.teamB === myId)!.id)!;
+  assert.equal(myQF.played, true, "逾期比赛应被自动补打");
+  assert.ok(state.news.some((n) => n.text.includes("补赛")), "补赛新闻应存在");
+  // 杯赛树继续：SF 对阵已回填
+  const sf = state.fixtures.filter((f) => f.label.includes("半决赛"));
+  assert.ok(sf.every((f) => f.teamA !== "" && f.teamB !== ""), "半决赛对阵应已回填");
 });

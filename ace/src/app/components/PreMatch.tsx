@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 import type { GameState, Player } from "../../core/types.ts";
 import { AGENTS, AGENT_BY_ID } from "../../core/data/agents.ts";
 import { MAPS } from "../../core/data/maps.ts";
+import { intelOf, estimateMapStrength, starsOf } from "../../core/sim/intel.ts";
 
 export interface PreMatchResult {
   /** 首发名单（玩家确认后的 5 人） */
@@ -121,7 +122,22 @@ export function PreMatch(props: {
           <div>
             <div className="muted small" style={{ marginBottom: 8 }}>
               自动 BP 按双方图池熟练推荐（ban 对方强图、pick 我方强图）。手动可改，决胜图仍随机。
+              {(() => {
+                const intel = intelOf(state, opp.id);
+                return intel === 0 ? " 尚未侦察对手——看不到他们的图池评估。" : "";
+              })()}
             </div>
+            {/* 对手图池评估：情报门控（GDD §7.2）——零情报不显示 */}
+            {intelOf(state, opp.id) > 0 && (
+              <div className="muted small" style={{ marginBottom: 10 }}>
+                对手 {opp.name} 图池评估（情报 {Math.round(intelOf(state, opp.id))}/10）：
+                {MAPS.map((m) => (
+                  <span key={m.id} style={{ marginLeft: 10 }}>
+                    {m.name} <span className="muted">{starsOf(estimateMapStrength(state, opp, m))}★</span>
+                  </span>
+                ))}
+              </div>
+            )}
             <div className="row" style={{ flexWrap: "wrap", marginBottom: 10 }}>
               {MAPS.map((m) => {
                 const idx = (manual ?? autoPreview).indexOf(m.id);
@@ -141,14 +157,6 @@ export function PreMatch(props: {
                   </button>
                 );
               })}
-            </div>
-            <div className="muted small" style={{ marginBottom: 8 }}>
-              对手 {opp.name} 图池评估：
-              {MAPS.map((m) => (
-                <span key={m.id} style={{ marginLeft: 10 }}>
-                  {m.name} <span className="muted">{stars(opp.mapPref[m.id] ?? 50)}</span>
-                </span>
-              ))}
             </div>
             <div className="row" style={{ justifyContent: "space-between" }}>
               <button onClick={() => { setManual(null); setStep(0); }}>← 上一步</button>
@@ -212,9 +220,6 @@ export function PreMatch(props: {
   );
 }
 
-function stars(v: number): string {
-  return v >= 72 ? "★★★" : v >= 52 ? "★★" : "★";
-}
 
 /** 自动 BP 建议（展示用，与引擎 veto 同思路） */
 function suggestVeto(state: GameState, myId: string, oppId: string, bo: 1 | 3 | 5): string[] {

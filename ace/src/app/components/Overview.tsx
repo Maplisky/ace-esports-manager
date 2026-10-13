@@ -1,5 +1,6 @@
 import type { GameState } from "../../core/types.ts";
 import { AGENT_BY_ID } from "../../core/data/agents.ts";
+import { MAPS } from "../../core/data/maps.ts";
 import { stageName } from "../App.tsx";
 import { intelOf, estimateMapStrength, starsOf } from "../../core/sim/intel.ts";
 
@@ -107,15 +108,11 @@ export function OverviewPage(props: {
             <div className="muted small">尚未侦察：看不到对手的图池倾向与强度评估。</div>
           ) : (
             <div className="row small" style={{ flexWrap: "wrap", gap: 12 }}>
-              {["jingjie", "xiajing", "panyan", "yugang", "xueyuan", "kongting", "fenlu"].map((mid) => {
-                const m = [
-                  { id: "jingjie", name: "净界" }, { id: "xiajing", name: "霞径" }, { id: "panyan", name: "磐岩" },
-                  { id: "yugang", name: "雨港" }, { id: "xueyuan", name: "雪原" }, { id: "kongting", name: "空庭" }, { id: "fenlu", name: "焚炉" },
-                ].find((x) => x.id === mid)!;
+              {MAPS.map((m) => {
                 const oppTeam = state.teams[nextOppId]!;
-                const stars = starsOf(estimateMapStrength(state, oppTeam, { id: m.id, name: m.name, sites: 2, openness: 0.5, vertical: 0.5, corridor: 0.5 }));
+                const stars = starsOf(estimateMapStrength(state, oppTeam, m));
                 return (
-                  <span key={mid}>
+                  <span key={m.id}>
                     {m.name} <span className={stars === 3 ? "tag red" : stars === 2 ? "tag orange" : "tag green"}>{"★".repeat(stars)}</span>
                   </span>
                 );
