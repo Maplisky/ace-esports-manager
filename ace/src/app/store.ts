@@ -1,11 +1,21 @@
 /** Zustand store + Worker 桥：主线程渲染快照，模拟全在 Worker（GDD §11.1）。 */
 import { create } from "zustand";
-import type { GameState, MatchRecord, Preset } from "../core/types.ts";
+import type { GameState, MatchRecord, Preset, TransferOffer } from "../core/types.ts";
 import { loadGame, saveGame, type SavedGame } from "./save.ts";
 import type { PreMatchResult } from "./components/PreMatch.tsx";
 
 type Screen = "start" | "main";
-type Page = "overview" | "schedule" | "squad" | "tactics" | "training";
+type Page = "overview" | "schedule" | "squad" | "tactics" | "training" | "transfer";
+
+export interface NegotiationState {
+  offer: TransferOffer;
+  demand: string;
+  attitude: number;
+  insulting: boolean;
+  /** 谈判终局文本（成/败），非空时展示结果按钮 */
+  result: string | null;
+  accepted: boolean;
+}
 
 /** 待赛前准备的我的比赛（Worker 停车返回） */
 export interface HeldMatch {
@@ -30,6 +40,8 @@ interface AppStore {
   viewerStartFinished: boolean;
   toast: string | null;
   held: HeldMatch | null;
+  /** 进行中的转会谈判（含实时态度） */
+  negotiation: NegotiationState | null;
 
   boot: () => Promise<void>;
   newGame: (seed: number, teamId: string) => Promise<void>;
@@ -46,6 +58,13 @@ interface AppStore {
   openViewer: (fixtureId: string) => void;
   closeViewer: () => void;
   showToast: (t: string | null) => void;
+  /** 转会：开谈（花 1 行动力）/ 再谈 / 终局检定 / 挂牌 / 解约 / 答复挖角 */
+  startNegotiation: (playerId: string, terms: { fee: number; salary: number; years: number; signingBonus: number; promisedRole: "core" | "starter" | "rotation" | "bench" }) => Promise<void>;
+  reNegotiate: (terms: { fee: number; salary: number; years: number; signingBonus: number; promisedRole: "core" | "starter" | "rotation" | "bench" }) => Promise<void>;
+  finalizeNegotiation: () => Promise<void>;
+  listToggle: (pid: string, listed: boolean) => Promise<void>;
+  releasePlayer: (pid: string) => Promise<void>;
+  respondBid: (offerId: string, accept: boolean) => Promise<void>;
 }
 
 let worker: Worker | null = null;
@@ -101,6 +120,7 @@ export const useStore = create<AppStore>((set, get) => ({
   viewerStartFinished: false,
   toast: null,
   held: null,
+  negotiation: null,
 
   boot: async () => {
     const saved: SavedGame | null = await loadGame();
@@ -208,5 +228,49 @@ export const useStore = create<AppStore>((set, get) => ({
   showToast: (t) => {
     set({ toast: t });
     if (t) window.setTimeout(() => set({ toast: null }), 2200);
+  },
+
+  startNegotiation: async (playerId, terms) => {
+    const res = await call<{ state?: GameState; records?: Record<string, MatchRecord>; offer?: TransferOffer; demand?: string; attitude?: number; insulting?: boolean; error?: string }>({ type: "startNegotiation", playerId, ...terms });
+    if (res.error || !res.offer || !res.state) {
+      get().showToast(res.error ?? "无法开启谈判");
+      return;
+    }
+    records = res.records ?? get().records;
+    set({ state: res.state, records, negotiation: { offer: res.offer, demand: res.demand ?? "", attitude: res.attitude ?? 0, insulting: res.insulting ?? false, result: null, accepted: false } });
+  },
+
+  reNegotiate: async (terms) => {
+    const res = await call<{ state?: GameState; offer?: TransferOffer; demand?: string; attitude?: number }>({ type: "reNegotiate", ...terms });
+    if (res.offer && res.state) {
+      set({ state: res.state, negotiation: { offer: res.offer, demand: res.demand ?? "", attitude: res.attitude ?? 0, insulting: false, result: null, accepted: false } });
+    }
+  },
+
+  finalizeNegotiation: async () => {
+    const res = await call<{ state: GameState; records: Record<string, MatchRecord>; accepted: boolean; reason: string }>({ type: "finalizeNegotiation" });
+    records = res.records;
+    await persist(res.state);
+    set({ state: res.state, records, negotiation: { offer: null as unknown as TransferOffer, demand: "", attitude: 0, insulting: false, result: res.reason, accepted: res.accepted } });
+  },
+
+  listToggle: async (pid, listed) => {
+    const res = await call<{ state: GameState; records: Record<string, MatchRecord> }>({ type: "listPlayer", pid, listed });
+    records = res.records;
+    set({ state: res.state, records });
+  },
+
+  releasePlayer: async (pid) => {
+    const res = await call<{ state: GameState; records: Record<string, MatchRecord>; message?: string }>({ type: "releasePlayer", pid });
+    records = res.records;
+    set({ state: res.state, records });
+    if (res.message) get().showToast(res.message);
+  },
+
+  respondBid: async (offerId, accept) => {
+    const res = await call<{ state: GameState; records: Record<string, MatchRecord> }>({ type: "respondBid", offerId, accept });
+    records = res.records;
+    set({ state: res.state, records });
+    get().showToast(accept ? "转会完成" : "已拒绝报价");
   },
 }));

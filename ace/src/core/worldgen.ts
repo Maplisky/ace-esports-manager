@@ -74,10 +74,11 @@ function generateAttrs(rng: Rng, target: number, duty: DutyKey, isIgl: boolean):
   return attrs;
 }
 
-/** 薪资曲线：overall 67 ≈ $21K/季，78 ≈ $171K/季（调参表可调） */
+/** 薪资曲线：overall 67 ≈ $21K/季，78 ≈ $171K/季（调参表可调；base 已是美元，勿再放大） */
 export function salaryFor(overall: number, tier: 1 | 2): number {
   const base = 0.06 * Math.pow(1.21, overall);
-  return Math.round(base * 1000 * (tier === 1 ? 1 : 0.45) / 100) * 100;
+  const scaled = base * (tier === 1 ? 1 : 0.45);
+  return Math.round(scaled / 1000) * 1000;
 }
 
 let playerIdSeq = 0;
@@ -143,6 +144,9 @@ function makePlayer(
     isIgl,
     focus: "rest",
     xp: {},
+    listed: false,
+    releaseClause: 0,
+    noPoach: false,
     promisedRole: "starter",
     injuredUntilDay: 0,
     homegrown,
@@ -235,6 +239,15 @@ export function generateWorld(seed: number): GameState {
   const playerMap: Record<string, Player> = {};
   for (const p of players) playerMap[p.id] = p;
 
+  // 自由市场：14 名自由人（紧急补位 + AI 签约 + 玩家捡漏）
+  for (let i = 0; i < 14; i++) {
+    const target = rng.int(60, 78);
+    const fa = makePlayer(rng, null, 1, target, rng.pick(DUTY_KEYS), false, [18, 30], usedIgns, false);
+    fa.promisedRole = "bench";
+    players.push(fa);
+    playerMap[fa.id] = fa;
+  }
+
   const state: GameState = {
     seed,
     year: 2026,
@@ -246,6 +259,13 @@ export function generateWorld(seed: number): GameState {
     fixtures: [],
     comps: {},
     news: [],
+    transferFeed: [],
+    incomingBids: [],
+    manager: {
+      name: "经理",
+      reputation: 40,
+      skills: { training: 50, negotiation: 50, tactics: 50, scouting: 50, medical: 50, business: 50, locker: 50, youth: 50 },
+    },
     boardConfidence: 62,
     objective: null,
     actionPoints: 3,
@@ -255,6 +275,17 @@ export function generateWorld(seed: number): GameState {
     trainingMaps: ["jingjie", "xueyuan"],
   };
   return state;
+}
+
+/** 生成自由人并入 state（迁移补池 / 休赛期补强共用；GDD §6.5） */
+export function spawnFreeAgents(state: GameState, rng: Rng, count: number): void {
+  const usedIgns = new Set(Object.values(state.players).map((p) => p.ign));
+  for (let i = 0; i < count; i++) {
+    const target = rng.int(60, 78);
+    const fa = makePlayer(rng, null, 1, target, rng.pick(DUTY_KEYS), false, [18, 30], usedIgns, false);
+    fa.promisedRole = "bench";
+    state.players[fa.id] = fa;
+  }
 }
 
 /** 供测试：直接构造指定 overall 均值的队伍（平衡性基准用） */

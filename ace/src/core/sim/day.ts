@@ -6,6 +6,7 @@
 import { Rng, clamp, hashString } from "../rng.ts";
 import { computeOverall } from "../worldgen.ts";
 import { OPTION_BY_KEY, XP_PER_ATTR_POINT, XP_PER_DAY } from "../data/training.ts";
+import { aiWeeklyTransfers } from "./transfer.ts";
 import type { PlayerAttrs } from "../types.ts";
 import { simMatch } from "./match.ts";
 import { buildCup, buildLeague, fillNextSlot } from "./fixtures.ts";
@@ -284,7 +285,22 @@ export function advanceDay(
   }
 
   // 周结算
-  if (state.day % 7 === 0) weeklyTick(state, rng);
+  if (state.day % 7 === 0) {
+    weeklyTick(state, rng);
+    // AI 转会动态 + 挖角（GDD §8.2）
+    const aiNotes = aiWeeklyTransfers(state, rng, (offer) => {
+      notes.push({ day: state.day, kind: "transfer", important: true, text: offer.demand });
+    });
+    for (const t of aiNotes) notes.push({ day: state.day, kind: "transfer", text: t });
+    // 报价答复窗到期：7 天未答复视为拒绝
+    const expired = state.incomingBids.filter((b) => state.day - b.day > 7);
+    for (const b of expired) {
+      const p = state.players[b.playerId];
+      if (p) p.morale = clamp(p.morale - 4, 10, 100);
+      notes.push({ day: state.day, kind: "transfer", text: `⌛ 对 ${p?.ign ?? "?"} 的报价已逾期，视为拒绝（士气 -4）。` });
+    }
+    state.incomingBids = state.incomingBids.filter((b) => state.day - b.day <= 7);
+  }
 
   // 年末收官 + 翻年（按自然年天数，闰年 366 天；v1.9 检错修复：原实现收官后日历死掉）
   if (state.day === daysInYear(state.year)) {

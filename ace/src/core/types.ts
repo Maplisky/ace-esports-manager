@@ -88,6 +88,12 @@ export interface Player {
   xp: Record<string, number>;
   /** 个人训练项目（本周；key 见 data/training.ts） */
   focus: string;
+  /** 挂牌中（转会费 ×0.75，AI 更愿意报价） */
+  listed: boolean;
+  /** 解约金（0 = 无；报价 ≥ 解约金时原队无权拒绝） */
+  releaseClause: number;
+  /** 抢人保护条款（挂牌/解约金触发前其他队不可报价） */
+  noPoach: boolean;
   injuredUntilDay: number;
   /** 导师型替补绑定的弟子 id */
   apprenticeId?: string;
@@ -264,6 +270,43 @@ export interface NewsItem {
   important?: boolean;
 }
 
+/** 转会动态（GDD §8.2 Feed，上限 300 条） */
+export interface TransferFeedItem {
+  day: number;
+  year: number;
+  kind: "done" | "bid" | "list" | "release";
+  text: string;
+}
+
+/** 一份转会报价（含即时谈判进度；GDD §8.2 v1.1） */
+export interface TransferOffer {
+  id: string;
+  playerId: string;
+  fromTeam: string | null; // null = 自由签约
+  toTeam: string;
+  fee: number;
+  salary: number;
+  years: number;
+  signingBonus: number;
+  promisedRole: "core" | "starter" | "rotation" | "bench";
+  /** 报价日（答复窗 7 天） */
+  day: number;
+  /** 谈判轮次（1-3）；0 = 尚未开谈 */
+  round: number;
+  /** AI 最新诉求文本 */
+  demand: string;
+  /** 接受概率 0-1（实时评估） */
+  attitude: number;
+}
+
+export interface NegotiationSession {
+  offer: TransferOffer;
+  /** 本会话的谈判日志 */
+  log: string[];
+  /** 是否已到终局（成/败已定） */
+  settled: false;
+}
+
 export interface Objective {
   stage: Fixture["stage"];
   placeAtLeast: number;
@@ -282,6 +325,16 @@ export interface GameState {
   fixtures: Fixture[];
   comps: Record<string, Competition>;
   news: NewsItem[];
+  /** 经理（v0.5：8 项技能挂接转会/训练/医疗等系统；GDD §9.5） */
+  manager: {
+    name: string;
+    reputation: number;
+    skills: Record<string, number>;
+  };
+  /** 转会动态（最近 300 条） */
+  transferFeed: TransferFeedItem[];
+  /** 待答复的 AI 报价（挖角我方；7 天答复窗） */
+  incomingBids: TransferOffer[];
   boardConfidence: number;
   objective: Objective | null;
   /** 行动力（v0.1：3/天） */
