@@ -3,6 +3,7 @@
  */
 import { useState } from "react";
 import type { GameState, Player, TransferOffer } from "../../core/types.ts";
+import { AGENT_BY_ID } from "../../core/data/agents.ts";
 import { marketValue, salaryExpectation, inTransferWindow } from "../../core/sim/transfer.ts";
 import { useStore } from "../store.ts";
 
@@ -109,10 +110,12 @@ export function TransferPage(props: { state: GameState }) {
             <tr><th>选手</th><th>位置倾向</th><th>能力</th><th>潜力</th><th>年龄</th><th>身价参考</th><th></th></tr>
           </thead>
           <tbody>
-            {freeAgents.slice(0, 14).map((p) => (
+            {freeAgents.slice(0, 14).map((p) => {
+              const names = p.agentPool.map((a) => AGENT_BY_ID.get(a)?.name ?? a).join(" / ");
+              return (
               <tr key={p.id}>
                 <td>{p.ign}</td>
-                <td className="muted small">{p.agentPool.join(" / ")}</td>
+                <td className="muted small">{names}</td>
                 <td><b>{p.overall}</b></td>
                 <td className="muted">{p.potential}</td>
                 <td className="muted">{p.age}</td>
@@ -127,7 +130,8 @@ export function TransferPage(props: { state: GameState }) {
                   </button>
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
         {!inWindow && <div className="muted small" style={{ marginTop: 6 }}>转会窗已关闭，等下一个窗口（季前 / 夏季窗口 / 休赛期）。</div>}

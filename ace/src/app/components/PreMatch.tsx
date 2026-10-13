@@ -95,10 +95,11 @@ export function PreMatch(props: {
                       <td>
                         <button
                           className="small"
-                          disabled={injured(p)}
+                          disabled={injured(p) && !on}
                           onClick={() => {
-                            if (on && starters.length > 5) setStarters(starters.filter((x) => x !== p.id));
-                            else if (!on && starters.length < 5) setStarters([...starters, p.id]);
+                            // 允许 <5 的中间态：先换下再补人；人数 ≠5 时禁止进入 BP（GDD §5.5）
+                            if (on) setStarters(starters.filter((x) => x !== p.id));
+                            else if (starters.length < 5) setStarters([...starters, p.id]);
                           }}
                         >
                           {on ? "换下" : "首发"}
@@ -110,7 +111,7 @@ export function PreMatch(props: {
               </tbody>
             </table>
             <div className="muted small" style={{ margin: "8px 0" }}>
-              首发 {starters.length}/5 · 带伤上场的选手强度 −20%（GDD §5.2）
+              首发需恰好 5 人{starters.length !== 5 && <span className="tag orange" style={{ marginLeft: 6 }}>当前 {starters.length} 人，先调整到 5 人</span>} · 带伤上场的选手强度 −20%（GDD §5.2）
             </div>
             <div className="row" style={{ justifyContent: "flex-end" }}>
               <button className="primary" disabled={starters.length !== 5} onClick={() => setStep(1)}>下一步：BP →</button>
