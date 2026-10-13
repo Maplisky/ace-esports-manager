@@ -176,7 +176,7 @@ export function releasePlayer(state: GameState, playerId: string): string {
   return `${p.ign} 已解约，赔付 ${fmt(cost)}。`;
 }
 
-/** 每周 AI 转会动态：挖角我方 + AI 自由签约（轻量活市场，GDD §8.2 继承清单） */
+/** 每周 AI 转会动态：挖角我方 + AI 自由签约（仅窗内；轻量活市场，GDD §8.2 继承清单） */
 export function aiWeeklyTransfers(state: GameState, rng: Rng, onBid: (offer: TransferOffer) => void): string[] {
   const notes: string[] = [];
   const myId = state.myTeamId;
@@ -215,9 +215,9 @@ export function aiWeeklyTransfers(state: GameState, rng: Rng, onBid: (offer: Tra
       }
     }
   }
-  // AI 自由签约：自由池按需补强（每周概率触发）
+  // AI 自由签约：自由池按需补强（仅窗内；每周概率触发）
   const fas = Object.values(state.players).filter((p) => !p.teamId && p.injuredUntilDay <= state.day);
-  if (fas.length && rng.chance(0.4)) {
+  if (fas.length && rng.chance(0.4) && inTransferWindow(state.day)) {
     const fa = rng.pick(fas);
     const suitors = Object.values(state.teams).filter((t) => t.id !== myId && t.roster.length < 7);
     if (suitors.length) {

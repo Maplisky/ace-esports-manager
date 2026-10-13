@@ -87,7 +87,7 @@ function migrate(state: GameState): GameState {
     const tier = p.teamId ? state.teams[p.teamId]?.tier ?? 1 : 2;
     if (p.salary > 5_000_000) p.salary = salaryFor(p.overall, tier as 1 | 2);
     // 事件卡字段（v0.5-2）
-    p.birthdayDay ??= (hashString(p.id) % 340) + 1;
+    p.birthdayDay ??= (hashString(p.id) % 365) + 1;
     p.lastEventDay ??= 0;
   }
   // 旧档无自由人池 → 注入 14 名自由人（自由市场/紧急补位的来源）
@@ -261,6 +261,11 @@ self.onmessage = (e: MessageEvent) => {
     if (!state) return reply({ type: "negotiation", state: null });
     if (state.actionPoints < 1) {
       return reply({ type: "negotiation", error: "行动力不足：对外事务每天各花 1 点。", ...snapshot() });
+    }
+    // 转会窗强制（GDD §8.2）：窗内可谈；关窗宽限 3 天内只可完成在谈交易，不能再开新谈判
+    if (!inTransferWindow(state.day)) {
+      const grace = graceRemain(state);
+      return reply({ type: "negotiation", error: grace ? "转会窗已关闭（宽限期内只能完成在谈交易）。" : "转会窗未开启。", ...snapshot() });
     }
     // 转会窗强制（GDD §8.2）：窗内可谈；关窗宽限 3 天内只可完成在谈交易，不能再开新谈判
     if (!inTransferWindow(state.day)) {
