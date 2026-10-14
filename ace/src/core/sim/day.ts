@@ -11,6 +11,7 @@ import { spawnDailyEvents, spawnBirthdays } from "./events.ts";
 import { aiWeeklyTransfers, resolveInquiries } from "./transfer.ts";
 import { rollPatch } from "./patch.ts";
 import { decayIntel } from "./intel.ts";
+import { seasonRetirements } from "./retirement.ts";
 import { refreshCommercialWeek, weeklySponsorIncome } from "./business.ts";
 import type { PlayerAttrs } from "../types.ts";
 import { simMatch } from "./match.ts";
@@ -547,6 +548,7 @@ export function advanceDay(
     state.objective = null;
     state.boardConfidence = clamp(state.boardConfidence, 20, 90);
     initSeasonFixtures(state);
+    // 退役检定与劝留（v1.0-1，GDD §6.5/§8.3）：本队出劝留对话卡，AI 自动决策+补位+签教练
     // 休赛期自由市场补强（GDD §6.5）：按队伍规模等比（18 队 8-12 名，36 队 16-24 名）
     const faRng = new Rng((state.seed ^ Math.imul(state.year, 0x5f5f)) >>> 0);
     const faScale = Math.max(1, Math.round(Object.keys(state.teams).length / 18));

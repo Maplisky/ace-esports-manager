@@ -107,6 +107,10 @@ export interface Player {
   listedWeeks?: number;
   /** 选手特质（0-3 条，原作 traits 移植）：key 见 data/traits.ts */
   traits?: string[];
+  /** 野心（v1.0 退役检定输入，35-85；旧档缺省 50） */
+  ambition?: number;
+  /** 导师型替补起始年（v1.0 替补三正路；旧档缺省无） */
+  mentorSince?: number;
   injuredUntilDay: number;
   /** 导师型替补绑定的弟子 id */
   apprenticeId?: string;
@@ -377,8 +381,36 @@ export interface NewsItem {
 export interface TransferFeedItem {
   day: number;
   year: number;
-  kind: "done" | "bid" | "list" | "release";
+  kind: "done" | "bid" | "list" | "release" | "retire";
   text: string;
+}
+
+/** 教练自由池条目（v1.0 退役转教练） */
+export interface CoachFreeAgent {
+  id: string;
+  name: string;
+  fame: number;
+  comm: number;
+  titles: number;
+  mvps: number;
+  isIgl: boolean;
+  homegrownClubId: string | null;
+  retiredYear: number;
+  value: number;
+}
+
+/** 退役留档（名人堂页数据源） */
+export interface RetireLogItem {
+  year: number;
+  ign: string;
+  name: string;
+  age: number;
+  titles: number;
+  mvps: number;
+  overall: number;
+  path: "coach" | "media" | "fade" | "mentor";
+  teamName: string | null;
+  coachId?: string;
 }
 
 /** 一份转会报价（含即时谈判进度；GDD §8.2 v1.1） */
@@ -468,6 +500,10 @@ export interface GameState {
   };
   /** 转会动态（最近 300 条） */
   transferFeed: TransferFeedItem[];
+  /** 教练自由池（v1.0 退役转教练；worker migrate 兜底） */
+  coachPool?: CoachFreeAgent[];
+  /** 退役留档（名人堂页数据源） */
+  retireLog?: RetireLogItem[];
   /** 待答复的 AI 报价（挖角我方；7 天答复窗） */
   incomingBids: TransferOffer[];
   /** 轮换沟通豁免（本周已沟通的选手 id；周重置，每周 2 次） */

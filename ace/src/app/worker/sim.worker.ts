@@ -2,6 +2,7 @@
 import { generateWorld, resetPlayerSeq, salaryFor, spawnFreeAgents, migrateMapsToRealPool } from "../../core/worldgen.ts";
 import { initSeasonFixtures, advanceDay, playHeldMatch, migrateLegacyComps } from "../../core/sim/day.ts";
 import { resolveEvent } from "../../core/sim/events.ts";
+import { signCoach } from "../../core/sim/retirement.ts";
 import { startNegotiation, reNegotiate, finalizeOffer, completeTransfer, releasePlayer, inTransferWindow, graceRemain, askInquiry } from "../../core/sim/transfer.ts";
 import { signSponsorOffer, cancelSponsorById, acceptGig, declineGig, signStream, cancelStream } from "../../core/sim/business.ts";
 import { Rng, hashString } from "../../core/rng.ts";
@@ -114,6 +115,8 @@ function migrate(state: GameState): GameState {
   state.scouting ??= {};
   state.agentTraining ??= {};
   state.inquiries ??= [];
+  state.coachPool ??= [];
+  state.retireLog ??= [];
   // v0.6-1：旧单赛区 comp key → 霞赛区新命名（过渡年结算/Masters 依赖）
   migrateLegacyComps(state);
   // v0.7 真实数据包：旧档虚构地图 id 全量映射到真实图池（逻辑在 core，可测）
@@ -263,6 +266,11 @@ function handleWorkerMessage(e: MessageEvent) {
       reply({ type: "played", ...snapshot(), record: rec ? structuredClone(rec) : null });
     } else {
       reply({ type: "played", state: null, records: {}, record: null });
+    }
+  } else if (type === "signCoach") {
+    if (state?.myTeamId) {
+      const err = signCoach(state, msg.coachId as string, msg.slot as "training" | "mapTactics" | "match");
+      reply({ type: "signed", error: err ?? null, ...snapshot() });
     }
   } else if (type === "resolveEvent") {
     if (state) {

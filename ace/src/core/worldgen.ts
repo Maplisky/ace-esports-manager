@@ -3,7 +3,7 @@
  * 四大赛区 64 队（每区 10 VCT + 6 挑战者，数据快照 vlr.gg，见 data/real/real-data.ts）。
  * 选手属性由 vlr.gg 逐英雄统计（rounds 加权）推导；无统计/缺员以青训虚拟生成并标注 synthetic。
  */
-import { Rng, clamp } from "./rng.ts";
+import { Rng, clamp, hashString } from "./rng.ts";
 import { AGENTS, primaryDuty } from "./data/agents.ts";
 import { MAPS } from "./data/maps.ts";
 import { REAL_TEAMS, REAL_PLAYERS_BY_VLR, type VlrPlayerStat, type VlrTeamStat } from "./data/real/real-data.ts";
@@ -545,6 +545,8 @@ export function generateWorld(seed: number): GameState {
       signedYear: 2026,
     }));
   }
+    // 野心（v1.0 退役检定输入）：35-85 确定性分布
+  for (const p of Object.values(state.players)) p.ambition ??= 35 + (hashString(p.id) % 51);
   return state;
 }
 

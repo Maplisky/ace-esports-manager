@@ -76,6 +76,88 @@ export function ManagerPage(props: { state: GameState }) {
           </button>
         </div>
       </div>
+
+      <CoachStaffCard state={state} />
+    </div>
+  );
+}
+
+/** 教练组（v1.0-1 退役转教练）：三槽位 + 教练自由池签约（退役选手转型，GDD §8.3） */
+function CoachStaffCard({ state }: { state: GameState }) {
+  const signCoach = useStore((s) => s.signCoach);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [msg, setMsg] = useState<string | null>(null);
+  const team = state.myTeamId ? state.teams[state.myTeamId] : null;
+  if (!team) return null;
+  const slots: { key: "training" | "mapTactics" | "match"; label: string; desc: string }[] = [
+    { key: "training", label: "🏋 训练教练", desc: "个人训练收益" },
+    { key: "mapTactics", label: "🗺 地图战术教练", desc: "图池熟练收益" },
+    { key: "match", label: "🏁 比赛教练", desc: "比赛临场调整" },
+  ];
+  const pool = state.coachPool ?? [];
+  const sign = async (coachId: string, slot: "training" | "mapTactics" | "match") => {
+    setBusy(coachId + slot);
+    const err = await signCoach(coachId, slot);
+    setBusy(null);
+    setMsg(err ?? "签约完成。");
+  };
+  return (
+    <div className="card">
+      <h3>🎖 教练组（退役选手转型执教 · GDD §8.3）</h3>
+      <div className="row" style={{ gap: 10, flexWrap: "wrap", marginBottom: 10 }}>
+        {slots.map((s) => {
+          const cur = team.staff[s.key];
+          return (
+            <div key={s.key} style={{ flex: "1 1 200px", border: "1px solid var(--line-soft)", borderRadius: 8, padding: "8px 12px", background: "rgba(255,255,255,0.025)" }}>
+              <div className="muted small">{s.label} · {s.desc}</div>
+              {cur ? (
+                <div style={{ marginTop: 4 }}>
+                  <b>{cur.name}</b> <span className="tag green">能力 {cur.value}</span>
+                </div>
+              ) : (
+                <div className="muted" style={{ marginTop: 4 }}>空缺</div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <div className="muted small" style={{ marginBottom: 8 }}>
+        教练能力 = 沟通 0.5 + 名望 0.2 + 冠军 3 + MVP 1.2（指挥 +6）。AI 俱乐部同样会从自由池签约退役名将。
+      </div>
+      {pool.length === 0 ? (
+        <div className="muted small">教练自由池暂无人——退役名将（沟通/冠军达标者）会随赛季退役进入自由池。</div>
+      ) : (
+        <table>
+          <thead>
+            <tr><th style={{ textAlign: "left" }}>教练</th><th>潜力</th><th>背景</th><th style={{ textAlign: "left" }}>签约至</th></tr>
+          </thead>
+          <tbody>
+            {pool.map((c) => (
+              <tr key={c.id}>
+                <td style={{ textAlign: "left" }}>
+                  <b>{c.name}</b>{c.isIgl && <span className="tag" style={{ marginLeft: 5 }}>前指挥</span>}
+                </td>
+                <td><b>{c.value}</b></td>
+                <td className="muted small">名望 {c.fame} · 冠军 {c.titles} · {c.retiredYear} 年退役</td>
+                <td style={{ whiteSpace: "nowrap" }}>
+                  {slots.map((s) => (
+                    <button
+                      key={s.key}
+                      className="small"
+                      disabled={busy !== null}
+                      style={{ marginRight: 4 }}
+                      onClick={() => void sign(c.id, s.key).then((err) => setMsg(err ?? `已签入${s.label.slice(2)}。`))}
+                    >
+                      {s.label.slice(2)}
+                    </button>
+                  ))}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      {msg && <div className="muted small" style={{ marginTop: 6 }}>{msg}</div>}
     </div>
   );
 }

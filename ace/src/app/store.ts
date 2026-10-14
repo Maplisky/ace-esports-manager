@@ -79,6 +79,7 @@ interface AppStore {
   requestRotationTalk: (playerId: string) => Promise<void>;
   managerLife: (kind: "meal" | "feast" | "fun") => Promise<void>;
   upgradeFacility: () => Promise<void>;
+  signCoach: (coachId: string, slot: "training" | "mapTactics" | "match") => Promise<string | null>;
   promoteFromAcademy: (pid: string, outId: string | null) => Promise<void>;
 }
 
@@ -388,6 +389,12 @@ export const useStore = create<AppStore>((set, get) => ({
     const res = await call<{ state: GameState; message?: string }>({ type: "promoteFromAcademy", pid, outId });
     set({ state: res.state });
     if (res.message) get().showToast(res.message);
+  },
+
+  signCoach: async (coachId, slot) => {
+    const res = await call<{ state: GameState; error?: string }>({ type: "signCoach", coachId, slot });
+    set({ state: res.state });
+    return res.error ?? null;
   },
 
   upgradeFacility: async () => {
