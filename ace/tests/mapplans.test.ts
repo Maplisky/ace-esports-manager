@@ -40,9 +40,9 @@ test("站位：战术×职责×事件全组合确定性、界内、下包收拢�
         }
       }
     }
-    // 下包后：所有棋子收缩到预期包点区
+    // 下包后：所有棋子收缩到预期包点区（快攻战术强制下包点=快攻目标）
     const plan = planOf(m.id)!;
-    const pz = plantZoneOf(m.id, 9)!;
+    const pz = plantZoneOf(m.id, 9, "atk:rush:A")!;
     for (const duty of DUTIES) {
       const pos = positionFor(m.id, { duty, isAttacking: true, roundN: 9, pid: "px", plantRevealed: true, side: "top", tactic: "atk:rush:A", killsRevealed: 2, slot: 0 });
       assert.ok(pos.x >= pz.x - 1 && pos.x <= pz.x + pz.w + 1 && pos.y >= pz.y - 1 && pos.y <= pz.y + pz.h + 1,

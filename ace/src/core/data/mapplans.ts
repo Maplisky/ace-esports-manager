@@ -6,7 +6,7 @@
  */
 import { MAPS } from "./maps.ts";
 import { hashString } from "../rng.ts";
-import { GEN_ZONES } from "./mapplans.gen.ts";
+import { GEN_ZONES } from "./mapplans.zones.ts";
 
 export const PLAN_W = 400;
 export const PLAN_H = 400;
@@ -47,10 +47,15 @@ export function planOf(mapId: string): MapPlan | null {
   return PLANS[mapId] ?? null;
 }
 
-/** 本回合的预期下包点（确定性：按图+回合哈希在站点中选一） */
-export function plantZoneOf(mapId: string, roundN: number): PlanZone | null {
+/** 本回合的预期下包点（确定性）。快攻战术强制下包点=快攻目标，保证动画因果一致 */
+export function plantZoneOf(mapId: string, roundN: number, tacticAtk?: string): PlanZone | null {
   const plan = PLANS[mapId];
   if (!plan) return null;
+  const rush = tacticAtk?.match(/^atk:rush:([ABC])$/);
+  if (rush) {
+    const forced = plan.zones.find((z) => z.id === "site" + rush[1]);
+    if (forced) return forced;
+  }
   const h = hashString(`${mapId}:${roundN}:plant`);
   return plan.sites[h % plan.sites.length] ?? null;
 }
@@ -81,7 +86,7 @@ function zoneCenter(z: PlanZone): { x: number; y: number } {
   return { x: z.x + z.w / 2, y: z.y + z.h / 2 };
 }
 
-/** 战术 → 进攻方各职责的布置区（找不到 lane 回退 mid/site） */
+/** 战术 → 进攻方各职责的布置区（参考 valoplant 预设：默认 2-1-2 分推 / 快攻 4-1 / 中路夹击 2-1-2 / eco 抱团） */
 function atkSetupZone(plan: MapPlan, tactic: string, duty: AnchorDuty, plant: PlanZone | null): PlanZone {
   const lane = (L: string) => plan.zones.find((z) => z.id === "lane" + L);
   const site = (L: string) => plan.zones.find((z) => z.id === "site" + L);
@@ -92,31 +97,28 @@ function atkSetupZone(plan: MapPlan, tactic: string, duty: AnchorDuty, plant: Pl
   const target = tactic.split(":")[2] ?? "";
   const rushSite = target ? (site(target) ?? plant ?? fallback) : (plant ?? fallback);
   switch (kind) {
-    case "rush": { // 集群快攻：4 人压目标通道，1 人中路策应
+    case "rush": { // 快攻 4-1：4 人压目标通道口，1 人（哨卫）中路策应
       const mainLane = (target ? lane(target) : undefined) ?? lane("A") ?? plan.zones.find((z) => z.kind === "lane");
       if (duty === "sentinel") return midZ ?? mainLane ?? plan.spawnAtk;
       return mainLane ?? rushSite;
     }
-    case "midSplit": // 中路夹击：控场+先锋控中，决斗+哨卫走两侧
+    case "midSplit": // 中路夹击 2-1-2：控场+先锋控中，决斗+哨卫走 A 侧，机动位 B 侧
       if (duty === "controller" || duty === "initiator") return midZ ?? other;
-      if (duty === "duelist") return lane("A") ?? rushSite;
+      if (duty === "duelist" || duty === "sentinel") return lane("A") ?? rushSite;
       return lane("B") ?? other;
-    case "ecoStack": // 经济局抱团：全员缩在进攻出生压后
+    case "ecoStack": // eco 抱团：全员缩在进攻出生压后（避免分散送头）
       return plan.spawnAtk;
-    default: { // 默认分推：决斗走包点通道、先锋次通道、控场中路、哨卫压后
-      if (duty === "duelist") return lane(plant?.id.replace("site", "") ?? "A") ?? plant ?? plan.spawnAtk;
-      if (duty === "initiator") {
-        const mainLane = lane(plant?.id.replace("site", "") ?? "A");
-        const second = plan.zones.find((z) => z.kind === "lane" && z.id !== mainLane?.id);
-        return second ?? midZ ?? plan.spawnAtk;
-      }
-      if (duty === "controller") return midZ ?? plan.spawnAtk;
-      return plan.spawnAtk;
+    default: { // 默认分推 2-1-2：决斗+哨卫包点通道、先锋+机动位次通道、控场中路
+      const mainLane = lane(plant?.id.replace("site", "") ?? "A") ?? midZ ?? plant ?? plan.spawnAtk;
+      const secondLane = plan.zones.find((z) => z.kind === "lane" && z.id !== mainLane.id) ?? midZ ?? plan.spawnAtk;
+      if (duty === "duelist" || duty === "sentinel") return mainLane;
+      if (duty === "initiator" || duty === "flex") return secondLane;
+      return midZ ?? plan.spawnAtk;
     }
   }
 }
 
-/** 战术 → 防守方各职责的布置区 */
+/** 战术 → 防守方各职责的布置区（参考 valoplant 预设：常规 2-2-1 / 重心 3-1-1 / 前顶 1-2-2 顶通道口） */
 function defSetupZone(plan: MapPlan, tactic: string, duty: AnchorDuty): PlanZone {
   const kind = tactic.split(":")[1] ?? "standard";
   const target = tactic.split(":")[2] ?? "";
@@ -125,23 +127,30 @@ function defSetupZone(plan: MapPlan, tactic: string, duty: AnchorDuty): PlanZone
   const midZ = plan.mid;
   const lane = (L: string) => plan.zones.find((z) => z.id === "lane" + L);
   switch (kind) {
-    case "stack": { // 重心堆积：3 人囤目标点，其余看另一侧
+    case "stack": { // 重心 3-1-1：3 人囤目标点，先锋看另一侧，机动位中路
       const t = site(target) ?? s1!;
       const others = [s1, s2, s3].filter((s) => s && s.id !== t.id);
-      if (duty === "sentinel" || duty === "duelist") return t;
-      if (duty === "controller") return t;
-      return others[0] ?? midZ ?? t;
+      if (duty === "sentinel" || duty === "controller" || duty === "duelist") return t;
+      if (duty === "initiator") return others[0] ?? midZ ?? t;
+      return midZ ?? others[1] ?? t;
     }
-    case "aggro": // 前顶压制：各职责顶到通道口
-      if (duty === "sentinel") return lane("A") ?? s1!;
+    case "aggro": // 前顶压制：1 人守点，其余顶到通道口（哨卫留守最稳）
+      if (duty === "sentinel") return s1!;
       if (duty === "controller") return midZ ?? lane("B") ?? s2!;
       if (duty === "initiator") return lane("B") ?? s2!;
-      return lane("C") ?? midZ ?? s2!;
-    default: // 常规布防：哨卫主点 / 控场次点 / 先锋第三点或中路 / 决斗游走
+      return lane("C") ?? lane("A") ?? midZ ?? s2!;
+    default: { // 常规布防：两点图 2-2-1（A 哨卫+B 控场决斗+中先锋机动），三点图 1-1-1-2
+      if (plan.sites.length >= 3) {
+        if (duty === "sentinel") return s1!;
+        if (duty === "controller") return s2!;
+        if (duty === "initiator") return s3!;
+        if (duty === "duelist") return midZ ?? s2!;
+        return s2 ?? midZ!;
+      }
       if (duty === "sentinel") return s1!;
-      if (duty === "controller") return s2 ?? s1!;
-      if (duty === "initiator") return s3 ?? midZ ?? s2!;
+      if (duty === "controller" || duty === "duelist") return s2 ?? s1!;
       return midZ ?? s2!;
+    }
   }
 }
 
@@ -149,7 +158,7 @@ function defSetupZone(plan: MapPlan, tactic: string, duty: AnchorDuty): PlanZone
 export function positionFor(mapId: string, opts: PosOpts): { x: number; y: number; zoneId: string } {
   const plan = PLANS[mapId];
   if (!plan) return { x: PLAN_W / 2, y: PLAN_H / 2, zoneId: "mid" };
-  const plant = plantZoneOf(mapId, opts.roundN);
+  const plant = plantZoneOf(mapId, opts.roundN, opts.tactic);
   const isAtk = opts.isAttacking;
   const setupZone = isAtk ? atkSetupZone(plan, opts.tactic, opts.duty, plant) : defSetupZone(plan, opts.tactic, opts.duty);
 

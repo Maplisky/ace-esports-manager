@@ -39,7 +39,7 @@ export function Tactical2D(props: {
     }
     if (e.t === "plant") plantRevealed = true;
   }
-  const plantZone = plantZoneOf(mapRec.map, roundN);
+  const plantZone = plantZoneOf(mapRec.map, roundN, tacticAtk);
   const plantPos = plan?.zones.find((z) => z.id === plantZone?.id);
 
   const sides: { side: "A" | "B"; teamId: string; canvas: "top" | "bottom" }[] = [
