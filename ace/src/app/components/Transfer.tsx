@@ -158,6 +158,9 @@ export function TransferPage(props: { state: GameState }) {
           onDone={() => setNegPlayer(null)}
         />
       )}
+      {dossier && state.players[dossier] && (
+        <PlayerDossier state={state} player={state.players[dossier]!} onClose={() => setDossier(null)} />
+      )}
     </div>
   );
 }

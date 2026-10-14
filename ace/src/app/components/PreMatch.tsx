@@ -3,7 +3,7 @@
  * 阵容确认（可换替补）→ 正规 BP（双方交替 ban/pick，AI 对手按图池决策）→ 每图英雄确认 → 开赛。
  * 我的比赛日前弹出；确定后由引擎消费选择（BP 结果作为 mapLock 锁定图序）。
  */
-import { useMemo, useRef, useState } from "react";
+import { useState } from "react";
 import type { GameState, Player } from "../../core/types.ts";
 import { AGENTS, AGENT_BY_ID } from "../../core/data/agents.ts";
 import { computeFit } from "../../core/sim/fit.ts";
@@ -64,7 +64,6 @@ export function PreMatch(props: {
 
   // BP 状态机（进入 BP 步才初始化）
   const [bp, setBp] = useState<BpState | null>(null);
-  const bpSeedRef = useRef<number>(0);
 
   if (!myTeam || !opp) return null;
 
@@ -91,7 +90,6 @@ export function PreMatch(props: {
   const startBp = () => {
     if (!myTeam || !opp) return;
     const seed = hashString(`${state.seed}:${state.day}:bp:${props.fixtureId}`);
-    bpSeedRef.current = seed;
     setBpLog([]);
     const initial: BpState = {
       pool: MAPS.map((m) => m.id),
@@ -350,7 +348,7 @@ export function PreMatch(props: {
               <button onClick={() => setStep(0)}>← 上一步</button>
               <span className="row">
                 {!bp.done && <button onClick={autoBp}>⚡ 一键自动 BP</button>}
-                <button className="primary" onClick={() => setStep(2)} disabled={!bp.done || activeMaps.length < need}>
+                <button className="primary" onClick={() => { setHeroPage(0); setStep(2); }} disabled={!bp.done || activeMaps.length < need}>
                   下一步：英雄 →
                 </button>
               </span>
