@@ -2,7 +2,7 @@
  * 转会页（GDD §8.2 v1.1）：待答复挖角 · 我的名单（挂牌/解约）· 自由市场报价（即时谈判）· 动态 Feed
  */
 import { useState } from "react";
-import type { GameState, Player, TransferOffer } from "../../core/types.ts";
+import type { GameState, Player } from "../../core/types.ts";
 import { AGENT_BY_ID } from "../../core/data/agents.ts";
 import { marketValue, salaryExpectation, inTransferWindow } from "../../core/sim/transfer.ts";
 import { useStore } from "../store.ts";

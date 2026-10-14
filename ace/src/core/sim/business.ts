@@ -4,7 +4,7 @@
  * 收支均走周结算节奏：周收入 = perSeason/48，薪资支出同口径（GDD §12）。
  */
 import { Rng, clamp } from "../rng.ts";
-import type { GameState, GigOffer, Player, Sponsor, SponsorOffer, Team } from "../types.ts";
+import type { GameState, GigOffer, Player, Sponsor, SponsorOffer } from "../types.ts";
 
 const TIER_DEF = [
   { tier: 1 as const, name: "地方品牌", min: 80_000, max: 150_000, repNeed: 20 },
@@ -16,14 +16,13 @@ const BRANDS_T1 = ["晨光乳业", "飞毛腿快递", "街角咖啡", "雷霆文
 const BRANDS_T2 = ["星火运动", "长城汽车", "云杉银行", "银河电子", "巨浪饮料"];
 const BRANDS_T3 = ["HyperTech", "VoltEnergy", "ApexAir", "NovaTel"];
 
-export const MAX_SPONSOR_SLOTS = 4;
 
-export function sponsorSlotsFor(reputation: number): number {
+function sponsorSlotsFor(reputation: number): number {
   return reputation >= 60 ? 4 : reputation >= 35 ? 3 : 2;
 }
 
 /** 生成 1-2 条赞助意向（档位按声望门槛过滤） */
-export function refreshSponsorOffers(state: GameState, rng: Rng): void {
+function refreshSponsorOffers(state: GameState, rng: Rng): void {
   const myTeam = state.myTeamId ? state.teams[state.myTeamId] : null;
   if (!myTeam) return;
   const slots = sponsorSlotsFor(myTeam.reputation);

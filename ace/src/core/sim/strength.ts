@@ -6,19 +6,18 @@
  * 验收基准：87 分队对 72 分队 BO3 胜率 68-78%（§12 T1）。
  */
 import { clamp } from "../rng.ts";
-import { AGENT_BY_ID, ULT_TIER_BONUS } from "../data/agents.ts";
+import { AGENT_BY_ID } from "../data/agents.ts";
 import { computeFit } from "./fit.ts";
 import type { MapDef, Player, Team, DutyVector } from "../types.ts";
 
-export const LINEUP_WEIGHTS = [1.22, 1.10, 1.00, 0.90, 0.78] as const;
+const LINEUP_WEIGHTS = [1.22, 1.10, 1.00, 0.90, 0.78] as const;
 export const ROUND_BASE_SCALE = 0.28;
-export const DEF_BONUS = 1.5;
+const DEF_BONUS = 1.5;
 export const LOGISTIC_K = 30;
 export const SWING_SD = 6;
 
 /** 角色系数表（GDD §5.2），按职责向量插值 */
 const KILL_W: DutyVector = { duelist: 1.08, initiator: 0.98, controller: 0.93, sentinel: 0.96 };
-const DEATH_W: DutyVector = { duelist: 1.28, initiator: 1.08, controller: 0.90, sentinel: 0.88 };
 const ENTRY_W: DutyVector = { duelist: 2.0, initiator: 1.3, controller: 0.5, sentinel: 0.6 };
 const FLEX_MERGE = { duelist: "sentinel", initiator: "controller", controller: "initiator", sentinel: "duelist" } as const;
 
@@ -34,9 +33,6 @@ function interpolate(weights: DutyVector, duty: DutyVector): number {
 
 export function dutyKillWeight(duty: DutyVector): number {
   return interpolate(KILL_W, duty);
-}
-export function dutyDeathWeight(duty: DutyVector): number {
-  return interpolate(DEATH_W, duty);
 }
 export function dutyEntryWeight(duty: DutyVector): number {
   return interpolate(ENTRY_W, duty);
@@ -259,12 +255,3 @@ export function computeSide(input: TeamMapInput): SideStrength {
 }
 
 // fit 计算统一走 fit.ts（单一实现，GDD §4.3）
-
-/** 大招就绪队伍加成（GDD §5.4）：按档位求和，上限 +2.5 */
-export function ultReadyBonus(readies: { tier: string }[]): number {
-  let bonus = 0;
-  for (const r of readies) {
-    bonus += ULT_TIER_BONUS[r.tier] ?? 0.4;
-  }
-  return Math.min(2.5, bonus);
-}

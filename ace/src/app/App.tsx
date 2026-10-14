@@ -46,6 +46,9 @@ export function App() {
       <TopBar
         teamTag={myTeam?.tag ?? "?"}
         teamName={myTeam?.name ?? "?"}
+        teamLogo={myTeam?.logo}
+        regionLabel={REGIONS.find((r) => r.id === myTeam?.regionId)?.label}
+        regionLogo={REGIONS.find((r) => r.id === myTeam?.regionId)?.logo}
         year={state.year}
         day={state.day}
         stage={stageName(state.stage)}

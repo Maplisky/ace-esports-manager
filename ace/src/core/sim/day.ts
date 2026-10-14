@@ -6,7 +6,7 @@
 import { Rng, clamp, hashString } from "../rng.ts";
 import { computeOverall, spawnFreeAgents } from "../worldgen.ts";
 import { OPTION_BY_KEY, XP_PER_ATTR_POINT, XP_PER_DAY } from "../data/training.ts";
-import { spawnDailyEvents, spawnBirthdays, resolveEvent } from "./events.ts";
+import { spawnDailyEvents, spawnBirthdays } from "./events.ts";
 import { aiWeeklyTransfers } from "./transfer.ts";
 import { decayIntel } from "./intel.ts";
 import { refreshCommercialWeek, weeklySponsorIncome } from "./business.ts";
@@ -20,14 +20,14 @@ import type { GameState, MatchRecord, NewsItem } from "../types.ts";
  * 季前 1-24 · 揭幕杯 25-52 · Stage1 53-122 · 夏季窗口 123-152 · Stage2 153-232 · 休赛期 233-年末
  * 闰年（2028/2032…）为 366 天，2 月 29 日自然存在；年末跨年翻页。
  */
-export function isLeapYear(y: number): boolean {
+function isLeapYear(y: number): boolean {
   return (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
 }
 export function daysInYear(y: number): number {
   return isLeapYear(y) ? 366 : 365;
 }
 
-export const CALENDAR = {
+const CALENDAR = {
   preseasonEnd: 24,
   cupStart: 25,
   cupEnd: 52,

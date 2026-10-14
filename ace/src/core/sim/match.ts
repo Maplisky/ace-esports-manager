@@ -8,7 +8,7 @@ import { Rng, clamp } from "../rng.ts";
 import { MAP_BY_ID, MAPS } from "../data/maps.ts";
 import { AGENT_BY_ID, ULT_TIER_BONUS } from "../data/agents.ts";
 import {
-  computeSide, dutyKillWeight, dutyDeathWeight, dutyEntryWeight,
+  computeSide, dutyKillWeight, dutyEntryWeight,
   effectiveOverall, LOGISTIC_K, SWING_SD,
 } from "./strength.ts";
 import { intelOf } from "./intel.ts";

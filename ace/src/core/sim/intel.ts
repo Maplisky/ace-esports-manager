@@ -5,12 +5,11 @@
  */
 import { clamp } from "../rng.ts";
 import { AGENT_BY_ID } from "../data/agents.ts";
-import { computeFit } from "./fit.ts";
 import type { GameState, MapDef, Team } from "../types.ts";
 
-export const INTEL_PER_SCOUT = 2;
-export const INTEL_CAP = 10;
-export const INTEL_WEEKLY_DECAY = 0.5;
+const INTEL_PER_SCOUT = 2;
+const INTEL_CAP = 10;
+const INTEL_WEEKLY_DECAY = 0.5;
 
 export function intelOf(state: GameState, oppTeamId: string): number {
   return clamp(state.scouting[oppTeamId]?.points ?? 0, 0, INTEL_CAP);

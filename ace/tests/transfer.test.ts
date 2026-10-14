@@ -6,7 +6,7 @@ import { generateWorld } from "../src/core/worldgen.ts";
 import { initSeasonFixtures, advanceDay } from "../src/core/sim/day.ts";
 import {
   inTransferWindow, marketValue, salaryExpectation, evaluateOffer,
-  startNegotiation, finalizeOffer, completeTransfer, releasePlayer, aiWeeklyTransfers,
+  startNegotiation, releasePlayer, aiWeeklyTransfers,
 } from "../src/core/sim/transfer.ts";
 import type { GameState, Player, Team, TransferOffer } from "../src/core/types.ts";
 

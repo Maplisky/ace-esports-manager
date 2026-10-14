@@ -3,7 +3,7 @@
  * 每日抽取 0-3 张（35% 基础概率 + 空 6 天保底补偿）· 负面卡 14 天抑制器 · 生日事件（7 天祝福窗口语义以队列表达）。
  * 抽取时绑定目标选手并把 {ign}/{teamName} 代入文案；resolveEvent 按选项结算数值效果。
  */
-import { Rng, clamp, hashString } from "../rng.ts";
+import { Rng, clamp } from "../rng.ts";
 import { EVENT_POOL } from "../data/events.ts";
 import type { GameState, PendingEventCard, Player, Team } from "../types.ts";
 

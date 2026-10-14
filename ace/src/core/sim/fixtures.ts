@@ -7,16 +7,12 @@ import type { Fixture } from "../types.ts";
 
 let fixtureSeq = 0;
 
-export function resetFixtureSeq(): void {
-  fixtureSeq = 0;
-}
-
 function mkFixture(f: Omit<Fixture, "id" | "played">): Fixture {
   return { ...f, id: `F${fixtureSeq++}`, played: false };
 }
 
 /** 单循环（轮转法），返回每轮的对阵；rng 决定主队顺序洗牌 */
-export function roundRobin(teamIds: string[], rng: Rng): [string, string][][] {
+function roundRobin(teamIds: string[], rng: Rng): [string, string][][] {
   const ids = rng.shuffle(teamIds);
   const n = ids.length;
   const rounds: [string, string][][] = [];

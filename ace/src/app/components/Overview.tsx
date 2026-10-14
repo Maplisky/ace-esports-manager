@@ -1,7 +1,6 @@
 import type { GameState } from "../../core/types.ts";
 import { AGENT_BY_ID } from "../../core/data/agents.ts";
 import { MAPS } from "../../core/data/maps.ts";
-import { stageName } from "../App.tsx";
 import { PlayerFace, TeamLogo } from "./Avatar.tsx";
 import { intelOf, estimateMapStrength, starsOf } from "../../core/sim/intel.ts";
 
@@ -239,7 +238,7 @@ function advisor(state: GameState): string[] {
   return out.slice(0, 3);
 }
 
-export function fixtureLabel(state: GameState, f: { teamA: string; teamB: string; label: string; day: number; played: boolean }): string {
+function fixtureLabel(state: GameState, f: { teamA: string; teamB: string; label: string; day: number; played: boolean }): string {
   const a = state.teams[f.teamA]?.tag ?? "?";
   const b = state.teams[f.teamB]?.tag ?? "?";
   const score = f.played ? "" : `（D${f.day}）`;
@@ -252,7 +251,7 @@ export function formatDate(year: number, day: number): string {
   return `${d.getUTCMonth() + 1}/${d.getUTCDate()}`;
 }
 
-export function fmtK(v: number): string {
+function fmtK(v: number): string {
   if (Math.abs(v) >= 1_000_000) return (v / 1_000_000).toFixed(2) + "M";
   return Math.round(v / 1000) + "K";
 }

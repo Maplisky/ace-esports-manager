@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { Rng, hashString } from "../src/core/rng.ts";
 import { generateWorld, computeOverall } from "../src/core/worldgen.ts";
-import { initSeasonFixtures, advanceDay, isLeapYear, daysInYear, migrateLegacyComps } from "../src/core/sim/day.ts";
+import { initSeasonFixtures, advanceDay, daysInYear, migrateLegacyComps } from "../src/core/sim/day.ts";
 import { migrateMapsToRealPool } from "../src/core/worldgen.ts";
 
 test("RNG：同种子序列一致，不同种子不同", () => {

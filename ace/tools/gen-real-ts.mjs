@@ -22,9 +22,8 @@ export interface VlrPlayerStat {
   avatar: string | null; captain: boolean; stats: VlrAgentStat[];
 }
 export const REAL_TEAMS: readonly VlrTeamStat[] = ${JSON.stringify(teams)};
-export const REAL_PLAYERS: readonly VlrPlayerStat[] = ${JSON.stringify(players)};
+const REAL_PLAYERS: readonly VlrPlayerStat[] = ${JSON.stringify(players)};
 export const REAL_PLAYERS_BY_VLR: ReadonlyMap<number, VlrPlayerStat> = new Map(REAL_PLAYERS.map((p) => [p.vlrId, p]));
-export const REAL_CRAWL_DATE = "${new Date().toISOString().slice(0, 10)}";
 `;
 await writeFile(path.join(ROOT, "src/core/data/real/real-data.ts"), ts);
 console.log(`real-data.ts: ${teams.length} 队 / ${players.length} 选手，${(ts.length / 1024 / 1024).toFixed(2)} MB`);

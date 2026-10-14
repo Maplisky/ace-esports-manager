@@ -139,13 +139,6 @@ export function TacticsPage(props: { state: GameState }) {
   );
 }
 
-/** 替补智能适配入口（选中替补 → 给出英雄建议）——供 Squad 页未来联动 */
-export function smartAdaptHint(state: GameState, benchId: string): string {
-  const bench = state.players[benchId]!;
-  const best = bench.agentPool.map((a) => ({ a, pro: bench.agentPro[a] ?? 0 })).sort((x, y) => y.pro - x.pro)[0];
-  return best ? `${bench.ign} 最熟练英雄：${AGENT_BY_ID.get(best.a)?.name}（${best.pro}%）` : "";
-}
-
 function bestAgentOf(p: GameState["players"][string]): string {
   let best = p.agentPool[0] ?? "omen";
   let bestPro = -1;

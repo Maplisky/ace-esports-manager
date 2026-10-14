@@ -5,7 +5,6 @@ export type Duty = "duelist" | "initiator" | "controller" | "sentinel";
 /** 赛历阶段（GDD §4.2）：自然年内六段 + 休赛期 */
 export type Stage = "preseason" | "cup" | "stage1" | "summer" | "stage2" | "offseason" | "masters";
 
-export const DUTIES: readonly Duty[] = ["duelist", "initiator", "controller", "sentinel"];
 
 /** 职责向量：四项之和 = 1（GDD §6.1） */
 export interface DutyVector {

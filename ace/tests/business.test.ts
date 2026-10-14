@@ -3,7 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { generateWorld } from "../src/core/worldgen.ts";
 import { initSeasonFixtures, advanceDay } from "../src/core/sim/day.ts";
-import { weeklySponsorIncome, refreshCommercialWeek, acceptGig, sponsorSignChance } from "../src/core/sim/business.ts";
+import { refreshCommercialWeek, sponsorSignChance } from "../src/core/sim/business.ts";
 import { Rng } from "../src/core/rng.ts";
 
 function setup() {
