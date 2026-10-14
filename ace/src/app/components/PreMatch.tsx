@@ -56,6 +56,7 @@ export function PreMatch(props: {
   const [step, setStep] = useState<0 | 1 | 2>(0); // 0 阵容 1 BP 2 英雄
   const [starters, setStarters] = useState<string[]>(() => (myTeam ? myTeam.starters.slice() : []));
   const [picks, setPicks] = useState<Record<string, Record<string, string>>>({});
+  const [presetChoice, setPresetChoice] = useState<Record<string, string>>({});
   const [bpLog, setBpLog] = useState<string[]>([]);
 
   // BP 状态机（进入 BP 步才初始化）
@@ -203,7 +204,21 @@ export function PreMatch(props: {
   const activeMaps = bp?.picks ?? [];
 
   const confirm = (fastForward: boolean) => {
-    onConfirm({ starters, manualMaps: activeMaps.length >= need ? activeMaps.slice() : null, agentPicks: picks, fastForward });
+    // 所见即所得：把每图每名首发的当前显示值完整固化（预案默认/自动池首都算数），
+    // 否则引擎只收到玩家手动改过的条目，「套用预案」显示而不生效
+    const fullPicks: Record<string, Record<string, string>> = {};
+    for (const mapId of activeMaps.slice(0, need)) {
+      const presets = myTeam.presets[mapId] ?? [];
+      const chosen = presetChoice[mapId] ?? presets.find((p) => p.preferred)?.name ?? presets[0]?.name ?? "";
+      const preset = presets.find((p) => p.name === chosen);
+      fullPicks[mapId] = Object.fromEntries(
+        starterPlayers.map((p) => {
+          const current = picks[mapId]?.[p.id] ?? preset?.agents[p.id] ?? p.agentPool[0] ?? "omen";
+          return [p.id, p.agentPool.includes(current) ? current : (p.agentPool[0] ?? "omen")];
+        }),
+      );
+    }
+    onConfirm({ starters, manualMaps: activeMaps.length >= need ? activeMaps.slice() : null, agentPicks: fullPicks, fastForward });
   };
 
   return (
@@ -344,12 +359,49 @@ export function PreMatch(props: {
           <div>
             {activeMaps.slice(0, need).map((mapId) => {
               const m = MAPS.find((x) => x.id === mapId)!;
-              const preset = myTeam.presets[mapId]?.find((p) => p.preferred) ?? myTeam.presets[mapId]?.[0];
+              const presets = myTeam.presets[mapId] ?? [];
+              const chosen = presetChoice[mapId] ?? presets.find((p) => p.preferred)?.name ?? presets[0]?.name ?? "";
+              const preset = presets.find((p) => p.name === chosen);
               return (
                 <div key={mapId} className="card" style={{ padding: "10px 14px" }}>
-                  <h3 style={{ display: "flex", justifyContent: "space-between" }}>
+                  <h3 style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span>🗺 {m.name} <span className="muted small">熟练 {Math.round(myTeam.mapPref[mapId] ?? 50)}</span></span>
-                    {preset && <span className="tag green">套用预案「{preset.name}」</span>}
+                    <span className="row" style={{ gap: 6 }}>
+                      <span className="muted small">阵容预案</span>
+                      <select
+                        value={chosen}
+                        onChange={(e) => {
+                          const name = e.target.value;
+                          setPresetChoice((prev) => ({ ...prev, [mapId]: name }));
+                          const pr = presets.find((p) => p.name === name);
+                          if (!pr) {
+                            // 不使用预案：清掉该图的显式选择，回落自动
+                            setPicks((prev) => { const n = { ...prev }; delete n[mapId]; return n; });
+                            return;
+                          }
+                          // 套用预案：该图全部首发按预案填充（池外英雄回落该选手池首）
+                          setPicks((prev) => ({
+                            ...prev,
+                            [mapId]: Object.fromEntries(
+                              starterPlayers.map((p) => {
+                                const want = pr.agents[p.id];
+                                const inPool = want && p.agentPool.includes(want);
+                                return [p.id, inPool ? want : (prev[mapId]?.[p.id] ?? p.agentPool[0] ?? "omen")];
+                              }),
+                            ),
+                          }));
+                        }}
+                      >
+                        {!presets.length && <option value="">（本图暂无预案）</option>}
+                        {presets.length > 0 && <option value="">不使用预案</option>}
+                        {presets.map((p, pi) => (
+                          <option key={p.name + "#" + pi} value={p.name}>
+                            {p.name}{p.preferred ? " ★" : ""}
+                          </option>
+                        ))}
+                      </select>
+                      {preset && <span className="tag green">已套用</span>}
+                    </span>
                   </h3>
                   <div className="row" style={{ flexWrap: "wrap", gap: 8 }}>
                     {starterPlayers.map((p) => {
