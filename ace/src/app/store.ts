@@ -171,9 +171,9 @@ export const useStore = create<AppStore>((set, get) => ({
     const saved = await loadGame();
     if (!saved) return;
     records = saved.records;
-    await call({ type: "load", save: { state: saved.state, records: saved.records } });
+    const res = await call<{ held?: HeldMatch | null }>({ type: "load", save: { state: saved.state, records: saved.records } });
     const snap = await call<{ state: GameState; records: Record<string, MatchRecord> }>({ type: "getSnapshot" });
-    set({ state: snap.state, records, screen: "main", page: "overview", held: null });
+    set({ state: snap.state, records, screen: "main", page: "overview", held: res.held ?? null });
   },
 
   advance: async () => {

@@ -148,7 +148,17 @@ function handleWorkerMessage(e: MessageEvent) {
     const saved = msg.save as SavedPayload;
     state = migrate(saved.state);
     records = saved.records;
-    reply({ type: "ready", ...snapshot() });
+    // 存档停在赛前准备（比赛日 = 当天、我的未打比赛）：恢复 held 让 PreMatch 立即重入。
+    // 否则下一次推进 day++ 后该场落入"逾期清扫"被自动补打，玩家丢失赛前操作权。
+    let held: typeof replyHeld = null;
+    if (state.myTeamId) {
+      const f = state.fixtures.find(
+        (x) => !x.played && x.day === state!.day && x.teamA !== "" && x.teamB !== "" &&
+          (x.teamA === state!.myTeamId || x.teamB === state!.myTeamId),
+      );
+      if (f) held = { fixtureId: f.id, teamA: f.teamA, teamB: f.teamB, bo: f.bo, label: f.label };
+    }
+    reply({ type: "ready", ...snapshot(), held });
   } else if (type === "advance") {
     doAdvance(1);
   } else if (type === "advanceToNextMatch") {

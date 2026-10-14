@@ -98,7 +98,8 @@ export function PreMatch(props: {
       banned: [],
       stepIdx: 0,
       meFirst: (seed % 2) === 0,
-      deciderRolls: [(seed >> 3) % 97, (seed >> 7) % 89, (seed >> 11) % 83],
+      // >>> 无符号移位：hashString 已 >>>0，带符号 >> 会让高段位变负、负 roll 令 pool[负] 取出 undefined
+      deciderRolls: [(seed >>> 3) % 97, (seed >>> 7) % 89, (seed >>> 11) % 83],
       done: false,
     };
     // 对方掷得先手时立即执行其回合（否则界面停在"思考中"等待不存在的玩家输入）
@@ -205,20 +206,39 @@ export function PreMatch(props: {
 
   const activeMaps = bp?.picks ?? [];
 
+  // 单图五人英雄分配（显示与 confirm 共用）：手动选择优先；预案值/自动池回退时
+  // 跳过本图已被他人占用的英雄——默认阵容永远合法，重复警告只针对手动冲突
+  const resolveMapAgents = (mapId: string): Record<string, string> => {
+    const presets = myTeam.presets[mapId] ?? [];
+    const chosen = presetChoice[mapId] ?? presets.find((p) => p.preferred)?.name ?? presets[0]?.name ?? "";
+    const preset = presets.find((p) => p.name === chosen);
+    const taken = new Set<string>();
+    const out: Record<string, string> = {};
+    for (const p of starterPlayers) {
+      const manual = picks[mapId]?.[p.id];
+      let aid: string;
+      if (manual && p.agentPool.includes(manual)) {
+        aid = manual;
+      } else {
+        const pool = p.agentPool;
+        aid =
+          [preset?.agents[p.id], ...pool].find((a) => a && !taken.has(a)) ??
+          pool.find((a) => !taken.has(a)) ??
+          pool[0] ??
+          "omen";
+      }
+      taken.add(aid);
+      out[p.id] = aid;
+    }
+    return out;
+  };
+
   const confirm = (fastForward: boolean) => {
-    // 所见即所得：把每图每名首发的当前显示值完整固化（预案默认/自动池首都算数），
+    // 所见即所得：把每图每名首发的最终英雄完整固化（预案默认/自动池首都算数），
     // 否则引擎只收到玩家手动改过的条目，「套用预案」显示而不生效
     const fullPicks: Record<string, Record<string, string>> = {};
     for (const mapId of activeMaps.slice(0, need)) {
-      const presets = myTeam.presets[mapId] ?? [];
-      const chosen = presetChoice[mapId] ?? presets.find((p) => p.preferred)?.name ?? presets[0]?.name ?? "";
-      const preset = presets.find((p) => p.name === chosen);
-      fullPicks[mapId] = Object.fromEntries(
-        starterPlayers.map((p) => {
-          const current = picks[mapId]?.[p.id] ?? preset?.agents[p.id] ?? p.agentPool[0] ?? "omen";
-          return [p.id, p.agentPool.includes(current) ? current : (p.agentPool[0] ?? "omen")];
-        }),
-      );
+      fullPicks[mapId] = resolveMapAgents(mapId);
     }
     onConfirm({ starters, manualMaps: activeMaps.length >= need ? activeMaps.slice() : null, agentPicks: fullPicks, fastForward });
   };
@@ -359,11 +379,11 @@ export function PreMatch(props: {
 
         {step === 2 && heroPage < activeMaps.length && (() => {
   const mapId = activeMaps[heroPage]!;
-  const m = MAPS.find((x) => x.id === mapId)!;
+  const m = MAPS.find((x) => x.id === mapId) ?? MAPS[0]!;
   const presets = myTeam.presets[mapId] ?? [];
   const chosen = presetChoice[mapId] ?? presets.find((p) => p.preferred)?.name ?? presets[0]?.name ?? "";
-  const preset = presets.find((p) => p.name === chosen);
-  const currentOf = (p: Player) => picks[mapId]?.[p.id] ?? preset?.agents[p.id] ?? p.agentPool[0] ?? "omen";
+  const resolved = resolveMapAgents(mapId);
+  const currentOf = (p: Player) => picks[mapId]?.[p.id] ?? resolved[p.id];
   const dupAgents = (() => {
     const seen = new Set<string>();
     for (const p of starterPlayers) {
@@ -436,7 +456,7 @@ export function PreMatch(props: {
       {/* 图进度指示 */}
       <div className="row" style={{ gap: 8, marginBottom: 8, alignItems: "center" }}>
         {activeMaps.map((mid, i) => {
-          const pageMap = MAPS.find((x) => x.id === mid)!;
+          const pageMap = MAPS.find((x) => x.id === mid);
           const done = i < heroPage;
           return (
             <button
@@ -446,7 +466,7 @@ export function PreMatch(props: {
               disabled={i > heroPage} // 前进必须过校验，只能回看
               onClick={() => setHeroPage(i)}
             >
-              {done ? "✓ " : ""}第 {i + 1} 图 · {pageMap.name}
+              {done ? "✓ " : ""}第 {i + 1} 图 · {pageMap?.name ?? mid}
             </button>
           );
         })}

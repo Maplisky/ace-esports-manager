@@ -14,7 +14,8 @@ const H = 400;
 function hashPos(mapId: string, pid: string, roundN: number, half: "top" | "bottom"): { x: number; y: number } {
   const h = hashString(`${mapId}:${pid}:${roundN}:${half}`);
   const x = 36 + (h % (W - 72));
-  const y = half === "top" ? 40 + ((h >> 8) % 120) : H - 160 + ((h >> 8) % 120);
+  // >>> 无符号移位：>> 会让 h≥2^31 时取到负数，棋子被画到画布外
+  const y = half === "top" ? 40 + ((h >>> 8) % 120) : H - 160 + ((h >>> 8) % 120);
   return { x, y };
 }
 
