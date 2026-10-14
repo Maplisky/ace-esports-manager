@@ -7,6 +7,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AGENT_BY_ID } from "../../core/data/agents.ts";
 import { TeamLogo } from "./Avatar.tsx";
 import { MAP_BY_ID } from "../../core/data/maps.ts";
+import { Tactical2D } from "./Tactical2D.tsx";
 import type { GameState, MatchRecord, RoundEvent } from "../../core/types.ts";
 
 const SLOW_MS = 850;
@@ -27,6 +28,7 @@ export function MatchPlayer(props: { record: MatchRecord; state: GameState; onCl
   const [playing, setPlaying] = useState(!startAtEnd);
   const [speed, setSpeed] = useState(2);
   const [finished, setFinished] = useState(startAtEnd);
+  const [view, setView] = useState<"text" | "2d">("2d");
   const timer = useRef<number | null>(null);
 
   const map = record.maps[pos.mi];
@@ -160,17 +162,30 @@ export function MatchPlayer(props: { record: MatchRecord; state: GameState; onCl
               </div>
             )}
 
-            {/* 击杀流（逐步揭示） */}
-            <div className="killfeed">
-              {revealed.map((e, i) => (
-                <FeedRow key={i} e={e} state={state} ign={ign} agentName={agentName} />
-              ))}
-              {showResult && round && (
-                <div className="fevent big">
-                  🏁 {(round.end.win === "A" ? teamA?.tag : teamB?.tag)} 拿下回合（{howText(round.end.how)}）
-                  · 存活 {round.end.alive.A}-{round.end.alive.B}
-                </div>
+            {/* 击杀流（逐步揭示）+ 2D 战术视图并排 */}
+            <div className="row" style={{ gap: 12, alignItems: "flex-start", flexWrap: "wrap" }}>
+              {view === "2d" && round && map && (
+                <Tactical2D
+                  state={state}
+                  mapRec={map}
+                  roundEvents={round.events}
+                  revealedCount={pos.ei + 1}
+                  teamAId={record.teamA}
+                  teamBId={record.teamB}
+                  atkSide={round.atk}
+                />
               )}
+              <div className="killfeed" style={{ flex: 1, minWidth: 260 }}>
+                {revealed.map((e, i) => (
+                  <FeedRow key={i} e={e} state={state} ign={ign} agentName={agentName} />
+                ))}
+                {showResult && round && (
+                  <div className="fevent big">
+                    🏁 {(round.end.win === "A" ? teamA?.tag : teamB?.tag)} 拿下回合（{howText(round.end.how)}）
+                    · 存活 {round.end.alive.A}-{round.end.alive.B}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="progress">
@@ -190,6 +205,9 @@ export function MatchPlayer(props: { record: MatchRecord; state: GameState; onCl
                 {speed}x
               </button>
               <button onClick={jumpToEnd}>⏭ 跳到结果</button>
+              <button onClick={() => setView((v) => (v === "2d" ? "text" : "2d"))}>
+                {view === "2d" ? "📄 文字" : "🗺 2D 战术"}
+              </button>
               <div className="grow" />
               <button className="ghost" onClick={onClose}>关闭 ✕</button>
             </div>

@@ -12,6 +12,7 @@ import { TransferPage } from "./components/Transfer.tsx";
 import { MatchPlayer } from "./components/MatchPlayer.tsx";
 import { PreMatch } from "./components/PreMatch.tsx";
 import { REGIONS } from "../core/sim/day.ts";
+import { ErrorBoundary } from "./components/ErrorBoundary.tsx";
 import { EventCardModal } from "./components/EventCards.tsx";
 
 const PAGES: { key: "overview" | "schedule" | "squad" | "tactics" | "training" | "business" | "transfer" | "manager"; label: string }[] = [
