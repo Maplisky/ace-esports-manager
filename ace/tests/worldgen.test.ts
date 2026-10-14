@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { Rng, hashString } from "../src/core/rng.ts";
 import { generateWorld, computeOverall } from "../src/core/worldgen.ts";
 import { initSeasonFixtures, advanceDay, isLeapYear, daysInYear, migrateLegacyComps } from "../src/core/sim/day.ts";
+import { migrateMapsToRealPool } from "../src/core/worldgen.ts";
 
 test("RNG：同种子序列一致，不同种子不同", () => {
   const a = new Rng(12345);
@@ -235,4 +236,28 @@ test("自由人池：64 队世界开局 50 人（与队伍数等比），虚拟�
   const fas = Object.values(state.players).filter((p) => !p.teamId);
   assert.equal(fas.length, 50);
   assert.ok(fas.every((p) => p.synthetic === "free"), "自由池为虚拟生成，必须标注");
+});
+
+
+test("旧档地图迁移：虚构 id 全量映射真实池，合并取大/求和，幂等", () => {
+  const state = generateWorld(2026);
+  initSeasonFixtures(state);
+  const t = Object.values(state.teams)[0]!;
+  t.mapPref = { jingjie: 70, ascent: 60, xueyuan: 80 };
+  t.patternUsage = { ascent: 2, jingjie: 3 };
+  t.presets = { jingjie: [{ name: "旧预案", agents: {}, preferred: true } as never] };
+  state.trainingMaps = ["jingjie", "kongting"];
+  state.fixtures.push({ id: "FXM", day: 60, stage: "stage1", comp: "cup", teamA: t.id, teamB: Object.values(state.teams)[1]!.id, bo: 3, label: "迁移测试", played: false, mapLock: ["xueyuan", "jingjie"], agentLock: { fenlu: { X: "jett" } } });
+  migrateMapsToRealPool(state);
+  assert.equal(t.mapPref["ascent"], 70);
+  assert.equal(t.mapPref["split"], 80);
+  assert.ok(!("jingjie" in t.mapPref) && !("xueyuan" in t.mapPref));
+  assert.equal(t.patternUsage["ascent"], 5);
+  assert.equal(t.presets["ascent"]?.[0]?.name, "旧预案");
+  assert.deepEqual(state.trainingMaps, ["ascent", "lotus"]);
+  assert.deepEqual(state.fixtures.at(-1)!.mapLock, ["split", "ascent"]);
+  assert.deepEqual(Object.keys(state.fixtures.at(-1)!.agentLock!), ["sunset"]);
+  migrateMapsToRealPool(state);
+  assert.equal(t.mapPref["ascent"], 70);
+  assert.equal(t.patternUsage["ascent"], 5);
 });

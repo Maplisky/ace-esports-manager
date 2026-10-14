@@ -473,6 +473,48 @@ export function generateWorld(seed: number): GameState {
   return state;
 }
 
+/** v0.7 旧档虚构地图 id → 真实图池（训练图/图池熟练/招牌计数/预案/mapLock/agentLock；worker migrate 调用，core 可测） */
+export function migrateMapsToRealPool(state: GameState): void {
+  const validMap = new Set(MAPS.map((m) => m.id));
+  const legacyMap: Record<string, string> = { jingjie: "ascent", xiajing: "haven", panyan: "icebox", yugang: "bind", xueyuan: "split", kongting: "lotus", fenlu: "sunset" };
+  const remap = (id: string) => (validMap.has(id) ? id : legacyMap[id] ?? "ascent");
+  if (state.trainingMaps.some((m) => !validMap.has(m))) {
+    state.trainingMaps = [...new Set(state.trainingMaps.map(remap))].slice(0, 3);
+  }
+  for (const t of Object.values(state.teams)) {
+    for (const oldId of Object.keys(t.mapPref)) {
+      if (!validMap.has(oldId)) {
+        const n = remap(oldId);
+        t.mapPref[n] = Math.max(t.mapPref[n] ?? 50, t.mapPref[oldId] ?? 50);
+        delete t.mapPref[oldId];
+      }
+    }
+    for (const oldId of Object.keys(t.patternUsage)) {
+      if (!validMap.has(oldId)) {
+        t.patternUsage[remap(oldId)] = (t.patternUsage[remap(oldId)] ?? 0) + (t.patternUsage[oldId] ?? 0);
+        delete t.patternUsage[oldId];
+      }
+    }
+    for (const oldId of Object.keys(t.presets)) {
+      if (!validMap.has(oldId)) {
+        if (!t.presets[remap(oldId)]) t.presets[remap(oldId)] = t.presets[oldId]!;
+        delete t.presets[oldId];
+      }
+    }
+  }
+  for (const f of state.fixtures) {
+    if (f.mapLock?.some((m) => !validMap.has(m))) f.mapLock = f.mapLock.map(remap);
+    if (f.agentLock) {
+      for (const oldId of Object.keys(f.agentLock)) {
+        if (!validMap.has(oldId)) {
+          if (!f.agentLock[remap(oldId)]) f.agentLock[remap(oldId)] = f.agentLock[oldId]!;
+          delete f.agentLock[oldId];
+        }
+      }
+    }
+  }
+}
+
 /** 生成自由人并入 state（迁移补池 / 休赛期补强共用；GDD §6.5） */
 export function spawnFreeAgents(state: GameState, rng: Rng, count: number): void {
   const usedIgns = new Set(Object.values(state.players).map((p) => p.ign));

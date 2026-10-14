@@ -164,7 +164,8 @@ export function OverviewPage(props: {
         .filter((c) => {
           if (Object.keys(c.standings).length === 0) return false;
           if (c.key === "masters") return true;
-          const activeStage = state.stage === "summer" || state.stage === "masters" || state.stage === "stage2" || state.stage === "offseason" ? "stage2" : "stage1";
+          // 休整期（夏季窗口/Masters）看 Stage1 收官表；Stage2/休赛期看 Stage2；季前看即将开打的 Stage1
+          const activeStage = state.stage === "stage2" || state.stage === "offseason" ? "stage2" : "stage1";
           if (c.stage !== activeStage) return false; // 当前/即将阶段的表（16 张表洪水治理）
           const myRegion = myTeam?.regionId;
           if (c.key.includes(`-${myRegion}-`)) return true; // 我的赛区全量

@@ -5,7 +5,7 @@
  */
 import { useMemo, useState } from "react";
 import type { GameState, Player } from "../../core/types.ts";
-import { AGENTS, AGENT_BY_ID } from "../../core/data/agents.ts";
+import { AGENTS } from "../../core/data/agents.ts";
 import { MAPS } from "../../core/data/maps.ts";
 import { intelOf, estimateMapStrength, starsOf } from "../../core/sim/intel.ts";
 
@@ -238,6 +238,5 @@ function suggestVeto(state: GameState, myId: string, oppId: string, bo: 1 | 3 | 
   }));
   // pick 差值最高的图在前，其余按我方熟练补足
   const picks = scored.slice().sort((a, b) => b.diff - a.diff).slice(0, bo === 1 ? 1 : bo === 3 ? 3 : 5);
-  void AGENT_BY_ID;
   return picks.map((p) => p.id);
 }

@@ -103,8 +103,8 @@ export function initSeasonFixtures(state: GameState): void {
       const k2 = `${st}-${r.id}-t2`;
       state.comps[k1] = { key: k1, name: `VCT ${r.label} · ${sName}`, stage: st, teamIds: rt1.map((t) => t.id), standings: {} };
       state.comps[k2] = { key: k2, name: `挑战者 ${r.label} · ${sName}`, stage: st, teamIds: rt2.map((t) => t.id), standings: {} };
-      buildLeague(state.fixtures, { comp: k1, name: `${r.label}联赛`, stage: st, teamIds: rt1.map((t) => t.id), startDay: start + 2, endDay: end, bo: 3, rng });
-      buildLeague(state.fixtures, { comp: k2, name: `${r.label}挑战者联赛`, stage: st, teamIds: rt2.map((t) => t.id), startDay: start + 2, endDay: end, bo: 3, rng });
+      buildLeague(state.fixtures, { comp: k1, name: `${r.label} 联赛`, stage: st, teamIds: rt1.map((t) => t.id), startDay: start + 2, endDay: end, bo: 3, rng });
+      buildLeague(state.fixtures, { comp: k2, name: `${r.label} 挑战者联赛`, stage: st, teamIds: rt2.map((t) => t.id), startDay: start + 2, endDay: end, bo: 3, rng });
     }
   }
   // 清掉上一赛季遗留的 comp（去年的 Masters/旧 key 联赛不残留到总览）
