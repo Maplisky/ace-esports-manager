@@ -134,12 +134,14 @@ function assignAgents(lineup: Player[]): Record<string, string> {
       used.add("agent:" + bestAgent);
     }
   }
-  // 自由位：剩余选手最强英雄
+  // 自由位：剩余选手最强英雄；同场不重复（池内全撞车才允许回落）
   for (const p of lineup) {
     if (out[p.id]) continue;
-    let best = p.agentPool[0] ?? "omen";
+    const free = p.agentPool.filter((a) => !used.has("agent:" + a));
+    const pool = free.length ? free : p.agentPool;
+    let best = pool[0] ?? p.agentPool[0] ?? "omen";
     let bestPro = -1;
-    for (const a of p.agentPool) {
+    for (const a of pool) {
       const pro = p.agentPro[a] ?? 0;
       if (pro > bestPro) {
         bestPro = pro;
@@ -147,6 +149,7 @@ function assignAgents(lineup: Player[]): Record<string, string> {
       }
     }
     out[p.id] = best;
+    used.add("agent:" + best);
   }
   return out;
 }

@@ -60,6 +60,7 @@ export function PreMatch(props: {
   const [picks, setPicks] = useState<Record<string, Record<string, string>>>({});
   const [presetChoice, setPresetChoice] = useState<Record<string, string>>({});
   const [bpLog, setBpLog] = useState<string[]>([]);
+  const [heroPage, setHeroPage] = useState(0); // 英雄步分页（每图一页）
 
   // BP 状态机（进入 BP 步才初始化）
   const [bp, setBp] = useState<BpState | null>(null);
@@ -357,104 +358,198 @@ export function PreMatch(props: {
           </div>
         )}
 
-        {step === 2 && (
-          <div>
-            {activeMaps.slice(0, need).map((mapId) => {
-              const m = MAPS.find((x) => x.id === mapId)!;
-              const presets = myTeam.presets[mapId] ?? [];
-              const chosen = presetChoice[mapId] ?? presets.find((p) => p.preferred)?.name ?? presets[0]?.name ?? "";
-              const preset = presets.find((p) => p.name === chosen);
+        {step === 2 && heroPage < activeMaps.length && (() => {
+  const mapId = activeMaps[heroPage]!;
+  const m = MAPS.find((x) => x.id === mapId)!;
+  const presets = myTeam.presets[mapId] ?? [];
+  const chosen = presetChoice[mapId] ?? presets.find((p) => p.preferred)?.name ?? presets[0]?.name ?? "";
+  const preset = presets.find((p) => p.name === chosen);
+  const currentOf = (p: Player) => picks[mapId]?.[p.id] ?? preset?.agents[p.id] ?? p.agentPool[0] ?? "omen";
+  const dupAgents = (() => {
+    const seen = new Set<string>();
+    for (const p of starterPlayers) {
+      const a = currentOf(p);
+      if (seen.has(a)) return a;
+      seen.add(a);
+    }
+    return null;
+  })();
+  const dupAgentName = dupAgents ? AGENT_BY_ID.get(dupAgents)?.name ?? dupAgents : null;
+  const isLast = heroPage >= activeMaps.length - 1;
+  const blocked = !!dupAgents;
+  const goNext = (ff: boolean) => {
+    if (blocked) return;
+    if (!isLast) setHeroPage(heroPage + 1);
+    else confirm(ff);
+  };
+  // 对方常用阵容（该图情报 >0 时展示：对手首发的常用英雄）
+  const oppIntel = intelOf(state, opp.id);
+  const oppStarters = opp.starters.map((id) => state.players[id]).filter((x): x is Player => !!x);
+  return (
+    <div>
+      {/* 顶端：地图信息条 */}
+      <div className="card" style={{ padding: "10px 16px", marginBottom: 10 }}>
+        <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>
+          <span className="row" style={{ gap: 10, alignItems: "center" }}>
+            <b style={{ fontSize: 17 }}>🗺 {m.name}</b>
+            <span className="tag">我方熟练 {Math.round(myTeam.mapPref[mapId] ?? 50)}</span>
+            <span className="muted small">{m.sites} 点位 · 开阔 {Math.round(m.openness * 100)} / 垂直 {Math.round(m.vertical * 100)} / 走廊 {Math.round(m.corridor * 100)}</span>
+          </span>
+          <span className="row" style={{ gap: 10, alignItems: "center" }}>
+            <span className="muted small">对方图池评估 {starsOf(estimateMapStrength(state, opp, m))}★</span>
+            <span className="row" style={{ gap: 6, alignItems: "center" }}>
+              <span className="muted small">阵容预案</span>
+              <select
+                value={chosen}
+                onChange={(e) => {
+                  const name = e.target.value;
+                  setPresetChoice((prev) => ({ ...prev, [mapId]: name }));
+                  const pr = presets.find((p) => p.name === name);
+                  if (!pr) {
+                    setPicks((prev) => { const n = { ...prev }; delete n[mapId]; return n; });
+                    return;
+                  }
+                  setPicks((prev) => ({
+                    ...prev,
+                    [mapId]: Object.fromEntries(
+                      starterPlayers.map((p) => {
+                        const want = pr.agents[p.id];
+                        const inPool = want && p.agentPool.includes(want);
+                        return [p.id, inPool ? want : (prev[mapId]?.[p.id] ?? p.agentPool[0] ?? "omen")];
+                      }),
+                    ),
+                  }));
+                }}
+              >
+                {!presets.length && <option value="">（本图暂无预案）</option>}
+                {presets.length > 0 && <option value="">不使用预案</option>}
+                {presets.map((p, pi) => (
+                  <option key={p.name + "#" + pi} value={p.name}>
+                    {p.name}{p.preferred ? " ★" : ""}
+                  </option>
+                ))}
+              </select>
+            </span>
+          </span>
+        </div>
+      </div>
+
+      {/* 图进度指示 */}
+      <div className="row" style={{ gap: 8, marginBottom: 8, alignItems: "center" }}>
+        {activeMaps.map((mid, i) => {
+          const pageMap = MAPS.find((x) => x.id === mid)!;
+          const done = i < heroPage;
+          return (
+            <button
+              key={mid}
+              className={i === heroPage ? "primary small" : "small"}
+              style={{ opacity: i > heroPage ? 0.55 : 1 }}
+              disabled={i > heroPage} // 前进必须过校验，只能回看
+              onClick={() => setHeroPage(i)}
+            >
+              {done ? "✓ " : ""}第 {i + 1} 图 · {pageMap.name}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 重复英雄警告 */}
+      {blocked && (
+        <div className="card" style={{ padding: "8px 14px", marginBottom: 8, borderColor: "var(--accent)" }}>
+          <b style={{ color: "var(--accent)" }}>⚠ 重复英雄：{dupAgentName} 已被其他选手选用。同一场每名选手必须使用不同英雄，请调整后才能进入下一图。</b>
+        </div>
+      )}
+
+      {/* 我方五人（竖排） */}
+      <div className="card" style={{ padding: "10px 14px", marginBottom: 10 }}>
+        <h3 style={{ marginBottom: 8 }}>👥 我方五人（{myTeam.name}）</h3>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {starterPlayers.map((p) => {
+            const current = currentOf(p);
+            const curAgent = AGENT_BY_ID.get(current);
+            const isDup = dupAgents === current;
+            const fit = computeFit(current, m);
+            const pro = Math.round((p.agentPro[current] ?? 0) * 10) / 10;
+            return (
+              <div key={p.id} className="row" style={{ gap: 10, alignItems: "center", background: isDup ? "rgba(238,80,80,0.10)" : "rgba(255,255,255,0.03)", borderRadius: 8, padding: "6px 10px", border: isDup ? "1px solid var(--accent)" : "none" }}>
+                <PlayerFace p={p} size={38} showTag={false} />
+                <span style={{ minWidth: 110 }}>
+                  <b className="small">{p.ign}</b>
+                  <span className="muted small" style={{ marginLeft: 6 }}>{p.overall} 综合</span>
+                  {p.isIgl && <span className="tag" style={{ marginLeft: 6 }}>指挥</span>}
+                </span>
+                <AgentIcon agentId={current} size={36} name={curAgent?.name} />
+                <select
+                  value={current}
+                  onChange={(e) => {
+                    setPicks((prev) => ({
+                      ...prev,
+                      [mapId]: { ...(prev[mapId] ?? {}), [p.id]: e.target.value },
+                    }));
+                  }}
+                >
+                  {AGENTS.filter((a) => p.agentPool.includes(a.id)).map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.name}（{Math.round((p.agentPro[a.id] ?? 0) * 10) / 10}%）
+                    </option>
+                  ))}
+                </select>
+                <span className="small" style={{ display: "inline-flex", flexDirection: "column", lineHeight: 1.3, minWidth: 90 }}>
+                  <span>熟练 <b>{pro}</b>%</span>
+                  <span className={fit >= 1.06 ? "tag green" : fit <= 0.94 ? "tag orange" : "muted"} style={{ fontSize: 10 }}>图适 {Math.round(fit * 100)}%</span>
+                </span>
+                {isDup && <span className="tag red">重复</span>}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 对方常用阵容（情报门控） */}
+      {oppIntel > 0 && (
+        <div className="card" style={{ padding: "10px 14px", marginBottom: 10 }}>
+          <h3 style={{ marginBottom: 8 }}>🎯 {opp.name} 常用阵容（情报 {Math.round(oppIntel)}/10，估算）</h3>
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            {oppStarters.map((p) => {
+              const aid = p.agentPool[0] ?? "omen";
+              const a = AGENT_BY_ID.get(aid);
               return (
-                <div key={mapId} className="card" style={{ padding: "10px 14px" }}>
-                  <h3 style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span>🗺 {m.name} <span className="muted small">熟练 {Math.round(myTeam.mapPref[mapId] ?? 50)}</span></span>
-                    <span className="row" style={{ gap: 6 }}>
-                      <span className="muted small">阵容预案</span>
-                      <select
-                        value={chosen}
-                        onChange={(e) => {
-                          const name = e.target.value;
-                          setPresetChoice((prev) => ({ ...prev, [mapId]: name }));
-                          const pr = presets.find((p) => p.name === name);
-                          if (!pr) {
-                            // 不使用预案：清掉该图的显式选择，回落自动
-                            setPicks((prev) => { const n = { ...prev }; delete n[mapId]; return n; });
-                            return;
-                          }
-                          // 套用预案：该图全部首发按预案填充（池外英雄回落该选手池首）
-                          setPicks((prev) => ({
-                            ...prev,
-                            [mapId]: Object.fromEntries(
-                              starterPlayers.map((p) => {
-                                const want = pr.agents[p.id];
-                                const inPool = want && p.agentPool.includes(want);
-                                return [p.id, inPool ? want : (prev[mapId]?.[p.id] ?? p.agentPool[0] ?? "omen")];
-                              }),
-                            ),
-                          }));
-                        }}
-                      >
-                        {!presets.length && <option value="">（本图暂无预案）</option>}
-                        {presets.length > 0 && <option value="">不使用预案</option>}
-                        {presets.map((p, pi) => (
-                          <option key={p.name + "#" + pi} value={p.name}>
-                            {p.name}{p.preferred ? " ★" : ""}
-                          </option>
-                        ))}
-                      </select>
-                      {preset && <span className="tag green">已套用</span>}
-                    </span>
-                  </h3>
-                  <div className="muted small" style={{ marginBottom: 8 }}>
-                    {m.sites} 点位 · 开阔 {Math.round(m.openness * 100)} / 垂直 {Math.round(m.vertical * 100)} / 走廊 {Math.round(m.corridor * 100)}
-                    <span style={{ marginLeft: 12 }}>对方图池评估 {starsOf(estimateMapStrength(state, opp, m))}★</span>
-                  </div>
-                  <div className="row" style={{ flexWrap: "wrap", gap: 10 }}>
-                    {starterPlayers.map((p) => {
-                      const current = picks[mapId]?.[p.id] ?? preset?.agents[p.id] ?? p.agentPool[0] ?? "omen";
-                      const curAgent = AGENT_BY_ID.get(current);
-                      const fit = computeFit(current, m);
-                      const pro = Math.round((p.agentPro[current] ?? 0) * 10) / 10;
-                      return (
-                        <span key={p.id} className="row" style={{ gap: 6, alignItems: "center", background: "rgba(255,255,255,0.03)", borderRadius: 8, padding: "4px 8px" }}>
-                          <PlayerFace p={p} size={34} showTag={false} />
-                          <span className="small" style={{ minWidth: 64 }}>{p.ign}<span className="muted"> {p.overall}</span></span>
-                          <AgentIcon agentId={current} size={30} name={curAgent?.name} />
-                          <select
-                            value={current}
-                            onChange={(e) => {
-                              setPicks((prev) => ({
-                                ...prev,
-                                [mapId]: { ...(prev[mapId] ?? {}), [p.id]: e.target.value },
-                              }));
-                            }}
-                          >
-                            {AGENTS.filter((a) => p.agentPool.includes(a.id)).map((a) => (
-                              <option key={a.id} value={a.id}>
-                                {a.name}（{Math.round((p.agentPro[a.id] ?? 0) * 10) / 10}%）
-                              </option>
-                            ))}
-                          </select>
-                          <span className="small" style={{ display: "inline-flex", flexDirection: "column", lineHeight: 1.3, minWidth: 84 }}>
-                            <span>熟练 <b>{pro}</b>%</span>
-                            <span className={fit >= 1.06 ? "tag green" : fit <= 0.94 ? "tag orange" : "muted"} style={{ fontSize: 10 }}>图适 {Math.round(fit * 100)}%</span>
-                          </span>
-                        </span>
-                      );
-                    })}
-                  </div>
+                <div key={p.id} className="row" style={{ gap: 10, alignItems: "center", opacity: 0.85 }}>
+                  <PlayerFace p={p} size={28} showTag={false} />
+                  <span className="small" style={{ minWidth: 90 }}>{p.ign}<span className="muted"> {p.overall}</span></span>
+                  <AgentIcon agentId={aid} size={26} name={a?.name} />
+                  <span className="small">{a?.name ?? aid}</span>
                 </div>
               );
             })}
-            <div className="row" style={{ justifyContent: "space-between", marginTop: 6 }}>
-              <button onClick={() => setStep(1)}>← 上一步</button>
-              <span className="row">
-                <button onClick={() => confirm(true)}>⏭ 快进到结果</button>
-                <button className="primary" onClick={() => confirm(false)}>▶ 进入观战</button>
-              </span>
-            </div>
           </div>
-        )}
+          <div className="muted small" style={{ marginTop: 6 }}>情报越高越接近真实倾向；正式比赛中对方可能针对性调整。</div>
+        </div>
+      )}
+
+      {/* 底部导航 */}
+      <div className="row" style={{ justifyContent: "space-between", marginTop: 8 }}>
+        <span className="row" style={{ gap: 8 }}>
+          <button onClick={() => setStep(1)}>← 上一步（BP）</button>
+          <button disabled={heroPage === 0} onClick={() => setHeroPage(heroPage - 1)}>← 上一图</button>
+        </span>
+        <span className="row" style={{ gap: 8 }}>
+          {!isLast && (
+            <button className="primary" disabled={blocked} onClick={() => setHeroPage(heroPage + 1)}>
+              下一图：{MAPS.find((x) => x.id === activeMaps[heroPage + 1])?.name} →
+            </button>
+          )}
+          {isLast && (
+            <>
+              <button disabled={blocked} onClick={() => goNext(true)}>⏭ 快进到结果</button>
+              <button className="primary" disabled={blocked} onClick={() => goNext(false)}>▶ 进入观战</button>
+            </>
+          )}
+        </span>
+      </div>
+    </div>
+  );
+})()}
       </div>
     </div>
   );
