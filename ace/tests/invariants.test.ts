@@ -6,9 +6,9 @@ import { initSeasonFixtures, advanceDay, daysInYear } from "../src/core/sim/day.
 test("翻年清仓：跨年时间窗集合统一作废（bids/gigs/sponsorOffers/stream）", () => {
   const state = generateWorld(4321);
   initSeasonFixtures(state);
-  state.myTeamId = "T0";
+  state.myTeamId = Object.values(state.teams).find((t) => t.tier === 1)!.id;
   state.fixtures = []; // 清掉赛程：只测翻年路径，不打完整个赛季
-  const pid = "T0" === state.myTeamId ? (state.teams["T0"]!.roster[0] as string) : "P0";
+  const pid = state.teams[state.myTeamId!]!.roster[0] as string;
   // 去年 12 月产出的"7 天答复窗"报价 / 商务邀约 / 赞助邀约 / 直播合同
   state.incomingBids.push({
     id: "BIDX", playerId: pid, fromTeam: "T1", toTeam: "T0",
@@ -35,7 +35,7 @@ test("翻年清仓：跨年时间窗集合统一作废（bids/gigs/sponsorOffers
 test("两年不变量巡航：数值/名单/积分守恒/同日双赛/引用/上界", () => {
   const state = generateWorld(2026);
   initSeasonFixtures(state);
-  state.myTeamId = "YT3"; // 曜赛区球队：覆盖第二赛区的整年路径
+  state.myTeamId = Object.values(state.teams).find((t) => t.regionId === "pacific")!.id; // Pacific 赛区球队：覆盖非默认赛区的整年路径
   const problems: string[] = [];
   const check = (tag: string) => {
     for (const p of Object.values(state.players)) {

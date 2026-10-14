@@ -1,22 +1,41 @@
 import { useMemo, useState } from "react";
 import { useStore } from "../store.ts";
 import { generateWorld } from "../../core/worldgen.ts";
+import { REGIONS } from "../../core/sim/day.ts";
+import { TeamLogo } from "./Avatar.tsx";
 
 export function StartScreen() {
   const { hasSave, newGame, continueGame, busy } = useStore();
   const [seed, setSeed] = useState(() => Math.floor(Math.random() * 900000) + 1000);
   const [selected, setSelected] = useState<string | null>(null);
 
-  // 预览世界：同步生成一次性只读世界（~160 人，毫秒级），换种子即刷新
-  const teams = useMemo(() => {
-    const w = generateWorld(seed);
-    return Object.values(w.teams).map((t) => {
-      const rating = Math.round(
-        t.roster.reduce((s, pid) => s + (w.players[pid]?.overall ?? 0), 0) / Math.max(1, t.roster.length),
-      );
-      return { id: t.id, name: t.name, tag: t.tag, tier: t.tier, rating, budget: t.budget, coach: t.coach.name };
-    });
-  }, [seed]);
+  // 预览世界：同步生成一次性只读世界（~550 人，毫秒级），换种子即刷新
+  const world = useMemo(() => generateWorld(seed), [seed]);
+  const teams = useMemo(
+    () =>
+      Object.values(world.teams).map((t) => {
+        const rating = Math.round(
+          t.roster.reduce((s, pid) => s + (world.players[pid]?.overall ?? 0), 0) / Math.max(1, t.roster.length),
+        );
+        return { id: t.id, name: t.name, tag: t.tag, tier: t.tier, regionId: t.regionId, logo: t.logo, rating, budget: t.budget, coach: t.coach.name };
+      }),
+    [world],
+  );
+
+  const teamCard = (t: (typeof teams)[number]) => (
+    <div key={t.id} className={`teamcard${selected === t.id ? " sel" : ""}`} onClick={() => setSelected(t.id)}>
+      <div className="row" style={{ justifyContent: "space-between", alignItems: "center", gap: 6 }}>
+        <span className="row" style={{ gap: 6, alignItems: "center", minWidth: 0 }}>
+          <TeamLogo team={t} size={22} />
+          <b style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.name}</b>
+        </span>
+        <span className={`tag${t.tier === 1 ? " red" : ""}`}>{t.tier === 1 ? "VCT" : "挑战者"}</span>
+      </div>
+      <div className="muted small" style={{ marginTop: 6 }}>
+        阵容强度 {t.rating} · 预算 ${(t.budget / 1000).toFixed(0)}K · 教练 {t.coach}
+      </div>
+    </div>
+  );
 
   return (
     <div style={{ maxWidth: 980, margin: "0 auto", padding: "36px 20px" }}>
@@ -24,6 +43,7 @@ export function StartScreen() {
         ACE<em>教练</em>
       </h1>
       <p className="muted">无畏契约风电竞经理 · 你不开枪，但每一次胜利都由你设计。</p>
+      <p className="muted small">真实世界包：队伍 / 选手 / 头像来自 vlr.gg（{teams.length} 支 · 四大赛区），英雄池与能力由真实生涯统计推导。</p>
 
       {hasSave && (
         <div className="card">
@@ -53,23 +73,19 @@ export function StartScreen() {
 
       <div className="card">
         <h3>2 · 选择俱乐部（{teams.length} 支）</h3>
-        <div className="startgrid">
-          {teams.map((t) => (
-            <div
-              key={t.id}
-              className={`teamcard${selected === t.id ? " sel" : ""}`}
-              onClick={() => setSelected(t.id)}
-            >
-              <div className="row" style={{ justifyContent: "space-between" }}>
-                <b>{t.name}</b>
-                <span className={`tag${t.tier === 1 ? " red" : ""}`}>{t.tier === 1 ? "一级" : "次级"}</span>
-              </div>
-              <div className="muted small" style={{ marginTop: 6 }}>
-                阵容强度 {t.rating} · 预算 ${(t.budget / 1000).toFixed(0)}K · 教练 {t.coach}
-              </div>
+        {REGIONS.map((r) => (
+          <div key={r.id} style={{ marginBottom: 14 }}>
+            <div className="row" style={{ alignItems: "center", gap: 8, margin: "10px 0 6px" }}>
+              <img src={r.logo} alt={r.label} width={20} height={20} style={{ borderRadius: 4 }} />
+              <b>VCT {r.label}</b>
+              <span className="muted small">
+                {teams.filter((t) => t.regionId === r.id && t.tier === 1).length} 支合作队 ·{" "}
+                {teams.filter((t) => t.regionId === r.id && t.tier === 2).length} 支挑战者
+              </span>
             </div>
-          ))}
-        </div>
+            <div className="startgrid">{teams.filter((t) => t.regionId === r.id).map(teamCard)}</div>
+          </div>
+        ))}
       </div>
 
       <div className="row" style={{ marginTop: 14 }}>
@@ -80,7 +96,7 @@ export function StartScreen() {
         >
           {busy ? "生成世界中…" : "开始职业生涯 →"}
         </button>
-        <span className="muted small">v0.1：全部俱乐部开放选择（声望门槛与出身系统在 v0.5 加入）</span>
+        <span className="muted small">全部俱乐部开放选择（声望门槛与出身系统在后续版本加入）</span>
       </div>
     </div>
   );

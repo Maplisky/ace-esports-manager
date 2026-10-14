@@ -5,6 +5,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AGENT_BY_ID } from "../../core/data/agents.ts";
+import { TeamLogo } from "./Avatar.tsx";
 import { MAP_BY_ID } from "../../core/data/maps.ts";
 import type { GameState, MatchRecord, RoundEvent } from "../../core/types.ts";
 
@@ -110,7 +111,7 @@ export function MatchPlayer(props: { record: MatchRecord; state: GameState; onCl
       <div className="viewer" onClick={(e) => e.stopPropagation()}>
         {/* 记分牌 */}
         <div className="scorebug">
-          <div className="team" style={{ color: "var(--accent)" }}>{teamA?.tag}</div>
+          <div className="team" style={{ color: "var(--accent)", display: "flex", alignItems: "center", gap: 6 }}>{teamA && <TeamLogo team={teamA} size={22} />}{teamA?.tag}</div>
           <div className="mid">
             <div className="series">{series[0]} : {series[1]}</div>
             <div className="muted small">
@@ -119,7 +120,7 @@ export function MatchPlayer(props: { record: MatchRecord; state: GameState; onCl
             </div>
             <div style={{ fontSize: 26, fontWeight: 800 }}>{liveScore[0]} — {liveScore[1]}</div>
           </div>
-          <div className="team right">{teamB?.tag}</div>
+          <div className="team right" style={{ display: "flex", alignItems: "center", gap: 6 }}>{teamB?.tag}{teamB && <TeamLogo team={teamB} size={22} />}</div>
         </div>
 
         {finished ? (

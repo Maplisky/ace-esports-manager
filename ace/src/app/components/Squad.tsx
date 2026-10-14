@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { GameState } from "../../core/types.ts";
 import { AGENT_BY_ID } from "../../core/data/agents.ts";
 import { useStore } from "../store.ts";
+import { PlayerFace, SyntheticBadge } from "./Avatar.tsx";
 
 const DUTY_CN: Record<string, string> = { duelist: "决斗者", initiator: "先锋", controller: "控场", sentinel: "哨卫" };
 const ROLE_CN: Record<string, string> = { core: "核心", starter: "首发", rotation: "轮换", bench: "替补" };
@@ -69,9 +70,11 @@ export function SquadPage(props: { state: GameState }) {
               const p = state.players[pid]!;
               return (
                 <tr key={pid} className="me">
-                  <td>
-                    {p.ign}
-                    {p.isIgl && <span className="tag" style={{ marginLeft: 6 }}>指挥</span>}
+                  <td style={{ whiteSpace: "nowrap" }}>
+                    <span className="row" style={{ alignItems: "center", gap: 6 }}>
+                      <PlayerFace p={p} size={26} />
+                      <span>{p.ign}<SyntheticBadge p={p} />{p.isIgl && <span className="tag" style={{ marginLeft: 6 }}>指挥</span>}</span>
+                    </span>
                   </td>
                   <td className="muted">{dutyOf(state, pid)}</td>
                   <td className="muted small">{p.agentPool.map((a) => AGENT_BY_ID.get(a)?.name ?? a).join(" / ")}</td>
@@ -98,7 +101,7 @@ export function SquadPage(props: { state: GameState }) {
           <tbody>
             {bench.map((p) => (
               <tr key={p.id}>
-                <td>{p.ign}</td>
+                <td style={{ whiteSpace: "nowrap" }}><span className="row" style={{ alignItems: "center", gap: 6 }}><PlayerFace p={p} size={22} />{p.ign}<SyntheticBadge p={p} /></span></td>
                 <td className="muted">{dutyOf(state, p.id)}</td>
                 <td><b>{p.overall}</b></td>
                 <td className="muted">{p.potential}</td>
@@ -146,7 +149,7 @@ export function SquadPage(props: { state: GameState }) {
             const waived = state.rotationWaive.includes(pid);
             return (
               <div key={pid} className="row" style={{ padding: "5px 0", borderBottom: "1px dashed var(--line)" }}>
-                <b style={{ width: 100 }}>{p.ign}</b>
+                <span className="row" style={{ alignItems: "center", gap: 6, width: 118 }}><PlayerFace p={p} size={24} /><b>{p.ign}</b><SyntheticBadge p={p} /></span>
                 <span className="muted small grow">
                   {waived ? "✅ 本周已沟通轮换" : `承诺：${ROLE_CN[p.promisedRole] ?? p.promisedRole} · 疲劳 ${Math.round(p.fatigue)}`}
                 </span>

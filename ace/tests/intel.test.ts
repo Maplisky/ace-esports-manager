@@ -13,7 +13,7 @@ function setup() {
   resetPlayerSeq();
   const state = generateWorld(88);
   initSeasonFixtures(state);
-  state.myTeamId = "T0";
+  state.myTeamId = Object.values(state.teams).find((t) => t.tier === 1)!.id;
   state.day = 30;
   return state;
 }
@@ -37,7 +37,7 @@ test("侦察：+2/次上限 10，周衰减 0.5 不为负，等级映射", () => 
 
 test("图池评估：★级映射与边界", () => {
   const state = setup();
-  const opp = state.teams["T1"]!;
+  const opp = Object.values(state.teams).find((t) => t.id !== state.myTeamId)!;
   const m = MAPS[0]!;
   opp.mapPref[m.id] = 90;
   assert.equal(starsOf(estimateMapStrength(state, opp, m)), 3);

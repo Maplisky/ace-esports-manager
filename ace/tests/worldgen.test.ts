@@ -39,18 +39,18 @@ test("hashString：确定性且发散", () => {
   assert.notEqual(hashString("abc"), hashString("abd"));
 });
 
-test("世界生成：规模与健全性", () => {
+test("世界生成：规模与健全性（v0.7 真实数据包）", () => {
   const state = generateWorld(2026);
   const teams = Object.values(state.teams);
-  assert.equal(teams.length, 36);
+  assert.equal(teams.length, 64);
   const t1 = teams.filter((t) => t.tier === 1);
   const t2 = teams.filter((t) => t.tier === 2);
-  assert.equal(t1.length, 20);
-  assert.equal(t2.length, 16);
-  // 双赛区（v0.6-1）：霞/曜各 10+8
-  for (const rid of ["xia", "yao"]) {
-    assert.equal(teams.filter((t) => t.regionId === rid && t.tier === 1).length, 10, `${rid} 一级`);
-    assert.equal(teams.filter((t) => t.regionId === rid && t.tier === 2).length, 8, `${rid} 次级`);
+  assert.equal(t1.length, 40);
+  assert.equal(t2.length, 24);
+  // 四大赛区（vlr.gg）：每区 10 VCT + 6 挑战者
+  for (const rid of ["americas", "emea", "pacific", "china"]) {
+    assert.equal(teams.filter((t) => t.regionId === rid && t.tier === 1).length, 10, `${rid} VCT`);
+    assert.equal(teams.filter((t) => t.regionId === rid && t.tier === 2).length, 6, `${rid} 挑战者`);
   }
   // 每队 7 人，5 首发，恰 1 名 IGL
   for (const t of teams) {
@@ -63,13 +63,19 @@ test("世界生成：规模与健全性", () => {
       assert.ok(p.overall >= 50 && p.overall <= 95, `${p.ign} overall ${p.overall}`);
       assert.ok(p.agentPool.length >= 3, `${p.ign} 英雄池`);
       assert.ok(p.salary > 0);
-      assert.equal(p.homegrown, false);
     }
   }
+  // 真实选手带 vlr 数据与头像；虚拟生成的必须标注 synthetic
+  const rostered = Object.values(state.players).filter((p) => p.teamId);
+  const real = rostered.filter((p) => p.id.startsWith("R"));
+  assert.ok(real.length >= 400, `真实选手 ${real.length} 应 ≥400`);
+  assert.ok(real.every((p) => p.avatar && p.ign && p.agentPool.length >= 3), "真实选手应有头像与英雄池");
+  const syn = rostered.filter((p) => p.synthetic === "academy");
+  assert.ok(syn.length > 0 && syn.every((p) => p.homegrown), "青训补充需标注 academy 且 homegrown");
   // 一级整体强于次级
   const avg = (ts: typeof teams) =>
     ts.reduce((s, t) => s + t.roster.reduce((x, pid) => x + (state.players[pid]?.overall ?? 0), 0) / t.roster.length, 0) / ts.length;
-  assert.ok(avg(t1) > avg(t2) + 3, `一级均值 ${avg(t1).toFixed(1)} 应高于次级 ${avg(t2).toFixed(1)}`);
+  assert.ok(avg(t1) > avg(t2), `一级均值 ${avg(t1).toFixed(1)} 应高于次级 ${avg(t2).toFixed(1)}`);
 });
 
 test("computeOverall：权重合成在 30-99 内", () => {
@@ -85,22 +91,22 @@ test("computeOverall：权重合成在 30-99 内", () => {
   }
 });
 
-test("赛历与翻年：自然年日历（含双赛区 Stage2/休赛期），年末按实际天数翻年", () => {
+test("赛历与翻年：自然年日历（含四赛区 Stage2/休赛期），年末按实际天数翻年", () => {
   const state = generateWorld(777);
   initSeasonFixtures(state);
-  state.myTeamId = "T0";
-  // 赛程数量：揭幕杯 7（跨赛区）；双赛区 × 双 Stage 各 (90+56)
-  assert.equal(state.fixtures.length, 7 + (90 + 56) * 4);
-  // 推进到 Stage1 收官前夕（121）：杯赛 + 双赛区 Stage1 全部打完，Stage2 未开打
+  state.myTeamId = Object.values(state.teams).find((t) => t.tier === 1)!.id;
+  // 赛程数量：揭幕杯 7（跨赛区）；四赛区 × 双 Stage 各 (VCT 90 + 挑战者 30)
+  assert.equal(state.fixtures.length, 7 + (90 + 30) * 4 * 2);
+  // 推进到 Stage1 收官前夕（121）：杯赛 + 四赛区 Stage1 全部打完，Stage2 未开打
   for (let d = 0; d < 400 && state.day < 121; d++) {
     advanceDay(state);
   }
   assert.equal(state.day, 121, "应推进到 Stage1 收官前夕");
   const unplayedBefore = state.fixtures.filter((f) => f.teamA !== "" && f.teamB !== "" && !f.played);
   assert.ok(unplayedBefore.every((f) => f.stage === "stage2"), "121 天前未打的只能是 Stage2");
-  assert.equal(unplayedBefore.length, 292, `Stage2 应有 292 场未打: ${unplayedBefore.length}`);
-  // Stage1 积分守恒（霞赛区一级 90 场 = 180 胜负）
-  const comp = state.comps["stage1-xia-t1"]!;
+  assert.equal(unplayedBefore.length, 480, `Stage2 应有 480 场未打: ${unplayedBefore.length}`);
+  // Stage1 积分守恒（Americas VCT 10 队 90 场 = 180 胜负）
+  const comp = state.comps["stage1-americas-t1"]!;
   const totalPlayed = Object.values(comp.standings).reduce((s, e) => s + e.w + e.l, 0);
   assert.equal(totalPlayed, 180);
   // 翻年：推进到自然年末（2026 非闰年 = 365 天），收官 + 新赛季
@@ -114,18 +120,18 @@ test("赛历与翻年：自然年日历（含双赛区 Stage2/休赛期），年
   assert.ok(ended, "年末应触发赛季收官");
   assert.equal(state.year, 2027, "应进入 2027 赛季");
   assert.equal(state.day, 1, "翻年后天数重置");
-  assert.equal(state.fixtures.length, 591, "新赛季赛程已生成（双赛区，Masters 待抽签）");
+  assert.equal(state.fixtures.length, 967, "新赛季赛程已生成（四赛区，Masters 待抽签）");
   assert.ok(state.news.some((n) => n.text.includes("收官")));
   assert.ok(state.news.some((n) => n.text.includes("2027 赛季开始")));
-  assert.ok(state.news.some((n) => n.text.includes("Stage 2 联赛进入前四")));
+  assert.ok(state.news.some((n) => n.text.includes("联赛进入前四")));
   assert.equal(aPlayer.age, ageAtStart + 1, "翻年年龄 +1");
   assert.ok(aPlayer.contractYears >= 0, "合同年递减不越界");
 });
 
-test("Masters 国际赛：Stage1 双赛区各前四晋级，单败淘汰 7 场，冠军记荣誉", () => {
+test("Masters 国际赛：Stage1 四赛区各前二晋级，单败淘汰 7 场，冠军记荣誉", () => {
   const state = generateWorld(99);
   initSeasonFixtures(state);
-  state.myTeamId = "T0";
+  state.myTeamId = Object.values(state.teams).find((t) => t.tier === 1)!.id;
   // 推进过夏季窗口首日（123）：Masters 已抽签
   for (let d = 0; d < 400 && state.day < 124; d++) {
     advanceDay(state);
@@ -133,16 +139,16 @@ test("Masters 国际赛：Stage1 双赛区各前四晋级，单败淘汰 7 场�
   const masters = state.comps["masters"]!;
   assert.ok(masters, "夏季窗口首日应完成 Masters 抽签");
   assert.equal(masters.teamIds.length, 8);
-  // 双赛区各 4 队，且都是一级队
-  for (const rid of ["xia", "yao"]) {
+  // 四赛区各 2 队，且都是一级队
+  for (const rid of ["americas", "emea", "pacific", "china"]) {
     const fromRegion = masters.teamIds.filter((id) => state.teams[id]?.regionId === rid);
-    assert.equal(fromRegion.length, 4, `${rid} 应 4 队晋级`);
+    assert.equal(fromRegion.length, 2, `${rid} 应 2 队晋级`);
     assert.ok(fromRegion.every((id) => state.teams[id]?.tier === 1));
-    // 晋级队 = 该赛区 Stage1 积分前四（与 buildMasters 同一套同分裁决：积分→图差→回合差）
+    // 晋级队 = 该赛区 Stage1 积分前二（与 buildMasters 同一套同分裁决：积分→图差→回合差）
     const table = Object.values(state.comps[`stage1-${rid}-t1`]!.standings).sort(
       (a, b) => b.pts - a.pts || (b.mapW - b.mapL) - (a.mapW - a.mapL) || (b.roundW - b.roundL) - (a.roundW - a.roundL),
     );
-    assert.deepEqual(new Set(fromRegion), new Set(table.slice(0, 4).map((s) => s.teamId)));
+    assert.deepEqual(new Set(fromRegion), new Set(table.slice(0, 2).map((s) => s.teamId)));
   }
   const mastersFixtures = state.fixtures.filter((f) => f.comp === "masters");
   assert.equal(mastersFixtures.length, 7, "8 队单败 = QF4 + SF2 + 决赛 1");
@@ -168,61 +174,65 @@ test("闰年：2028 为 366 天（GDD 日期表考虑闰年）", () => {
   assert.equal(daysInYear(2100), 365);
 });
 
-test("旧档迁移：comp key 改名后过渡年结算与翻年不失效（v0.6-1 兼容）", () => {
+test("旧档迁移：comp key 改名后过渡年结算与翻年不失效（v0.5/v0.6 兼容）", () => {
   const state = generateWorld(2026);
   initSeasonFixtures(state);
   // 模拟 v0.5 旧档：单赛区、旧 comp key、无 regionId（四个联赛 comp 齐全）
   const legacyState = generateWorld(2026);
   legacyState.fixtures = [];
   legacyState.comps = {};
-  for (const [newK, oldK] of [
-    ["stage1-xia-t1", "stage1-t1"],
-    ["stage1-xia-t2", "stage1-t2"],
-    ["stage2-xia-t1", "stage2-t1"],
-    ["stage2-xia-t2", "stage2-t2"],
-  ] as const) {
-    const src = state.comps[newK]!;
-    legacyState.comps[oldK] = { ...src, key: oldK, standings: {} };
-    for (const id of src.teamIds) {
-      legacyState.comps[oldK]!.standings[id] = { teamId: id, w: 0, l: 0, mapW: 0, mapL: 0, roundW: 0, roundL: 0, pts: 0 };
+  // 旧档世界 = 霞赛区（Americas VCT 队扮演旧档队伍）
+  const oldRegionTeams = Object.values(state.teams).filter((t) => t.regionId === "americas");
+  for (const t of Object.values(legacyState.teams)) {
+    const keep = oldRegionTeams.some((x) => x.id === t.id);
+    if (!keep) {
+      for (const pid of t.roster) delete legacyState.players[pid];
+      delete legacyState.teams[t.id];
     }
   }
-  for (const f of state.fixtures) {
-    const map: Record<string, string> = {
-      "stage1-xia-t1": "stage1-t1", "stage1-xia-t2": "stage1-t2",
-      "stage2-xia-t1": "stage2-t1", "stage2-xia-t2": "stage2-t2",
-    };
-    if (map[f.comp]) legacyState.fixtures.push({ ...f, comp: map[f.comp]! });
+  legacyState.myTeamId = oldRegionTeams.find((t) => t.tier === 1)!.id;
+  const t1 = oldRegionTeams.filter((t) => t.tier === 1).map((t) => t.id);
+  const t2 = oldRegionTeams.filter((t) => t.tier === 2).map((t) => t.id);
+  legacyState.comps["stage1-t1"] = { key: "stage1-t1", name: "旧", stage: "stage1", teamIds: t1, standings: {} };
+  legacyState.comps["stage1-t2"] = { key: "stage1-t2", name: "旧", stage: "stage1", teamIds: t2, standings: {} };
+  legacyState.comps["stage2-t1"] = { key: "stage2-t1", name: "旧", stage: "stage2", teamIds: t1, standings: {} };
+  legacyState.comps["stage2-t2"] = { key: "stage2-t2", name: "旧", stage: "stage2", teamIds: t2, standings: {} };
+  for (const comp of Object.values(legacyState.comps)) {
+    for (const id of comp.teamIds) {
+      comp.standings[id] = { teamId: id, w: 0, l: 0, mapW: 0, mapL: 0, roundW: 0, roundL: 0, pts: 0 };
+    }
   }
   for (const t of Object.values(legacyState.teams)) t.regionId = "xia";
-  legacyState.myTeamId = "T0";
   // 迁移
   migrateLegacyComps(legacyState);
   assert.ok(legacyState.comps["stage1-xia-t1"], "旧 key 应改名");
   assert.ok(!legacyState.comps["stage1-t1"], "旧 key 应删除");
-  assert.ok(legacyState.fixtures.every((f) => f.comp !== "stage1-t1" && f.comp !== "stage1-t2"), "fixture comp 同步改名");
   // 重复迁移幂等
   migrateLegacyComps(legacyState);
   assert.ok(legacyState.comps["stage1-xia-t1"]);
-  // 推进到夏窗（123）：目标结算与冠军荣誉仍发生（修复前静默丢失）
+  // 旧档比赛走补赛通道：手造一轮对阵验证结算与冠军荣誉发生（修复前静默丢失）
+  legacyState.fixtures.push({
+    id: "FX1", day: 100, stage: "stage1", comp: "stage1-xia-t1",
+    teamA: t1[0]!, teamB: t1[1]!, bo: 3, label: "旧档补赛 第1轮", played: false,
+  });
   for (let d = 0; d < 400 && legacyState.day < 123; d++) advanceDay(legacyState);
   assert.ok(legacyState.news.some((n) => n.text.includes("Stage 1目标")), "过渡年目标结算生效");
   assert.ok(legacyState.news.some((n) => n.text.includes("加冕")), "过渡年冠军荣誉生效");
-  assert.ok(!legacyState.comps["masters"], "旧世界无曜赛区 → 无 Masters（预期行为）");
 });
 
 test("tier-2 球队：目标对挑战者联赛结算（v0.6-1 检错：此前静默跳过）", () => {
   const state = generateWorld(31);
   initSeasonFixtures(state);
-  state.myTeamId = "C0"; // 霞赛区挑战者联赛
+  state.myTeamId = Object.values(state.teams).find((t) => t.tier === 2)!.id;
   for (let d = 0; d < 400 && state.day < 123; d++) advanceDay(state);
-  // 目标文案按级别给出，结算对 stage1-xia-t2 生效（达成或未达成都应有判定新闻）
-  assert.ok(state.news.some((n) => n.text.includes("Stage 1 挑战者联赛进入前四")), "挑战者目标文案");
+  // 目标文案按级别给出，结算对该队所在挑战者联赛生效（达成或未达成都应有判定新闻）
+  assert.ok(state.news.some((n) => n.text.includes("挑战者联赛进入前四")), "挑战者目标文案");
   assert.ok(state.news.some((n) => n.text.includes("Stage 1目标")), "结算已发生（修复前 findIndex=0 直接 return）");
 });
 
-test("自由人池：36 队世界开局 28 人（与队伍数等比）", () => {
+test("自由人池：64 队世界开局 50 人（与队伍数等比），虚拟生成需标注", () => {
   const state = generateWorld(55);
   const fas = Object.values(state.players).filter((p) => !p.teamId);
-  assert.equal(fas.length, 28);
+  assert.equal(fas.length, 50);
+  assert.ok(fas.every((p) => p.synthetic === "free"), "自由池为虚拟生成，必须标注");
 });

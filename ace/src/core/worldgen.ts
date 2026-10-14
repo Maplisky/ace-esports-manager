@@ -1,11 +1,12 @@
 /**
- * 种子化世界生成器（GDD §4.4 / §13 v0.1）：
- * 1 赛区 18 队（一级 10 + 次级 8），每队 7 人（5 首发 + 2 替补），~160 人。
- * Schema 与调研导出的原作数据同构（research/extracted/world_players.json 为模板）。
+ * 种子化世界生成器（GDD §4.4 / §13；v0.7 真实数据包）：
+ * 四大赛区 64 队（每区 10 VCT + 6 挑战者，数据快照 vlr.gg，见 data/real/real-data.ts）。
+ * 选手属性由 vlr.gg 逐英雄统计（rounds 加权）推导；无统计/缺员以青训虚拟生成并标注 synthetic。
  */
 import { Rng, clamp } from "./rng.ts";
 import { AGENTS, primaryDuty } from "./data/agents.ts";
 import { MAPS } from "./data/maps.ts";
+import { REAL_TEAMS, REAL_PLAYERS_BY_VLR, type VlrPlayerStat, type VlrTeamStat } from "./data/real/real-data.ts";
 import type { GameState, Player, PlayerAttrs, Team, DutyVector } from "./types.ts";
 
 const DUTY_KEYS = ["duelist", "initiator", "controller", "sentinel"] as const;
@@ -23,27 +24,19 @@ const IGN_A = [
 ];
 const IGN_B = ["", "", "", "1", "2", "X", "Z", "7", "9", "ee", "ie", "ao", "in", "er", "0"];
 
-const T1_NAMES: [string, string][] = [
-  ["天穹电竞", "TQ"], ["白泽电竞", "BZ"], ["烛龙电竞", "ZL"], ["玄鲲电竞", "XK"],
-  ["星阑电竞", "XL"], ["潮汐电竞", "CX"], ["破晓电竞", "PX"], ["凌云电竞", "LY"],
-  ["赤霄电竞", "CJ"], ["岚山电竞", "LS"],
-];
-const T2_NAMES: [string, string][] = [
-  ["野草电竞", "YC"], ["屿风电竞", "YF"], ["拾光电竞", "SG"], ["白鸽电竞", "BG"],
-  ["麦浪电竞", "ML"], ["夜航电竞", "YH"], ["青苔电竞", "QT"], ["飞鸟电竞", "FN"],
-];
-/** 曜赛区（v0.6-1 第二赛区）：一级 10 队 + 挑战者 8 队 */
-const YA_T1_NAMES: [string, string][] = [
-  ["曜石电竞", "YS"], ["苍狼电竞", "CL"], ["银翼电竞", "YY"], ["赤焰电竞", "CY"],
-  ["玄夜电竞", "XN"], ["天狼电竞", "TL"], ["破军电竞", "PJ"], ["惊鸿电竞", "JH"],
-  ["流影电竞", "LYY"], ["狂澜电竞", "KL"],
-];
-const YA_T2_NAMES: [string, string][] = [
-  ["磐石电竞", "PS"], ["疾风电竞", "JF"], ["晨曦电竞", "CX2"], ["夜雨电竞", "YY2"],
-  ["烈日电竞", "LR"], ["寒霜电竞", "HS"], ["紫电电竞", "ZD"], ["青鸾电竞", "QL"],
-];
+/** 青训/自由人名池（按赛区，无 vlr 数据时虚拟生成） */
+const SYN_NAMES: Record<string, string[]> = {
+  americas: ["Tyler", "Mason", "Diego", "Mateo", "Lucas", "Jayden", "Carlo", "Santi", "Eli", "Marco", "Andre", "Nico"],
+  emea: ["Emil", "Jonas", "Maks", "Patrik", "Aleks", "Nikita", "Tomas", "Felix", "Hugo", "Louis", "Piotr", "Sasha"],
+  pacific: ["Minjun", "Sungwoo", "Yuki", "Haruto", "Renji", "Jiho", "Kenta", "Minseo", "Takeru", "Dohyun", "Riku", "Junsu"],
+  china: ["Xiaoyu", "Chenxi", "Zihan", "Yifan", "Haochen", "Junyi", "Weiming", "Zhiyuan", "Ruoxi", "Tianyi", "Zeming", "Boyu"],
+};
+const SYN_SUFFIX = ["", "", "X", "7", "2", "ee", "z", "99", "01"];
 
 const COACH_NAMES = ["老K", "阿澈", "白熊", "萧然", "陆离", "顾行", "苏木", "陈野", "洛尘", "祁风", "温叙", "关山"];
+
+/** 每赛区一级（VCT）队数；其余为挑战者（tier 2） */
+const T1_PER_REGION = 10;
 
 /** 八维合成 overall 的权重（GDD §6.1：合成可读且分工明确） */
 const OVERALL_W: Record<keyof PlayerAttrs, number> = {
@@ -98,6 +91,61 @@ export function resetPlayerSeq(): void {
   playerIdSeq = 0;
 }
 
+const AGENT_IDS = new Set(AGENTS.map((a) => a.id));
+
+/** vlr 逐英雄统计 → rounds 加权综合（只计内部英雄池内的行） */
+function weightedStats(vlrP: VlrPlayerStat) {
+  let rounds = 0, rating = 0, acs = 0, kd = 0, kast = 0, adr = 0, kpr = 0, apr = 0, fk = 0, fd = 0;
+  const byAgent: { agent: string; rounds: number; share: number }[] = [];
+  for (const s of vlrP.stats) {
+    if (!AGENT_IDS.has(s.agent) || s.rounds <= 0) continue;
+    rounds += s.rounds;
+    rating += s.rating * s.rounds;
+    acs += s.acs * s.rounds;
+    kd += s.kd * s.rounds;
+    kast += s.kast * s.rounds;
+    adr += s.adr * s.rounds;
+    kpr += s.kpr * s.rounds;
+    apr += s.apr * s.rounds;
+    fk += s.fk;
+    fd += s.fd;
+    byAgent.push({ agent: s.agent, rounds: s.rounds, share: 0 });
+  }
+  if (rounds === 0) return null;
+  for (const a of byAgent) a.share = a.rounds / rounds;
+  return {
+    rating: rating / rounds, acs: acs / rounds, kd: kd / rounds, kast: kast / rounds,
+    adr: adr / rounds, kpr: kpr / rounds, apr: apr / rounds,
+    fkRate: rounds > 0 ? fk / rounds : 0, fdRate: rounds > 0 ? fd / rounds : 0,
+    byAgent: byAgent.sort((a, b) => b.rounds - a.rounds),
+  };
+}
+
+const linmap = (v: number, inMin: number, inMax: number, outMin: number, outMax: number): number =>
+  clamp(outMin + ((v - inMin) / (inMax - inMin)) * (outMax - outMin), 35, 95);
+
+/** 真实选手属性推导：vlr 指标 → 八维（口径见 README"真实数据包"节） */
+function attrsFromVlr(w: NonNullable<ReturnType<typeof weightedStats>>, duty: DutyKey, isIgl: boolean): PlayerAttrs {
+  const fkShare = w.fkRate + w.fdRate > 0 ? w.fkRate / (w.fkRate + w.fdRate) : 0.5;
+  const attrs: PlayerAttrs = {
+    aim: linmap(w.acs, 145, 245, 60, 96),
+    reaction: linmap(w.kd, 0.80, 1.26, 60, 94),
+    awareness: linmap(w.kast, 61, 78, 60, 86) + fkShare * 6,
+    utility: linmap(w.apr, 0.05, 0.36, 56, 92),
+    clutch: clamp(66 + (w.rating - 1.0) * 60 + (w.kd - 1.0) * 20, 55, 96),
+    teamwork: linmap(w.kast * 0.7 + w.apr * 60, 55, 85, 62, 90),
+    communication: 65 + fkShare * 5,
+    igl: isIgl ? 76 : 48,
+  };
+  // 职责微倾斜保留（真实数据只是均值，分工倾向仍成立）
+  const tilt = DUTY_ATTR_TILT[duty];
+  for (const k of Object.keys(attrs) as (keyof PlayerAttrs)[]) {
+    attrs[k] = clamp(attrs[k] + (tilt[k] ?? 0) * 0.4, 35, 95);
+  }
+  if (isIgl) attrs.igl = clamp(attrs.igl + 8, 35, 95);
+  return attrs;
+}
+
 function makePlayer(
   rng: Rng,
   teamId: string | null,
@@ -108,14 +156,19 @@ function makePlayer(
   ageRange: [number, number],
   usedIgns: Set<string>,
   homegrown: boolean,
+  opts?: { ign?: string; synthetic?: "academy" | "free"; realName?: string; country?: string; avatar?: string; age?: number },
 ): Player {
-  let ign = "";
-  do {
-    ign = rng.pick(IGN_A) + rng.pick(IGN_B);
-  } while (usedIgns.has(ign));
+  let ign = opts?.ign ?? "";
+  if (ign) {
+    while (usedIgns.has(ign)) ign = ign + rng.pick(SYN_SUFFIX);
+  } else {
+    do {
+      ign = rng.pick(IGN_A) + rng.pick(IGN_B);
+    } while (usedIgns.has(ign));
+  }
   usedIgns.add(ign);
 
-  const age = rng.int(ageRange[0], ageRange[1]);
+  const age = opts?.age ?? rng.int(ageRange[0], ageRange[1]);
   const attrs = generateAttrs(rng, targetOverall, duty, isIgl);
   const overall = computeOverall(attrs);
 
@@ -138,6 +191,10 @@ function makePlayer(
   return {
     id: `P${String(playerIdSeq++).padStart(4, "0")}`,
     ign,
+    realName: opts?.realName,
+    country: opts?.country,
+    avatar: opts?.avatar,
+    synthetic: opts?.synthetic,
     age,
     teamId,
     attrs,
@@ -169,49 +226,87 @@ function makePlayer(
   };
 }
 
-function makeTeam(rng: Rng, id: string, name: string, tag: string, tier: 1 | 2, regionId: string, players: Player[], usedIgns: Set<string>): Team {
-  const baseMean = tier === 1 ? 74 : 66.5;
-  const sd = tier === 1 ? 5.5 : 4.5;
-  const roster: string[] = [];
-  let iglAssigned = false;
+/** 真实选手：id = R{vlrId}；属性从 vlr 统计推导，无统计按队档基线虚拟生成（保留真实姓名/头像） */
+function makeRealPlayer(rng: Rng, vlrP: VlrPlayerStat, teamId: string, tier: 1 | 2, forceIgl: boolean): Player {
+  const w = weightedStats(vlrP);
+  const mainAgent = w ? AGENTS.find((a) => a.id === w.byAgent[0]!.agent) : undefined;
+  const usedDuty = (mainAgent ? primaryDuty(mainAgent.duty) : rng.pick(DUTY_KEYS)) as DutyKey;
+  const isIgl = forceIgl || (vlrP.captain && rng.chance(0.85)); // 队长 ≈ IGL（近似口径）
 
-  // 5 首发：4 个固定职责 + 1 自由位
-  const flexDuty = rng.pick(DUTY_KEYS);
-  const starterDuties: DutyKey[] = [...STARTER_TEMPLATE, flexDuty];
-  for (const duty of starterDuties) {
-    const target = clamp(rng.clampNorm(baseMean + (tier === 1 ? 2 : 0), sd, 55, 92), 55, 92);
-    const isIgl = !iglAssigned && duty === "controller" ? true : false;
-    const p = makePlayer(rng, id, tier, target, duty, isIgl, [tier === 1 ? 18 : 17, 31], usedIgns, false);
-    if (isIgl) iglAssigned = true;
-    players.push(p);
-    roster.push(p.id);
+  let attrs: PlayerAttrs;
+  let agentPool: string[];
+  let agentPro: Record<string, number>;
+  if (w) {
+    attrs = attrsFromVlr(w, usedDuty, isIgl);
+    agentPool = w.byAgent.slice(0, 5).map((a) => a.agent);
+    agentPro = {};
+    for (const a of w.byAgent.slice(0, 5)) agentPro[a.agent] = clamp(55 + a.share * 75, 55, 95);
+  } else {
+    const target = tier === 1 ? 71 : 63;
+    attrs = generateAttrs(rng, target + rng.int(-4, 4), usedDuty, isIgl);
+    const pool: string[] = [];
+    const byDuty = (d: DutyKey) => AGENTS.filter((a) => primaryDuty(a.duty) === d);
+    pool.push(...rng.shuffle(byDuty(usedDuty)).slice(0, 3).map((a) => a.id));
+    agentPool = pool;
+    agentPro = {};
+    for (const a of pool) agentPro[a] = rng.int(50, 85);
   }
-  // 兜底：确保每队有 IGL
-  if (!iglAssigned) {
-    const first = players[players.length - 5] as Player;
-    first.isIgl = true;
-    first.attrs.igl = clamp(first.attrs.igl + 10, 30, 99);
-    first.overall = computeOverall(first.attrs);
-  }
-  // 2 替补：1 名年轻潜力（接班人/学习型替补候选），1 名老将
-  const youngTarget = clamp(baseMean - rng.range(2, 6), 55, 80);
-  const young = makePlayer(rng, id, tier, youngTarget, rng.pick(DUTY_KEYS), false, [17, 19], usedIgns, false);
-  young.potential = clamp(young.overall + rng.range(8, 18), young.overall, 99);
-  players.push(young);
-  roster.push(young.id);
-  const vet = makePlayer(rng, id, tier, clamp(baseMean - rng.range(0, 4), 55, 84), rng.pick(DUTY_KEYS), false, [28, 33], usedIgns, false);
-  players.push(vet);
-  roster.push(vet.id);
-
-  const starters = roster.slice(0, 5);
-  for (const pid of roster) {
-    const p = players.find((x) => x.id === pid) as Player;
-    p.promisedRole = starters.includes(pid) ? (p.overall >= baseMean + 4 ? "core" : "starter") : "rotation";
+  if (agentPool.length < 3) {
+    const extra = AGENTS.filter((a) => primaryDuty(a.duty) === usedDuty && !agentPool.includes(a.id));
+    agentPool.push(...rng.shuffle(extra).slice(0, 3 - agentPool.length).map((a) => a.id));
   }
 
+  // 年龄：vlr 无生日字段 → 按 hash 确定性合成 19-29（README 口径）
+  let h = vlrP.vlrId ^ 0x5bf03635;
+  h = Math.imul(h ^ (h >>> 15), 0x2545f491) >>> 0;
+  const age = 19 + (h % 11);
+  const overall = computeOverall(attrs);
+  const growth = age <= 19 ? rng.range(6, 14) : age <= 22 ? rng.range(3, 9) : age <= 25 ? rng.range(0, 5) : 0;
+
+  return {
+    id: `R${vlrP.vlrId}`,
+    ign: vlrP.alias,
+    realName: vlrP.real || undefined,
+    country: vlrP.country || undefined,
+    avatar: vlrP.avatar ?? undefined,
+    age,
+    teamId,
+    attrs,
+    overall,
+    potential: clamp(Math.round(overall + growth), overall, 99),
+    peakOverall: overall,
+    form: Math.round(rng.range(60, 80)),
+    morale: Math.round(rng.range(60, 85)),
+    fatigue: Math.round(rng.range(5, 30)),
+    salary: salaryFor(overall, tier),
+    contractYears: rng.int(1, 3),
+    agentPool,
+    agentPro,
+    isIgl,
+    focus: "rest",
+    xp: {},
+    commercialDays: 0,
+    stream: null,
+    listed: false,
+    releaseClause: 0,
+    noPoach: false,
+    promisedRole: "starter",
+    injuredUntilDay: 0,
+    homegrown: false,
+    benchedWeeks: 0,
+    birthdayDay: rng.int(1, 365),
+    lastEventDay: 0,
+    career: { maps: 0, rounds: 0, kills: 0, deaths: 0, assists: 0, firstKills: 0, firstDeaths: 0, clutches: 0, mvps: 0, titles: 0, clubs: [teamId] },
+  };
+}
+
+function teamTierOf(rankInRegion: number): 1 | 2 {
+  return rankInRegion <= T1_PER_REGION ? 1 : 2;
+}
+
+function makeTeamSkeleton(rng: Rng, id: string, name: string, tag: string, tier: 1 | 2, regionId: string): Team {
   const mapPref: Record<string, number> = {};
-  for (const m of MAPS) mapPref[m.id] = Math.round(clamp(rng.clampNorm(52, 12, 20, 85), 20, 85));
-
+  for (const m of MAPS) mapPref[m.id] = rng.int(45, 75);
   const personalities: Team["personality"][] = ["spender", "youth", "steady", "wheeler"];
   return {
     id,
@@ -219,8 +314,8 @@ function makeTeam(rng: Rng, id: string, name: string, tag: string, tier: 1 | 2, 
     tag,
     tier,
     regionId,
-    roster,
-    starters,
+    roster: [],
+    starters: [],
     coach: {
       name: rng.pick(COACH_NAMES),
       tactics: Math.round(rng.clampNorm(tier === 1 ? 64 : 56, 8, 35, 90)),
@@ -244,34 +339,84 @@ function makeTeam(rng: Rng, id: string, name: string, tag: string, tier: 1 | 2, 
   };
 }
 
-/** 生成 v0.1 世界：1 赛区 18 队（一级 10 + 次级 8） */
+/** 生成 v0.7 世界：四大赛区 64 队（真实数据快照），每队 ≤7 真实 roster + 青训补位 */
 export function generateWorld(seed: number): GameState {
   const rng = new Rng(seed);
   const players: Player[] = [];
   const teams: Record<string, Team> = {};
   const usedIgns = new Set<string>();
 
-  T1_NAMES.forEach(([name, tag], i) => {
-    teams[`T${i}`] = makeTeam(rng, `T${i}`, name, tag, 1, "xia", players, usedIgns);
-  });
-  T2_NAMES.forEach(([name, tag], i) => {
-    teams[`C${i}`] = makeTeam(rng, `C${i}`, name, tag, 2, "xia", players, usedIgns);
-  });
-  // 曜赛区（v0.6-1 第二赛区）
-  YA_T1_NAMES.forEach(([name, tag], i) => {
-    teams[`YT${i}`] = makeTeam(rng, `YT${i}`, name, tag, 1, "yao", players, usedIgns);
-  });
-  YA_T2_NAMES.forEach(([name, tag], i) => {
-    teams[`YC${i}`] = makeTeam(rng, `YC${i}`, name, tag, 2, "yao", players, usedIgns);
-  });
+  // 赛区内按 rank 排序：前 10 为 VCT（tier1），其余挑战者（tier2）
+  const byRegion = new Map<string, VlrTeamStat[]>();
+  for (const t of REAL_TEAMS) {
+    const arr = byRegion.get(t.region) ?? [];
+    arr.push(t);
+    byRegion.set(t.region, arr);
+  }
+  for (const [region, list] of byRegion) {
+    const sorted = [...list].sort((a, b) => a.rank - b.rank);
+    sorted.forEach((vt, i) => {
+      const tier = teamTierOf(i + 1);
+      const id = `${tier === 1 ? "T" : "C"}${vt.vlrId}`;
+      // 基础队伍骨架（coach/staff/预算等仍随机生成，锚定 tier）
+      const skeleton = makeTeamSkeleton(rng, id, vt.name, vt.tag, tier, region);
+      // 真实 roster 覆盖：属性从 vlr 推导
+      const realRoster: string[] = [];
+      let iglSet = false;
+      for (const vlrId of vt.roster) {
+        const vlrP = REAL_PLAYERS_BY_VLR.get(vlrId);
+        if (!vlrP) continue;
+        const p = makeRealPlayer(rng, vlrP, id, tier, false);
+        if (!iglSet && p.isIgl) iglSet = true;
+        players.push(p);
+        realRoster.push(p.id);
+        usedIgns.add(p.ign);
+      }
+      // IGL 保证恰 1：无 captain → overall 最高者转 IGL
+      const rosterPlayers = realRoster.map((pid) => players.find((x) => x.id === pid)!);
+      if (rosterPlayers.length > 0 && !rosterPlayers.some((p) => p.isIgl)) {
+        const top = [...rosterPlayers].sort((a, b) => b.overall - a.overall)[0]!;
+        top.isIgl = true;
+        top.attrs.igl = clamp(top.attrs.igl + 22, 35, 95);
+        top.overall = computeOverall(top.attrs);
+      }
+      // 青训补位到 7（synthetic 标注；vlr 无该选手数据）
+      while (realRoster.length < 7) {
+        const duty = STARTER_TEMPLATE[realRoster.length % 4];
+        const target = tier === 1 ? 64 : 58;
+        const ap = makePlayer(rng, id, tier, target + rng.int(-3, 3), duty, false, [17, 21], usedIgns, true, {
+          ign: rng.pick(SYN_NAMES[region] ?? SYN_NAMES.china!) + rng.pick(SYN_SUFFIX),
+          synthetic: "academy",
+          age: rng.int(17, 20),
+        });
+        ap.promisedRole = "bench";
+        players.push(ap);
+        realRoster.push(ap.id);
+      }
+      // 替补超编（roster>7，vlr 偶有 8 人名单）：裁到 7，被裁者进自由池
+      while (realRoster.length > 7) {
+        const cut = realRoster.pop()!;
+        const cp = players.find((x) => x.id === cut)!;
+        cp.teamId = null;
+        cp.promisedRole = "bench";
+      }
+      skeleton.roster = realRoster;
+      skeleton.starters = realRoster.slice(0, 5); // vlr roster 顺序即首发优先
+      skeleton.vlrId = vt.vlrId;
+      skeleton.logo = vt.logo ?? undefined;
+      skeleton.reputation = clamp(Math.round((tier === 1 ? 50 : 30) + (16 - Math.min(i, 15)) * 2 + rng.int(0, 8)), 25, 90);
+      teams[id] = skeleton;
+    });
+  }
 
   const playerMap: Record<string, Player> = {};
   for (const p of players) playerMap[p.id] = p;
 
-  // 自由市场：14 名自由人（紧急补位 + AI 签约 + 玩家捡漏）
-  for (let i = 0; i < 14; i++) {
+  // 自由市场：按队伍规模等比 + 超编裁出的真实选手（synthetic:"free" 标注虚拟生成部分）
+  const faCount = Math.round((Object.keys(teams).length / 18) * 14);
+  for (let i = 0; i < faCount; i++) {
     const target = rng.int(60, 78);
-    const fa = makePlayer(rng, null, 1, target, rng.pick(DUTY_KEYS), false, [18, 30], usedIgns, false);
+    const fa = makePlayer(rng, null, 1, target, rng.pick(DUTY_KEYS), false, [18, 30], usedIgns, false, { synthetic: "free" });
     fa.promisedRole = "bench";
     players.push(fa);
     playerMap[fa.id] = fa;
@@ -309,10 +454,8 @@ export function generateWorld(seed: number): GameState {
     inbox: [],
     schedules: {},
     teamSchedule: ["map", "map", "review", "scrim", "individual", "individual", "rest"],
-    trainingMaps: ["jingjie", "xueyuan"],
+    trainingMaps: ["ascent", "split"],
   };
-  // 自由市场：14 名自由人（新开局即有可签目标；GDD §6.5）
-  spawnFreeAgents(state, rng, 14);
   // 开局赞助：每队 2 档随机地方赞助（v0.5-4 商务系统）
   for (const t of Object.values(teams)) {
     t.sponsors = [0, 1].map((k) => ({
@@ -332,7 +475,7 @@ export function spawnFreeAgents(state: GameState, rng: Rng, count: number): void
   const usedIgns = new Set(Object.values(state.players).map((p) => p.ign));
   for (let i = 0; i < count; i++) {
     const target = rng.int(60, 78);
-    const fa = makePlayer(rng, null, 1, target, rng.pick(DUTY_KEYS), false, [18, 30], usedIgns, false);
+    const fa = makePlayer(rng, null, 1, target, rng.pick(DUTY_KEYS), false, [18, 30], usedIgns, false, { synthetic: "free" });
     fa.promisedRole = "bench";
     state.players[fa.id] = fa;
   }
@@ -351,7 +494,7 @@ export function makeSyntheticTeam(id: string, tag: string, targetOverall: number
   const mapPref: Record<string, number> = {};
   for (const m of MAPS) mapPref[m.id] = 50;
   const team: Team = {
-    id, name: tag, tag, tier: 1, regionId: "xia", roster, starters: roster.slice(),
+    id, name: tag, tag, tier: 1, regionId: "emea", roster, starters: roster.slice(),
     coach: { name: "测试教练", tactics: 60, development: 60, motivation: 60 },
     facilities: 60, budget: 5_000_000, reputation: 60,
     personality: "steady", mapPref, bond: 50, presets: {},

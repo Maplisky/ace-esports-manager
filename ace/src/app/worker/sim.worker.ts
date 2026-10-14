@@ -5,6 +5,7 @@ import { spawnDailyEvents, spawnBirthdays, resolveEvent } from "../../core/sim/e
 import { startNegotiation, reNegotiate, finalizeOffer, completeTransfer, releasePlayer, inTransferWindow, graceRemain } from "../../core/sim/transfer.ts";
 import { signSponsorOffer, cancelSponsorById, acceptGig, declineGig, signStream, cancelStream } from "../../core/sim/business.ts";
 import { Rng, hashString } from "../../core/rng.ts";
+import { MAPS } from "../../core/data/maps.ts";
 import type { GameState, MatchRecord, Preset, TransferOffer } from "../../core/types.ts";
 
 export interface SavedPayload {
@@ -76,7 +77,7 @@ function migrate(state: GameState): GameState {
     life: { wallet: 2000, hunger: 80, mood: 70 },
   };
   state.manager.life ??= { wallet: 2000, hunger: 80, mood: 70 };
-  state.trainingMaps ??= ["jingjie"];
+  state.trainingMaps ??= ["ascent"];
   state.schedules ??= {};
   for (const p of Object.values(state.players)) {
     p.xp ??= {};
@@ -113,6 +114,47 @@ function migrate(state: GameState): GameState {
   state.scouting ??= {};
   // v0.6-1：旧单赛区 comp key → 霞赛区新命名（过渡年结算/Masters 依赖）
   migrateLegacyComps(state);
+  // v0.7 真实数据包：旧档的虚构地图 id 全部映射到真实图池（训练图/图池熟练/招牌计数/预案/mapLock/agentLock）
+  const validMap = new Set(MAPS.map((m) => m.id));
+  const legacyMap: Record<string, string> = { jingjie: "ascent", xiajing: "haven", panyan: "icebox", yugang: "bind", xueyuan: "split", kongting: "lotus", fenlu: "sunset" };
+  const remap = (id: string) => (validMap.has(id) ? id : legacyMap[id] ?? "ascent");
+  if (state.trainingMaps.some((m) => !validMap.has(m))) {
+    state.trainingMaps = [...new Set(state.trainingMaps.map(remap))].slice(0, 3);
+  }
+  for (const t of Object.values(state.teams)) {
+    for (const oldId of Object.keys(t.mapPref)) {
+      if (!validMap.has(oldId)) {
+        const n = remap(oldId);
+        t.mapPref[n] = Math.max(t.mapPref[n] ?? 50, t.mapPref[oldId] ?? 50);
+        delete t.mapPref[oldId];
+      }
+    }
+    for (const oldId of Object.keys(t.patternUsage)) {
+      if (!validMap.has(oldId)) {
+        t.patternUsage[remap(oldId)] = (t.patternUsage[remap(oldId)] ?? 0) + (t.patternUsage[oldId] ?? 0);
+        delete t.patternUsage[oldId];
+      }
+    }
+    for (const oldId of Object.keys(t.presets)) {
+      if (!validMap.has(oldId)) {
+        if (!t.presets[remap(oldId)]) t.presets[remap(oldId)] = t.presets[oldId]!;
+        delete t.presets[oldId];
+      }
+    }
+  }
+  for (const f of state.fixtures) {
+    if (f.mapLock?.some((m) => !validMap.has(m))) f.mapLock = f.mapLock.map(remap);
+    if (f.agentLock) {
+      for (const oldId of Object.keys(f.agentLock)) {
+        if (!validMap.has(oldId)) {
+          if (!f.agentLock[remap(oldId)]) f.agentLock[remap(oldId)] = f.agentLock[oldId]!;
+          delete f.agentLock[oldId];
+        }
+      }
+    }
+  }
+  // 旧档我的队若已不在（异常存档）：置空回到选队界面而不是崩溃
+  if (state.myTeamId && !state.teams[state.myTeamId]) state.myTeamId = null;
   return state;
 }
 

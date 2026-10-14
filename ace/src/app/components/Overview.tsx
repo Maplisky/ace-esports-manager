@@ -2,10 +2,12 @@ import type { GameState } from "../../core/types.ts";
 import { AGENT_BY_ID } from "../../core/data/agents.ts";
 import { MAPS } from "../../core/data/maps.ts";
 import { stageName } from "../App.tsx";
+import { PlayerFace, TeamLogo } from "./Avatar.tsx";
 import { intelOf, estimateMapStrength, starsOf } from "../../core/sim/intel.ts";
 
 export function TopBar(props: {
   teamTag: string; teamName: string; year: number; day: number; stage: string;
+  teamLogo?: string; regionLabel?: string; regionLogo?: string;
   budget: number; ap: number; confidence: number; nextLabel: string;
 }) {
   const date = formatDate(props.year, props.day);
@@ -14,7 +16,11 @@ export function TopBar(props: {
       <span className="logo">ACE</span>
       <div className="stat">
         <span className="k">俱乐部</span>
-        <span className="v">{props.teamName} <span className="tag">{props.teamTag}</span></span>
+        <span className="v" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+          {props.teamLogo && <img src={props.teamLogo} alt="" width={18} height={18} style={{ borderRadius: 3, objectFit: "contain" }} />}
+          {props.teamName} <span className="tag">{props.teamTag}</span>
+          {props.regionLogo && <span title={props.regionLabel} style={{ display: "inline-flex", alignItems: "center", gap: 3 }}><img src={props.regionLogo} alt={props.regionLabel} width={16} height={16} style={{ borderRadius: 3 }} /><span className="muted small">{props.regionLabel}</span></span>}
+        </span>
       </div>
       <div className="stat">
         <span className="k">日期</span>
@@ -140,7 +146,7 @@ export function OverviewPage(props: {
                 const p = state.players[pid]!;
                 return (
                   <tr key={pid}>
-                    <td>{p.ign}{p.isIgl && <span className="tag" style={{ marginLeft: 6 }}>指挥</span>}</td>
+                    <td><span className="row" style={{ alignItems: "center", gap: 6 }}><PlayerFace p={p} size={24} showTag={false} />{p.ign}{p.isIgl && <span className="tag" style={{ marginLeft: 6 }}>指挥</span>}</span></td>
                     <td className="muted">{dutyName(pid, state)}</td>
                     <td>{p.overall}</td>
                     <td>{Math.round(p.form)}</td>
@@ -172,7 +178,7 @@ export function OverviewPage(props: {
                 {table.map((e, i) => (
                   <tr key={e.teamId} className={e.teamId === myId ? "me" : ""}>
                     <td>{i + 1}</td>
-                    <td>{state.teams[e.teamId]?.name}</td>
+                    <td><span className="row" style={{ alignItems: "center", gap: 6 }}>{state.teams[e.teamId] && <TeamLogo team={state.teams[e.teamId]} size={18} />}{state.teams[e.teamId]?.name}</span></td>
                     <td>{e.w + e.l}</td>
                     <td>{e.w}</td>
                     <td>{e.l}</td>

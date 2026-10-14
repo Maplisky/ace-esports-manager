@@ -20,12 +20,12 @@ test("agentLock：指定英雄出现在 MatchRecord.agents，未指定的图不�
   // 为第一张指定图构造英雄锁：每名首发换成其英雄池第一项
   const lockMap: Record<string, string> = {};
   for (const pid of t1.team.starters) lockMap[pid] = state.players[pid]!.agentPool[0]!;
-  const agentLock = { xueyuan: lockMap };
+  const agentLock = { split: lockMap };
 
-  const rec = simMatch(state, "LA", "LB", 3, 999, "AL", ["xueyuan", "jingjie", "panyan"], agentLock);
-  // 雪原（锁定的第一图）上 LA 首发的英雄 = 锁定英雄
+  const rec = simMatch(state, "LA", "LB", 3, 999, "AL", ["split", "ascent", "icebox"], agentLock);
+  // split（锁定的第一图）上 LA 首发的英雄 = 锁定英雄
   const map1 = rec.maps[0]!;
-  assert.equal(map1.map, "xueyuan");
+  assert.equal(map1.map, "split");
   for (const [pid, agentId] of Object.entries(lockMap)) {
     assert.equal(map1.agents[pid], agentId, `选手 ${pid} 应使用锁定英雄 ${agentId}`);
   }

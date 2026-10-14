@@ -9,8 +9,8 @@ import { Rng } from "../src/core/rng.ts";
 test("生日：当日生成祝福卡，选项结算士气/预算并移出队列", () => {
   const state = generateWorld(5);
   initSeasonFixtures(state);
-  state.myTeamId = "T0";
-  const team = state.teams["T0"]!;
+  state.myTeamId = Object.values(state.teams).find((t) => t.tier === 1)!.id;
+  const team = state.teams[state.myTeamId!]!;
   const p = state.players[team.starters[0]!]!;
   state.day = Math.max(2, p.birthdayDay); // 直接落在生日当天做单元级验证
   const moraleBefore = p.morale;
@@ -33,7 +33,7 @@ test("生日：当日生成祝福卡，选项结算士气/预算并移出队列"
 test("抽取：队列上限 4，空档 6 天保底补偿 1 张", () => {
   const state = generateWorld(6);
   initSeasonFixtures(state);
-  state.myTeamId = "T0";
+  state.myTeamId = Object.values(state.teams).find((t) => t.tier === 1)!.id;
   state.day = 60;
   state.lastEventDay = 53; // 空档 7 天
   spawnDailyEvents(state, new Rng(1));
@@ -48,8 +48,8 @@ test("抽取：队列上限 4，空档 6 天保底补偿 1 张", () => {
 test("翻年：抑制器重置（旧年 lastEventDay 不应抑制新赛季负面事件）", () => {
   const state = generateWorld(9);
   initSeasonFixtures(state);
-  state.myTeamId = "T0";
-  const team = state.teams["T0"]!;
+  state.myTeamId = Object.values(state.teams).find((t) => t.tier === 1)!.id;
+  const team = state.teams[state.myTeamId!]!;
   const p = state.players[team.starters[0]!]!;
   // 模拟旧年残留：lastEventDay 是旧年第 340 天
   p.lastEventDay = 340;
@@ -67,8 +67,8 @@ test("翻年：抑制器重置（旧年 lastEventDay 不应抑制新赛季负面
 test("抑制器：负面卡结算后标记 lastEventDay，14 天内不再当负面主角", () => {
   const state = generateWorld(7);
   initSeasonFixtures(state);
-  state.myTeamId = "T0";
-  const team = state.teams["T0"]!;
+  state.myTeamId = Object.values(state.teams).find((t) => t.tier === 1)!.id;
+  const team = state.teams[state.myTeamId!]!;
   const p = state.players[team.starters[0]!]!;
   state.pendingEvents.push({
     uid: "TEST_NEG", cardId: "quarrel", title: "训练室争吵", text: "测试",
@@ -84,8 +84,8 @@ test("抑制器：负面卡结算后标记 lastEventDay，14 天内不再当负�
 test("结算效果：预算与声望按选项增减", () => {
   const state = generateWorld(8);
   initSeasonFixtures(state);
-  state.myTeamId = "T0";
-  const team = state.teams["T0"]!;
+  state.myTeamId = Object.values(state.teams).find((t) => t.tier === 1)!.id;
+  const team = state.teams[state.myTeamId!]!;
   const repBefore = team.reputation;
   const budgetBefore = team.budget;
   state.pendingEvents.push({

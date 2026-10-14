@@ -7,8 +7,8 @@ import { initSeasonFixtures, advanceDay } from "../src/core/sim/day.ts";
 test("轮换沟通豁免：已沟通的核心/首发坐板凳不再扣士气", () => {
   const state = generateWorld(17);
   initSeasonFixtures(state);
-  state.myTeamId = "T0";
-  const team = state.teams["T0"]!;
+  state.myTeamId = Object.values(state.teams).find((t) => t.tier === 1)!.id;
+  const team = state.teams[state.myTeamId!]!;
   const p = state.players[team.starters[0]!]!;
   // 造一个"被轮换的核心"：从首发移除并承诺核心
   team.starters = team.starters.filter((id) => id !== p.id);
@@ -24,8 +24,8 @@ test("轮换沟通豁免：已沟通的核心/首发坐板凳不再扣士气", (
 test("无豁免：核心承诺坐板凳 → 周士气 −3", () => {
   const state = generateWorld(18);
   initSeasonFixtures(state);
-  state.myTeamId = "T0";
-  const team = state.teams["T0"]!;
+  state.myTeamId = Object.values(state.teams).find((t) => t.tier === 1)!.id;
+  const team = state.teams[state.myTeamId!]!;
   const p = state.players[team.starters[0]!]!;
   team.starters = team.starters.filter((id) => id !== p.id);
   p.promisedRole = "core";
@@ -41,8 +41,8 @@ test("训练助教：xp 收益按 staff 数值放大", () => {
   const stateB = generateWorld(21);
   for (const [state, staffValue] of [[stateA, 99], [stateB, 0]] as const) {
     initSeasonFixtures(state);
-    state.myTeamId = "T0";
-    const team = state.teams["T0"]!;
+    state.myTeamId = Object.values(state.teams).find((t) => t.tier === 1)!.id;
+    const team = state.teams[state.myTeamId!]!;
     team.staff = { training: { name: "T", value: staffValue } };
     state.day = 1;
     state.teamSchedule = ["map", "map", "review", "scrim", "map", "map", "map"];

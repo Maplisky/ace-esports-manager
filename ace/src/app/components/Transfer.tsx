@@ -6,6 +6,7 @@ import type { GameState, Player, TransferOffer } from "../../core/types.ts";
 import { AGENT_BY_ID } from "../../core/data/agents.ts";
 import { marketValue, salaryExpectation, inTransferWindow } from "../../core/sim/transfer.ts";
 import { useStore } from "../store.ts";
+import { PlayerFace, SyntheticBadge } from "./Avatar.tsx";
 
 const ROLE_CN: Record<string, string> = { core: "核心", starter: "首发", rotation: "轮换", bench: "替补" };
 const fmt = (v: number) => (v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(2)}M` : `$${Math.round(v / 1000)}K`);
@@ -37,7 +38,7 @@ export function TransferPage(props: { state: GameState }) {
             if (!p) return null;
             return (
               <div key={b.id} className="row" style={{ padding: "8px 0", borderBottom: "1px dashed var(--line)", flexWrap: "wrap" }}>
-                <b style={{ width: 90 }}>{p.ign}</b>
+                <span className="row" style={{ alignItems: "center", gap: 6, width: 110 }}><PlayerFace p={p} size={24} /><b>{p.ign}</b><SyntheticBadge p={p} /></span>
                 <span className="muted small" style={{ width: 220 }}>
                   {state.teams[b.fromTeam as string]?.name} · {fmt(b.fee)} · 年薪 {fmt(b.salary)}×{b.years}年
                 </span>
@@ -66,7 +67,7 @@ export function TransferPage(props: { state: GameState }) {
               return (
                 <tr key={pid}>
                   <td>
-                    {p.ign}
+                    <span className="row" style={{ alignItems: "center", gap: 6 }}><PlayerFace p={p} size={20} />{p.ign}</span>
                     {p.listed && <span className="tag orange" style={{ marginLeft: 6 }}>挂牌</span>}
                     {p.noPoach && <span className="tag" style={{ marginLeft: 6 }}>保护</span>}
                   </td>
@@ -113,7 +114,7 @@ export function TransferPage(props: { state: GameState }) {
               const names = p.agentPool.map((a) => AGENT_BY_ID.get(a)?.name ?? a).join(" / ");
               return (
               <tr key={p.id}>
-                <td>{p.ign}</td>
+                <td><span className="row" style={{ alignItems: "center", gap: 6 }}><PlayerFace p={p} size={22} showTag={false} />{p.ign}</span></td>
                 <td className="muted small">{names}</td>
                 <td><b>{p.overall}</b></td>
                 <td className="muted">{p.potential}</td>

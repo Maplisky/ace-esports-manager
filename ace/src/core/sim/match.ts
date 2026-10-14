@@ -42,10 +42,12 @@ function sideOf(sim: { A: SimTeam; B: SimTeam }, s: "A" | "B"): SimTeam {
   return s === "A" ? sim.A : sim.B;
 }
 
-function attackSideOf(round: number): "A" | "B" {
-  if (round <= 12) return "A";
-  if (round <= 24) return "B";
-  return (round - 25) % 2 === 0 ? "A" : "B";
+function attackSideOf(round: number, aAttacksFirst: boolean): "A" | "B" {
+  const first = aAttacksFirst ? "A" : "B";
+  const second = aAttacksFirst ? "B" : "A";
+  if (round <= 12) return first;
+  if (round <= 24) return second;
+  return (round - 25) % 2 === 0 ? first : second;
 }
 
 function decideBuy(money: number, pistol: boolean, rng: Rng): BuyType {
@@ -124,12 +126,13 @@ function simMap(state: GameState, mapId: string, A: SimTeam, B: SimTeam, rng: Rn
   const rounds: RoundRecord[] = [];
   const swingA = rng.norm(0, SWING_SD);
   const swingB = rng.norm(0, SWING_SD);
+  const aAttacksFirst = rng.chance(0.5); // 每图掷硬币定先攻（消除固定 A 先攻的系统性偏置）
   let comebackNoted = false;
 
   for (let round = 1; round <= MAX_ROUNDS; round++) {
     if ((a >= 13 && a - b >= 2) || (b >= 13 && b - a >= 2)) break;
 
-    const atkSide = attackSideOf(round);
+    const atkSide = attackSideOf(round, aAttacksFirst);
     const atkSim = sideOf({ A, B }, atkSide);
     const defSim = sideOf({ A, B }, atkSide === "A" ? "B" : "A");
     const pistol = round === 1 || round === 13 || round === 25;

@@ -41,12 +41,17 @@ export const CALENDAR = {
   offseasonStart: 233,
 } as const;
 
-/** 赛区注册表（v0.6-1 双赛区）：霞（主赛区）/ 曜（第二赛区） */
-export const REGIONS: { id: string; label: string }[] = [
-  { id: "xia", label: "霞赛区" },
-  { id: "yao", label: "曜赛区" },
+/** 赛区注册表（v0.7 真实四赛区，数据来自 vlr.gg） */
+export const REGIONS: { id: string; label: string; logo: string }[] = [
+  { id: "americas", label: "Americas", logo: "assets/regions/americas.svg" },
+  { id: "emea", label: "EMEA", logo: "assets/regions/emea.svg" },
+  { id: "pacific", label: "Pacific", logo: "assets/regions/pacific.svg" },
+  { id: "china", label: "China", logo: "assets/regions/china.svg" },
 ];
-const regionLabel = (id: string): string => REGIONS.find((r) => r.id === id)?.label ?? "霞赛区";
+/** Masters 每赛区晋级名额（×4 赛区 = 8 队单败） */
+const MASTERS_SLOTS_PER_REGION = 2;
+const LEGACY_REGION_LABEL: Record<string, string> = { xia: "霞赛区", yao: "曜赛区" };
+const regionLabel = (id: string): string => REGIONS.find((r) => r.id === id)?.label ?? LEGACY_REGION_LABEL[id] ?? "联赛";
 
 export interface AdvanceResult {
   day: number;
@@ -104,7 +109,7 @@ export function initSeasonFixtures(state: GameState): void {
   }
   // 清掉上一赛季遗留的 comp（去年的 Masters/旧 key 联赛不残留到总览）
   for (const k of Object.keys(state.comps)) {
-    if (!/^(stage1|stage2)-(xia|yao)-t[12]$/.test(k) && k !== "cup") delete state.comps[k];
+    if (!/^stage\d+-[a-z]+-t\d$/.test(k) && k !== "cup") delete state.comps[k];
   }
   for (const comp of Object.values(state.comps)) {
     if (comp.key === "cup" || comp.key === "masters") continue;
@@ -122,9 +127,9 @@ function buildMasters(state: GameState, notes: NewsItem[]): void {
     const table = Object.values(state.comps[`stage1-${r.id}-t1`]?.standings ?? {}).sort(
       (x, y) => y.pts - x.pts || (y.mapW - y.mapL) - (x.mapW - x.mapL) || (y.roundW - y.roundL) - (x.roundW - x.roundL),
     );
-    for (const s of table.slice(0, 4)) qualified.push(s.teamId);
+    for (const s of table.slice(0, MASTERS_SLOTS_PER_REGION)) qualified.push(s.teamId);
   }
-  if (qualified.length !== 8) return;
+  if (qualified.length !== MASTERS_SLOTS_PER_REGION * REGIONS.length) return;
   state.comps["masters"] = { key: "masters", name: "Masters 国际赛", stage: "masters", teamIds: qualified, standings: {} };
   for (const id of qualified) {
     state.comps["masters"]!.standings[id] = { teamId: id, w: 0, l: 0, mapW: 0, mapL: 0, roundW: 0, roundL: 0, pts: 0 };
@@ -339,9 +344,8 @@ export function advanceDay(
   } else if (state.day === CALENDAR.summerStart) {
     // Stage1 收官：结算目标 + 冠军荣誉 + Masters 抽签
     settleObjective(state, myLeagueCompKey(state, "stage1") ?? "stage1-xia-t1", "Stage 1", notes);
-    for (const r of REGIONS) {
-      awardLeagueTitle(state, `stage1-${r.id}-t1`, notes);
-      awardLeagueTitle(state, `stage1-${r.id}-t2`, notes);
+    for (const comp of Object.values(state.comps)) {
+      if (/^stage1-[a-z]+-t[12]$/.test(comp.key)) awardLeagueTitle(state, comp.key, notes);
     }
     buildMasters(state, notes);
     notes.push({ day: state.day, kind: "league", text: "—— 进入夏季窗口（休整与练兵）——" });
@@ -354,9 +358,8 @@ export function advanceDay(
   } else if (state.day === CALENDAR.offseasonStart) {
     // Stage2 收官
     settleObjective(state, myLeagueCompKey(state, "stage2") ?? "stage2-xia-t1", "Stage 2", notes);
-    for (const r of REGIONS) {
-      awardLeagueTitle(state, `stage2-${r.id}-t1`, notes);
-      awardLeagueTitle(state, `stage2-${r.id}-t2`, notes);
+    for (const comp of Object.values(state.comps)) {
+      if (/^stage2-[a-z]+-t[12]$/.test(comp.key)) awardLeagueTitle(state, comp.key, notes);
     }
     notes.push({ day: state.day, kind: "league", text: "—— 进入休赛期 ——" });
   }
@@ -508,7 +511,11 @@ export function advanceDay(
   // 新闻入档（上限 400 条）
   for (const n of notes) {
     state.news.push(n);
-    if (state.news.length > 400) state.news.splice(0, state.news.length - 400);
+    while (state.news.length > 400) {
+      const idx = state.news.findIndex((x) => !x.important);
+      if (idx < 0) break;
+      state.news.splice(idx, 1);
+    }
   }
 
   return { day: state.day, notes: notes.map((n) => n.text), playedMine, seasonEnded };
@@ -563,7 +570,11 @@ export function playHeldMatch(
   }
   for (const n of notes) {
     state.news.push(n);
-    if (state.news.length > 400) state.news.splice(0, state.news.length - 400);
+    while (state.news.length > 400) {
+      const idx = state.news.findIndex((x) => !x.important);
+      if (idx < 0) break;
+      state.news.splice(idx, 1);
+    }
   }
   return rec;
 }

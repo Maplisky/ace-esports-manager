@@ -36,7 +36,7 @@ test("赛前准备：mineHold 拦截我的比赛，AI 比赛照常；playHeldMat
   assert.equal(myFixture.played, false);
 
   // 赛前准备：手动 BP 图序 + 指定首发（把替补提上来）
-  const manualMaps = ["xueyuan", "jingjie", "kongting"];
+  const manualMaps = ["split", "ascent", "lotus"];
   const benchId = team.roster.find((pid) => !team.starters.includes(pid))!;
   const starters = team.starters.slice(0, 4).concat(benchId);
   const rec = playHeldMatch(
@@ -46,10 +46,9 @@ test("赛前准备：mineHold 拦截我的比赛，AI 比赛照常；playHeldMat
   );
   assert.ok(rec, "应产出 MatchRecord");
   assert.equal(myFixture.played, true);
-  // mapLock 生效：图序一致
-  assert.deepEqual(
-    rec!.maps.map((m) => m.map),
-    manualMaps,
+  // mapLock 生效：图序一致（BO3 可能 2-0 提前收官，只断言已打图为手排前缀）
+  const playedMaps = rec!.maps.map((m) => m.map);
+  assert.deepEqual(playedMaps, manualMaps.slice(0, playedMaps.length),
   );
   // 首发生效：替补出现在回放 lines 里，被换下的首发不在
   const bench = state.players[benchId]!;
@@ -66,7 +65,7 @@ test("赛前准备：mineHold 拦截我的比赛，AI 比赛照常；playHeldMat
 test("赛前准备：不带 mineHold 的旧调用路径行为不变（我的比赛自动打完）", () => {
   const state = generateWorld(31);
   initSeasonFixtures(state);
-  state.myTeamId = "T0";
+  state.myTeamId = Object.values(state.teams).find((t) => t.tier === 1)!.id;
   state.day = 25;
   advanceDay(state);
   const qfPlayed = state.fixtures.filter((f) => f.label.includes("四分之一决赛") && f.played);

@@ -67,6 +67,14 @@ export interface PlayerCareer {
 export interface Player {
   id: string;
   ign: string;
+  /** 真实姓名（vlr.gg；虚拟选手为空） */
+  realName?: string;
+  /** 国籍/地区码（vlr.gg flag，如 fi / kr / cn） */
+  country?: string;
+  /** 头像（public/assets 相对路径） */
+  avatar?: string;
+  /** 虚拟生成标注：academy=青训补充 / free=自由池（非 vlr.gg 数据，UI 需标注） */
+  synthetic?: "academy" | "free";
   age: number;
   teamId: string | null;
   attrs: PlayerAttrs;
@@ -126,8 +134,12 @@ export interface Team {
   name: string;
   tag: string;
   tier: 1 | 2;
-  /** 赛区（v0.6-1 第二赛区："xia" 霞 / "yao" 曜） */
+  /** 赛区（v0.7 真实四赛区：americas / emea / pacific / china；旧档 xia/yao 兼容） */
   regionId: string;
+  /** vlr.gg 队伍 id（真实数据包；虚拟队为空） */
+  vlrId?: number;
+  /** 队徽（public/assets 相对路径；无则 UI 用首字母 fallback） */
+  logo?: string;
   roster: string[];
   starters: string[];
   coach: Coach;

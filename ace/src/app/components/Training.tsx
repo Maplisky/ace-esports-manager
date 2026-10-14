@@ -175,7 +175,7 @@ export function TrainingPage(props: { state: GameState }) {
       <button
         className="primary"
         onClick={() => {
-          const finalMaps = maps.length ? maps : ["jingjie"];
+          const finalMaps = maps.length ? maps : ["ascent"];
           void setTeamSchedule(slots, finalMaps, schedules);
         }}
       >

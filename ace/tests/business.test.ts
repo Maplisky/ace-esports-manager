@@ -9,14 +9,14 @@ import { Rng } from "../src/core/rng.ts";
 function setup() {
   const state = generateWorld(21);
   initSeasonFixtures(state);
-  state.myTeamId = "T0";
+  state.myTeamId = Object.values(state.teams).find((t) => t.tier === 1)!.id;
   state.day = 10;
   return state;
 }
 
 test("赞助：周收入 = 全部赞助 perSeason/48，入账走俱乐部预算", () => {
   const state = setup();
-  const team = state.teams["T0"]!;
+  const team = state.teams[state.myTeamId!]!;
   team.sponsors = [
     { id: "S1", name: "测试A", tier: 1, perSeason: 96_000, years: 1, signedYear: 2026 },
     { id: "S2", name: "测试B", tier: 2, perSeason: 240_000, years: 1, signedYear: 2026 },
@@ -33,9 +33,9 @@ test("赞助：周收入 = 全部赞助 perSeason/48，入账走俱乐部预算"
 
 test("赞助档位门槛：低声望签国际品牌概率被压制", () => {
   const state = setup();
-  state.teams["T0"]!.reputation = 30; // 低于国际品牌门槛 60
+  state.teams[state.myTeamId!]!.reputation = 30; // 低于国际品牌门槛 60
   const low = sponsorSignChance(state, 3);
-  state.teams["T0"]!.reputation = 80;
+  state.teams[state.myTeamId!]!.reputation = 80;
   const high = sponsorSignChance(state, 3);
   assert.ok(high > low, `高声望 ${high.toFixed(2)} 应高于低声望 ${low.toFixed(2)}`);
 });
@@ -59,7 +59,7 @@ test("商务日：接受邀约占训练日并降低个人经验收益", () => {
 
 test("直播合同：俱乐部周入 40%，合同到期后停止", () => {
   const state = setup();
-  const team = state.teams["T0"]!;
+  const team = state.teams[state.myTeamId!]!;
   const pid = team.roster[0]!;
   const p = state.players[pid]!;
   p.stream = { weekly: 4000, untilDay: state.day + 30 };
