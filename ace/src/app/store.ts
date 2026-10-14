@@ -89,6 +89,16 @@ function ensureWorker(): Worker {
   worker = new Worker(new URL("./worker/sim.worker.ts", import.meta.url), { type: "module" });
   worker.onmessage = (e: MessageEvent) => {
     const msg = e.data as Record<string, unknown> & { seq?: number };
+    // worker 异常兜底：带 seq 回传错误 → 拒绝对应 promise（防 UI 永久 busy）
+    if (msg.type === "workerError") {
+      const resolve = typeof msg.seq === "number" ? pending.get(msg.seq) : undefined;
+      if (resolve) {
+        pending.delete(msg.seq as number);
+        resolve({ __workerError: msg.message });
+      }
+      console.error("[worker]", msg.message);
+      return;
+    }
     if (typeof msg.seq === "number") {
       const resolve = pending.get(msg.seq);
       if (resolve) {
@@ -96,6 +106,11 @@ function ensureWorker(): Worker {
         resolve(msg);
       }
     }
+  };
+  worker.onerror = (e) => {
+    // 供测试/诊断：worker 加载失败时在页面上可见
+    (window as unknown as { __workerLoadError?: string }).__workerLoadError = e.message;
+    console.error("[worker load]", e.message);
   };
   return worker;
 }

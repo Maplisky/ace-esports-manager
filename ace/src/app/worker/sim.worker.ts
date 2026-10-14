@@ -2,7 +2,7 @@
 import { generateWorld, resetPlayerSeq, salaryFor, spawnFreeAgents, migrateMapsToRealPool } from "../../core/worldgen.ts";
 import { initSeasonFixtures, advanceDay, playHeldMatch, migrateLegacyComps } from "../../core/sim/day.ts";
 import { resolveEvent } from "../../core/sim/events.ts";
-import { startNegotiation, reNegotiate, finalizeOffer, completeTransfer, releasePlayer, inTransferWindow, graceRemain, askInquiry } from "../../core/sim/transfer.ts";
+import { startNegotiation, reNegotiate, finalizeOffer, completeTransfer, releasePlayer, inTransferWindow, graceRemain, askInquiry, marketValue } from "../../core/sim/transfer.ts";
 import { signSponsorOffer, cancelSponsorById, acceptGig, declineGig, signStream, cancelStream } from "../../core/sim/business.ts";
 import { Rng, hashString } from "../../core/rng.ts";
 import type { GameState, MatchRecord, Preset, TransferOffer } from "../../core/types.ts";
@@ -84,6 +84,7 @@ function migrate(state: GameState): GameState {
     p.listed ??= false;
     p.releaseClause ??= 0;
     p.noPoach ??= false;
+    p.listedWeeks ??= 0;
     p.benchedWeeks ??= 0;
     // v0.5 检错修复：旧档薪资被 salaryFor 旧公式放大 1000 倍，按面板整体重算
     const tier = p.teamId ? state.teams[p.teamId]?.tier ?? 1 : 2;
@@ -123,6 +124,15 @@ function migrate(state: GameState): GameState {
 }
 
 self.onmessage = (e: MessageEvent) => {
+  try {
+    handleWorkerMessage(e);
+  } catch (err) {
+    console.error("worker error:", err);
+    self.postMessage({ type: "workerError", message: String((err as Error)?.stack ?? err), seq: (e.data as Record<string, unknown>)?.seq });
+  }
+};
+
+function handleWorkerMessage(e: MessageEvent) {
   const msg = e.data as Record<string, unknown>;
   currentSeq = msg.seq as number | undefined;
   const type = msg.type as string;
@@ -332,13 +342,34 @@ self.onmessage = (e: MessageEvent) => {
     }
     reply({ type: "snapshot", state: null, records: {} });
   } else if (type === "getSnapshot") {
+    // 纯快照请求（newGame/continueGame 第二步依赖；v0.8 检错：本分支曾被挂牌逻辑误占名导致消息永久挂起）
+    reply({ type: "snapshot", ...snapshot() });
+  } else if (type === "listPlayer") {
     if (state) {
       const p = state.players[msg.pid as string];
+      const wantList = !!msg.listed;
+      // 挂牌花 1 行动力（GDD §9.2）；撤牌免费。重复挂牌拒绝
+      if (wantList && state.actionPoints < 1) {
+        reply({ type: "snapshot", ...snapshot(), message: "行动力不足：挂牌需要 1 点。" });
+        return;
+      }
+      if (wantList && p?.listed) {
+        reply({ type: "snapshot", ...snapshot(), message: "该选手已在挂牌中。" });
+        return;
+      }
       if (p) {
-        p.listed = !!msg.listed;
-        const team = p.teamId ? state.teams[p.teamId] : null;
-        state.transferFeed.push({ day: state.day, year: state.year, kind: "list", text: `${team?.name ?? "?"} 挂牌 ${p.ign}。` });
-        if (state.transferFeed.length > 300) state.transferFeed.splice(0, state.transferFeed.length - 300);
+        p.listed = wantList;
+        if (wantList) {
+          state.actionPoints--;
+          p.listedWeeks = 0;
+          // 按承诺角色的士气反应（GDD §8.2）：核心/首发不想被卖，轮换/替补视为机会
+          const moraleHit = p.promisedRole === "core" ? -8 : p.promisedRole === "starter" ? -5 : 2;
+          p.morale = Math.max(10, Math.min(100, p.morale + moraleHit));
+          const team = p.teamId ? state.teams[p.teamId] : null;
+          const value = Math.round(0.06 * Math.pow(1.21, p.overall) * (team?.tier === 1 ? 1 : 0.45) * 0.75 / 1000) * 1000;
+          state.transferFeed.push({ day: state.day, year: state.year, kind: "list", text: `${team?.name ?? "?"} 挂牌 ${p.ign}（身价约 $${value}K）。` });
+          if (state.transferFeed.length > 300) state.transferFeed.splice(0, state.transferFeed.length - 300);
+        }
       }
     }
     reply({ type: "snapshot", ...snapshot() });

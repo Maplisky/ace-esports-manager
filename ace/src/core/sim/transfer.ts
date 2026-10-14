@@ -246,6 +246,69 @@ export function aiWeeklyTransfers(state: GameState, rng: Rng, onBid: (offer: Tra
       }
     }
   }
+
+  // AI 挂牌/摘牌（v0.8 用户需求：让「挂牌」列活起来）——仅他队；性格定概率，换血型最活跃
+  if (inTransferWindow(state.day)) {
+    const LIST_PERSONALITY: Record<Team["personality"], number> = { wheeler: 0.35, spender: 0.1, youth: 0.08, steady: 0.03 };
+    for (const t of Object.values(state.teams)) {
+      if (t.id === myId) continue;
+      const listedNow = t.roster.map((id) => state.players[id] as Player).filter((p) => p?.listed);
+      // 摘牌：挂牌 ≥6 周 → 静默撤牌
+      for (const p of listedNow) {
+        p.listedWeeks = (p.listedWeeks ?? 0) + 1;
+        if (p.listedWeeks >= 6) {
+          p.listed = false;
+          p.listedWeeks = 0;
+        }
+      }
+      // 新挂牌：性格概率（每队同时 ≤1 人）；对象=非 IGL/noPoach 且（老将/无潜力空间/长期板凳）
+      if (listedNow.length === 0 && rng.chance(LIST_PERSONALITY[t.personality] ?? 0.08)) {
+        const pool = t.roster
+          .map((id) => state.players[id] as Player)
+          .filter((p) => p && !p.isIgl && !p.noPoach && (p.age >= 27 || p.potential - p.overall <= 2 || (p.benchedWeeks ?? 0) >= 4));
+        if (pool.length) {
+          const target = rng.pick(pool);
+          target.listed = true;
+          target.listedWeeks = 0;
+          const feed = state.transferFeed;
+          feed.push({ day: state.day, year: state.year, kind: "list", text: `${t.name} 挂牌 ${target.ign}（${target.overall}，身价约 ${fmt(marketValue(target, t.tier))}）。` });
+          if (feed.length > 300) feed.splice(0, feed.length - 300);
+          notes.push(feed[feed.length - 1]!.text);
+        }
+      }
+    }
+    // AI 互挖挂牌选手：预算够的他队按 30%/周出价，直接成交（completeTransfer 处理收钱/补位）
+    const listedPlayers = Object.values(state.players).filter(
+      (p) => p.teamId && p.teamId !== myId && p.listed && p.injuredUntilDay <= state.day,
+    );
+    if (listedPlayers.length && rng.chance(0.3)) {
+      const target = rng.pick(listedPlayers);
+      const fromId = target.teamId as string;
+      const seller = state.teams[fromId] as Team;
+      const suitors = Object.values(state.teams).filter(
+        (t) => t.id !== myId && t.id !== fromId && t.budget > marketValue(target, t.tier) && t.roster.length < 7,
+      );
+      if (suitors.length && seller) {
+        const to = rng.pick(suitors);
+        const offer: TransferOffer = {
+          id: `AIL${state.day}_${target.id}`,
+          playerId: target.id,
+          fromTeam: fromId,
+          toTeam: to.id,
+          fee: Math.round(marketValue(target, to.tier) * rng.range(0.8, 1.1) / 1000) * 1000,
+          salary: salaryExpectation(target, to.tier),
+          years: rng.int(2, 3),
+          signingBonus: 0,
+          promisedRole: target.promisedRole,
+          day: state.day,
+          round: 0,
+          demand: "",
+          attitude: 0,
+        };
+        notes.push(...completeTransfer(state, offer, rng));
+      }
+    }
+  }
   return notes;
 }
 

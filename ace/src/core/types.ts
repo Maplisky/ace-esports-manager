@@ -103,6 +103,8 @@ export interface Player {
   releaseClause: number;
   /** 抢人保护条款（挂牌/解约金触发前其他队不可报价） */
   noPoach: boolean;
+  /** 已挂牌周数（AI 摘牌计时；我方挂牌显示用） */
+  listedWeeks?: number;
   injuredUntilDay: number;
   /** 导师型替补绑定的弟子 id */
   apprenticeId?: string;

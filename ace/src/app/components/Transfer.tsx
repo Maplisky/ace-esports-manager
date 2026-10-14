@@ -134,7 +134,12 @@ export function TransferPage(props: { state: GameState }) {
                   <td className="muted">{p.contractYears} 年</td>
                   <td>{p.benchedWeeks > 0 ? <span className="tag orange">板凳 {p.benchedWeeks} 周</span> : <span className="tag green">在阵</span>}</td>
                   <td>
-                    <button className="small" onClick={() => void listToggle(pid, !p.listed)}>
+                    <button
+                      className="small"
+                      disabled={!p.listed && (!inWindow || state.actionPoints < 1)}
+                      title={p.listed ? "撤牌免费" : "挂牌花 1 行动力；核心/首发被挂牌会闹情绪"}
+                      onClick={() => void listToggle(pid, !p.listed)}
+                    >
                       {p.listed ? "取消挂牌" : "挂牌"}
                     </button>
                     {releaseTarget === pid ? (
