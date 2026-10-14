@@ -3,7 +3,6 @@
  */
 import { useState } from "react";
 import type { GameState, Player } from "../../core/types.ts";
-import { AGENTS } from "../../core/data/agents.ts";
 import { marketValue, salaryExpectation, inTransferWindow } from "../../core/sim/transfer.ts";
 import { useStore } from "../store.ts";
 import { PlayerFace, SyntheticBadge } from "./Avatar.tsx";

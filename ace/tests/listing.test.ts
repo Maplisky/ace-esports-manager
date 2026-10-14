@@ -3,7 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { generateWorld } from "../src/core/worldgen.ts";
 import { initSeasonFixtures, advanceDay } from "../src/core/sim/day.ts";
-import { aiWeeklyTransfers, marketValue } from "../src/core/sim/transfer.ts";
+import { aiWeeklyTransfers } from "../src/core/sim/transfer.ts";
 import { Rng } from "../src/core/rng.ts";
 
 function setup(seed = 707) {

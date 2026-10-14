@@ -2,7 +2,7 @@
 import { generateWorld, resetPlayerSeq, salaryFor, spawnFreeAgents, migrateMapsToRealPool } from "../../core/worldgen.ts";
 import { initSeasonFixtures, advanceDay, playHeldMatch, migrateLegacyComps } from "../../core/sim/day.ts";
 import { resolveEvent } from "../../core/sim/events.ts";
-import { startNegotiation, reNegotiate, finalizeOffer, completeTransfer, releasePlayer, inTransferWindow, graceRemain, askInquiry, marketValue } from "../../core/sim/transfer.ts";
+import { startNegotiation, reNegotiate, finalizeOffer, completeTransfer, releasePlayer, inTransferWindow, graceRemain, askInquiry } from "../../core/sim/transfer.ts";
 import { signSponsorOffer, cancelSponsorById, acceptGig, declineGig, signStream, cancelStream } from "../../core/sim/business.ts";
 import { Rng, hashString } from "../../core/rng.ts";
 import type { GameState, MatchRecord, Preset, TransferOffer } from "../../core/types.ts";
