@@ -30,7 +30,7 @@ export function SchedulePage(props: { state: GameState; records: Record<string, 
                 <td>{stageName(f.stage)}</td>
                 <td className="muted">{f.label}</td>
                 <td>
-                  vs {state.teams[oppId]?.name}
+                  {state.teams[oppId]?.name}
                   <span className="tag" style={{ marginLeft: 6 }}>BO{f.bo}</span>
                 </td>
                 <td>
