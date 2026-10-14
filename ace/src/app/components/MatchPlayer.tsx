@@ -138,6 +138,12 @@ export function MatchPlayer(props: { record: MatchRecord; state: GameState; onCl
           const mapIdx = isSeriesView ? -1 : hasSeries ? sumTab - 1 : 0;
           const viewMap = mapIdx >= 0 ? record.maps[mapIdx] : null;
           const rows = isSeriesView ? seriesRows : summarizeMatch(viewMap ? [viewMap] : record.maps, teamAPids);
+          // 单图页签的 MVP/SMVP 按本图胜负计算（该图胜方最佳=MVP、败方最佳=SMVP），不沿用系列赛结果
+          const viewWinner: "A" | "B" = viewMap
+            ? (viewMap.score[0] > viewMap.score[1] ? "A" : "B")
+            : winnerTeam;
+          const viewMvps = isSeriesView || !viewMap ? mvps : pickMvps(rows, viewWinner);
+          const viewWinnerTeam = isSeriesView || !viewMap ? winnerTeam : viewWinner;
           return (
             <div style={{ textAlign: "center" }}>
               <div className="card" style={{ textAlign: "center", padding: "16px 26px" }}>
@@ -170,13 +176,13 @@ export function MatchPlayer(props: { record: MatchRecord; state: GameState; onCl
                 state={state}
                 record={record}
                 rows={rows}
-                winnerTeam={winnerTeam}
-                mvpPid={mvps.mvp}
-                smvpPid={mvps.smvp}
+                winnerTeam={viewWinnerTeam}
+                mvpPid={viewMvps.mvp}
+                smvpPid={viewMvps.smvp}
                 agents={viewMap?.agents}
                 title={isSeriesView
                   ? `比赛总结 · 双方选手数据（全部 ${record.maps.length} 图汇总）`
-                  : `第 ${mapIdx + 1} 图数据 · ${MAP_BY_ID.get(viewMap?.map ?? "")?.name ?? ""}`}
+                  : `第 ${mapIdx + 1} 图数据 · ${MAP_BY_ID.get(viewMap?.map ?? "")?.name ?? ""}（本图胜负口径）`}
               />
               {isSeriesView && <AttributionTable record={record} state={state} />}
             </div>
