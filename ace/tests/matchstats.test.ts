@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { liveLines, liveAcs, summarizeMatch, pickMvps } from "../src/core/sim/matchstats.ts";
+import { liveLines, liveAcs, liveMeta, summarizeMatch, pickMvps } from "../src/core/sim/matchstats.ts";
 import type { MapRecord, PlayerLine } from "../src/core/types.ts";
 
 function line(p: Partial<PlayerLine>): PlayerLine {
@@ -103,4 +103,30 @@ test("结算 MVP 派生：总 MVP=胜方最佳，SMVP=败方最佳", () => {
   const { mvp, smvp } = pickMvps(rows, "A");
   assert.equal(mvp, "a2");
   assert.equal(smvp, "b1");
+});
+
+
+test("实时元数据：大招进度与经济随回合结果揭示，旧档缺省安全", () => {
+  const maps = [mapRec({}, [
+    [{ t: "kill", s: "a1", v: "b1" }],
+    [{ t: "kill", s: "b1", v: "a2" }],
+  ])];
+  maps[0]!.rounds[0]!.end.ults = { a1: 7, b1: 3 };
+  maps[0]!.rounds[0]!.end.money = { A: 3900, B: 1900 };
+  maps[0]!.rounds[1]!.end.ults = { a1: 7, b1: 4 };
+  maps[0]!.rounds[1]!.end.money = { A: 5000, B: 2800 };
+  // ei=-1 → 第 2 回合未完成：元数据停留在第 1 回合快照
+  const m1 = liveMeta(maps, { mi: 0, ri: 1, ei: -1 });
+  assert.equal(m1.ults.b1, 3);
+  assert.equal(m1.money?.A, 3900);
+  // ei=0 ≥ events.length(1) → 第 2 回合完成：快照推进
+  const m2 = liveMeta(maps, { mi: 0, ri: 1, ei: 1 });
+  assert.equal(m2.ults.b1, 4);
+  assert.equal(m2.ults.a1, 7);
+  assert.equal(m2.money?.A, 5000);
+  // 旧档：无 ults/money 字段 → 空对象与 null
+  const bare = [mapRec({}, [[{ t: "kill", s: "a1", v: "b1" }]])];
+  const m3 = liveMeta(bare, { mi: 0, ri: 0, ei: 0 });
+  assert.deepEqual(m3.ults, {});
+  assert.equal(m3.money, null);
 });

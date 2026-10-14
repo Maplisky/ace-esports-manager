@@ -9,7 +9,7 @@ import { AgentIcon, PlayerFace, TeamLogo } from "./Avatar.tsx";
 import { MAP_BY_ID } from "../../core/data/maps.ts";
 import { tacticLabel } from "../../core/data/mapplans.ts";
 import { Tactical2D } from "./Tactical2D.tsx";
-import { liveLines, liveAcs, summarizeMatch, pickMvps, type StatRow } from "../../core/sim/matchstats.ts";
+import { liveLines, liveMeta, summarizeMatch, pickMvps, type StatRow } from "../../core/sim/matchstats.ts";
 import type { GameState, MatchRecord, RoundEvent } from "../../core/types.ts";
 
 const SLOW_MS = 850;
@@ -270,9 +270,10 @@ export function MatchPlayer(props: { record: MatchRecord; state: GameState; onCl
   );
 }
 
-/** 对局中双方选手实时战绩板（GDD §5.4）：K/D/★FK/助攻/实时 ACS（已完成回合口径），阵亡灰显 */
+/** 对局中双方选手实时战绩板（GDD §5.4，转播样式）：特工头像 + K/D/A + 大招进度 + 经济池 */
 function LiveScoreboard({ record, state, pos }: { record: MatchRecord; state: GameState; pos: Pos }) {
   const live = useMemo(() => liveLines(record.maps, pos), [record.maps, pos]);
+  const meta = useMemo(() => liveMeta(record.maps, pos), [record.maps, pos]);
   const map = record.maps[pos.mi];
   const deadNow = new Set<string>();
   for (const e of (map?.rounds[pos.ri]?.events ?? []).slice(0, Math.max(0, pos.ei + 1))) {
@@ -281,49 +282,92 @@ function LiveScoreboard({ record, state, pos }: { record: MatchRecord; state: Ga
   const ign = (pid: string) => state.players[pid]?.ign ?? pid;
   const teamA = state.teams[record.teamA];
   const teamB = state.teams[record.teamB];
+  const fmtMoney = (n: number) => "$" + Math.round(n).toLocaleString("en-US");
+
   const col = (team: typeof teamA) =>
-    (team?.starters ?? []).map((pid) => ({ pid, line: live.lines[pid] ?? { k: 0, d: 0, a: 0, fk: 0, dmg: 0 }, dead: deadNow.has(pid) }));
+    (team?.starters ?? []).map((pid) => {
+      const l = live.lines[pid] ?? { k: 0, d: 0, a: 0, fk: 0, dmg: 0 };
+      const ult = meta.ults[pid];
+      const agent = map?.agents?.[pid];
+      return { pid, k: l.k, d: l.d, a: l.a, ult, agent, dead: deadNow.has(pid) };
+    });
   const rowsA = col(teamA);
   const rowsB = col(teamB);
-  const acsColor = (v: number) => (v >= 230 ? "var(--green)" : v < 110 ? "var(--muted)" : "inherit");
-  const row = (r: { pid: string; line: { k: number; d: number; a: number; fk: number; dmg: number }; dead: boolean }) => (
-    <div
-      key={r.pid}
-      className="small"
-      style={{
-        display: "flex", alignItems: "center", gap: 8, padding: "1px 6px", borderRadius: 4,
-        background: r.dead ? "rgba(238,80,80,0.10)" : "rgba(255,255,255,0.03)",
-        opacity: r.dead ? 0.5 : 1,
-      }}
-    >
-      <span style={{ minWidth: 76, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ign(r.pid)}</span>
-      <span className="muted" style={{ fontVariantNumeric: "tabular-nums", width: 52, textAlign: "right" }}>
-        <b style={{ color: "inherit" }}>{r.line.k}</b>/{r.line.d}
-        {r.line.fk > 0 && <span style={{ color: "#fb923c" }}>★{r.line.fk}</span>}
-      </span>
-      <span className="muted" style={{ fontVariantNumeric: "tabular-nums", width: 24, textAlign: "right" }}>{r.line.a}</span>
-      <span style={{ fontVariantNumeric: "tabular-nums", width: 34, textAlign: "right", fontWeight: 700, color: acsColor(liveAcs(r.line.dmg, live.rounds)) }}>
-        {liveAcs(r.line.dmg, live.rounds)}
-      </span>
+
+  const head = (team: typeof teamA, color: string) => {
+    const money = team === teamA ? meta.money?.A : meta.money?.B;
+    return (
+      <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "3px 8px", borderBottom: "1px solid var(--line)", marginBottom: 3 }}>
+        {team && <TeamLogo team={team} size={16} />}
+        <b style={{ color, fontSize: 12 }}>{team?.tag}</b>
+        {money !== undefined && money !== null && (
+          <span style={{ marginLeft: "auto", fontVariantNumeric: "tabular-nums", fontSize: 11, color: "var(--green)" }}>{fmtMoney(money)}</span>
+        )}
+      </div>
+    );
+  };
+  const rowHead = (
+    <div className="muted" style={{ display: "flex", gap: 6, padding: "0 8px 2px", fontSize: 10 }}>
+      <span style={{ width: 118 }}>选手</span>
+      <span style={{ width: 26, textAlign: "center" }}>K</span>
+      <span style={{ width: 26, textAlign: "center" }}>D</span>
+      <span style={{ width: 26, textAlign: "center" }}>A</span>
+      <span style={{ width: 58, textAlign: "center" }}>大招</span>
+      <span style={{ width: 62, textAlign: "right" }}>经济</span>
     </div>
   );
-  const head = (tag: string | undefined, color: string) => (
-    <div className="muted small" style={{ padding: "0 6px", color, display: "flex", gap: 8 }}>
-      <span style={{ minWidth: 76 }}>{tag} 战绩</span>
-      <span style={{ width: 52, textAlign: "right" }}>K/D</span>
-      <span style={{ width: 24, textAlign: "right" }}>A</span>
-      <span style={{ width: 34, textAlign: "right" }}>ACS</span>
-    </div>
-  );
+  const row = (r: { pid: string; k: number; d: number; a: number; ult?: number; agent?: string; dead: boolean }, accent: string, teamMoney: number | null | undefined) => {
+    const ultReady = r.ult !== undefined && r.ult >= 7;
+    const agentDef = r.agent ? AGENT_BY_ID.get(r.agent) : undefined;
+    return (
+      <div
+        key={r.pid}
+        style={{
+          display: "flex", alignItems: "center", gap: 6, padding: "2.5px 8px", borderRadius: 5,
+          background: r.dead ? "rgba(238,80,80,0.10)" : "rgba(255,255,255,0.028)",
+          opacity: r.dead ? 0.5 : 1,
+          borderLeft: `2px solid ${accent}`,
+          fontSize: 11.5,
+        }}
+      >
+        <span style={{ width: 118, display: "flex", alignItems: "center", gap: 5, overflow: "hidden", whiteSpace: "nowrap" }}>
+          {r.agent && <AgentIcon agentId={r.agent} size={17} name={agentDef?.name} />}
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{ign(r.pid)}</span>
+        </span>
+        <span style={{ width: 26, textAlign: "center", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{r.k}</span>
+        <span className="muted" style={{ width: 26, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>{r.d}</span>
+        <span className="muted" style={{ width: 26, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>{r.a}</span>
+        <span style={{ width: 58, display: "flex", alignItems: "center", gap: 4 }}>
+          {r.ult === undefined ? (
+            <span className="muted" style={{ fontSize: 10 }}>—</span>
+          ) : ultReady ? (
+            <span title="大招就绪" style={{ color: "#fbbf24", fontSize: 12, textShadow: "0 0 6px rgba(251,191,36,0.6)" }}>◆ 就绪</span>
+          ) : (
+            <>
+              <span className="muted" style={{ fontVariantNumeric: "tabular-nums", fontSize: 10.5, width: 20 }}>{r.ult}/7</span>
+              <span style={{ flex: 1, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.10)", overflow: "hidden" }}>
+                <span style={{ display: "block", height: "100%", width: `${((r.ult ?? 0) / 7) * 100}%`, background: "#8b7cf6", borderRadius: 2 }} />
+              </span>
+            </>
+          )}
+        </span>
+        <span className="muted" style={{ width: 62, textAlign: "right", fontVariantNumeric: "tabular-nums", fontSize: 10.5 }}>
+          {teamMoney != null ? fmtMoney(teamMoney) : "—"}
+        </span>
+      </div>
+    );
+  };
   return (
     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-      <div style={{ flex: 1, minWidth: 240, border: "1px solid var(--line)", borderRadius: 8, padding: "4px 6px", display: "flex", flexDirection: "column", gap: 2 }}>
-        {head(teamA?.tag, "var(--green)")}
-        {rowsA.map(row)}
+      <div style={{ flex: 1, minWidth: 265, border: "1px solid var(--line)", borderRadius: 8, padding: "5px 6px", display: "flex", flexDirection: "column", gap: 1.5, background: "rgba(74,222,128,0.03)" }}>
+        {head(teamA, "var(--green)")}
+        {rowHead}
+        {rowsA.map((r) => row(r, "var(--green)", meta.money?.A))}
       </div>
-      <div style={{ flex: 1, minWidth: 240, border: "1px solid var(--line)", borderRadius: 8, padding: "4px 6px", display: "flex", flexDirection: "column", gap: 2 }}>
-        {head(teamB?.tag, "#60a5fa")}
-        {rowsB.map(row)}
+      <div style={{ flex: 1, minWidth: 265, border: "1px solid var(--line)", borderRadius: 8, padding: "5px 6px", display: "flex", flexDirection: "column", gap: 1.5, background: "rgba(96,165,250,0.03)" }}>
+        {head(teamB, "#60a5fa")}
+        {rowHead}
+        {rowsB.map((r) => row(r, "#60a5fa", meta.money?.B))}
       </div>
     </div>
   );

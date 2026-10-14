@@ -264,6 +264,10 @@ export interface RoundRecord {
     assists?: string[];
     /** 回合残伤（选手 id → 非击杀伤害；实时 ACS 揭示用，旧档缺省 {}） */
     dmgBonus?: Record<string, number>;
+    /** 回合末大招进度（就绪=7；旧档缺省 {}） */
+    ults?: Record<string, number>;
+    /** 回合末经济池（team money，旧档缺省 null） */
+    money?: { A: number; B: number } | null;
   };
 }
 

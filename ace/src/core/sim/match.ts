@@ -389,6 +389,16 @@ function simMap(state: GameState, mapId: string, A: SimTeam, B: SimTeam, rng: Rn
         score: [a, b],
         assists: endAssists,
         dmgBonus: endDmg,
+        // 大招进度（就绪=7 分封顶）与回合末经济池——局内战绩板展示（GDD §5.4 二期）
+        ults: (() => {
+          const snap: Record<string, number> = {};
+          for (const p of allPlayers) {
+            const ready = (A.players.some((q) => q.id === p.id) ? A.ultReady : B.ultReady).has(p.id);
+            snap[p.id] = ready ? 7 : (ultPoints.get(p.id) ?? 0);
+          }
+          return snap;
+        })(),
+        money: { A: A.money, B: B.money },
       },
     });
 

@@ -64,6 +64,32 @@ export function liveLines(
   return { lines: out, rounds };
 }
 
+export interface LiveMeta {
+  /** 大招进度快照（0-6 = 点数，7 = 就绪；来自最后已揭示回合的 end.ults，旧档缺省 {}） */
+  ults: Record<string, number>;
+  /** 回合末经济池（攻/守两队同一池内金额；旧档缺省 null） */
+  money: { A: number; B: number } | null;
+}
+
+/** 随回合结果揭示的元数据：大招进度与经济池（与 liveLines 的「已完成回合」口径一致） */
+export function liveMeta(maps: MapRecord[], upTo: { mi: number; ri: number; ei: number }): LiveMeta {
+  let ults: Record<string, number> = {};
+  let money: { A: number; B: number } | null = null;
+  for (let mi = 0; mi < maps.length && mi <= upTo.mi; mi++) {
+    const m = maps[mi]!;
+    const roundsHere = mi < upTo.mi ? m.rounds.length : upTo.ri + 1;
+    for (let ri = 0; ri < roundsHere; ri++) {
+      const r = m.rounds[ri]!;
+      const isCurrent = mi === upTo.mi && ri === upTo.ri;
+      if (!isCurrent || upTo.ei >= r.events.length) {
+        if (r.end.ults) ults = r.end.ults;
+        if (r.end.money) money = r.end.money;
+      }
+    }
+  }
+  return { ults, money };
+}
+
 export interface StatRow {
   pid: string;
   team: "A" | "B";
