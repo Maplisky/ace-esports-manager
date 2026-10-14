@@ -10,6 +10,7 @@ import { PlayerFace, SyntheticBadge } from "./Avatar.tsx";
 import { dutyTendencyOf } from "./AgentSelect.tsx";
 import { useMarketFilters, MarketFilterPanel } from "./MarketFilter.tsx";
 import { PlayerDossier } from "./PlayerDossier.tsx";
+import { CollapsibleCard } from "./CollapsibleCard.tsx";
 
 const ROLE_CN: Record<string, string> = { core: "核心", starter: "首发", rotation: "轮换", bench: "替补" };
 const DUTY_LABEL: Record<string, string> = { duelist: "决斗者", initiator: "先锋", controller: "控场", sentinel: "哨卫" };
@@ -33,7 +34,12 @@ export function TransferPage(props: { state: GameState }) {
   const allFreeAgents = Object.values(state.players).filter((p) => !p.teamId && p.injuredUntilDay <= state.day);
   // 身价预计算（排序比较器热路径避免 O(N log N) 次完整估值公式重算；必须先于消费它的派生）
   const valueOf = new Map(allFreeAgents.map((p) => [p.id, marketValue(p, team.tier)]));
-  const freeAgents = freeMkt.apply(allFreeAgents, valueOf);
+  // 他队挂牌选手并入自由市场（v0.8 用户反馈）：挂牌=公开可报价，身价已按 listed ×0.75
+  const listedOthers = Object.values(state.players).filter(
+    (p) => p.teamId && p.teamId !== myId && p.listed && p.injuredUntilDay <= state.day,
+  );
+  const valueOfAll = new Map([...allFreeAgents, ...listedOthers].map((p) => [p.id, marketValue(p, team.tier)]));
+  const freeAgents = freeMkt.apply([...allFreeAgents, ...listedOthers], valueOfAll);
   // 有主选手（他队）：问价卡全量展示（可筛选）
   const rosteredOthers = Object.values(state.players).filter(
     (p) => p.teamId && p.teamId !== myId && (!inquiryTeamId || p.teamId === inquiryTeamId) && p.injuredUntilDay <= state.day,
@@ -47,8 +53,10 @@ export function TransferPage(props: { state: GameState }) {
     <div>
       {/* 问价结果（原作式：置顶显示，从结果报价） */}
       {(state.inquiries.length > 0 || pendingInquiryCount > 0) && (
-        <div className="card">
-          <h3>📋 问价结果（{state.inquiries.filter((q) => q.done).length} 人可以报价 · {pendingInquiryCount} 人问价中）</h3>
+        <CollapsibleCard
+          title={`📋 问价结果（${state.inquiries.filter((q) => q.done).length} 人可以报价 · ${pendingInquiryCount} 人问价中）`}
+          defaultOpen
+        >
           {state.inquiries.slice().reverse().map((q) => {
             const p = state.players[q.playerId];
             if (!p) return null;
@@ -75,13 +83,12 @@ export function TransferPage(props: { state: GameState }) {
               </div>
             );
           })}
-        </div>
+        </CollapsibleCard>
       )}
 
       {/* 待答复挖角 */}
       {state.incomingBids.length > 0 && (
-        <div className="card">
-          <h3>💼 待答复报价（7 天内答复，逾期视为拒绝）</h3>
+        <CollapsibleCard title="💼 待答复报价（7 天内答复，逾期视为拒绝）" defaultOpen>
           {state.incomingBids.map((b) => {
             const p = state.players[b.playerId];
             if (!p) return null;
@@ -97,14 +104,15 @@ export function TransferPage(props: { state: GameState }) {
               </div>
             );
           })}
-        </div>
+        </CollapsibleCard>
       )}
 
       {/* 我的名单 */}
-      <div className="card">
-        <h3>👥 我的名单 · 挂牌与解约
-          <span className={`tag${inWindow ? " green" : " red"}`} style={{ marginLeft: 10 }}>{inWindow ? "转会窗开启" : grace ?? "窗口已关"}</span>
-        </h3>
+      <CollapsibleCard
+        title={<>👥 我的名单 · 挂牌与解约 <span className={`tag${inWindow ? " green" : " red"}`} style={{ marginLeft: 10 }}>{inWindow ? "转会窗开启" : grace ?? "窗口已关"}</span></>}
+        defaultOpen={false}
+        collapsedSummary={<span className="muted small">{team.roster.length} 人</span>}
+      >
         <table>
           <thead>
             <tr><th>选手</th><th>能力</th><th>身价</th><th>年薪</th><th>合同</th><th>状态</th><th>操作</th></tr>
@@ -150,16 +158,19 @@ export function TransferPage(props: { state: GameState }) {
         <div className="muted small" style={{ marginTop: 8 }}>
           解约赔付剩余合同 40% · 挂牌身价 ×0.75 但更容易收到报价 · 长期坐板凳的选手会被人盯上
         </div>
-      </div>
+      </CollapsibleCard>
 
-      {/* 自由市场 */}
-      <div className="card">
-        <h3>
-          🛒 自由市场（{freeAgents.length}/{allFreeAgents.length} 人 · 报价花 1 行动力 · 问价免费）
-          <button className="small" style={{ marginLeft: 12 }} onClick={() => freeMkt.setShow(!freeMkt.show)}>
+      {/* 自由市场（含他队挂牌选手，v0.8 用户反馈） */}
+      <CollapsibleCard
+        title={`🛒 自由市场（${freeAgents.length}/${allFreeAgents.length} 人 · 报价花 1 行动力 · 问价免费）`}
+        defaultOpen
+        collapsedSummary={<span className="muted small">关注：{freeAgents.slice(0, 3).map((p) => p.ign).join("、") || "—"}</span>}
+      >
+        <div className="row" style={{ marginBottom: 10, alignItems: "center" }}>
+          <button className="small" onClick={() => freeMkt.setShow(!freeMkt.show)}>
             ⚙ 筛选器{freeMkt.activeCount > 0 && <span className="tag" style={{ marginLeft: 6 }}>{freeMkt.activeCount} 项生效</span>}
           </button>
-        </h3>
+        </div>
         {freeMkt.show && <MarketFilterPanel mf={freeMkt} />}
         <div className="row" style={{ gap: 10, marginBottom: 10, alignItems: "center" }}>
           <span className="row" style={{ gap: 4, alignItems: "center" }}>
@@ -176,7 +187,7 @@ export function TransferPage(props: { state: GameState }) {
         </div>
         <table>
           <thead>
-            <tr><th>选手</th><th>位置倾向</th><th>能力</th><th>潜力</th><th>年龄</th><th>身价参考</th><th></th></tr>
+            <tr><th>选手</th><th>所属</th><th>位置倾向</th><th>能力</th><th>潜力</th><th>年龄</th><th>身价参考</th><th></th></tr>
           </thead>
           <tbody>
             {freeAgents.map((p) => {
@@ -187,6 +198,16 @@ export function TransferPage(props: { state: GameState }) {
               <>
               <tr key={p.id}>
                 <td><span className="row" style={{ alignItems: "center", gap: 6 }}><PlayerFace p={p} size={22} showTag={false} /><span style={{ cursor: "pointer", textDecoration: "underline dotted" }} onClick={() => setDossier(p.id)}>{p.ign}</span><SyntheticBadge p={p} /></span></td>
+                <td className="muted small" style={{ whiteSpace: "nowrap" }}>
+                  {p.teamId ? (
+                    <span className="row" style={{ alignItems: "center", gap: 4 }}>
+                      {state.teams[p.teamId]?.name ?? "—"}
+                      <span className="tag orange">挂牌</span>
+                    </span>
+                  ) : (
+                    "自由市场"
+                  )}
+                </td>
                 <td className="small" style={{ whiteSpace: "nowrap" }}>
                   <span className="tag">{tendency.main}</span>
                   {tendency.second && <span className="muted small" style={{ marginLeft: 4 }}>{tendency.second}</span>}
@@ -222,16 +243,19 @@ export function TransferPage(props: { state: GameState }) {
           </tbody>
         </table>
         {!inWindow && <div className="muted small" style={{ marginTop: 6 }}>转会窗已关闭，等下一个窗口（季前 / 夏季窗口 / 休赛期）。</div>}
-      </div>
+      </CollapsibleCard>
 
       {/* 问价 · 找有主选手（原作式：全部有主选手可筛选，问价 2-5 天反馈要价+意向；解约金/noPoach 信息见反馈） */}
-      <div className="card">
-        <h3>
-          🎯 问价 · 找有主选手（{underContract.length}/{rosteredOthers.length} 人 · 问价花 1 行动力）
-          <button className="small" style={{ marginLeft: 12 }} onClick={() => underMkt.setShow(!underMkt.show)}>
+      <CollapsibleCard
+        title={`🎯 问价 · 找有主选手（${underContract.length}/${rosteredOthers.length} 人 · 问价花 1 行动力）`}
+        defaultOpen={false}
+        collapsedSummary={<span className="muted small">选俱乐部后逐人问价，2-5 天反馈要价与意向</span>}
+      >
+        <div className="row" style={{ marginBottom: 10, alignItems: "center" }}>
+          <button className="small" onClick={() => underMkt.setShow(!underMkt.show)}>
             ⚙ 筛选器{underMkt.activeCount > 0 && <span className="tag" style={{ marginLeft: 6 }}>{underMkt.activeCount} 项生效</span>}
           </button>
-        </h3>
+        </div>
         {underMkt.show && (
           <MarketFilterPanel
             mf={underMkt}
@@ -296,10 +320,9 @@ export function TransferPage(props: { state: GameState }) {
             })}
           </tbody>
         </table>
-      </div>
+      </CollapsibleCard>
 
-      <div className="card">
-        <h3>📰 转会动态</h3>
+      <CollapsibleCard title="📰 转会动态" defaultOpen={false} collapsedSummary={<span className="muted small">{feed.length} 条</span>}>
         {feed.length === 0 && <div className="muted small">还没有动态。</div>}
         {feed.map((n, i) => (
           <div key={i} className="news-item">
@@ -307,7 +330,7 @@ export function TransferPage(props: { state: GameState }) {
             {n.text}
           </div>
         ))}
-      </div>
+      </CollapsibleCard>
 
       {negPlayer && (
         <NegotiationModal
