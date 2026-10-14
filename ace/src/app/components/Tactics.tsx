@@ -112,12 +112,16 @@ export function TacticsPage(props: { state: GameState }) {
               const offDuty = isOffDuty(p, current);
               return (
                 <tr key={p.id}>
-                  <td>
-                    <span
-                      style={{ cursor: "pointer", textDecoration: pendingOut === p.id ? "line-through" : "underline dotted" }}
-                      onClick={() => setDossier(p.id)}
-                    >
-                      {p.ign}
+                  <td style={{ whiteSpace: "nowrap" }}>
+                    <span className="row" style={{ alignItems: "center", gap: 6 }}>
+                      <PlayerFace p={p} size={22} showTag={false} />
+                      <span
+                        style={{ cursor: "pointer", textDecoration: pendingOut === p.id ? "line-through" : "underline dotted" }}
+                        onClick={() => setDossier(p.id)}
+                      >
+                        {p.ign}
+                      </span>
+                      <SyntheticBadge p={p} />
                     </span>
                     {p.isIgl && <span className="tag" style={{ marginLeft: 6 }}>主指挥</span>}
                     {p.viceIgl && <span className="tag" style={{ marginLeft: 6 }}>副指挥</span>}
