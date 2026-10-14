@@ -20,7 +20,7 @@ for (const [id, zones] of Object.entries(GEN_ZONES)) {
   }
   const draw = (tactic, isAtk, color, roundN) => {
     DUTIES.forEach((duty, i) => {
-      const p = positionFor(id, { duty, isAttacking: isAtk, roundN, pid: duty + i, plantRevealed: false, side: isAtk ? 'bottom' : 'top', tactic, killsRevealed: 0, slot: i });
+      const p = positionFor(id, { duty, isAttacking: isAtk, roundN, pid: duty + i, side: isAtk ? 'bottom' : 'top', tactic, slot: i });
       html += '<circle cx="' + p.x + '" cy="' + p.y + '" r="8" fill="' + color + '" stroke="#000" opacity="0.9"/>';
     });
   };
