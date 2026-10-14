@@ -3,6 +3,7 @@ import type { GameState } from "../../core/types.ts";
 import { AGENT_BY_ID } from "../../core/data/agents.ts";
 import { useStore } from "../store.ts";
 import { PlayerFace, SyntheticBadge } from "./Avatar.tsx";
+import { PlayerDossier } from "./PlayerDossier.tsx";
 
 const DUTY_CN: Record<string, string> = { duelist: "决斗者", initiator: "先锋", controller: "控场", sentinel: "哨卫" };
 const ROLE_CN: Record<string, string> = { core: "核心", starter: "首发", rotation: "轮换", bench: "替补" };
@@ -45,6 +46,7 @@ export function SquadPage(props: { state: GameState }) {
   const myId = state.myTeamId ?? "";
   const team = state.teams[myId];
   const [swapTarget, setSwapTarget] = useState<string | null>(null);
+  const [dossier, setDossier] = useState<string | null>(null);
   if (!team) return null;
 
   const roster = team.roster.map((pid) => state.players[pid]!);
@@ -73,7 +75,7 @@ export function SquadPage(props: { state: GameState }) {
                   <td style={{ whiteSpace: "nowrap" }}>
                     <span className="row" style={{ alignItems: "center", gap: 6 }}>
                       <PlayerFace p={p} size={26} />
-                      <span>{p.ign}<SyntheticBadge p={p} />{p.isIgl && <span className="tag" style={{ marginLeft: 6 }}>指挥</span>}</span>
+                      <span style={{ cursor: "pointer", textDecoration: "underline dotted" }} onClick={() => setDossier(p.id)}>{p.ign}<SyntheticBadge p={p} />{p.isIgl && <span className="tag" style={{ marginLeft: 6 }}>指挥</span>}</span>
                     </span>
                   </td>
                   <td className="muted">{dutyOf(state, pid)}</td>
@@ -101,7 +103,7 @@ export function SquadPage(props: { state: GameState }) {
           <tbody>
             {bench.map((p) => (
               <tr key={p.id}>
-                <td style={{ whiteSpace: "nowrap" }}><span className="row" style={{ alignItems: "center", gap: 6 }}><PlayerFace p={p} size={22} />{p.ign}<SyntheticBadge p={p} /></span></td>
+                <td style={{ whiteSpace: "nowrap" }}><span className="row" style={{ alignItems: "center", gap: 6 }}><PlayerFace p={p} size={22} /><span style={{ cursor: "pointer", textDecoration: "underline dotted" }} onClick={() => setDossier(p.id)}>{p.ign}</span><SyntheticBadge p={p} /></span></td>
                 <td className="muted">{dutyOf(state, p.id)}</td>
                 <td><b>{p.overall}</b></td>
                 <td className="muted">{p.potential}</td>
@@ -164,6 +166,9 @@ export function SquadPage(props: { state: GameState }) {
             );
           })}
       </div>
+      {dossier && state.players[dossier] && (
+        <PlayerDossier state={state} player={state.players[dossier]!} onClose={() => setDossier(null)} />
+      )}
     </div>
   );
 }

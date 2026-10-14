@@ -425,6 +425,8 @@ export interface GameState {
   /** 轮换沟通豁免（本周已沟通的选手 id；周重置，每周 2 次） */
   rotationWaive: string[];
   rotationTalks: { week: number; used: number };
+  /** 练英雄（GDD §6.3）：pid → 目标英雄；≤5 人/周，周结算熟练 +4.2×效率（0.7+(意识+道具)/400），池外英雄 34 入池 */
+  agentTraining: Record<string, string>;
   /** 待决策事件卡队列（先进先出，玩家逐张处理；GDD §9.3） */
   pendingEvents: PendingEventCard[];
   /** 上次事件日（空回合补偿用） */

@@ -1,9 +1,10 @@
 import { useState } from "react";
 import type { GameState } from "../../core/types.ts";
 import { MAPS } from "../../core/data/maps.ts";
-import { AGENT_BY_ID } from "../../core/data/agents.ts";
+import { AGENTS, AGENT_BY_ID } from "../../core/data/agents.ts";
 import { INDIVIDUAL_OPTIONS, OPTION_BY_KEY, recommendFocus, XP_PER_DAY, XP_PER_ATTR_POINT } from "../../core/data/training.ts";
 import { useStore } from "../store.ts";
+import { AgentIcon, PlayerFace } from "./Avatar.tsx";
 
 const TEAM_SLOTS: { key: string; name: string; desc: string }[] = [
   { key: "map", name: "跑图", desc: "所选地图熟练 +0.4/天（上限 95）" },
@@ -43,6 +44,8 @@ function primaryDuty(state: GameState, pid: string): "duelist" | "initiator" | "
 export function TrainingPage(props: { state: GameState }) {
   const { state } = props;
   const setTeamSchedule = useStore((s) => s.setTeamSchedule);
+  const setAgentTraining = useStore((s) => s.setAgentTraining);
+  const [agentPicks, setAgentPicks] = useState<Record<string, string>>(() => ({ ...(state.agentTraining ?? {}) }));
   const myId = state.myTeamId ?? "";
   const team = state.teams[myId];
   const [slots, setSlots] = useState<string[]>(() =>
@@ -172,7 +175,57 @@ export function TrainingPage(props: { state: GameState }) {
         </div>
       </div>
 
-      <button
+            <div className="card" style={{ padding: "12px 16px", marginTop: 14 }}>
+        <h3>🎭 练英雄（GDD §6.3：最多 5 人/周，熟练 +4.2×效率/周；效率 = 0.7 +（意识+道具）/400）</h3>
+        <div className="muted small" style={{ margin: "6px 0" }}>
+          已选 {Object.values(agentPicks).filter(Boolean).length}/5 人 · 练非池内英雄从 34 熟练起步，达标后自动入池 · 上限 100（本命）
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 8 }}>
+          {(team?.roster ?? []).map((pid) => {
+            const p = state.players[pid]!;
+            const aid = agentPicks[pid] ?? "";
+            const inPool = !!aid && p.agentPool.includes(aid);
+            const curPro = aid ? (p.agentPro[aid] ?? (inPool ? 0 : 34)) : 0;
+            const eff = 0.7 + (p.attrs.awareness + p.attrs.utility) / 400;
+            const full = Object.values(agentPicks).filter(Boolean).length >= 5;
+            return (
+              <span key={pid} className="row" style={{ gap: 8, alignItems: "center" }}>
+                <PlayerFace p={p} size={26} showTag={false} />
+                <span className="small" style={{ minWidth: 60 }}>{p.ign}</span>
+                {aid && <AgentIcon agentId={aid} size={24} name={AGENT_BY_ID.get(aid)?.name} />}
+                <select
+                  value={aid}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setAgentPicks((prev) => {
+                      const n = { ...prev };
+                      if (!v) delete n[pid];
+                      else if (!full || n[pid]) n[pid] = v;
+                      return n;
+                    });
+                  }}
+                >
+                  <option value="">（不练）</option>
+                  <optgroup label="英雄池">
+                    {p.agentPool.map((a) => <option key={a} value={a}>{AGENT_BY_ID.get(a)?.name ?? a}（{Math.round(p.agentPro[a] ?? 0)}）</option>)}
+                  </optgroup>
+                  <optgroup label="新英雄（34 起步）">
+                    {AGENTS.filter((a) => !p.agentPool.includes(a.id)).map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+                  </optgroup>
+                </select>
+                {aid && <span className="muted small">{Math.round(curPro)} → {Math.min(100, Math.round((curPro + 4.2 * eff) * 10) / 10)}/周</span>}
+              </span>
+            );
+          })}
+        </div>
+        <div className="row" style={{ justifyContent: "flex-end", marginTop: 8 }}>
+          <button className="primary small" onClick={() => { void setAgentTraining(Object.fromEntries(Object.entries(agentPicks).filter(([, v]) => v))); }}>
+            📌 保存练英雄安排
+          </button>
+        </div>
+      </div>
+
+<button
         className="primary"
         onClick={() => {
           const finalMaps = maps.length ? maps : ["ascent"];

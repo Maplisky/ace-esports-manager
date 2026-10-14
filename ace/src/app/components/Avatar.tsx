@@ -86,3 +86,27 @@ export function SyntheticBadge({ p }: { p: Player }) {
     </span>
   );
 }
+
+/** 英雄头像（vlr.gg 图标；缺失回退名字） */
+export function AgentIcon({ agentId, size = 22, name }: { agentId: string; size?: number; name?: string }) {
+  return (
+    <span
+      style={{
+        width: size, height: size, borderRadius: "50%", background: "#2a2a33", color: "#ccc",
+        fontSize: Math.max(8, size * 0.36), display: "inline-flex", alignItems: "center",
+        justifyContent: "center", flex: "0 0 auto", overflow: "hidden",
+      }}
+      title={name ?? agentId}
+    >
+      <img
+        src={`assets/agents/${agentId}.png`}
+        alt={name ?? agentId}
+        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+        onError={(e) => {
+          (e.target as HTMLImageElement).style.display = "none";
+          (e.currentTarget.parentElement as HTMLElement).innerText = (name ?? agentId).slice(0, 2);
+        }}
+      />
+    </span>
+  );
+}

@@ -182,6 +182,14 @@ self.onmessage = (e: MessageEvent) => {
       if (msg.schedules) state.schedules = msg.schedules as Record<string, string>;
     }
     reply({ type: "snapshot", ...snapshot() });
+  } else if (type === "setAgentTraining") {
+    if (state) {
+      const picks = msg.picks as Record<string, string>;
+      const cur = state;
+      const entries = Object.entries(picks).filter(([pid, aid]) => cur.players[pid] && aid);
+      cur.agentTraining = Object.fromEntries(entries.slice(0, 5)); // ≤5 人守卫（GDD §6.3）
+    }
+    reply({ type: "snapshot", ...snapshot() });
   } else if (type === "getRecord") {
     const rec = records[msg.fixtureId as string] ?? null;
     reply({ type: "record", fixtureId: msg.fixtureId, record: rec ? structuredClone(rec) : null });

@@ -442,6 +442,22 @@ export function advanceDay(
     const weekIdx = Math.floor(state.day / 7);
     if (state.rotationTalks.week !== weekIdx) {
       state.rotationWaive = [];
+    // 练英雄周结算（GDD §6.3 v0.8）：≤5 人，+4.2×效率；池外英雄达 34 入池
+    const trainAgents = Object.entries(state.agentTraining ?? {}).slice(0, 5);
+    for (const [pid, agentId] of trainAgents) {
+      const p = state.players[pid];
+      if (!p || p.teamId !== state.myTeamId || p.injuredUntilDay > state.day) continue;
+      const eff = 0.7 + (p.attrs.awareness + p.attrs.utility) / 400;
+      const gain = 4.2 * eff;
+      // 池外英雄从 34 基线起步（GDD §6.3：34 入池——首周结算即达标入池）
+      const cur = p.agentPool.includes(agentId) ? (p.agentPro[agentId] ?? 34) : Math.max(34, p.agentPro[agentId] ?? 0);
+      if (cur >= 100) continue;
+      p.agentPro[agentId] = Math.min(100, cur + gain);
+      if (!p.agentPool.includes(agentId) && p.agentPro[agentId]! >= 34) {
+        p.agentPool.push(agentId);
+        state.news.push({ day: state.day, kind: "league", text: `🎭 ${p.ign} 的 ${agentId} 练习达标（34），正式进入英雄池。` });
+      }
+    }
       state.rotationTalks = { week: weekIdx, used: 0 };
     }
     // 商务周结算：赞助/直播收入入账 + 邀约刷新（GDD §8.4）

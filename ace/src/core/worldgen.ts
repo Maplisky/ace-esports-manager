@@ -452,7 +452,8 @@ export function generateWorld(seed: number): GameState {
     gigOffers: [],
     finances: { log: [] },
     rotationWaive: [],
-    rotationTalks: { week: 0, used: 0 },    manager: {
+    rotationTalks: { week: 0, used: 0 },
+    agentTraining: {},    manager: {
       name: "经理",
       reputation: 40,
       skills: { training: 50, negotiation: 50, tactics: 50, scouting: 50, medical: 50, business: 50, locker: 50, youth: 50 },

@@ -7,6 +7,7 @@ import { AGENT_BY_ID } from "../../core/data/agents.ts";
 import { marketValue, salaryExpectation, inTransferWindow } from "../../core/sim/transfer.ts";
 import { useStore } from "../store.ts";
 import { PlayerFace, SyntheticBadge } from "./Avatar.tsx";
+import { PlayerDossier } from "./PlayerDossier.tsx";
 
 const ROLE_CN: Record<string, string> = { core: "核心", starter: "首发", rotation: "轮换", bench: "替补" };
 const fmt = (v: number) => (v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(1)}M` : `$${Math.round(v / 1000)}K`);
@@ -14,6 +15,7 @@ const fmt = (v: number) => (v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(1)}M` :
 export function TransferPage(props: { state: GameState }) {
   const { state } = props;
   const { respondBid, listToggle, releasePlayer, startNegotiation } = useStore();
+  const [dossier, setDossier] = useState<string | null>(null);
   const myId = state.myTeamId ?? "";
   const team = state.teams[myId];
   const [negPlayer, setNegPlayer] = useState<Player | null>(null);
@@ -67,7 +69,7 @@ export function TransferPage(props: { state: GameState }) {
               return (
                 <tr key={pid}>
                   <td>
-                    <span className="row" style={{ alignItems: "center", gap: 6 }}><PlayerFace p={p} size={20} />{p.ign}</span>
+                    <span className="row" style={{ alignItems: "center", gap: 6 }}><PlayerFace p={p} size={20} /><span style={{ cursor: "pointer", textDecoration: "underline dotted" }} onClick={() => setDossier(p.id)}>{p.ign}</span></span>
                     {p.listed && <span className="tag orange" style={{ marginLeft: 6 }}>挂牌</span>}
                     {p.noPoach && <span className="tag" style={{ marginLeft: 6 }}>保护</span>}
                   </td>
@@ -114,7 +116,7 @@ export function TransferPage(props: { state: GameState }) {
               const names = p.agentPool.map((a) => AGENT_BY_ID.get(a)?.name ?? a).join(" / ");
               return (
               <tr key={p.id}>
-                <td><span className="row" style={{ alignItems: "center", gap: 6 }}><PlayerFace p={p} size={22} showTag={false} />{p.ign}<SyntheticBadge p={p} /></span></td>
+                <td><span className="row" style={{ alignItems: "center", gap: 6 }}><PlayerFace p={p} size={22} showTag={false} /><span style={{ cursor: "pointer", textDecoration: "underline dotted" }} onClick={() => setDossier(p.id)}>{p.ign}</span><SyntheticBadge p={p} /></span></td>
                 <td className="muted small">{names}</td>
                 <td><b>{p.overall}</b></td>
                 <td className="muted">{p.potential}</td>

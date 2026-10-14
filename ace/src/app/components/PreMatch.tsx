@@ -5,7 +5,9 @@
  */
 import { useMemo, useRef, useState } from "react";
 import type { GameState, Player } from "../../core/types.ts";
-import { AGENTS } from "../../core/data/agents.ts";
+import { AGENTS, AGENT_BY_ID } from "../../core/data/agents.ts";
+import { computeFit } from "../../core/sim/fit.ts";
+import { PlayerFace, AgentIcon } from "./Avatar.tsx";
 import { MAPS } from "../../core/data/maps.ts";
 import { intelOf, estimateMapStrength, starsOf } from "../../core/sim/intel.ts";
 import { hashString } from "../../core/rng.ts";
@@ -403,12 +405,21 @@ export function PreMatch(props: {
                       {preset && <span className="tag green">已套用</span>}
                     </span>
                   </h3>
-                  <div className="row" style={{ flexWrap: "wrap", gap: 8 }}>
+                  <div className="muted small" style={{ marginBottom: 8 }}>
+                    {m.sites} 点位 · 开阔 {Math.round(m.openness * 100)} / 垂直 {Math.round(m.vertical * 100)} / 走廊 {Math.round(m.corridor * 100)}
+                    <span style={{ marginLeft: 12 }}>对方图池评估 {starsOf(estimateMapStrength(state, opp, m))}★</span>
+                  </div>
+                  <div className="row" style={{ flexWrap: "wrap", gap: 10 }}>
                     {starterPlayers.map((p) => {
                       const current = picks[mapId]?.[p.id] ?? preset?.agents[p.id] ?? p.agentPool[0] ?? "omen";
+                      const curAgent = AGENT_BY_ID.get(current);
+                      const fit = computeFit(current, m);
+                      const pro = Math.round((p.agentPro[current] ?? 0) * 10) / 10;
                       return (
-                        <span key={p.id} className="row" style={{ gap: 4 }}>
-                          <span className="small">{p.ign}</span>
+                        <span key={p.id} className="row" style={{ gap: 6, alignItems: "center", background: "rgba(255,255,255,0.03)", borderRadius: 8, padding: "4px 8px" }}>
+                          <PlayerFace p={p} size={34} showTag={false} />
+                          <span className="small" style={{ minWidth: 64 }}>{p.ign}<span className="muted"> {p.overall}</span></span>
+                          <AgentIcon agentId={current} size={30} name={curAgent?.name} />
                           <select
                             value={current}
                             onChange={(e) => {
@@ -424,6 +435,10 @@ export function PreMatch(props: {
                               </option>
                             ))}
                           </select>
+                          <span className="small" style={{ display: "inline-flex", flexDirection: "column", lineHeight: 1.3, minWidth: 84 }}>
+                            <span>熟练 <b>{pro}</b>%</span>
+                            <span className={fit >= 1.06 ? "tag green" : fit <= 0.94 ? "tag orange" : "muted"} style={{ fontSize: 10 }}>图适 {Math.round(fit * 100)}%</span>
+                          </span>
                         </span>
                       );
                     })}
