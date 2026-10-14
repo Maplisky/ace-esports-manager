@@ -215,7 +215,7 @@ function makePlayer(
     commercialDays: 0,
     stream: null,
     listed: false,
-    releaseClause: 0,
+    releaseClause: rng.chance(0.06) ? Math.round(salaryFor(overall, tier) * 14 / 1000) * 1000 : 0,
     noPoach: false,
     promisedRole: "starter",
     injuredUntilDay: 0,
@@ -280,6 +280,9 @@ function makeRealPlayer(rng: Rng, vlrP: VlrPlayerStat, teamId: string, tier: 1 |
   const age = 19 + (h % 11);
   const overall = computeOverall(attrs);
   const growth = age <= 19 ? rng.range(6, 14) : age <= 22 ? rng.range(3, 9) : age <= 25 ? rng.range(0, 5) : 0;
+  // 解约金（GDD §8.2 用户需求完善）：明星 25% / 普通 8%，额度 ≈ 身价 ×1.5（salaryFor 同族曲线以美元计）
+  const releaseOdds = overall >= 80 ? 0.25 : 0.08;
+  const releaseClause = rng.chance(releaseOdds) ? Math.round(salaryFor(overall, tier) * 18 / 1000) * 1000 : 0;
 
   return {
     id: `R${vlrP.vlrId}`,
@@ -306,7 +309,7 @@ function makeRealPlayer(rng: Rng, vlrP: VlrPlayerStat, teamId: string, tier: 1 |
     commercialDays: 0,
     stream: null,
     listed: false,
-    releaseClause: 0,
+    releaseClause,
     noPoach: false,
     promisedRole: "starter",
     injuredUntilDay: 0,

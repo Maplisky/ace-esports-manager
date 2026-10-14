@@ -22,8 +22,12 @@ export function TransferPage(props: { state: GameState }) {
   const team = state.teams[myId];
   const [negPlayer, setNegPlayer] = useState<Player | null>(null);
   const [releaseTarget, setReleaseTarget] = useState<string | null>(null);
-  const [dutyFilter, setDutyFilter] = useState(""); // ""=全部 / duelist…（按主职业）
-  const [agentFilter, setAgentFilter] = useState(""); // ""=全部 / 英雄 id（池含）
+  const [dutySet, setDutySet] = useState<Set<string>>(new Set()); // 位置多选（按主职业）
+  const [agentSet, setAgentSet] = useState<Set<string>>(new Set()); // 英雄多选（池含任一）
+  const [iglFilter, setIglFilter] = useState(""); // ""不限 / main / vice / none
+  const [hideSynthetic, setHideSynthetic] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [inquiryTeamId, setInquiryTeamId] = useState(""); // 有主问价：目标队伍
   const [minOvr, setMinOvr] = useState("");
   const [minPot, setMinPot] = useState("");
   const [ageMax, setAgeMax] = useState("");
@@ -39,8 +43,12 @@ export function TransferPage(props: { state: GameState }) {
   // 筛选 + 排序（用户需求：按位置/英雄/能力/潜力/年龄/身价）
   const freeAgents = allFreeAgents
     .filter((p) => {
-      if (dutyFilter && dutyTendencyOf(p).main !== DUTY_LABEL[dutyFilter]) return false;
-      if (agentFilter && !p.agentPool.includes(agentFilter)) return false;
+      if (dutySet.size > 0 && !dutySet.has(dutyTendencyOf(p).mainKey)) return false;
+      if (agentSet.size > 0 && !p.agentPool.some((a) => agentSet.has(a))) return false;
+      if (iglFilter === "main" && !p.isIgl) return false;
+      if (iglFilter === "vice" && !(p.isIgl || p.viceIgl)) return false;
+      if (iglFilter === "none" && (p.isIgl || p.viceIgl)) return false;
+      if (hideSynthetic && p.synthetic) return false;
       if (minOvr && p.overall < Number(minOvr)) return false;
       if (minPot && p.potential < Number(minPot)) return false;
       if (ageMax && p.age > Number(ageMax)) return false;
@@ -57,6 +65,9 @@ export function TransferPage(props: { state: GameState }) {
         default: return valueOf.get(b.id)! - valueOf.get(a.id)!;
       }
     });
+  const activeFilterCount =
+    dutySet.size + agentSet.size + (iglFilter ? 1 : 0) + (hideSynthetic ? 1 : 0) +
+    (minOvr ? 1 : 0) + (minPot ? 1 : 0) + (ageMax ? 1 : 0) + (minValue ? 1 : 0);
   const pendingInquiryCount = state.inquiries.filter((q) => !q.done).length;
   const feed = state.transferFeed.slice(-12).reverse();
 
@@ -171,39 +182,86 @@ export function TransferPage(props: { state: GameState }) {
 
       {/* 自由市场 */}
       <div className="card">
-        <h3>🛒 自由市场（{freeAgents.length}/{allFreeAgents.length} 人 · 报价花 1 行动力 · 问价免费）</h3>
-        {/* 筛选/排序条 */}
-        <div className="row" style={{ flexWrap: "wrap", gap: 10, marginBottom: 10, alignItems: "center" }}>
-          <span className="row" style={{ gap: 4, alignItems: "center" }}>
-            <span className="muted small">位置</span>
-            <select value={dutyFilter} onChange={(e) => setDutyFilter(e.target.value)}>
-              <option value="">全部</option>
-              {DUTY_ORDER.map((d) => <option key={d.key} value={d.key}>{d.label}</option>)}
-            </select>
-          </span>
-          <span className="row" style={{ gap: 4, alignItems: "center" }}>
-            <span className="muted small">英雄</span>
-            <select value={agentFilter} onChange={(e) => setAgentFilter(e.target.value)}>
-              <option value="">全部</option>
-              {AGENTS.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
-            </select>
-          </span>
-          <span className="row" style={{ gap: 4, alignItems: "center" }}>
-            <span className="muted small">能力≥</span>
-            <input type="number" value={minOvr} onChange={(e) => setMinOvr(e.target.value)} style={{ width: 56 }} />
-          </span>
-          <span className="row" style={{ gap: 4, alignItems: "center" }}>
-            <span className="muted small">潜力≥</span>
-            <input type="number" value={minPot} onChange={(e) => setMinPot(e.target.value)} style={{ width: 56 }} />
-          </span>
-          <span className="row" style={{ gap: 4, alignItems: "center" }}>
-            <span className="muted small">年龄≤</span>
-            <input type="number" value={ageMax} onChange={(e) => setAgeMax(e.target.value)} style={{ width: 56 }} />
-          </span>
-          <span className="row" style={{ gap: 4, alignItems: "center" }}>
-            <span className="muted small">身价≥（$K）</span>
-            <input type="number" value={minValue} onChange={(e) => setMinValue(e.target.value)} style={{ width: 70 }} />
-          </span>
+        <h3>
+          🛒 自由市场（{freeAgents.length}/{allFreeAgents.length} 人 · 报价花 1 行动力 · 问价免费）
+          <button className="small" style={{ marginLeft: 12 }} onClick={() => setShowFilters(!showFilters)}>
+            ⚙ 筛选器{activeFilterCount > 0 && <span className="tag" style={{ marginLeft: 6 }}>{activeFilterCount} 项生效</span>}
+          </button>
+        </h3>
+        {showFilters && (
+          <div className="card" style={{ padding: "10px 14px", marginBottom: 10, background: "rgba(255,255,255,0.03)" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: 12 }}>
+              <div>
+                <div className="muted small" style={{ marginBottom: 4, fontWeight: 700 }}>位置（可多选，按主职业）</div>
+                {DUTY_ORDER.map((d) => (
+                  <label key={d.key} className="small" style={{ display: "block", cursor: "pointer" }}>
+                    <input
+                      type="checkbox"
+                      checked={dutySet.has(d.key)}
+                      onChange={(e) => {
+                        const n = new Set(dutySet);
+                        if (e.target.checked) n.add(d.key);
+                        else n.delete(d.key);
+                        setDutySet(n);
+                      }}
+                    />{" "}
+                    {d.label}
+                  </label>
+                ))}
+              </div>
+              <div>
+                <div className="muted small" style={{ marginBottom: 4, fontWeight: 700 }}>指挥身份</div>
+                {[["", "不限"], ["main", "仅主指挥"], ["vice", "主/副指挥"], ["none", "无指挥身份"]].map(([v, l]) => (
+                  <label key={v} className="small" style={{ display: "block", cursor: "pointer" }}>
+                    <input type="radio" name="iglFilter" checked={iglFilter === v} onChange={() => setIglFilter(v)} /> {l}
+                  </label>
+                ))}
+              </div>
+              <div>
+                <div className="muted small" style={{ marginBottom: 4, fontWeight: 700 }}>范围</div>
+                <div className="small" style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  <span>能力≥ <input type="number" value={minOvr} onChange={(e) => setMinOvr(e.target.value)} style={{ width: 52 }} /></span>
+                  <span>潜力≥ <input type="number" value={minPot} onChange={(e) => setMinPot(e.target.value)} style={{ width: 52 }} /></span>
+                  <span>年龄≤ <input type="number" value={ageMax} onChange={(e) => setAgeMax(e.target.value)} style={{ width: 48 }} /></span>
+                  <span>身价≥ <input type="number" value={minValue} onChange={(e) => setMinValue(e.target.value)} style={{ width: 64 }} />K$</span>
+                </div>
+                <label className="small" style={{ display: "block", marginTop: 6, cursor: "pointer" }}>
+                  <input type="checkbox" checked={hideSynthetic} onChange={(e) => setHideSynthetic(e.target.checked)} /> 隐藏虚构选手（只看 vlr 真实数据）
+                </label>
+              </div>
+              <div>
+                <div className="muted small" style={{ marginBottom: 4, fontWeight: 700 }}>英雄池含（可多选）</div>
+                <div style={{ maxHeight: 132, overflowY: "auto", display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
+                  {AGENTS.map((a) => (
+                    <label key={a.id} className="small" style={{ cursor: "pointer" }}>
+                      <input
+                        type="checkbox"
+                        checked={agentSet.has(a.id)}
+                        onChange={(e) => {
+                          const n = new Set(agentSet);
+                          if (e.target.checked) n.add(a.id);
+                          else n.delete(a.id);
+                          setAgentSet(n);
+                        }}
+                      />{" "}
+                      {a.name}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="row" style={{ justifyContent: "flex-end", marginTop: 8 }}>
+              <button
+                className="small"
+                onClick={() => { setDutySet(new Set()); setAgentSet(new Set()); setIglFilter(""); setMinOvr(""); setMinPot(""); setAgeMax(""); setMinValue(""); setHideSynthetic(false); }}
+              >
+                清空筛选
+              </button>
+            </div>
+          </div>
+        )}
+        {/* 快捷排序（常驻） */}
+        <div className="row" style={{ gap: 10, marginBottom: 10, alignItems: "center" }}>
           <span className="row" style={{ gap: 4, alignItems: "center" }}>
             <span className="muted small">排序</span>
             <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
@@ -264,6 +322,69 @@ export function TransferPage(props: { state: GameState }) {
           </tbody>
         </table>
         {!inWindow && <div className="muted small" style={{ marginTop: 6 }}>转会窗已关闭，等下一个窗口（季前 / 夏季窗口 / 休赛期）。</div>}
+      </div>
+
+      {/* 问价 · 找有主球员（原作式：选队伍 → 对其 roster 问价，2-5 天反馈要价+意向；解约金/noPoach 信息见反馈） */}
+      <div className="card">
+        <h3>🎯 问价 · 找有主球员</h3>
+        <div className="row" style={{ gap: 10, alignItems: "center", marginBottom: 10 }}>
+          <span className="muted small">选择俱乐部</span>
+          <select value={inquiryTeamId} onChange={(e) => setInquiryTeamId(e.target.value)}>
+            <option value="">（选择队伍）</option>
+            {Object.values(state.teams)
+              .filter((t) => t.id !== myId)
+              .sort((a, b) => b.reputation - a.reputation)
+              .map((t) => (
+                <option key={t.id} value={t.id}>{t.name}（{t.regionId} · {t.tier === 1 ? "VCT" : "挑战者"}）</option>
+              ))}
+          </select>
+          <span className="muted small">问价花 1 行动力不花钱，2-5 天后给出要价与本人意向。</span>
+        </div>
+        {inquiryTeamId && state.teams[inquiryTeamId] && (
+          <table>
+            <thead>
+              <tr><th>选手</th><th>位置倾向</th><th>能力</th><th>身价参考</th><th>解约金</th><th></th></tr>
+            </thead>
+            <tbody>
+              {state.teams[inquiryTeamId]!.roster.map((pid) => {
+                const p = state.players[pid]!;
+                const tendency = dutyTendencyOf(p);
+                const inquiryQ = state.inquiries.find((q) => q.playerId === pid && !q.done);
+                const inquiryDone = state.inquiries.filter((q) => q.playerId === pid && q.done).slice(-1)[0];
+                return (
+                  <tr key={pid}>
+                    <td>
+                      <span className="row" style={{ alignItems: "center", gap: 6 }}>
+                        <PlayerFace p={p} size={22} showTag={false} />
+                        <span style={{ cursor: "pointer", textDecoration: "underline dotted" }} onClick={() => setDossier(p.id)}>{p.ign}</span>
+                        {p.isIgl && <span className="tag" style={{ marginLeft: 4 }}>主指挥</span>}
+                        {p.viceIgl && <span className="muted small" style={{ marginLeft: 4 }}>副指挥</span>}
+                        {p.listed && <span className="tag orange" style={{ marginLeft: 4 }}>挂牌中</span>}
+                        {p.noPoach && <span className="tag red" style={{ marginLeft: 4 }}>noPoach</span>}
+                      </span>
+                    </td>
+                    <td className="small" style={{ whiteSpace: "nowrap" }}>
+                      <span className="tag">{tendency.main}</span>
+                      {tendency.second && <span className="muted small" style={{ marginLeft: 4 }}>{tendency.second}</span>}
+                    </td>
+                    <td><b>{p.overall}</b></td>
+                    <td className="muted">{fmt(valueOf.get(pid) ?? marketValue(p, team.tier))}</td>
+                    <td className="muted small">{p.releaseClause > 0 ? fmt(p.releaseClause) : "—"}</td>
+                    <td style={{ whiteSpace: "nowrap" }}>
+                      <button
+                        className="small"
+                        disabled={!inWindow || state.actionPoints < 1 || !!inquiryQ}
+                        onClick={() => void askInquiry(pid)}
+                      >
+                        {inquiryQ ? "问价中" : "问价"}
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
       </div>
 
       <div className="card">

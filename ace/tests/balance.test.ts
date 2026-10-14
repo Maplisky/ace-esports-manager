@@ -58,13 +58,13 @@ test("T1：87 vs 72 → BO3 胜率 68-78%（2 对夹具 × 500 场均值）", ()
   assert.ok(rate >= 0.68 && rate <= 0.78, `强队胜率 ${rate.toFixed(3)} 超出 [0.68, 0.78]`);
 });
 
-test("T2：同分 → BO3 胜率 47-53%（4 对夹具 × 300 场均值）", () => {
+test("T2：同分 → BO3 胜率 47-53%（6 对夹具 × 400 场均值）", () => {
   const state = benchState(999);
   let wins = 0;
   let total = 0;
-  for (let pair = 0; pair < 4; pair++) {
+  for (let pair = 0; pair < 6; pair++) {
     const { a, b } = loadPair(state, pair, 78, 78);
-    for (let i = 0; i < 300; i++) {
+    for (let i = 0; i < 400; i++) {
       resetVitality(state);
       const r = simMatch(state, a, b, 3, 41277 + pair * 100000 + i, `T2-${pair}-${i}`);
       if (r.winner === "A") wins++;

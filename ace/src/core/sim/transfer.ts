@@ -63,6 +63,14 @@ export function evaluateOffer(state: GameState, p: Player, offer: OfferTerms, to
   if (offer.salary < insultLine) {
     return { insulting: true, chance: 0, objection: `薪资远低于他的期望（约 ${fmt(salaryExp)}/年）`, score: -99 };
   }
+  // 违约金条款（GDD §8.2）：报价 ≥ 解约金 → 强制放人（原队与选手意愿均不构成障碍）
+  if (p.releaseClause > 0 && offer.fee >= p.releaseClause) {
+    return { insulting: false, chance: 1, objection: `触发解约金条款（${fmt(p.releaseClause)}）——原队不得拒绝`, score: 99 };
+  }
+  // 抢人保护：noPoach 选手在解约金触发前不可被挖（可问价、报价拒）
+  if (p.noPoach) {
+    return { insulting: false, chance: 0, objection: "原队已激活抢人保护条款（noPoach），解约金触发前不接受报价", score: -80 };
+  }
   const fs: { v: number; why: string }[] = [];
   fs.push({ v: (offer.salary / salaryExp - 1) * 60, why: "薪资低于他的期望" });
   fs.push({ v: offer.signingBonus / Math.max(1, salaryExp) * 26, why: "签字费缺乏吸引力" });
@@ -115,6 +123,10 @@ export function finalizeOffer(state: GameState, offer: TransferOffer, rng: Rng):
   const toTeam = state.teams[offer.toTeam] as Team;
   const ev = evaluateOffer(state, p, offer, toTeam);
   if (ev.insulting) return { accepted: false, reason: `${p.ign} 认为这份报价缺乏诚意，谈判破裂。` };
+  // 解约金强制：不受 logistic 拒绝（触发条款即成交）
+  if (p.releaseClause > 0 && offer.fee >= p.releaseClause) {
+    return { accepted: true, reason: `${p.ign} 的解约金条款被触发（${fmt(p.releaseClause)}）——原队不得拒绝，交易强制完成。` };
+  }
   const accepted = rng.chance(ev.chance);
   return accepted
     ? { accepted: true, reason: `${p.ign} 接受了报价（${fmt(offer.fee)}，年薪 ${fmt(offer.salary)} × ${offer.years} 年）。` }
@@ -266,9 +278,17 @@ export function resolveInquiries(state: GameState): void {
       q.intent = "选手已不知所踪。";
       continue;
     }
-    q.askingFee = Math.round(marketValue(p, 1) * (0.9 + ((hashString(q.id) % 40) / 100)));
+    const base = marketValue(p, 1);
+    // 有主球员：俱乐部溢价 ×1.15（挂牌 ×0.75、noPoach 天价非卖）
+    const premium = !p.teamId ? 1 : p.noPoach ? 2.2 : p.listed ? 0.75 : 1.15;
+    q.askingFee = Math.round(base * premium * (0.9 + ((hashString(q.id) % 40) / 100)));
+    const clauses: string[] = [];
+    if (p.releaseClause > 0) clauses.push(`合同含解约金 ${fmt(p.releaseClause)}（报价≥即强制放人）`);
     const willing = !p.teamId || p.morale >= 45;
-    q.intent = willing ? (p.morale >= 65 ? "本人意愿强烈，愿谈。" : "本人愿意接触。") : "本人倾向留队，需要更大诚意。";
+    const intent = willing ? (p.morale >= 65 ? "本人意愿强烈，愿谈。" : "本人愿意接触。") : "本人倾向留队，需要更大诚意。";
+    if (p.noPoach && p.teamId) clauses.push("俱乐部明确表示非卖（noPoach）");
+    if (p.promisedRole === "core" && p.teamId) clauses.push("他是队内核心，挖角难度极高");
+    q.intent = intent + (clauses.length ? "（" + clauses.join("；") + "）" : "");
   }
   // 保留最近 20 条；完成超 30 天的清掉
   state.inquiries = state.inquiries.filter((q) => !q.done || state.day - q.resolveDay <= 30).slice(-20);
