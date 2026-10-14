@@ -30,12 +30,10 @@ export function Tactical2D(props: {
   const dead = new Set<string>();
   const killLinks: { k: string; v: string; first: boolean }[] = [];
   let plantRevealed = false;
-  let killsRevealed = 0;
   for (const e of revealed) {
     if (e.t === "kill" && e.s && e.v) {
       dead.add(e.v);
       killLinks.push({ k: e.s, v: e.v, first: !!e.first });
-      killsRevealed++;
     }
     if (e.t === "plant") plantRevealed = true;
   }
@@ -79,8 +77,8 @@ export function Tactical2D(props: {
     }));
   }
   // 事件序列位姿模拟（逐事件推进）：击杀者扑向受害者位置（交火发生在受害者处），
+  // 击杀者存活队友小步靠拢交火点（小规模接触的观感），
   // 下包后进攻方收拢包点、防守方回防——杜绝「A 点击倒 B 点敌人」的跨图击杀画面
-  const plant = plantZoneOf(mapRec.map, roundN, tacticAtk);
   for (const e of revealed) {
     if (e.t === "kill" && e.s && e.v) {
       const k = posOf.get(e.s);
@@ -88,9 +86,19 @@ export function Tactical2D(props: {
       if (k && v) {
         k.x = k.x + (v.x - k.x) * 0.85;
         k.y = k.y + (v.y - k.y) * 0.85;
+        // 击杀者的存活队友向交火点小步靠拢
+        const killer = pieceList.find((pc) => pc.pid === e.s);
+        if (killer) {
+          for (const pc of pieceList) {
+            if (pc.pid === e.s || pc.pid === e.v || pc.side !== killer.side || dead.has(pc.pid)) continue;
+            const p = posOf.get(pc.pid)!;
+            p.x = p.x + (v.x - p.x) * 0.12;
+            p.y = p.y + (v.y - p.y) * 0.12;
+          }
+        }
       }
-    } else if (e.t === "plant" && plant) {
-      const t = { x: plant.x + plant.w / 2, y: plant.y + plant.h / 2 };
+    } else if (e.t === "plant" && plantPos) {
+      const t = { x: plantPos.x + plantPos.w / 2, y: plantPos.y + plantPos.h / 2 };
       for (const pc of pieceList) {
         const p = posOf.get(pc.pid)!;
         const pull = atkSide === pc.side ? 0.8 : 0.5;

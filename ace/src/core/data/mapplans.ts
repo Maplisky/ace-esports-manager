@@ -1,7 +1,7 @@
 /**
  * 地图平面数据 v2（v0.9-5 对局美术打磨二期，GDD §5.4）：
  * 真实俯视图（valorant-api displayicon，本地 assets/maps/*.png）+ 官方 callouts 标定区域
- * （mapplans.gen.ts，node calibrate.mjs 生成）。坐标系 400×400，与底图逐像素对齐。
+ * （mapplans.zones.ts，map-overrides.json 经 apply-overrides.mjs 合并）。坐标系 400×400，与底图逐像素对齐。
  * 站位锚点按 开局战术×职责×攻防×回合事件 推演：布置 → 交火压进 → 下包收拢。
  */
 import { MAPS } from "./maps.ts";
@@ -77,7 +77,6 @@ export interface PosOpts {
 }
 
 const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
-const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
 function zoneCenter(z: PlanZone): { x: number; y: number } {
   return { x: z.x + z.w / 2, y: z.y + z.h / 2 };
