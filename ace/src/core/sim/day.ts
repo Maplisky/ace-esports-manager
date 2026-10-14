@@ -78,7 +78,7 @@ export function migrateLegacyComps(state: GameState): void {
   }
 }
 
-/** 开赛程：揭幕杯（跨赛区一级前 8）+ 双赛区双循环联赛（VCT-P/挑战者 × Stage1/Stage2）。Masters 待 Stage1 收官后抽签。按年份变化种子。 */
+/** 开赛程：揭幕杯（跨赛区一级前 8）+ 四赛区双循环联赛（VCT/挑战者 × Stage1/Stage2）。Masters 待 Stage1 收官后抽签。按年份变化种子。 */
 export function initSeasonFixtures(state: GameState): void {
   const rng = new Rng((state.seed ^ Math.imul(state.year, 0x9e3779b9)) >>> 0);
   const all = Object.values(state.teams);
@@ -91,7 +91,7 @@ export function initSeasonFixtures(state: GameState): void {
   const cupTeams = t1.slice().sort((a, b) => avgOverall(b.id) - avgOverall(a.id)).slice(0, 8).map((t) => t.id);
   state.comps["cup"] = { key: "cup", name: "揭幕杯", stage: "cup", teamIds: cupTeams, standings: {} };
   buildCup(state.fixtures, { comp: "cup", name: "揭幕杯", stage: "cup", teamIds: cupTeams, startDay: CALENDAR.cupStart + 1, gapDays: 8, bo: 3, rng });
-  // 双赛区：VCT-P + 挑战者联赛（Stage1/Stage2 双循环）
+  // 四赛区：VCT + 挑战者联赛（Stage1/Stage2 双循环）
   for (const st of ["stage1", "stage2"] as const) {
     const sName = st === "stage1" ? "Stage 1" : "Stage 2";
     const start = st === "stage1" ? CALENDAR.stage1Start : CALENDAR.stage2Start;
@@ -101,8 +101,8 @@ export function initSeasonFixtures(state: GameState): void {
       const rt2 = all.filter((t) => t.tier === 2 && (t.regionId ?? "xia") === r.id);
       const k1 = `${st}-${r.id}-t1`;
       const k2 = `${st}-${r.id}-t2`;
-      state.comps[k1] = { key: k1, name: `VCT-P ${r.label} · ${sName}`, stage: st, teamIds: rt1.map((t) => t.id), standings: {} };
-      state.comps[k2] = { key: k2, name: `挑战者联赛 ${r.label} · ${sName}`, stage: st, teamIds: rt2.map((t) => t.id), standings: {} };
+      state.comps[k1] = { key: k1, name: `VCT ${r.label} · ${sName}`, stage: st, teamIds: rt1.map((t) => t.id), standings: {} };
+      state.comps[k2] = { key: k2, name: `挑战者 ${r.label} · ${sName}`, stage: st, teamIds: rt2.map((t) => t.id), standings: {} };
       buildLeague(state.fixtures, { comp: k1, name: `${r.label}联赛`, stage: st, teamIds: rt1.map((t) => t.id), startDay: start + 2, endDay: end, bo: 3, rng });
       buildLeague(state.fixtures, { comp: k2, name: `${r.label}挑战者联赛`, stage: st, teamIds: rt2.map((t) => t.id), startDay: start + 2, endDay: end, bo: 3, rng });
     }
@@ -119,7 +119,7 @@ export function initSeasonFixtures(state: GameState): void {
   }
 }
 
-/** Masters 国际赛（GDD §7.3）：Stage1 双赛区 VCT-P 各前 4 晋级，夏季窗口单败淘汰 */
+/** Masters 国际赛（GDD §7.3）：Stage1 四赛区 VCT 各前 2 晋级，夏季窗口单败淘汰 */
 function buildMasters(state: GameState, notes: NewsItem[]): void {
   const rng = new Rng(hashString(`${state.seed}:masters:${state.year}`));
   const qualified: string[] = [];
@@ -505,6 +505,13 @@ export function advanceDay(
     const faRng = new Rng((state.seed ^ Math.imul(state.year, 0x5f5f)) >>> 0);
     const faScale = Math.max(1, Math.round(Object.keys(state.teams).length / 18));
     spawnFreeAgents(state, faRng, 8 * faScale + faRng.int(0, 4 * faScale));
+    // 自由池上限（v0.7 检错：AI 消化慢于年增 50，多年后市场页与存档膨胀）：保留最强 ~90 人
+    const fas = Object.values(state.players).filter((p) => !p.teamId);
+    const faCap = 90;
+    if (fas.length > faCap) {
+      const keep = new Set(fas.sort((a, b) => b.overall - a.overall).slice(0, faCap).map((p) => p.id));
+      for (const p of fas) if (!keep.has(p.id)) delete state.players[p.id];
+    }
     notes.push({ day: 1, kind: "league", important: true, text: `—— ${state.year} 赛季开始 · 季前准备 ——` });
   }
 

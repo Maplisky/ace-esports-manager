@@ -252,8 +252,11 @@ function makeRealPlayer(rng: Rng, vlrP: VlrPlayerStat, teamId: string, tier: 1 |
     for (const a of pool) agentPro[a] = rng.int(50, 85);
   }
   if (agentPool.length < 3) {
-    const extra = AGENTS.filter((a) => primaryDuty(a.duty) === usedDuty && !agentPool.includes(a.id));
-    agentPool.push(...rng.shuffle(extra).slice(0, 3 - agentPool.length).map((a) => a.id));
+    const extra = rng.shuffle(AGENTS.filter((a) => primaryDuty(a.duty) === usedDuty && !agentPool.includes(a.id))).slice(0, 3 - agentPool.length);
+    for (const a of extra) {
+      agentPool.push(a.id);
+      agentPro[a.id] = rng.int(45, 60); // 补位英雄给保底熟练（否则 familiarity 口径不一致）
+    }
   }
 
   // 年龄：vlr 无生日字段 → 按 hash 确定性合成 19-29（README 口径）
