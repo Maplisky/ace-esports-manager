@@ -55,6 +55,24 @@ export interface AdvanceResult {
   seasonEnded: boolean;
 }
 
+/** 旧档 comp key 迁移（v0.6-1）：单赛区旧命名 → 霞赛区新命名，否则过渡年夏窗找不到联赛（目标结算/冠军/Masters 抽签全部静默失效） */
+export function migrateLegacyComps(state: GameState): void {
+  const renames: Record<string, string> = {
+    "stage1-t1": "stage1-xia-t1",
+    "stage1-t2": "stage1-xia-t2",
+    "stage2-t1": "stage2-xia-t1",
+    "stage2-t2": "stage2-xia-t2",
+  };
+  for (const [oldK, newK] of Object.entries(renames)) {
+    if (!state.comps[oldK] || state.comps[newK]) continue;
+    state.comps[newK] = { ...state.comps[oldK]!, key: newK };
+    delete state.comps[oldK];
+    for (const f of state.fixtures) {
+      if (f.comp === oldK) f.comp = newK;
+    }
+  }
+}
+
 /** 开赛程：揭幕杯（跨赛区一级前 8）+ 双赛区双循环联赛（VCT-P/挑战者 × Stage1/Stage2）。Masters 待 Stage1 收官后抽签。按年份变化种子。 */
 export function initSeasonFixtures(state: GameState): void {
   const rng = new Rng((state.seed ^ Math.imul(state.year, 0x9e3779b9)) >>> 0);
@@ -259,6 +277,14 @@ function settleObjective(state: GameState, compKey: string, stageName: string, n
   });
 }
 
+/** 我的球队所在联赛 comp key（按赛区 + 级别；tier-2 球队对挑战者联赛结算，GDD §9.5） */
+function myLeagueCompKey(state: GameState, stage: "stage1" | "stage2"): string | null {
+  if (!state.myTeamId) return null;
+  const t = state.teams[state.myTeamId];
+  if (!t) return null;
+  return `${stage}-${t.regionId ?? "xia"}-t${t.tier}`;
+}
+
 /** 联赛冠军荣誉（career.titles 是退役转教练与名人堂的输入，GDD §8.3） */
 function awardLeagueTitle(state: GameState, compKey: string, notes: NewsItem[]): void {
   const table = Object.values(state.comps[compKey]?.standings ?? {}).sort(
@@ -306,13 +332,13 @@ export function advanceDay(
   } else if (state.day === CALENDAR.stage1Start) {
     notes.push({ day: state.day, kind: "league", text: "—— 进入 Stage 1 联赛 ——" });
     if (state.myTeamId) {
-      state.objective = { stage: "stage1", placeAtLeast: 4, text: "董事会要求：Stage 1 联赛进入前四。" };
+      const chal = state.teams[state.myTeamId]?.tier === 2;
+      state.objective = { stage: "stage1", placeAtLeast: 4, text: chal ? "董事会要求：Stage 1 挑战者联赛进入前四。" : "董事会要求：Stage 1 联赛进入前四。" };
       notes.push({ day: state.day, kind: "club", important: true, text: state.objective.text });
     }
   } else if (state.day === CALENDAR.summerStart) {
     // Stage1 收官：结算目标 + 冠军荣誉 + Masters 抽签
-    const myRegion = state.myTeamId ? (state.teams[state.myTeamId] as GameState["teams"][string] | undefined)?.regionId ?? "xia" : "xia";
-    settleObjective(state, `stage1-${myRegion}-t1`, "Stage 1", notes);
+    settleObjective(state, myLeagueCompKey(state, "stage1") ?? "stage1-xia-t1", "Stage 1", notes);
     for (const r of REGIONS) {
       awardLeagueTitle(state, `stage1-${r.id}-t1`, notes);
       awardLeagueTitle(state, `stage1-${r.id}-t2`, notes);
@@ -322,13 +348,12 @@ export function advanceDay(
   } else if (state.day === CALENDAR.stage2Start) {
     notes.push({ day: state.day, kind: "league", text: "—— 进入 Stage 2 联赛 ——" });
     if (state.myTeamId) {
-      state.objective = { stage: "stage2", placeAtLeast: 4, text: "董事会要求：Stage 2 联赛进入前四。" };
+      state.objective = { stage: "stage2", placeAtLeast: 4, text: (state.myTeamId ? state.teams[state.myTeamId]?.tier : 1) === 2 ? "董事会要求：Stage 2 挑战者联赛进入前四。" : "董事会要求：Stage 2 联赛进入前四。" };
       notes.push({ day: state.day, kind: "club", important: true, text: state.objective.text });
     }
   } else if (state.day === CALENDAR.offseasonStart) {
     // Stage2 收官
-    const myRegion = state.myTeamId ? (state.teams[state.myTeamId] as GameState["teams"][string] | undefined)?.regionId ?? "xia" : "xia";
-    settleObjective(state, `stage2-${myRegion}-t1`, "Stage 2", notes);
+    settleObjective(state, myLeagueCompKey(state, "stage2") ?? "stage2-xia-t1", "Stage 2", notes);
     for (const r of REGIONS) {
       awardLeagueTitle(state, `stage2-${r.id}-t1`, notes);
       awardLeagueTitle(state, `stage2-${r.id}-t2`, notes);
@@ -469,9 +494,10 @@ export function advanceDay(
     state.objective = null;
     state.boardConfidence = clamp(state.boardConfidence, 20, 90);
     initSeasonFixtures(state);
-    // 休赛期自由市场补强（GDD §6.5）：8-12 名新自由人
+    // 休赛期自由市场补强（GDD §6.5）：按队伍规模等比（18 队 8-12 名，36 队 16-24 名）
     const faRng = new Rng((state.seed ^ Math.imul(state.year, 0x5f5f)) >>> 0);
-    spawnFreeAgents(state, faRng, 8 + faRng.int(0, 4));
+    const faScale = Math.max(1, Math.round(Object.keys(state.teams).length / 18));
+    spawnFreeAgents(state, faRng, 8 * faScale + faRng.int(0, 4 * faScale));
     notes.push({ day: 1, kind: "league", important: true, text: `—— ${state.year} 赛季开始 · 季前准备 ——` });
   }
 

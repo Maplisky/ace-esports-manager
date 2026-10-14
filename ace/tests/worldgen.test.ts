@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { Rng, hashString } from "../src/core/rng.ts";
 import { generateWorld, computeOverall } from "../src/core/worldgen.ts";
-import { initSeasonFixtures, advanceDay, isLeapYear, daysInYear } from "../src/core/sim/day.ts";
+import { initSeasonFixtures, advanceDay, isLeapYear, daysInYear, migrateLegacyComps } from "../src/core/sim/day.ts";
 
 test("RNG：同种子序列一致，不同种子不同", () => {
   const a = new Rng(12345);
@@ -166,4 +166,63 @@ test("闰年：2028 为 366 天（GDD 日期表考虑闰年）", () => {
   assert.equal(daysInYear(2028), 366);
   assert.equal(daysInYear(2000), 366);
   assert.equal(daysInYear(2100), 365);
+});
+
+test("旧档迁移：comp key 改名后过渡年结算与翻年不失效（v0.6-1 兼容）", () => {
+  const state = generateWorld(2026);
+  initSeasonFixtures(state);
+  // 模拟 v0.5 旧档：单赛区、旧 comp key、无 regionId（四个联赛 comp 齐全）
+  const legacyState = generateWorld(2026);
+  legacyState.fixtures = [];
+  legacyState.comps = {};
+  for (const [newK, oldK] of [
+    ["stage1-xia-t1", "stage1-t1"],
+    ["stage1-xia-t2", "stage1-t2"],
+    ["stage2-xia-t1", "stage2-t1"],
+    ["stage2-xia-t2", "stage2-t2"],
+  ] as const) {
+    const src = state.comps[newK]!;
+    legacyState.comps[oldK] = { ...src, key: oldK, standings: {} };
+    for (const id of src.teamIds) {
+      legacyState.comps[oldK]!.standings[id] = { teamId: id, w: 0, l: 0, mapW: 0, mapL: 0, roundW: 0, roundL: 0, pts: 0 };
+    }
+  }
+  for (const f of state.fixtures) {
+    const map: Record<string, string> = {
+      "stage1-xia-t1": "stage1-t1", "stage1-xia-t2": "stage1-t2",
+      "stage2-xia-t1": "stage2-t1", "stage2-xia-t2": "stage2-t2",
+    };
+    if (map[f.comp]) legacyState.fixtures.push({ ...f, comp: map[f.comp]! });
+  }
+  for (const t of Object.values(legacyState.teams)) t.regionId = "xia";
+  legacyState.myTeamId = "T0";
+  // 迁移
+  migrateLegacyComps(legacyState);
+  assert.ok(legacyState.comps["stage1-xia-t1"], "旧 key 应改名");
+  assert.ok(!legacyState.comps["stage1-t1"], "旧 key 应删除");
+  assert.ok(legacyState.fixtures.every((f) => f.comp !== "stage1-t1" && f.comp !== "stage1-t2"), "fixture comp 同步改名");
+  // 重复迁移幂等
+  migrateLegacyComps(legacyState);
+  assert.ok(legacyState.comps["stage1-xia-t1"]);
+  // 推进到夏窗（123）：目标结算与冠军荣誉仍发生（修复前静默丢失）
+  for (let d = 0; d < 400 && legacyState.day < 123; d++) advanceDay(legacyState);
+  assert.ok(legacyState.news.some((n) => n.text.includes("Stage 1目标")), "过渡年目标结算生效");
+  assert.ok(legacyState.news.some((n) => n.text.includes("加冕")), "过渡年冠军荣誉生效");
+  assert.ok(!legacyState.comps["masters"], "旧世界无曜赛区 → 无 Masters（预期行为）");
+});
+
+test("tier-2 球队：目标对挑战者联赛结算（v0.6-1 检错：此前静默跳过）", () => {
+  const state = generateWorld(31);
+  initSeasonFixtures(state);
+  state.myTeamId = "C0"; // 霞赛区挑战者联赛
+  for (let d = 0; d < 400 && state.day < 123; d++) advanceDay(state);
+  // 目标文案按级别给出，结算对 stage1-xia-t2 生效（达成或未达成都应有判定新闻）
+  assert.ok(state.news.some((n) => n.text.includes("Stage 1 挑战者联赛进入前四")), "挑战者目标文案");
+  assert.ok(state.news.some((n) => n.text.includes("Stage 1目标")), "结算已发生（修复前 findIndex=0 直接 return）");
+});
+
+test("自由人池：36 队世界开局 28 人（与队伍数等比）", () => {
+  const state = generateWorld(55);
+  const fas = Object.values(state.players).filter((p) => !p.teamId);
+  assert.equal(fas.length, 28);
 });

@@ -1,6 +1,6 @@
 /** 模拟 Worker（GDD §11.1）：权威 state 常驻此处，主线程只拿快照渲染。 */
 import { generateWorld, resetPlayerSeq, salaryFor, spawnFreeAgents } from "../../core/worldgen.ts";
-import { initSeasonFixtures, advanceDay, playHeldMatch } from "../../core/sim/day.ts";
+import { initSeasonFixtures, advanceDay, playHeldMatch, migrateLegacyComps } from "../../core/sim/day.ts";
 import { spawnDailyEvents, spawnBirthdays, resolveEvent } from "../../core/sim/events.ts";
 import { startNegotiation, reNegotiate, finalizeOffer, completeTransfer, releasePlayer, inTransferWindow, graceRemain } from "../../core/sim/transfer.ts";
 import { signSponsorOffer, cancelSponsorById, acceptGig, declineGig, signStream, cancelStream } from "../../core/sim/business.ts";
@@ -112,6 +112,8 @@ function migrate(state: GameState): GameState {
   state.pendingEvents ??= [];
   state.lastEventDay ??= 0;
   state.scouting ??= {};
+  // v0.6-1：旧单赛区 comp key → 霞赛区新命名（过渡年结算/Masters 依赖）
+  migrateLegacyComps(state);
   return state;
 }
 
