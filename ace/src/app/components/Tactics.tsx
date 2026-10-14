@@ -4,6 +4,7 @@ import { AGENT_BY_ID, AGENTS } from "../../core/data/agents.ts";
 import { MAPS } from "../../core/data/maps.ts";
 import { useStore } from "../store.ts";
 import { PlayerDossier } from "./PlayerDossier.tsx";
+import { PlayerFace, SyntheticBadge } from "./Avatar.tsx";
 
 const DUTY_CN: Record<string, string> = { duelist: "决斗者", initiator: "先锋", controller: "控场", sentinel: "哨卫" };
 
@@ -30,6 +31,13 @@ export function TacticsPage(props: { state: GameState }) {
     void setStarters(team.starters.filter((id) => id !== outId).concat(inId));
     setPendingOut(null);
   };
+
+  // 状态条（与阵容页同款）
+  const VitalBar = ({ v, color }: { v: number; color: string }) => (
+    <span className="bar-track" title={String(Math.round(v))}>
+      <span className="bar-fill" style={{ width: `${Math.max(0, Math.min(100, v))}%`, background: color }} />
+    </span>
+  );
 
   // 当前生效的英雄分配：首选预案优先，否则草稿（缺省自动）
   const currentAgents: Record<string, string> = {};
@@ -186,31 +194,60 @@ export function TacticsPage(props: { state: GameState }) {
           </div>
         </div>
 
-        <div className="row" style={{ marginTop: 10, flexWrap: "wrap", gap: 8, alignItems: "center" }}>
-          <span className="muted small">轮换：</span>
-          {bench.map((p) =>
-            pendingOut ? (
-              <button key={p.id} className="small" onClick={() => swap(pendingOut, p.id)}>
-                {p.ign} ⇄ 换下 {state.players[pendingOut]?.ign}
-              </button>
-            ) : (
-              <select
-                key={p.id}
-                className="small"
-                defaultValue=""
-                onChange={(e) => e.target.value && swap(e.target.value, p.id)}
-                title={"提上 " + p.ign + "（选择换下谁）"}
-              >
-                <option value="">{"提上 " + p.ign + "：换下谁…"}</option>
-                {team.starters.map((sid) => (
-                  <option key={sid} value={sid}>
-                    {state.players[sid]?.ign}（{state.players[sid]?.overall}）
-                  </option>
-                ))}
-              </select>
-            ),
-          )}
-          {!bench.length && <span className="muted small">替补席无人。</span>}
+        <div className="card" style={{ padding: "10px 14px", marginTop: 12, background: "rgba(255,255,255,0.02)" }}>
+          <h3 style={{ marginBottom: 8 }}>🪑 替补席 · 轮换（点「提上首发」后选择换下谁；与阵容页共用名单状态）</h3>
+          <table>
+            <thead>
+              <tr><th>选手</th><th>位置倾向</th><th>能力</th><th>状态</th><th>年龄</th><th>操作</th></tr>
+            </thead>
+            <tbody>
+              {bench.map((p) => (
+                <tr key={p.id}>
+                  <td style={{ whiteSpace: "nowrap" }}>
+                    <span className="row" style={{ alignItems: "center", gap: 6 }}>
+                      <PlayerFace p={p} size={22} showTag={false} />
+                      <span style={{ cursor: "pointer", textDecoration: "underline dotted" }} onClick={() => setDossier(p.id)}>{p.ign}</span>
+                      <SyntheticBadge p={p} />
+                    </span>
+                  </td>
+                  <td className="small" style={{ whiteSpace: "nowrap" }}>
+                    <span className="tag">{dutyTendency(p).main}</span>
+                    {dutyTendency(p).second && <span className="muted small" style={{ marginLeft: 4 }}>{dutyTendency(p).second}</span>}
+                  </td>
+                  <td><b>{p.overall}</b></td>
+                  <td style={{ minWidth: 70 }}><VitalBar v={p.form} color="var(--green)" /></td>
+                  <td className="muted">{p.age}</td>
+                  <td style={{ whiteSpace: "nowrap" }}>
+                    {pendingOut ? (
+                      <button className="small primary" onClick={() => swap(pendingOut, p.id)}>
+                        {p.ign} ⇄ 换下 {state.players[pendingOut]?.ign}
+                      </button>
+                    ) : (
+                      <select
+                        className="small"
+                        defaultValue=""
+                        onChange={(e) => e.target.value && swap(e.target.value, p.id)}
+                        title={"提上 " + p.ign + "（选择换下谁）"}
+                      >
+                        <option value="">{"提上首发：换下谁…"}</option>
+                        {team.starters.map((sid) => (
+                          <option key={sid} value={sid}>
+                            {state.players[sid]?.ign}（{state.players[sid]?.overall}）
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {!bench.length && (
+                <tr><td colSpan={6} className="muted small">替补席无人。</td></tr>
+              )}
+            </tbody>
+          </table>
+          <div className="muted small" style={{ marginTop: 6 }}>
+            先在上方首发表点「换下」标记待换对象，再点这里「⇄ 换下」一键完成；名单上限 7 人。
+          </div>
         </div>
 
         <div className="row" style={{ marginTop: 12 }}>
