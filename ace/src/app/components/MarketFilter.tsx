@@ -56,6 +56,8 @@ export function useMarketFilters(defaultSort = "value") {
         .sort((a, b) => {
           switch (f.sortBy) {
             case "ovr": return b.overall - a.overall;
+            case "ovrAsc": return a.overall - b.overall;
+            case "potAsc": return a.potential - b.potential;
             case "pot": return b.potential - a.potential;
             case "ageAsc": return a.age - b.age;
             case "ageDesc": return b.age - a.age;
@@ -147,5 +149,30 @@ export function MarketFilterPanel(props: {
         <button className="small" onClick={mf.reset}>清空筛选</button>
       </div>
     </div>
+  );
+}
+
+/** 可点击排序的表头（▲/▼ 指示；点新列默认降序、再点切换方向） */
+export function SortableTh(props: { label: string; col: "value" | "ovr" | "pot" | "age"; mf: ReturnType<typeof useMarketFilters> }) {
+  const { label, col, mf } = props;
+  const f = mf.filters;
+  const pairs: Record<string, [string, string]> = {
+    value: ["value", "valueAsc"],
+    ovr: ["ovr", "ovrAsc"],
+    pot: ["pot", "potAsc"],
+    age: ["ageDesc", "ageAsc"],
+  };
+  const [descV, ascV] = pairs[col]!;
+  const active = f.sortBy === descV || f.sortBy === ascV;
+  const isAsc = f.sortBy === ascV;
+  return (
+    <th
+      style={{ cursor: "pointer", userSelect: "none", whiteSpace: "nowrap" }}
+      title="点击排序 / 再点切换方向"
+      onClick={() => mf.set({ sortBy: active ? (isAsc ? descV : ascV) : descV })}
+    >
+      {label}
+      {active && (isAsc ? " ▲" : " ▼")}
+    </th>
   );
 }

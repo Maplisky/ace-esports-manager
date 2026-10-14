@@ -8,6 +8,7 @@ import { marketValue, salaryExpectation, inTransferWindow } from "../../core/sim
 import { useStore } from "../store.ts";
 import { PlayerFace, SyntheticBadge } from "./Avatar.tsx";
 import { dutyTendencyOf } from "./AgentSelect.tsx";
+import { SortableTh } from "./MarketFilter.tsx";
 import { useMarketFilters, MarketFilterPanel } from "./MarketFilter.tsx";
 import { PlayerDossier } from "./PlayerDossier.tsx";
 import { CollapsibleCard } from "./CollapsibleCard.tsx";
@@ -192,7 +193,14 @@ export function TransferPage(props: { state: GameState }) {
         </div>
         <table>
           <thead>
-            <tr><th>选手</th><th>所属</th><th>位置倾向</th><th>能力</th><th>潜力</th><th>年龄</th><th>身价参考</th><th></th></tr>
+            <tr>
+              <th>选手</th><th>所属</th><th>位置倾向</th>
+              <SortableTh label="能力" col="ovr" mf={freeMkt} />
+              <SortableTh label="潜力" col="pot" mf={freeMkt} />
+              <SortableTh label="年龄" col="age" mf={freeMkt} />
+              <SortableTh label="身价参考" col="value" mf={freeMkt} />
+              <th></th>
+            </tr>
           </thead>
           <tbody>
             {freeAgents.map((p) => {
@@ -285,7 +293,12 @@ export function TransferPage(props: { state: GameState }) {
         </div>
         <table>
           <thead>
-            <tr><th>选手</th><th>所属俱乐部</th><th>位置倾向</th><th>能力</th><th>身价参考</th><th>解约金</th><th></th></tr>
+            <tr>
+              <th>选手</th><th>所属俱乐部</th><th>位置倾向</th>
+              <SortableTh label="能力" col="ovr" mf={underMkt} />
+              <SortableTh label="身价参考" col="value" mf={underMkt} />
+              <th>解约金</th><th></th>
+            </tr>
           </thead>
           <tbody>
             {underContract.map((p) => {
