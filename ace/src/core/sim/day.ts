@@ -486,8 +486,12 @@ export function advanceDay(
       p.age++;
       if (p.contractYears > 0) p.contractYears--;
       p.lastEventDay = 0;
-      if (p.stream && p.stream.untilDay <= state.day) p.stream = null; // 到期直播合同清理
+      p.stream = null; // 直播合同按绝对 day 计，跨年统一作废（周界差值在翻年后为负，永不触发）
     }
+    // 跨年时间窗集合作废（全局检错：差值类过期在翻年后为负数 → 永不过期、永久残留）
+    state.incomingBids = [];
+    state.gigOffers = [];
+    state.sponsorOffers = [];
     state.lastEventDay = 0;
     state.day = 1;
     state.fixtures = [];

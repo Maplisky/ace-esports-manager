@@ -29,7 +29,6 @@ function doAdvance(maxDays = 1): void {
   if (!state) return;
   const notes: string[] = [];
   const playedMine: string[] = [];
-  const held: { fixtureId: string; teamA: string; teamB: string; bo: 1 | 3 | 5; label: string } | null = null;
   let seasonEnded = false;
   for (let i = 0; i < maxDays && !seasonEnded; i++) {
     const r = advanceDay(
@@ -43,7 +42,6 @@ function doAdvance(maxDays = 1): void {
       },
       // 我的比赛开打前：拦截并停车（第一场生效，后续场次正常）
       (fixtureId, teamA, teamB, bo, label) => {
-        void held;
         replyHeld = { fixtureId, teamA, teamB, bo, label };
         return true;
       },
@@ -52,6 +50,7 @@ function doAdvance(maxDays = 1): void {
     seasonEnded = r.seasonEnded;
     if (replyHeld) break; // 停车等待赛前准备
   }
+  if (seasonEnded) records = {}; // 翻年清回放：旧赛季 fixture 已重建，链接不再可达；防无限增长拖慢每帧快照克隆
   reply({
     type: "advanced",
     ...snapshot(),
