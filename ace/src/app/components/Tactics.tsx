@@ -47,7 +47,7 @@ export function TacticsPage(props: { state: GameState }) {
       .sort((x, y) => y.pro - x.pro)[0];
     if (best) {
       setDraft((d) => ({ ...d, [benchId]: best.a }));
-      setAdaptMsg(`替补 ${bench.ign} 上位：建议改用「${AGENT_BY_ID.get(best.a)?.name}」（熟练 ${best.pro}%），其余预案槽位不受影响。`);
+      setAdaptMsg(`替补 ${bench.ign} 上位：建议改用「${AGENT_BY_ID.get(best.a)?.name}」（熟练 ${Math.round(best.pro * 10) / 10}%），其余预案槽位不受影响。`);
     }
     void outId;
   };
@@ -95,7 +95,7 @@ export function TacticsPage(props: { state: GameState }) {
                     </select>
                   </td>
                   <td>
-                    <span className={pro >= 60 ? "tag green" : pro >= 34 ? "tag orange" : "tag red"}>{pro}%</span>
+                    <span className={pro >= 60 ? "tag green" : pro >= 34 ? "tag orange" : "tag red"}>{Math.round(pro * 10) / 10}%</span>
                     {offDuty && <span className="tag red" style={{ marginLeft: 6 }}>错位</span>}
                   </td>
                 </tr>

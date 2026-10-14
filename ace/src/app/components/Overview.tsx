@@ -252,7 +252,7 @@ export function formatDate(year: number, day: number): string {
 }
 
 function fmtK(v: number): string {
-  if (Math.abs(v) >= 1_000_000) return (v / 1_000_000).toFixed(2) + "M";
+  if (Math.abs(v) >= 1_000_000) return (v / 1_000_000).toFixed(1) + "M";
   return Math.round(v / 1000) + "K";
 }
 

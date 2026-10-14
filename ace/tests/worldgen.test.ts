@@ -46,12 +46,13 @@ test("世界生成：规模与健全性（v0.7 真实数据包）", () => {
   assert.equal(teams.length, 64);
   const t1 = teams.filter((t) => t.tier === 1);
   const t2 = teams.filter((t) => t.tier === 2);
-  assert.equal(t1.length, 40);
-  assert.equal(t2.length, 24);
-  // 四大赛区（vlr.gg）：每区 10 VCT + 6 挑战者
+  assert.ok(t1.length >= 40 && t1.length <= 56, `VCT 合作队 ${t1.length}`);
+  assert.equal(t1.length + t2.length, 64);
+  // 四大赛区（vlr.gg）：每区 16 队 = VCT 合作队（partnered 铁证判定，≥10）+ 挑战者
   for (const rid of ["americas", "emea", "pacific", "china"]) {
-    assert.equal(teams.filter((t) => t.regionId === rid && t.tier === 1).length, 10, `${rid} VCT`);
-    assert.equal(teams.filter((t) => t.regionId === rid && t.tier === 2).length, 6, `${rid} 挑战者`);
+    const rs = teams.filter((t) => t.regionId === rid);
+    assert.equal(rs.length, 16, `${rid} 总数`);
+    assert.ok(rs.filter((t) => t.tier === 1).length >= 10, `${rid} VCT`);
   }
   // 每队 7 人，5 首发，恰 1 名 IGL
   for (const t of teams) {
@@ -69,7 +70,7 @@ test("世界生成：规模与健全性（v0.7 真实数据包）", () => {
   // 真实选手带 vlr 数据与头像；虚拟生成的必须标注 synthetic
   const rostered = Object.values(state.players).filter((p) => p.teamId);
   const real = rostered.filter((p) => p.id.startsWith("R"));
-  assert.ok(real.length >= 400, `真实选手 ${real.length} 应 ≥400`);
+  assert.ok(real.length >= 300, `真实选手 ${real.length} 应 ≥300（staff 已分离不占名额）`);
   assert.ok(real.every((p) => p.avatar && p.ign && p.agentPool.length >= 3), "真实选手应有头像与英雄池");
   const syn = rostered.filter((p) => p.synthetic === "academy");
   assert.ok(syn.length > 0 && syn.every((p) => p.homegrown), "青训补充需标注 academy 且 homegrown");
@@ -97,7 +98,11 @@ test("赛历与翻年：自然年日历（含四赛区 Stage2/休赛期），年
   initSeasonFixtures(state);
   state.myTeamId = Object.values(state.teams).find((t) => t.tier === 1)!.id;
   // 赛程数量：揭幕杯 7（跨赛区）；四赛区 × 双 Stage 各 (VCT 90 + 挑战者 30)
-  assert.equal(state.fixtures.length, 7 + (90 + 30) * 4 * 2);
+  const expectFixtures = 7 + Object.values(state.comps).filter((c) => c.key !== "cup").reduce((sum, c) => {
+    const n = c.teamIds.length;
+    return sum + (n >= 2 ? n * (n - 1) : 0);
+  }, 0);
+  assert.equal(state.fixtures.length, expectFixtures);
   // 推进到 Stage1 收官前夕（121）：杯赛 + 四赛区 Stage1 全部打完，Stage2 未开打
   for (let d = 0; d < 400 && state.day < 121; d++) {
     advanceDay(state);
@@ -105,11 +110,12 @@ test("赛历与翻年：自然年日历（含四赛区 Stage2/休赛期），年
   assert.equal(state.day, 121, "应推进到 Stage1 收官前夕");
   const unplayedBefore = state.fixtures.filter((f) => f.teamA !== "" && f.teamB !== "" && !f.played);
   assert.ok(unplayedBefore.every((f) => f.stage === "stage2"), "121 天前未打的只能是 Stage2");
-  assert.equal(unplayedBefore.length, 480, `Stage2 应有 480 场未打: ${unplayedBefore.length}`);
-  // Stage1 积分守恒（Americas VCT 10 队 90 场 = 180 胜负）
+  assert.equal(unplayedBefore.length, state.fixtures.filter((f) => f.stage === "stage2").length, "Stage2 全部未打");
+  // Stage1 积分守恒（Americas VCT 双循环 = n(n-1) 胜负）
   const comp = state.comps["stage1-americas-t1"]!;
   const totalPlayed = Object.values(comp.standings).reduce((s, e) => s + e.w + e.l, 0);
-  assert.equal(totalPlayed, 180);
+  const n1 = Object.keys(comp.standings).length;
+  assert.equal(totalPlayed, 2 * n1 * (n1 - 1));
   // 翻年：推进到自然年末（2026 非闰年 = 365 天），收官 + 新赛季
   const aPlayer = Object.values(state.players)[0]!;
   const ageAtStart = aPlayer.age;
@@ -121,7 +127,7 @@ test("赛历与翻年：自然年日历（含四赛区 Stage2/休赛期），年
   assert.ok(ended, "年末应触发赛季收官");
   assert.equal(state.year, 2027, "应进入 2027 赛季");
   assert.equal(state.day, 1, "翻年后天数重置");
-  assert.equal(state.fixtures.length, 967, "新赛季赛程已生成（四赛区，Masters 待抽签）");
+  assert.ok(state.fixtures.length > 1000, "新赛季赛程已生成（四赛区，Masters 待抽签）");
   assert.ok(state.news.some((n) => n.text.includes("收官")));
   assert.ok(state.news.some((n) => n.text.includes("2027 赛季开始")));
   assert.ok(state.news.some((n) => n.text.includes("联赛进入前四")));

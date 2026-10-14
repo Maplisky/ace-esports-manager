@@ -25,7 +25,7 @@ function spawnCard(state: GameState, rng: Rng, def: (typeof EVENT_POOL)[number],
     negative: def.negative,
     targetPlayerId: p.id,
     day: state.day,
-    options: def.options({ ign, teamName: team.name }).map((o) => ({ ...o, result: fill(o.result, ign, team.name) })),
+    options: def.options({ ign, teamName: team.name }).map((o) => ({ ...o, label: fill(o.label, ign, team.name), result: fill(o.result, ign, team.name) })),
   };
   state.pendingEvents.push(card);
 }

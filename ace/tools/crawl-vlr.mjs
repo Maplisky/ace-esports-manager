@@ -13,19 +13,21 @@ const CONCURRENCY = 5;
 const DELAY_MS = 180;
 
 /** 大区子区配额（贴近 VCT 联赛名额分布） */
+/** 候选配额：抓取量 > 最终名额（16/区），team 页判定合作身份后：合作队全取 + 挑战者按排名补足 */
 const REGION_PLAN = {
-  americas: [["north-america", 8], ["brazil", 4], ["la-n", 2], ["la-s", 2]],
-  emea: [["europe", 16]],
-  pacific: [["asia-pacific", 8], ["korea", 4], ["japan", 4]],
+  americas: [["north-america", 12], ["brazil", 7], ["la-n", 4], ["la-s", 4]],
+  emea: [["europe", 24]],
+  pacific: [["asia-pacific", 12], ["korea", 7], ["japan", 4]],
   china: [["china", 16]],
 };
+const FINAL_PER_REGION = 16;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-async function fetchText(url, tries = 3) {
+async function fetchText(url, tries = 3, timeoutMs = 25_000) {
   for (let i = 0; i < tries; i++) {
     try {
-      const res = await fetch(url, { headers: { "User-Agent": UA }, signal: AbortSignal.timeout(25_000) });
+      const res = await fetch(url, { headers: { "User-Agent": UA }, signal: AbortSignal.timeout(timeoutMs) });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return await res.text();
     } catch (e) {
@@ -85,30 +87,52 @@ function parseRankings(html) {
   return rows;
 }
 
-/** 解析 team 页 roster → [{vlrId, slug, alias, real, country, avatar, captain}] */
+/** 解析 team 页 roster：按 Current Roster 的模块分节（players / staff）——staff 带 role 标签 */
 function parseRoster(html) {
-  const out = [];
-  const itemRe = /<div class="team-roster-item">[\s\S]*?<\/div>\s*<\/a>/g;
-  let m;
-  while ((m = itemRe.exec(html))) {
-    const item = m[0];
-    const linkM = /<a href="\/player\/(\d+)\/([a-z0-9-]+)"/.exec(item);
-    if (!linkM) continue;
-    const imgM = /<img src="([^"]+)"/.exec(item);
-    const aliasM = /team-roster-item-name-alias">\s*(?:<i[^>]*><\/i>)?\s*([^<]+?)\s*<\/div>/.exec(item);
-    const realM = /team-roster-item-name-real">\s*([^<]*?)\s*<\/div>/.exec(item);
-    const flagM = /<i class="flag mod-([a-z-]+)"/.exec(item);
-    out.push({
-      vlrId: Number(linkM[1]),
-      slug: linkM[2],
-      alias: decode(aliasM?.[1] ?? linkM[2]),
-      real: decode(realM?.[1] ?? ""),
-      country: flagM?.[1] ?? "",
-      avatar: imgM?.[1] ?? "",
-      captain: item.includes('title="Team Captain"'),
-    });
+  const players = [];
+  const staff = [];
+  // 截取 Current Roster 之后的部分
+  const rosterIdx = html.indexOf("Current\tRoster") >= 0 ? html.indexOf("Current\tRoster") : html.indexOf("Current Roster");
+  const section = rosterIdx >= 0 ? html.slice(rosterIdx) : html;
+  // 按模块（players/staff）切块
+  const moduleRe = /<div class="wf-module-label"[^>]*>\s*(players|staff|coach(?:es)?)\s*<\/div>([\s\S]*?)(?=<div class="wf-module-label"|<\/div>\s*<\/div>\s*<\/div>\s*<|$)/g;
+  let mod;
+  while ((mod = moduleRe.exec(section))) {
+    const kind = mod[1];
+    const block = mod[2];
+    const itemRe = /<div class="team-roster-item">[\s\S]*?<\/div>\s*<\/a>/g;
+    let m;
+    while ((m = itemRe.exec(block))) {
+      const item = m[0];
+      const linkM = /<a href="\/player\/(\d+)\/([a-z0-9-]+)"/.exec(item);
+      if (!linkM) continue;
+      const imgM = /<img src="([^"]+)"/.exec(item);
+      const aliasM = /team-roster-item-name-alias">\s*(?:<i[^>]*><\/i>)?\s*([^<]+?)\s*<\/div>/.exec(item);
+      const realM = /team-roster-item-name-real">\s*([^<]*?)\s*<\/div>/.exec(item);
+      const flagM = /<i class="flag mod-([a-z-]+)"/.exec(item);
+      const roleM = /team-roster-item-name-role">\s*([^<]*?)\s*<\/div>/.exec(item);
+      const entry = {
+        vlrId: Number(linkM[1]),
+        slug: linkM[2],
+        alias: decode(aliasM?.[1] ?? linkM[2]),
+        real: decode(realM?.[1] ?? ""),
+        country: flagM?.[1] ?? "",
+        avatar: imgM?.[1] ?? "",
+        role: roleM ? decode(roleM[1]).toLowerCase() : "",
+        captain: item.includes('title="Team Captain"'),
+      };
+      if (kind === "players" || !entry.role) players.push(entry);
+      else staff.push(entry);
+    }
   }
-  return out;
+  return { players, staff };
+}
+
+/** team 页页头：官方 tag + 合作队判定（铁证：VCT 联赛或冠军赛；挑战者页两者皆无） */
+function parseTeamMeta(html) {
+  const tagM = /team-header-tag">\s*([^<]+?)\s*<\/h2>/.exec(html);
+  const vctLeague = /VCT \d{2}: [A-Za-z]/.test(html) || /Valorant Champions 20\d\d/.test(html);
+  return { officialTag: tagM ? decode(tagM[1]).toUpperCase() : "", partnered: vctLeague };
 }
 
 /** 解析 player 页 ?timespan=all 的按英雄统计表 */
@@ -173,7 +197,7 @@ async function main() {
   const subRegionPages = [...new Set(Object.values(REGION_PLAN).flat().map(([s]) => s))];
   const subRankings = {};
   await pool(subRegionPages, async (sub) => {
-    const html = await fetchText(`https://www.vlr.gg/rankings/${sub}`);
+    const html = await fetchText(`https://www.vlr.gg/rankings/${sub}`, 3, 90_000);
     subRankings[sub] = parseRankings(html);
     console.log(`rankings/${sub}: ${subRankings[sub].length} 队`);
   }, 4);
@@ -191,20 +215,41 @@ async function main() {
   const deduped = teams.filter((t) => (seen.has(t.vlrId) ? false : (seen.add(t.vlrId), true)));
   console.log(`四大赛区合计 ${deduped.length} 队`);
 
-  // ③ team 页 → roster
+  // ③ team 页 → roster（players/staff 分节）+ 官方 tag + 合作队判定 + 教练
   await pool(deduped, async (t) => {
     const html = await fetchText(`https://www.vlr.gg/team/${t.vlrId}/${t.slug}`);
-    t.roster = parseRoster(html).slice(0, 7);
+    const { players: rosterPlayers, staff } = parseRoster(html);
+    t.roster = rosterPlayers.slice(0, 7);
+    t.staff = staff;
+    const meta = parseTeamMeta(html);
+    t.officialTag = meta.officialTag;
+    t.partnered = meta.partnered;
     t.logoLocal = (await download(t.logo, path.join(ROOT, `public/assets/teams/${t.vlrId}.png`))) ? `assets/teams/${t.vlrId}.png` : null;
-    console.log(`team ${t.name}: roster ${t.roster.length}`);
+    for (const s of staff) {
+      await download(s.avatar, path.join(ROOT, `public/assets/players/${s.vlrId}.png`));
+    }
+    console.log(`team ${t.name}: roster ${t.roster.length}, staff ${staff.length}, tag ${meta.officialTag || "-"}, ${meta.partnered ? "VCT" : "挑战者"}`);
   });
   const missingRoster = deduped.filter((t) => !t.roster || t.roster.length === 0);
   if (missingRoster.length) console.warn(`⚠ ${missingRoster.length} 队 roster 为空: ${missingRoster.map((t) => t.name).join(", ")}`);
+  const vctCount = deduped.filter((t) => t.partnered).length;
+  console.log(`合作队 ${vctCount} / ${deduped.length}`);
+
+  // 名额定版：每区 = 全部合作队 + 非合作队按子区排名补足 16
+  const finalTeams = [];
+  for (const region of Object.keys(REGION_PLAN)) {
+    const rs = deduped.filter((t) => t.region === region);
+    const vct = rs.filter((t) => t.partnered);
+    const challengers = rs.filter((t) => !t.partnered).sort((a, b) => a.rank - b.rank);
+    const take = [...vct, ...challengers].slice(0, Math.max(FINAL_PER_REGION, vct.length));
+    finalTeams.push(...take);
+    console.log(`${region}: VCT ${vct.length} + 挑战者 ${take.length - vct.length} = ${take.length}`);
+  }
 
   // ④ player 页统计 + 头像
   const players = [];
   if (!onlyMeta) {
-    const allP = deduped.flatMap((t) => (t.roster ?? []).map((p) => ({ ...p, teamVlrId: t.vlrId })));
+    const allP = finalTeams.flatMap((t) => (t.roster ?? []).map((p) => ({ ...p, teamVlrId: t.vlrId })));
     await pool(allP, async (p) => {
       const html = await fetchText(`https://www.vlr.gg/player/${p.vlrId}/${p.slug}?timespan=all`);
       const { agents } = parseAgentStats(html);
@@ -215,12 +260,22 @@ async function main() {
     });
   }
 
-  // ⑤ 输出
-  const teamsOut = deduped.map((t) => ({
-    vlrId: t.vlrId, slug: t.slug, name: t.name, tag: tagOf(t.name), region: t.region,
-    country: t.country, rank: t.rank, rating: t.rating, logo: t.logoLocal,
-    roster: (t.roster ?? []).map((p) => p.vlrId),
-  }));
+  // ⑤ 输出（staff: role=coach 为主教练，其余为助教组；Inactive 选手保留供市场，不进首发优先）
+  const coachOf = (staff) =>
+    (staff ?? []).find((s) => s.role === "coach") ?? (staff ?? []).find((s) => /coach/.test(s.role)) ?? null;
+  const teamsOut = finalTeams.map((t) => {
+    const head = coachOf(t.staff);
+    const assistants = (t.staff ?? []).filter((s) => s !== head && /coach|analyst/.test(s.role));
+    return {
+      vlrId: t.vlrId, slug: t.slug, name: t.name,
+      tag: t.officialTag || tagOf(t.name), region: t.region,
+      country: t.country, rank: t.rank, rating: t.rating, logo: t.logoLocal,
+      partnered: !!t.partnered,
+      coach: head ? { alias: head.alias, real: head.real, country: head.country, avatar: `assets/players/${head.vlrId}.png` } : null,
+      staff: assistants.slice(0, 3).map((s) => ({ alias: s.alias, role: s.role, avatar: `assets/players/${s.vlrId}.png` })),
+      roster: (t.roster ?? []).map((p) => p.vlrId),
+    };
+  });
   const playersOut = players.map((p) => ({
     vlrId: p.vlrId, teamVlrId: p.teamVlrId, alias: p.alias, real: p.real, country: p.country,
     avatar: p.avatarLocal, captain: p.captain, stats: p.stats,

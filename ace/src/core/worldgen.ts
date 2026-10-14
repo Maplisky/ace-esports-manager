@@ -35,8 +35,6 @@ const SYN_SUFFIX = ["", "", "X", "7", "2", "ee", "z", "99", "01"];
 
 const COACH_NAMES = ["老K", "阿澈", "白熊", "萧然", "陆离", "顾行", "苏木", "陈野", "洛尘", "祁风", "温叙", "关山"];
 
-/** 每赛区一级（VCT）队数；其余为挑战者（tier 2） */
-const T1_PER_REGION = 10;
 
 /** 八维合成 overall 的权重（GDD §6.1：合成可读且分工明确） */
 const OVERALL_W: Record<keyof PlayerAttrs, number> = {
@@ -303,8 +301,9 @@ function makeRealPlayer(rng: Rng, vlrP: VlrPlayerStat, teamId: string, tier: 1 |
   };
 }
 
-function teamTierOf(rankInRegion: number): 1 | 2 {
-  return rankInRegion <= T1_PER_REGION ? 1 : 2;
+/** tier = vlr.gg 合作队身份（铁证判定见爬虫），挑战者为次级 */
+function teamTierOf(partnered: boolean): 1 | 2 {
+  return partnered ? 1 : 2;
 }
 
 function makeTeamSkeleton(rng: Rng, id: string, name: string, tag: string, tier: 1 | 2, regionId: string): Team {
@@ -359,7 +358,7 @@ export function generateWorld(seed: number): GameState {
   for (const [region, list] of byRegion) {
     const sorted = [...list].sort((a, b) => a.rank - b.rank);
     sorted.forEach((vt, i) => {
-      const tier = teamTierOf(i + 1);
+      const tier = teamTierOf(vt.partnered);
       const id = `${tier === 1 ? "T" : "C"}${vt.vlrId}`;
       // 基础队伍骨架（coach/staff/预算等仍随机生成，锚定 tier）
       const skeleton = makeTeamSkeleton(rng, id, vt.name, vt.tag, tier, region);
@@ -375,14 +374,6 @@ export function generateWorld(seed: number): GameState {
         realRoster.push(p.id);
         usedIgns.add(p.ign);
       }
-      // IGL 保证恰 1：无 captain → overall 最高者转 IGL
-      const rosterPlayers = realRoster.map((pid) => players.find((x) => x.id === pid)!);
-      if (rosterPlayers.length > 0 && !rosterPlayers.some((p) => p.isIgl)) {
-        const top = [...rosterPlayers].sort((a, b) => b.overall - a.overall)[0]!;
-        top.isIgl = true;
-        top.attrs.igl = clamp(top.attrs.igl + 22, 35, 95);
-        top.overall = computeOverall(top.attrs);
-      }
       // 青训补位到 7（synthetic 标注；vlr 无该选手数据）
       while (realRoster.length < 7) {
         const duty = STARTER_TEMPLATE[realRoster.length % 4];
@@ -396,6 +387,16 @@ export function generateWorld(seed: number): GameState {
         players.push(ap);
         realRoster.push(ap.id);
       }
+      // IGL 保证恰 1（在青训补位后对最终名单执行：空 roster 队靠补位后转正）
+      {
+        const finalPlayers = realRoster.map((pid) => players.find((x) => x.id === pid)!).filter(Boolean);
+        if (finalPlayers.length > 0 && !finalPlayers.some((p) => p.isIgl)) {
+          const top = [...finalPlayers].sort((a, b) => b.overall - a.overall)[0]!;
+          top.isIgl = true;
+          top.attrs.igl = clamp(top.attrs.igl + 22, 35, 95);
+          top.overall = computeOverall(top.attrs);
+        }
+      }
       // 替补超编（roster>7，vlr 偶有 8 人名单）：裁到 7，被裁者进自由池
       while (realRoster.length > 7) {
         const cut = realRoster.pop()!;
@@ -405,6 +406,12 @@ export function generateWorld(seed: number): GameState {
       }
       skeleton.roster = realRoster;
       skeleton.starters = realRoster.slice(0, 5); // vlr roster 顺序即首发优先
+      if (vt.coach) skeleton.coach.name = vt.coach.alias;
+      const roleSlot: (keyof NonNullable<Team["staff"]>)[] = ["training", "mapTactics", "match"];
+      vt.staff.slice(0, 3).forEach((st, si) => {
+        const slot = skeleton.staff[roleSlot[si]!];
+        if (slot) slot.name = st.alias;
+      });
       skeleton.vlrId = vt.vlrId;
       skeleton.logo = vt.logo ?? undefined;
       skeleton.reputation = clamp(Math.round((tier === 1 ? 50 : 30) + (16 - Math.min(i, 15)) * 2 + rng.int(0, 8)), 25, 90);

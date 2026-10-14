@@ -14,16 +14,21 @@ function mkFixture(f: Omit<Fixture, "id" | "played">): Fixture {
 /** 单循环（轮转法），返回每轮的对阵；rng 决定主队顺序洗牌 */
 function roundRobin(teamIds: string[], rng: Rng): [string, string][][] {
   const ids = rng.shuffle(teamIds);
-  const n = ids.length;
+  const n0 = ids.length;
   const rounds: [string, string][][] = [];
-  if (n < 2) return rounds;
-  const arr = ids.slice();
+  if (n0 < 2) return rounds;
+  // 奇数队：补 BYE 占位（该轮轮空），配对时跳过含 BYE 的对
+  const BYE = "__BYE__";
+  const ids2 = n0 % 2 === 1 ? [...ids, BYE] : ids.slice();
+  const n = ids2.length;
+  const arr = ids2.slice();
   const half = n / 2;
   for (let r = 0; r < n - 1; r++) {
     const pairs: [string, string][] = [];
     for (let i = 0; i < half; i++) {
       const a = arr[i] as string;
       const b = arr[n - 1 - i] as string;
+      if (a === BYE || b === BYE) continue;
       pairs.push(r % 2 === 0 ? [a, b] : [b, a]);
     }
     rounds.push(pairs);

@@ -40,5 +40,5 @@ export function EventCardModal() {
 }
 
 function fmtMoney(v: number): string {
-  return v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(2)}M` : `$${Math.abs(v) >= 1000 ? Math.round(v / 1000) + "K" : v}`;
+  return v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(1)}M` : `$${Math.abs(v) >= 1000 ? Math.round(v / 1000) + "K" : v}`;
 }

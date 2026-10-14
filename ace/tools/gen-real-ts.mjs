@@ -11,7 +11,10 @@ const ts = `// 自动生成（tools/crawl-vlr.mjs + tools/gen-real-ts.mjs）—�
 // VlrTeam/VlrPlayer 为爬虫快照；worldgen 负责映射为引擎内 Team/Player。
 export interface VlrTeamStat {
   vlrId: number; slug: string; name: string; tag: string; region: "americas" | "emea" | "pacific" | "china";
-  country: string; rank: number; rating: number; logo: string | null; roster: number[];
+  country: string; rank: number; rating: number; logo: string | null; partnered: boolean;
+  coach: { alias: string; real: string; country: string; avatar: string } | null;
+  staff: { alias: string; role: string; avatar: string }[];
+  roster: number[];
 }
 export interface VlrAgentStat {
   agent: string; maps: number; rounds: number; rating: number; acs: number; kd: number;

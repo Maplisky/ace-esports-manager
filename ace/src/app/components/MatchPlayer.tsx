@@ -294,9 +294,9 @@ function AttributionTable({ record, state }: { record: MatchRecord; state: GameS
             const aWins = diff > 0;
             return (
               <tr key={k}>
-                <td style={{ textAlign: "right" }} className="small">{va >= 0 ? "+" : ""}{va.toFixed(2)}</td>
+                <td style={{ textAlign: "right" }} className="small">{va >= 0 ? "+" : ""}{va.toFixed(1)}</td>
                 <td style={{ textAlign: "center" }} className="muted small">{label}</td>
-                <td className="small">{vb >= 0 ? "+" : ""}{vb.toFixed(2)}</td>
+                <td className="small">{vb >= 0 ? "+" : ""}{vb.toFixed(1)}</td>
                 <td>
                     <div style={{ position: "relative", height: 12, background: "var(--panel2)", borderRadius: 6, overflow: "hidden", width: "100%", maxWidth: 260 }}>
                     <div style={{ position: "absolute", left: "50%", top: 0, bottom: 0, width: 1, background: "var(--line)" }} />
