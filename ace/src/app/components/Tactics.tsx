@@ -5,7 +5,7 @@ import { MAPS } from "../../core/data/maps.ts";
 import { useStore } from "../store.ts";
 import { PlayerDossier } from "./PlayerDossier.tsx";
 import { PlayerFace, SyntheticBadge } from "./Avatar.tsx";
-import { dutyTendencyOf } from "./AgentSelect.tsx";
+import { DutyTendency } from "./AgentSelect.tsx";
 
 const DUTY_CN: Record<string, string> = { duelist: "决斗者", initiator: "先锋", controller: "控场", sentinel: "哨卫" };
 
@@ -128,8 +128,8 @@ export function TacticsPage(props: { state: GameState }) {
                     {pendingOut === p.id && <span className="tag orange" style={{ marginLeft: 6 }}>待换下</span>}
                   </td>
                   <td className="small">
-                    <span className="tag">{dutyTendencyOf(p).main}</span>
-                    {dutyTendencyOf(p).second && <span className="muted small" style={{ marginLeft: 6 }}>{dutyTendencyOf(p).second}</span>}
+                    <DutyTendency p={p} />
+                    
                   </td>
                   <td>
                     <select
@@ -209,8 +209,8 @@ export function TacticsPage(props: { state: GameState }) {
                     </span>
                   </td>
                   <td className="small" style={{ whiteSpace: "nowrap" }}>
-                    <span className="tag">{dutyTendencyOf(p).main}</span>
-                    {dutyTendencyOf(p).second && <span className="muted small" style={{ marginLeft: 4 }}>{dutyTendencyOf(p).second}</span>}
+                    <DutyTendency p={p} />
+                    
                   </td>
                   <td><b>{p.overall}</b></td>
                   <td style={{ minWidth: 70 }}><VitalBar v={p.form} color="var(--green)" /></td>

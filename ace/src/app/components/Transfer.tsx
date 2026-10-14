@@ -6,7 +6,7 @@ import type { GameState, Player } from "../../core/types.ts";
 import { marketValue, salaryExpectation, inTransferWindow } from "../../core/sim/transfer.ts";
 import { useStore } from "../store.ts";
 import { PlayerFace, SyntheticBadge } from "./Avatar.tsx";
-import { dutyTendencyOf } from "./AgentSelect.tsx";
+import { DutyTendency } from "./AgentSelect.tsx";
 import { SortableTh } from "./MarketFilter.tsx";
 import { useMarketFilters, MarketFilterPanel } from "./MarketFilter.tsx";
 import { PlayerDossier } from "./PlayerDossier.tsx";
@@ -203,9 +203,7 @@ export function TransferPage(props: { state: GameState }) {
             </tr>
           </thead>
           <tbody>
-            {freeAgents.map((p) => {
-              const tendency = dutyTendencyOf(p);
-              const exp = salaryExpectation(p, team.tier);
+            {freeAgents.map((p) => {              const exp = salaryExpectation(p, team.tier);
               // 问价反馈（免费、确定性）：按市场公允条款评估意愿
               return (
               <>
@@ -222,8 +220,7 @@ export function TransferPage(props: { state: GameState }) {
                   )}
                 </td>
                 <td className="small" style={{ whiteSpace: "nowrap" }}>
-                  <span className="tag">{tendency.main}</span>
-                  {tendency.second && <span className="muted small" style={{ marginLeft: 4 }}>{tendency.second}</span>}
+                  <DutyTendency p={p} size="small" />
                   {p.isIgl && <span className="tag" style={{ marginLeft: 4 }}>指挥</span>}
                   {p.viceIgl && <span className="muted small" style={{ marginLeft: 4 }}>副指挥</span>}
                 </td>
@@ -301,9 +298,7 @@ export function TransferPage(props: { state: GameState }) {
             </tr>
           </thead>
           <tbody>
-            {underContract.map((p) => {
-              const tendency = dutyTendencyOf(p);
-              const inquiryQ = state.inquiries.find((q) => q.playerId === p.id && !q.done);
+            {underContract.map((p) => {              const inquiryQ = state.inquiries.find((q) => q.playerId === p.id && !q.done);
               return (
                 <tr key={p.id}>
                   <td>
@@ -318,8 +313,7 @@ export function TransferPage(props: { state: GameState }) {
                   </td>
                   <td className="muted small">{state.teams[p.teamId as string]?.name ?? "—"}</td>
                   <td className="small" style={{ whiteSpace: "nowrap" }}>
-                    <span className="tag">{tendency.main}</span>
-                    {tendency.second && <span className="muted small" style={{ marginLeft: 4 }}>{tendency.second}</span>}
+                    <DutyTendency p={p} size="small" />
                   </td>
                   <td><b>{p.overall}</b></td>
                   <td className="muted">{fmt(valueOfOthers.get(p.id) ?? marketValue(p, team.tier))}</td>

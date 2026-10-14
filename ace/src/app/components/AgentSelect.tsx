@@ -109,3 +109,31 @@ export function dutyTendencyOf(p: Player): { main: string; mainKey: string; seco
     secondKey: sum[second] / w >= (sum[main] / w) * 0.4 ? second : null,
   };
 }
+
+/** 岗位色（Valorant 角色色系）：决斗红 / 先锋橙 / 控场紫 / 哨卫绿 */
+export const DUTY_COLORS: Record<string, string> = {
+  duelist: "#e5484d",
+  initiator: "#f5a524",
+  controller: "#b687f8",
+  sentinel: "#3dd68c",
+};
+
+/** 位置倾向芯片（原作式）：主位置=同色软底实芯片，副位置=同色描边弱化芯片 */
+export function DutyTendency({ p, size = "normal" }: { p: Player; size?: "normal" | "small" }) {
+  const t = dutyTendencyOf(p);
+  const chip = (label: string, key: string | null, primary: boolean) => {
+    const color = key ? DUTY_COLORS[key] ?? "#9aa3af" : "#9aa3af";
+    const pad = size === "small" ? "0.5px 5px" : "1px 6px";
+    return primary ? (
+      <span style={{ background: color + "26", border: `1px solid ${color}66`, color, borderRadius: 4, padding: pad, fontSize: size === "small" ? 10 : 11, fontWeight: 600, whiteSpace: "nowrap" }}>{label}</span>
+    ) : (
+      <span style={{ border: `1px dashed ${color}55`, color: color + "cc", borderRadius: 4, padding: pad, fontSize: size === "small" ? 9.5 : 10.5, whiteSpace: "nowrap" }}>{label}</span>
+    );
+  };
+  return (
+    <span style={{ display: "inline-flex", gap: 4, alignItems: "center", whiteSpace: "nowrap" }}>
+      {chip(t.main, t.mainKey, true)}
+      {t.second && t.secondKey ? chip(t.second, t.secondKey, false) : null}
+    </span>
+  );
+}
