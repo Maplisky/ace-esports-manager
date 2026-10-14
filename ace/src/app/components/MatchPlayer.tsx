@@ -8,6 +8,7 @@ import { AGENT_BY_ID } from "../../core/data/agents.ts";
 import { TeamLogo } from "./Avatar.tsx";
 import { MAP_BY_ID } from "../../core/data/maps.ts";
 import { Tactical2D } from "./Tactical2D.tsx";
+import { liveLines, summarizeMatch } from "../../core/sim/matchstats.ts";
 import type { GameState, MatchRecord, RoundEvent } from "../../core/types.ts";
 
 const SLOW_MS = 850;
@@ -126,18 +127,22 @@ export function MatchPlayer(props: { record: MatchRecord; state: GameState; onCl
         </div>
 
         {finished ? (
-          <div className="card" style={{ textAlign: "center", padding: 26 }}>
-            <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 8 }}>
-              🏁 {(record.score[0] > record.score[1] ? teamA?.name : teamB?.name)} 获胜！
+          <div style={{ textAlign: "center" }}>
+            <div className="card" style={{ textAlign: "center", padding: 26 }}>
+              <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 8 }}>
+                🏁 {(record.score[0] > record.score[1] ? teamA?.name : teamB?.name)} 获胜！
+              </div>
+              <div className="muted">
+                比分 {record.score[0]}-{record.score[1]}
+                {record.mvp && <> · MVP：<b>{ign(record.mvp)}</b>（{agentName(record.mvp)}）</>}
+              </div>
+              <button className="primary" style={{ marginTop: 14 }} onClick={onClose}>
+                关闭回放
+              </button>
             </div>
-            <div className="muted">
-              比分 {record.score[0]}-{record.score[1]}
-              {record.mvp && <> · MVP：<b>{ign(record.mvp)}</b>（{agentName(record.mvp)}）</>}
-            </div>
+            {/* 比赛总结：双方选手战绩 / ACS / FK·FD（职业数据，GDD §5.4） */}
+            <MatchStatsTable record={record} state={state} />
             <AttributionTable record={record} state={state} />
-            <button className="primary" style={{ marginTop: 14 }} onClick={onClose}>
-              关闭回放
-            </button>
           </div>
         ) : (
           <>
@@ -160,6 +165,11 @@ export function MatchPlayer(props: { record: MatchRecord; state: GameState; onCl
                 <EconBar tag={teamA?.tag ?? "A"} buy={buys.A} atk={atkSide === "A"} />
                 <EconBar tag={teamB?.tag ?? "B"} buy={buys.B} atk={atkSide === "B"} />
               </div>
+            )}
+
+            {/* 双方选手实时战绩（已揭示事件聚合，GDD §5.4） */}
+            {map && (
+              <LiveScoreboard record={record} state={state} pos={pos} />
             )}
 
             {/* 击杀流（逐步揭示）+ 2D 战术视图并排 */}
@@ -218,8 +228,111 @@ export function MatchPlayer(props: { record: MatchRecord; state: GameState; onCl
   );
 }
 
-function EconBar({ tag, buy, atk }: { tag: string; buy: "full" | "force" | "eco"; atk: boolean }) {
-  const width = buy === "full" ? 100 : buy === "force" ? 55 : 22;
+/** 对局中双方选手实时战绩板（GDD §5.4）：已揭示事件聚合，阵亡灰显、本回合击杀高亮 */
+function LiveScoreboard({ record, state, pos }: { record: MatchRecord; state: GameState; pos: Pos }) {
+  const live = useMemo(() => liveLines(record.maps, pos), [record.maps, pos]);
+  const map = record.maps[pos.mi];
+  const deadNow = new Set<string>();
+  for (const e of (map?.rounds[pos.ri]?.events ?? []).slice(0, Math.max(0, pos.ei + 1))) {
+    if (e.t === "kill" && e.v) deadNow.add(e.v);
+  }
+  const ign = (pid: string) => state.players[pid]?.ign ?? pid;
+  const teamA = state.teams[record.teamA];
+  const teamB = state.teams[record.teamB];
+  const col = (team: typeof teamA, side: "A" | "B") =>
+    (team?.starters ?? []).map((pid) => ({ pid, line: live[pid] ?? { k: 0, d: 0, fk: 0 }, dead: deadNow.has(pid), side }));
+  const rowsA = col(teamA, "A");
+  const rowsB = col(teamB, "B");
+  const cell = (r: { pid: string; line: { k: number; d: number; fk: number }; dead: boolean }) => (
+    <div
+      key={r.pid}
+      className="small"
+      style={{
+        display: "flex", justifyContent: "space-between", gap: 8, padding: "1px 6px", borderRadius: 4,
+        background: r.dead ? "rgba(238,80,80,0.10)" : "rgba(255,255,255,0.03)",
+        opacity: r.dead ? 0.5 : 1,
+      }}
+    >
+      <span style={{ minWidth: 78, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ign(r.pid)}</span>
+      <span className="muted" style={{ fontVariantNumeric: "tabular-nums" }}>
+        <b style={{ color: "inherit" }}>{r.line.k}</b> / {r.line.d}
+        {r.line.fk > 0 && <span style={{ color: "#fb923c", marginLeft: 4 }}>★{r.line.fk}</span>}
+      </span>
+    </div>
+  );
+  return (
+    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+      <div style={{ flex: 1, minWidth: 240, border: "1px solid var(--line)", borderRadius: 8, padding: "4px 6px", display: "flex", flexDirection: "column", gap: 2 }}>
+        <div className="muted small" style={{ padding: "0 6px", color: "var(--green)" }}>{teamA?.tag ?? "A"} 战绩</div>
+        {rowsA.map(cell)}
+      </div>
+      <div style={{ flex: 1, minWidth: 240, border: "1px solid var(--line)", borderRadius: 8, padding: "4px 6px", display: "flex", flexDirection: "column", gap: 2 }}>
+        <div className="muted small" style={{ padding: "0 6px", color: "#60a5fa" }}>{teamB?.tag ?? "B"} 战绩</div>
+        {rowsB.map(cell)}
+      </div>
+    </div>
+  );
+}
+
+/** 比赛总结页数据表（GDD §5.4）：双方选手 KDA / ± / ACS / FK·FD（首杀首死）/ 残局，跨图汇总按 ACS 排序 */
+function MatchStatsTable({ record, state }: { record: MatchRecord; state: GameState }) {
+  const teamAPids = new Set([
+    ...(state.teams[record.teamA]?.roster ?? []),
+    ...(state.teams[record.teamA]?.starters ?? []),
+  ]);
+  const rows = useMemo(() => summarizeMatch(record.maps, teamAPids), [record]);
+  const ign = (pid: string) => state.players[pid]?.ign ?? pid;
+  const tagA = state.teams[record.teamA]?.tag ?? "A";
+  const tagB = state.teams[record.teamB]?.tag ?? "B";
+  if (rows.length === 0) return null;
+  const kda = (r: { k: number; d: number; a: number }) => {
+    const eff = r.d === 0 ? r.k + r.a : (r.k + r.a) / r.d;
+    return eff.toFixed(2);
+  };
+  return (
+    <div style={{ textAlign: "left", marginTop: 12 }}>
+      <div className="muted small" style={{ textAlign: "center", marginBottom: 6 }}>
+        比赛总结 · 双方选手数据（全部 {record.maps.length} 图汇总 · 按战斗评分排序）
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th style={{ textAlign: "left" }}>选手</th>
+            <th>战队</th>
+            <th>K / D / A</th>
+            <th>KDA</th>
+            <th>ACS</th>
+            <th>FK / FD</th>
+            <th>残局</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r.pid} style={{ background: r.pid === record.mvp ? "rgba(251,191,36,0.08)" : undefined }}>
+              <td style={{ textAlign: "left" }}>
+                <b>{ign(r.pid)}</b>
+                {r.pid === record.mvp && <span className="tag" style={{ marginLeft: 6 }}>MVP</span>}
+              </td>
+              <td style={{ color: r.team === "A" ? "var(--green)" : "#60a5fa" }}>{r.team === "A" ? tagA : tagB}</td>
+              <td style={{ fontVariantNumeric: "tabular-nums" }}>{r.k} / {r.d} / {r.a}</td>
+              <td style={{ fontVariantNumeric: "tabular-nums" }}>{kda(r)}</td>
+              <td style={{ fontVariantNumeric: "tabular-nums", fontWeight: 700 }}>{r.acs}</td>
+              <td style={{ fontVariantNumeric: "tabular-nums" }}>
+                <span style={{ color: "#fb923c" }}>{r.fk}</span> / <span style={{ color: "#f87171" }}>{r.fd}</span>
+              </td>
+              <td style={{ fontVariantNumeric: "tabular-nums" }}>{r.clutches > 0 ? <span className="tag green">{r.clutches}</span> : <span className="muted">0</span>}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="muted small" style={{ textAlign: "center", marginTop: 4 }}>
+        ACS＝战斗评分/回合（伤害加权）· FK/FD＝首杀/首死 · 残局＝1vX 得手
+      </div>
+    </div>
+  );
+}
+
+function EconBar({ tag, buy, atk }: { tag: string; buy: "full" | "force" | "eco"; atk: boolean }) {  const width = buy === "full" ? 100 : buy === "force" ? 55 : 22;
   const color = buy === "full" ? "var(--green)" : buy === "force" ? "var(--orange)" : "var(--muted)";
   return (
     <div className="econbar">
