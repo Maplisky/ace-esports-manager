@@ -132,6 +132,19 @@ export interface Coach {
   motivation: number;
 }
 
+export interface PatchChange {
+  agentId: string;
+  meta: number;
+  dir: "buff" | "nerf";
+  pct: number;
+}
+
+export interface PatchNote {
+  version: string;
+  changes: PatchChange[];
+  mapNotes: { mapId: string; text: string }[];
+}
+
 export type Personality = "spender" | "youth" | "steady" | "wheeler";
 
 export interface Team {
@@ -449,6 +462,8 @@ export interface GameState {
   agentTraining: Record<string, string>;
   /** 问价（GDD §8.2 原作式异步）：发起后 2-5 天出要价+意向，结果置顶可从结果报价 */
   inquiries: TransferInquiry[];
+  /** 版本历史（meta 二维化，GDD §4.3）：末条为当前生效版本 */
+  patchNotes: PatchNote[];
   /** 待决策事件卡队列（先进先出，玩家逐张处理；GDD §9.3） */
   pendingEvents: PendingEventCard[];
   /** 上次事件日（空回合补偿用） */

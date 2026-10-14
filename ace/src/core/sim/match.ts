@@ -133,8 +133,10 @@ function simMap(state: GameState, mapId: string, A: SimTeam, B: SimTeam, rng: Rn
     const lock = agentLock?.[mapId];
     return lock ? { ...(preset ?? {}), ...lock } : preset;
   };
-  A.str = computeSide({ team: A.team, players: state.players, map, day: state.day, agentAssign: assignFor(A.team), intel: intelA });
-  B.str = computeSide({ team: B.team, players: state.players, map, day: state.day, agentAssign: assignFor(B.team), intel: intelB });
+  // 当前版本 meta（GDD §4.3）传入阵容强度（fit × meta 联合）
+  const patchMetaMap = Object.fromEntries((state.patchNotes?.slice(-1)[0]?.changes ?? []).map((c) => [c.agentId, c.meta]));
+  A.str = computeSide({ team: A.team, players: state.players, map, day: state.day, agentAssign: assignFor(A.team), intel: intelA, patchMeta: patchMetaMap });
+  B.str = computeSide({ team: B.team, players: state.players, map, day: state.day, agentAssign: assignFor(B.team), intel: intelB, patchMeta: patchMetaMap });
 
   const lines: Record<string, PlayerLine> = {};
   const allPlayers = [...A.players, ...B.players];

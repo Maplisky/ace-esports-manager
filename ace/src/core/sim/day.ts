@@ -6,8 +6,10 @@
 import { Rng, clamp, hashString } from "../rng.ts";
 import { computeOverall, spawnFreeAgents } from "../worldgen.ts";
 import { OPTION_BY_KEY, XP_PER_ATTR_POINT, XP_PER_DAY } from "../data/training.ts";
+import { AGENT_BY_ID } from "../data/agents.ts";
 import { spawnDailyEvents, spawnBirthdays } from "./events.ts";
 import { aiWeeklyTransfers, resolveInquiries } from "./transfer.ts";
+import { rollPatch } from "./patch.ts";
 import { decayIntel } from "./intel.ts";
 import { refreshCommercialWeek, weeklySponsorIncome } from "./business.ts";
 import type { PlayerAttrs } from "../types.ts";
@@ -337,6 +339,10 @@ export function advanceDay(
     notes.push({ day: state.day, kind: "league", text: "—— 进入揭幕杯 ——" });
   } else if (state.day === CALENDAR.stage1Start) {
     notes.push({ day: state.day, kind: "league", text: "—— 进入 Stage 1 联赛 ——" });
+    // 版本发布（GDD §4.3 meta 二维化，v0.9）：每赛段重掷英雄 meta，Patch 公告入档
+    const seg = state.day === CALENDAR.stage1Start ? "1" : state.day === CALENDAR.stage2Start ? "2" : String(state.day);
+    const patch = rollPatch(state, seg, rng);
+    notes.push({ day: state.day, kind: "league", important: true, text: `📢 版本 ${patch.version} 发布：${patch.changes.map((c) => `${AGENT_BY_ID.get(c.agentId)?.name ?? c.agentId} ${c.dir === "buff" ? "↑" : "↓"}${c.pct}%`).join("、")}。` });
     if (state.myTeamId) {
       const chal = state.teams[state.myTeamId]?.tier === 2;
       state.objective = { stage: "stage1", placeAtLeast: 4, text: chal ? "董事会要求：Stage 1 挑战者联赛进入前四。" : "董事会要求：Stage 1 联赛进入前四。" };
@@ -352,6 +358,8 @@ export function advanceDay(
     notes.push({ day: state.day, kind: "league", text: "—— 进入夏季窗口（休整与练兵）——" });
   } else if (state.day === CALENDAR.stage2Start) {
     notes.push({ day: state.day, kind: "league", text: "—— 进入 Stage 2 联赛 ——" });
+    const patch2 = rollPatch(state, "2", rng);
+    notes.push({ day: state.day, kind: "league", important: true, text: `📢 版本 ${patch2.version} 发布：${patch2.changes.map((c) => `${AGENT_BY_ID.get(c.agentId)?.name ?? c.agentId} ${c.dir === "buff" ? "↑" : "↓"}${c.pct}%`).join("、")}。` });
     if (state.myTeamId) {
       state.objective = { stage: "stage2", placeAtLeast: 4, text: (state.myTeamId ? state.teams[state.myTeamId]?.tier : 1) === 2 ? "董事会要求：Stage 2 挑战者联赛进入前四。" : "董事会要求：Stage 2 联赛进入前四。" };
       notes.push({ day: state.day, kind: "club", important: true, text: state.objective.text });

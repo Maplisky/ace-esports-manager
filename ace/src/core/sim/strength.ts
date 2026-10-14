@@ -8,6 +8,7 @@
 import { clamp } from "../rng.ts";
 import { AGENT_BY_ID } from "../data/agents.ts";
 import { computeFit } from "./fit.ts";
+import { currentPatch } from "./patch.ts";
 import type { MapDef, Player, Team, DutyVector } from "../types.ts";
 
 const LINEUP_WEIGHTS = [1.22, 1.10, 1.00, 0.90, 0.78] as const;
@@ -56,6 +57,8 @@ export interface TeamMapInput {
   intel?: number;
   /** 指定每名首发使用的英雄（preset），缺省自动分配 */
   agentAssign?: Record<string, string>;
+  /** 当前版本 meta（GDD §4.3：agentId → 系数），缺省 = 全 1 */
+  patchMeta?: Record<string, number>;
 }
 
 export interface SideStrength {
@@ -155,7 +158,7 @@ function assignAgents(lineup: Player[]): Record<string, string> {
 }
 
 export function computeSide(input: TeamMapInput): SideStrength {
-  const { team, players, map, day } = input;
+  const { team, players, map, day, patchMeta } = input;
   const all = team.starters.map((id) => players[id]).filter((p): p is Player => !!p);
   const healthy = all.filter((p) => p.injuredUntilDay <= day);
   // 伤病缺阵 → 从 roster 补（按有效能力排序）
@@ -211,7 +214,9 @@ export function computeSide(input: TeamMapInput): SideStrength {
     const agentId = agents[p.id];
     if (!agentId) continue;
     const a = AGENT_BY_ID.get(agentId);
-    fitSum += a ? computeFit(agentId, map) : 1;
+    // meta 二维化（GDD §4.3）：fit(世界常量) × meta(版本变量) 联合进入阵容强度
+    const patchMetaV = patchMeta?.[agentId] ?? 1;
+    fitSum += a ? computeFit(agentId, map) * patchMetaV : 1;
     fitN++;
     proSum += p.agentPro[agentId] ?? 50;
   }

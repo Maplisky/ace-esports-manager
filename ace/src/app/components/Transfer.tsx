@@ -11,6 +11,7 @@ import { SortableTh } from "./MarketFilter.tsx";
 import { useMarketFilters, MarketFilterPanel } from "./MarketFilter.tsx";
 import { PlayerDossier } from "./PlayerDossier.tsx";
 import { CollapsibleCard } from "./CollapsibleCard.tsx";
+import { PatchPanel } from "./PatchPanel.tsx";
 
 const ROLE_CN: Record<string, string> = { core: "核心", starter: "首发", rotation: "轮换", bench: "替补" };
 const DUTY_LABEL: Record<string, string> = { duelist: "决斗者", initiator: "先锋", controller: "控场", sentinel: "哨卫" };
@@ -338,6 +339,8 @@ export function TransferPage(props: { state: GameState }) {
           </tbody>
         </table>
       </CollapsibleCard>
+
+      <PatchPanel state={state} />
 
       <CollapsibleCard title="📰 转会动态" defaultOpen={false} collapsedSummary={<span className="muted small">{feed.length} 条</span>}>
         {feed.length === 0 && <div className="muted small">还没有动态。</div>}
