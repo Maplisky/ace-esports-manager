@@ -117,7 +117,7 @@ export function reNegotiate(state: GameState, offer: TransferOffer): { demand: s
   return { demand: offer.demand, attitude: offer.attitude };
 }
 
-/** 最终检定（确定性：seed 由球员/日期派生）。返回是否接受。 */
+/** 最终检定（确定性：seed 由选手/日期派生）。返回是否接受。 */
 export function finalizeOffer(state: GameState, offer: TransferOffer, rng: Rng): { accepted: boolean; reason: string } {
   const p = state.players[offer.playerId] as Player;
   const toTeam = state.teams[offer.toTeam] as Team;
@@ -279,7 +279,7 @@ export function resolveInquiries(state: GameState): void {
       continue;
     }
     const base = marketValue(p, 1);
-    // 有主球员：俱乐部溢价 ×1.15（挂牌 ×0.75、noPoach 天价非卖）
+    // 有主选手：俱乐部溢价 ×1.15（挂牌 ×0.75、noPoach 天价非卖）
     const premium = !p.teamId ? 1 : p.noPoach ? 2.2 : p.listed ? 0.75 : 1.15;
     q.askingFee = Math.round(base * premium * (0.9 + ((hashString(q.id) % 40) / 100)));
     const clauses: string[] = [];
