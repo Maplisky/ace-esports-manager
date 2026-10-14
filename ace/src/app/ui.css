@@ -126,7 +126,7 @@ tbody tr { transition: background var(--t-fast); }
 tbody tr:hover td { background: rgba(255, 255, 255, 0.022); }
 tr.me td { background: rgba(255, 70, 85, 0.07); }
 tr.me:hover td { background: rgba(255, 70, 85, 0.1); }
-td b, td .num { font-variant-numeric: tabular-nums; }
+td b { font-variant-numeric: tabular-nums; }
 
 /* 播放器 */
 .viewer-backdrop {
