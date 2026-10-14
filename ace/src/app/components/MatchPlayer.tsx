@@ -56,18 +56,19 @@ export function MatchPlayer(props: { record: MatchRecord; state: GameState; onCl
   const revealed = round ? round.events.slice(0, Math.max(0, pos.ei + 1)) : [];
   const showResult = round !== undefined && pos.ei >= round.events.length;
 
-  // 系列赛比分（当前图之前的图）
+  // 系列赛比分：播放中 = 当前图之前的胜场；结算 = 全部图（否则 2-0 横扫在结算页只显示 1:0）
   const series = useMemo(() => {
     let a = 0;
     let b = 0;
-    for (let i = 0; i < pos.mi; i++) {
+    const upto = finished ? record.maps.length : pos.mi;
+    for (let i = 0; i < upto; i++) {
       const m = record.maps[i];
       if (!m) continue;
       if (m.score[0] > m.score[1]) a++;
       else b++;
     }
     return [a, b] as [number, number];
-  }, [pos.mi, record.maps]);
+  }, [pos.mi, record.maps, finished]);
 
   useEffect(() => {
     if (!playing || finished) return;
@@ -144,6 +145,14 @@ export function MatchPlayer(props: { record: MatchRecord; state: GameState; onCl
             : winnerTeam;
           const viewMvps = isSeriesView || !viewMap ? mvps : pickMvps(rows, viewWinner);
           const viewWinnerTeam = isSeriesView || !viewMap ? winnerTeam : viewWinner;
+          // 系列赛特工序列：每名选手按图序的全部特工
+          const seriesAgents: Record<string, string[]> = {};
+          for (const m of record.maps) {
+            for (const [pid, aid] of Object.entries(m.agents ?? {})) {
+              (seriesAgents[pid] ??= []).push(aid);
+            }
+          }
+          const tagA2 = teamA?.tag ?? "A", tagB2 = teamB?.tag ?? "B";
           return (
             <div style={{ textAlign: "center" }}>
               <div className="card" style={{ textAlign: "center", padding: "16px 26px" }}>
@@ -180,9 +189,10 @@ export function MatchPlayer(props: { record: MatchRecord; state: GameState; onCl
                 mvpPid={viewMvps.mvp}
                 smvpPid={viewMvps.smvp}
                 agents={viewMap?.agents}
+                agentSeq={isSeriesView ? seriesAgents : undefined}
                 title={isSeriesView
-                  ? `比赛总结 · 双方选手数据（全部 ${record.maps.length} 图汇总）`
-                  : `第 ${mapIdx + 1} 图数据 · ${MAP_BY_ID.get(viewMap?.map ?? "")?.name ?? ""}（本图胜负口径）`}
+                  ? `比赛总结 · 双方选手数据（全部 ${record.maps.length} 图汇总 · 比分 ${tagA2} ${record.score[0]} - ${record.score[1]} ${tagB2}）`
+                  : `第 ${mapIdx + 1} 图数据 · ${MAP_BY_ID.get(viewMap?.map ?? "")?.name ?? ""} · ${tagA2} ${viewMap?.score[0] ?? 0} - ${viewMap?.score[1] ?? 0} ${tagB2}（本图胜负口径）`}
               />
               {isSeriesView && <AttributionTable record={record} state={state} />}
             </div>
@@ -388,9 +398,11 @@ function StatsTable(props: {
   mvpPid: string | null;
   smvpPid: string | null;
   agents?: Record<string, string>;
+  /** 系列赛模式：pid → 按图序的全部特工 */
+  agentSeq?: Record<string, string[]>;
   title: string;
 }) {
-  const { state, record, rows, winnerTeam, mvpPid, smvpPid, agents, title } = props;
+  const { state, record, rows, winnerTeam, mvpPid, smvpPid, agents, agentSeq, title } = props;
   const ign = (pid: string) => state.players[pid]?.ign ?? pid;
   if (rows.length === 0) return null;
   const kda = (r: { k: number; d: number; a: number }) => (r.d === 0 ? r.k + r.a : (r.k + r.a) / r.d);
@@ -415,7 +427,7 @@ function StatsTable(props: {
               <thead>
                 <tr>
                   <th style={{ textAlign: "left" }}>选手</th>
-                  {agents && <th style={{ textAlign: "left" }}>特工</th>}
+                  {(agents || agentSeq) && <th style={{ textAlign: "left" }}>特工</th>}
                   <th>K / D / A</th>
                   <th>KDA</th>
                   <th>ACS</th>
@@ -441,12 +453,21 @@ function StatsTable(props: {
                           {r.pid === smvpPid && <span className="tag">SMVP</span>}
                         </span>
                       </td>
-                      {agents && (
+                      {(agents || agentSeq) && (
                         <td style={{ whiteSpace: "nowrap" }}>
                           {aid ? (
                             <span className="row" style={{ gap: 5, alignItems: "center" }}>
                               <AgentIcon agentId={aid} size={22} name={aDef?.name} />
                               <span className="muted small">{aDef?.name ?? aid}</span>
+                            </span>
+                          ) : agentSeq?.[r.pid]?.length ? (
+                            <span className="row" style={{ gap: 3, alignItems: "center" }}>
+                              {agentSeq[r.pid].map((aid2, ai) => (
+                                <span key={ai} title={AGENT_BY_ID.get(aid2)?.name ?? aid2} style={{ position: 'relative' }}>
+                                  <AgentIcon agentId={aid2} size={20} name={AGENT_BY_ID.get(aid2)?.name} />
+                                  {ai > 0 && <span style={{ position: 'absolute', left: -2, top: -4, fontSize: 8, color: 'var(--muted)' }}>{ai + 1}</span>}
+                                </span>
+                              ))}
                             </span>
                           ) : null}
                         </td>
