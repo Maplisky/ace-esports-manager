@@ -3,12 +3,11 @@
  */
 import { useState } from "react";
 import type { GameState, Player } from "../../core/types.ts";
-import { AGENT_BY_ID } from "../../core/data/agents.ts";
+import { AGENTS } from "../../core/data/agents.ts";
 import { marketValue, salaryExpectation, inTransferWindow, evaluateOffer } from "../../core/sim/transfer.ts";
 import { useStore } from "../store.ts";
 import { PlayerFace, SyntheticBadge } from "./Avatar.tsx";
 import { dutyTendencyOf, DUTY_ORDER } from "./AgentSelect.tsx";
-import { AGENTS } from "../../core/data/agents.ts";
 import { PlayerDossier } from "./PlayerDossier.tsx";
 
 const ROLE_CN: Record<string, string> = { core: "核心", starter: "首发", rotation: "轮换", bench: "替补" };
@@ -36,6 +35,8 @@ export function TransferPage(props: { state: GameState }) {
   const inWindow = inTransferWindow(state.day);
   const grace = !inWindow ? "关窗宽限：只能完成在谈交易" : null;
   const allFreeAgents = Object.values(state.players).filter((p) => !p.teamId && p.injuredUntilDay <= state.day);
+  // 身价预计算（排序比较器热路径避免 O(N log N) 次完整估值公式重算；必须先于消费它的派生）
+  const valueOf = new Map(allFreeAgents.map((p) => [p.id, marketValue(p, team.tier)]));
   // 筛选 + 排序（用户需求：按位置/英雄/能力/潜力/年龄/身价）
   const freeAgents = allFreeAgents
     .filter((p) => {
@@ -44,7 +45,7 @@ export function TransferPage(props: { state: GameState }) {
       if (minOvr && p.overall < Number(minOvr)) return false;
       if (minPot && p.potential < Number(minPot)) return false;
       if (ageMax && p.age > Number(ageMax)) return false;
-      if (minValue && marketValue(p, team.tier) < Number(minValue)) return false;
+      if (minValue && valueOf.get(p.id)! < Number(minValue) * 1000) return false;
       return true;
     })
     .sort((a, b) => {
@@ -53,8 +54,8 @@ export function TransferPage(props: { state: GameState }) {
         case "pot": return b.potential - a.potential;
         case "ageAsc": return a.age - b.age;
         case "ageDesc": return b.age - a.age;
-        case "valueAsc": return marketValue(a, team.tier) - marketValue(b, team.tier);
-        default: return marketValue(b, team.tier) - marketValue(a, team.tier);
+        case "valueAsc": return valueOf.get(a.id)! - valueOf.get(b.id)!;
+        default: return valueOf.get(b.id)! - valueOf.get(a.id)!;
       }
     });
   const feed = state.transferFeed.slice(-12).reverse();
@@ -167,7 +168,7 @@ export function TransferPage(props: { state: GameState }) {
             <input type="number" value={ageMax} onChange={(e) => setAgeMax(e.target.value)} style={{ width: 56 }} />
           </span>
           <span className="row" style={{ gap: 4, alignItems: "center" }}>
-            <span className="muted small">身价≥$K</span>
+            <span className="muted small">身价≥（$K）</span>
             <input type="number" value={minValue} onChange={(e) => setMinValue(e.target.value)} style={{ width: 70 }} />
           </span>
           <span className="row" style={{ gap: 4, alignItems: "center" }}>
@@ -205,7 +206,7 @@ export function TransferPage(props: { state: GameState }) {
                 <td><b>{p.overall}</b></td>
                 <td className="muted">{p.potential}</td>
                 <td className="muted">{p.age}</td>
-                <td className="muted">{fmt(marketValue(p, team.tier))}</td>
+                <td className="muted">{fmt(valueOf.get(p.id) ?? 0)}</td>
                 <td style={{ whiteSpace: "nowrap" }}>
                   <button
                     className="small"
@@ -213,7 +214,7 @@ export function TransferPage(props: { state: GameState }) {
                       setInquiry((prev) => {
                         const probe = {
                           id: `INQ_${p.id}`, playerId: p.id, fromTeam: p.teamId, toTeam: myId,
-                          fee: Math.round(marketValue(p, team.tier) * 1.1 / 1000) * 1000,
+                          fee: Math.round((valueOf.get(p.id) ?? 0) * 1.1 / 1000) * 1000,
                           salary: Math.round(salaryExpectation(p, 1) * 1.2), years: 2,
                           signingBonus: 0, promisedRole: "starter" as const, day: state.day, round: 0,
                           demand: "", attitude: 0,
@@ -241,7 +242,7 @@ export function TransferPage(props: { state: GameState }) {
               {inquiryText && (
                 <tr key={p.id + ":inq"} style={{ opacity: 0.85 }}>
                   <td colSpan={7} className="muted small">
-                    💬 <b>{p.ign}</b> 的问价反馈：{inquiryText}（薪资期望 ~{fmt(exp)}/年 · 身价参考 {fmt(marketValue(p, team.tier))}）
+                    💬 <b>{p.ign}</b> 的问价反馈：{inquiryText}（薪资期望 ~{fmt(exp)}/年 · 身价参考 {fmt(valueOf.get(p.id) ?? 0)}）
                   </td>
                 </tr>
               )}

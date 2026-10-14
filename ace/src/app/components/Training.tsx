@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { GameState } from "../../core/types.ts";
 import { MAPS } from "../../core/data/maps.ts";
-import { AGENTS, AGENT_BY_ID } from "../../core/data/agents.ts";
+import { AGENT_BY_ID } from "../../core/data/agents.ts";
 import { INDIVIDUAL_OPTIONS, OPTION_BY_KEY, recommendFocus, XP_PER_DAY, XP_PER_ATTR_POINT } from "../../core/data/training.ts";
 import { useStore } from "../store.ts";
 import { AgentIcon, PlayerFace } from "./Avatar.tsx";

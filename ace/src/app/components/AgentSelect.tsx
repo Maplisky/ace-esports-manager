@@ -17,7 +17,7 @@ export const DUTY_ORDER: { key: string; label: string }[] = [
   { key: "sentinel", label: "哨卫" },
 ];
 
-export function primaryDutyOf(a: AgentDef): string {
+function primaryDutyOf(a: AgentDef): string {
   let best = "duelist";
   let bestV = -1;
   for (const [k, v] of Object.entries(a.duty)) {
@@ -86,16 +86,6 @@ export function AgentSelect(props: {
   );
 }
 
-/** 行内英雄头像+名（Dossier/PreMatch 复用） */
-export function AgentChip({ agentId, size = 30 }: { agentId: string; size?: number }) {
-  const a = AGENT_BY_ID.get(agentId);
-  return (
-    <span className="row" style={{ gap: 6, alignItems: "center" }}>
-      <AgentIcon agentId={agentId} size={size} name={a?.name} />
-      <span className="small">{a?.name ?? agentId}</span>
-    </span>
-  );
-}
 
 /** 位置倾向（主职业+副职业，参照原作）：英雄池按熟练度加权的职责向量取前二；副职业份额 ≥ 主 40% 才显示 */
 export function dutyTendencyOf(p: Player): { main: string; second: string | null } {

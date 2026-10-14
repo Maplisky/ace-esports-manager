@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { generateWorld } from "../src/core/worldgen.ts";
-import { initSeasonFixtures, advanceDay, playHeldMatch } from "../src/core/sim/day.ts";
+import { initSeasonFixtures } from "../src/core/sim/day.ts";
 import { computeSide } from "../src/core/sim/strength.ts";
 import { MAPS } from "../src/core/data/maps.ts";
 

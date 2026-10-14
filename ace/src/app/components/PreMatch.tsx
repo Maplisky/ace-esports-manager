@@ -5,7 +5,7 @@
  */
 import { useState } from "react";
 import type { GameState, Player } from "../../core/types.ts";
-import { AGENTS, AGENT_BY_ID } from "../../core/data/agents.ts";
+import { AGENT_BY_ID } from "../../core/data/agents.ts";
 import { computeFit } from "../../core/sim/fit.ts";
 import { PlayerFace, AgentIcon } from "./Avatar.tsx";
 import { AgentSelect } from "./AgentSelect.tsx";
