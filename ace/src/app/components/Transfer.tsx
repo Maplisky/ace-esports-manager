@@ -346,6 +346,7 @@ export function TransferPage(props: { state: GameState }) {
         {feed.length === 0 && <div className="muted small">还没有动态。</div>}
         {feed.map((n, i) => (
           <div key={i} className="news-item">
+            <span className="muted small" style={{ marginRight: 4 }}>D{n.day}</span>
             <span className="muted small">[{n.kind === "done" ? "成交" : n.kind === "bid" ? "报价" : n.kind === "list" ? "挂牌" : "解约"}] </span>
             {n.text}
           </div>

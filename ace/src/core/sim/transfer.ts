@@ -250,20 +250,24 @@ export function aiWeeklyTransfers(state: GameState, rng: Rng, onBid: (offer: Tra
 
   // AI 挂牌/摘牌（v0.8 用户需求：让「挂牌」列活起来）——仅他队；性格定概率，换血型最活跃
   if (inTransferWindow(state.day)) {
+    // Deadline Day（GDD §18 #6）：窗口末 3 天挂牌与互挖密度 ×2（仪式感）
+    const windowsDL: [number, number][] = [[1, 24], [123, 152], [233, 366]];
+    const deadlineSoon = windowsDL.some(([a, b]) => state.day >= b - 2 && state.day <= b);
+    const dlMul = deadlineSoon ? 2 : 1;
     const LIST_PERSONALITY: Record<Team["personality"], number> = { wheeler: 0.35, spender: 0.1, youth: 0.08, steady: 0.03 };
     for (const t of Object.values(state.teams)) {
       if (t.id === myId) continue;
       const listedNow = t.roster.map((id) => state.players[id] as Player).filter((p) => p?.listed);
-      // 摘牌：挂牌 ≥6 周 → 静默撤牌
+      // 摘牌：挂牌 ≥6 周 → 静默撤牌（截止期不摘——最后机会留队）
       for (const p of listedNow) {
         p.listedWeeks = (p.listedWeeks ?? 0) + 1;
-        if (p.listedWeeks >= 6) {
+        if (p.listedWeeks >= 6 && !deadlineSoon) {
           p.listed = false;
           p.listedWeeks = 0;
         }
       }
-      // 新挂牌：性格概率（每队同时 ≤1 人）；对象=非 IGL/noPoach 且（老将/无潜力空间/长期板凳）
-      if (listedNow.length === 0 && rng.chance(LIST_PERSONALITY[t.personality] ?? 0.08)) {
+      // 新挂牌：性格概率（每队同时 ≤1 人，截止期概率 ×2）；对象=非 IGL/noPoach 且（老将/无潜力空间/长期板凳）
+      if (listedNow.length === 0 && rng.chance((LIST_PERSONALITY[t.personality] ?? 0.08) * dlMul)) {
         const pool = t.roster
           .map((id) => state.players[id] as Player)
           .filter((p) => p && !p.isIgl && !p.noPoach && (p.age >= 27 || p.potential - p.overall <= 2 || (p.benchedWeeks ?? 0) >= 4));
@@ -282,7 +286,7 @@ export function aiWeeklyTransfers(state: GameState, rng: Rng, onBid: (offer: Tra
     const listedPlayers = Object.values(state.players).filter(
       (p) => p.teamId && p.teamId !== myId && p.listed && p.injuredUntilDay <= state.day,
     );
-    if (listedPlayers.length && rng.chance(0.3)) {
+    if (listedPlayers.length && rng.chance(deadlineSoon ? 0.6 : 0.3)) {
       const target = rng.pick(listedPlayers);
       const fromId = target.teamId as string;
       const seller = state.teams[fromId] as Team;
