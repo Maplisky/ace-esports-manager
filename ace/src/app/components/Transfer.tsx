@@ -114,7 +114,7 @@ export function TransferPage(props: { state: GameState }) {
               const names = p.agentPool.map((a) => AGENT_BY_ID.get(a)?.name ?? a).join(" / ");
               return (
               <tr key={p.id}>
-                <td><span className="row" style={{ alignItems: "center", gap: 6 }}><PlayerFace p={p} size={22} showTag={false} />{p.ign}</span></td>
+                <td><span className="row" style={{ alignItems: "center", gap: 6 }}><PlayerFace p={p} size={22} showTag={false} />{p.ign}<SyntheticBadge p={p} /></span></td>
                 <td className="muted small">{names}</td>
                 <td><b>{p.overall}</b></td>
                 <td className="muted">{p.potential}</td>

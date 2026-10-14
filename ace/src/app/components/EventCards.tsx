@@ -9,7 +9,7 @@ export function EventCardModal() {
   const target = card.targetPlayerId ? state.players[card.targetPlayerId] : null;
 
   return (
-    <div className="viewer-backdrop">
+    <div className="viewer-backdrop" style={{ zIndex: 130 }}>
       <div className="viewer" style={{ width: "min(560px, 92vw)" }}>
         <div className="muted small" style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
           <span>📋 事件 · 待处理 {state.pendingEvents.length}</span>

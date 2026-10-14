@@ -157,7 +157,7 @@ export function PreMatch(props: {
                       setManual(next);
                     }}
                   >
-                    {m.name} <span className="muted small">{myTeam.mapPref[m.id] ?? 50}</span>
+                    {m.name} <span className="muted small">{Math.round(myTeam.mapPref[m.id] ?? 50)}</span>
                     {isA && <span className="tag green" style={{ marginLeft: 6 }}>第{idx + 1}图</span>}
                   </button>
                 );
