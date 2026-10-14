@@ -3,15 +3,18 @@ import type { GameState, Preset } from "../../core/types.ts";
 import { AGENT_BY_ID, AGENTS } from "../../core/data/agents.ts";
 import { MAPS } from "../../core/data/maps.ts";
 import { useStore } from "../store.ts";
+import { PlayerDossier } from "./PlayerDossier.tsx";
 
-/** 战术页（GDD §7.1 v1.3）：每图多预案（快照）+ 首选 + 替补智能适配提示 */
+/** 战术页（GDD §7.1 v1.3）：每图多预案（快照）+ 首选 + 替补智能适配提示 + 轮换 */
 export function TacticsPage(props: { state: GameState }) {
   const { state } = props;
-  const { setPreset, applyPreset } = useStore();
+  const { setPreset, applyPreset, setStarters } = useStore();
   const myId = state.myTeamId ?? "";
   const team = state.teams[myId];
   const [mapId, setMapId] = useState(MAPS[0]!.id);
   const [draft, setDraft] = useState<Record<string, string>>({});
+  const [dossier, setDossier] = useState<string | null>(null);
+  const [pendingOut, setPendingOut] = useState<string | null>(null);
   const [presetName, setPresetName] = useState("");
   const [adaptMsg, setAdaptMsg] = useState<string | null>(null);
   if (!team) return null;
@@ -20,6 +23,11 @@ export function TacticsPage(props: { state: GameState }) {
   const presets = team.presets[mapId] ?? [];
   const preferred = presets.find((p) => p.preferred) ?? presets[0];
   const starters = team.starters.map((pid) => state.players[pid]!);
+  const bench = team.roster.map((pid) => state.players[pid]!).filter((p) => !team.starters.includes(p.id));
+  const swap = (outId: string, inId: string) => {
+    void setStarters(team.starters.filter((id) => id !== outId).concat(inId));
+    setPendingOut(null);
+  };
 
   // 当前生效的英雄分配：首选预案优先，否则草稿（缺省自动）
   const currentAgents: Record<string, string> = {};
@@ -70,7 +78,7 @@ export function TacticsPage(props: { state: GameState }) {
 
         <table>
           <thead>
-            <tr><th>选手</th><th>位置倾向</th><th>本图英雄</th><th>熟练度</th></tr>
+            <tr><th>选手</th><th>位置倾向</th><th>本图英雄</th><th>熟练度</th><th></th></tr>
           </thead>
           <tbody>
             {starters.map((p) => {
@@ -79,7 +87,16 @@ export function TacticsPage(props: { state: GameState }) {
               const offDuty = isOffDuty(p, current);
               return (
                 <tr key={p.id}>
-                  <td>{p.ign}{p.isIgl && <span className="tag" style={{ marginLeft: 6 }}>指挥</span>}</td>
+                  <td>
+                    <span
+                      style={{ cursor: "pointer", textDecoration: pendingOut === p.id ? "line-through" : "underline dotted" }}
+                      onClick={() => setDossier(p.id)}
+                    >
+                      {p.ign}
+                    </span>
+                    {p.isIgl && <span className="tag" style={{ marginLeft: 6 }}>指挥</span>}
+                    {pendingOut === p.id && <span className="tag orange" style={{ marginLeft: 6 }}>待换下</span>}
+                  </td>
                   <td className="muted small">{p.agentPool.map((a) => AGENT_BY_ID.get(a)?.name).join(" / ")}</td>
                   <td>
                     <select
@@ -97,12 +114,46 @@ export function TacticsPage(props: { state: GameState }) {
                   <td>
                     <span className={pro >= 60 ? "tag green" : pro >= 34 ? "tag orange" : "tag red"}>{Math.round(pro * 10) / 10}%</span>
                     {offDuty && <span className="tag red" style={{ marginLeft: 6 }}>错位</span>}
+                    <button
+                      className="small"
+                      style={{ marginLeft: 8 }}
+                      onClick={() => setPendingOut(pendingOut === p.id ? null : p.id)}
+                    >
+                      {pendingOut === p.id ? "取消" : "换下"}
+                    </button>
                   </td>
                 </tr>
               );
             })}
           </tbody>
         </table>
+
+        <div className="row" style={{ marginTop: 10, flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+          <span className="muted small">轮换：</span>
+          {bench.map((p) =>
+            pendingOut ? (
+              <button key={p.id} className="small" onClick={() => swap(pendingOut, p.id)}>
+                {p.ign} ⇄ 换下 {state.players[pendingOut]?.ign}
+              </button>
+            ) : (
+              <select
+                key={p.id}
+                className="small"
+                defaultValue=""
+                onChange={(e) => e.target.value && swap(e.target.value, p.id)}
+                title={"提上 " + p.ign + "（选择换下谁）"}
+              >
+                <option value="">{"提上 " + p.ign + "：换下谁…"}</option>
+                {team.starters.map((sid) => (
+                  <option key={sid} value={sid}>
+                    {state.players[sid]?.ign}（{state.players[sid]?.overall}）
+                  </option>
+                ))}
+              </select>
+            ),
+          )}
+          {!bench.length && <span className="muted small">替补席无人。</span>}
+        </div>
 
         <div className="row" style={{ marginTop: 12 }}>
           <input
@@ -135,6 +186,9 @@ export function TacticsPage(props: { state: GameState }) {
           </div>
         ))}
       </div>
+      {dossier && state.players[dossier] && (
+        <PlayerDossier state={state} player={state.players[dossier]!} onClose={() => setDossier(null)} />
+      )}
     </div>
   );
 }
