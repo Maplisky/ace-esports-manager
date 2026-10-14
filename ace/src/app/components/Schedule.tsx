@@ -60,6 +60,7 @@ function stageName(stage: string): string {
   switch (stage) {
     case "preseason": return "季前准备";
     case "cup": return "揭幕杯";
+    case "masters": return "Masters";
     case "stage1": return "Stage 1";
     case "summer": return "夏季窗口";
     case "stage2": return "Stage 2";

@@ -3,7 +3,7 @@
 export type Duty = "duelist" | "initiator" | "controller" | "sentinel";
 
 /** 赛历阶段（GDD §4.2）：自然年内六段 + 休赛期 */
-export type Stage = "preseason" | "cup" | "stage1" | "summer" | "stage2" | "offseason";
+export type Stage = "preseason" | "cup" | "stage1" | "summer" | "stage2" | "offseason" | "masters";
 
 export const DUTIES: readonly Duty[] = ["duelist", "initiator", "controller", "sentinel"];
 
@@ -126,6 +126,8 @@ export interface Team {
   name: string;
   tag: string;
   tier: 1 | 2;
+  /** 赛区（v0.6-1 第二赛区："xia" 霞 / "yao" 曜） */
+  regionId: string;
   roster: string[];
   starters: string[];
   coach: Coach;

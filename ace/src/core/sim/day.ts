@@ -34,11 +34,19 @@ export const CALENDAR = {
   stage1Start: 53,
   stage1End: 122,
   summerStart: 123,
+  mastersStart: 126,
   summerEnd: 152,
   stage2Start: 153,
   stage2End: 232,
   offseasonStart: 233,
 } as const;
+
+/** 赛区注册表（v0.6-1 双赛区）：霞（主赛区）/ 曜（第二赛区） */
+export const REGIONS: { id: string; label: string }[] = [
+  { id: "xia", label: "霞赛区" },
+  { id: "yao", label: "曜赛区" },
+];
+const regionLabel = (id: string): string => REGIONS.find((r) => r.id === id)?.label ?? "霞赛区";
 
 export interface AdvanceResult {
   day: number;
@@ -47,34 +55,64 @@ export interface AdvanceResult {
   seasonEnded: boolean;
 }
 
-/** 开赛程：揭幕杯（一级前 8）+ 双循环联赛（一级/次级各一 × Stage1/Stage2）。按年份变化种子。 */
+/** 开赛程：揭幕杯（跨赛区一级前 8）+ 双赛区双循环联赛（VCT-P/挑战者 × Stage1/Stage2）。Masters 待 Stage1 收官后抽签。按年份变化种子。 */
 export function initSeasonFixtures(state: GameState): void {
   const rng = new Rng((state.seed ^ Math.imul(state.year, 0x9e3779b9)) >>> 0);
-  const t1 = Object.values(state.teams).filter((t) => t.tier === 1);
-  const t2 = Object.values(state.teams).filter((t) => t.tier === 2);
-  state.comps["cup"] = { key: "cup", name: "揭幕杯", stage: "cup", teamIds: [], standings: {} };
-  state.comps["stage1-t1"] = { key: "stage1-t1", name: "VCT-P 霞赛区 · Stage 1", stage: "stage1", teamIds: t1.map((t) => t.id), standings: {} };
-  state.comps["stage1-t2"] = { key: "stage1-t2", name: "挑战者联赛 · Stage 1", stage: "stage1", teamIds: t2.map((t) => t.id), standings: {} };
-  state.comps["stage2-t1"] = { key: "stage2-t1", name: "VCT-P 霞赛区 · Stage 2", stage: "stage2", teamIds: t1.map((t) => t.id), standings: {} };
-  state.comps["stage2-t2"] = { key: "stage2-t2", name: "挑战者联赛 · Stage 2", stage: "stage2", teamIds: t2.map((t) => t.id), standings: {} };
-  for (const comp of Object.values(state.comps)) {
-    if (comp.key === "cup") continue;
-    for (const id of comp.teamIds) {
-      comp.standings[id] = { teamId: id, w: 0, l: 0, mapW: 0, mapL: 0, roundW: 0, roundL: 0, pts: 0 };
-    }
-  }
-  // 揭幕杯：一级按平均 overall 取前 8
+  const all = Object.values(state.teams);
+  const t1 = all.filter((t) => t.tier === 1);
+  // 揭幕杯：跨赛区一级按平均 overall 取前 8（季前国际热身）
   const avgOverall = (id: string) => {
     const t = state.teams[id] as GameState["teams"][string];
     return t.roster.reduce((s, pid) => s + (state.players[pid]?.overall ?? 0), 0) / t.roster.length;
   };
   const cupTeams = t1.slice().sort((a, b) => avgOverall(b.id) - avgOverall(a.id)).slice(0, 8).map((t) => t.id);
-  state.comps["cup"]!.teamIds = cupTeams;
+  state.comps["cup"] = { key: "cup", name: "揭幕杯", stage: "cup", teamIds: cupTeams, standings: {} };
   buildCup(state.fixtures, { comp: "cup", name: "揭幕杯", stage: "cup", teamIds: cupTeams, startDay: CALENDAR.cupStart + 1, gapDays: 8, bo: 3, rng });
-  buildLeague(state.fixtures, { comp: "stage1-t1", name: "霞赛区联赛", stage: "stage1", teamIds: t1.map((t) => t.id), startDay: CALENDAR.stage1Start + 2, endDay: CALENDAR.stage1End, bo: 3, rng });
-  buildLeague(state.fixtures, { comp: "stage1-t2", name: "挑战者联赛", stage: "stage1", teamIds: t2.map((t) => t.id), startDay: CALENDAR.stage1Start + 2, endDay: CALENDAR.stage1End, bo: 3, rng });
-  buildLeague(state.fixtures, { comp: "stage2-t1", name: "霞赛区联赛", stage: "stage2", teamIds: t1.map((t) => t.id), startDay: CALENDAR.stage2Start + 2, endDay: CALENDAR.stage2End, bo: 3, rng });
-  buildLeague(state.fixtures, { comp: "stage2-t2", name: "挑战者联赛", stage: "stage2", teamIds: t2.map((t) => t.id), startDay: CALENDAR.stage2Start + 2, endDay: CALENDAR.stage2End, bo: 3, rng });
+  // 双赛区：VCT-P + 挑战者联赛（Stage1/Stage2 双循环）
+  for (const st of ["stage1", "stage2"] as const) {
+    const sName = st === "stage1" ? "Stage 1" : "Stage 2";
+    const start = st === "stage1" ? CALENDAR.stage1Start : CALENDAR.stage2Start;
+    const end = st === "stage1" ? CALENDAR.stage1End : CALENDAR.stage2End;
+    for (const r of REGIONS) {
+      const rt1 = all.filter((t) => t.tier === 1 && (t.regionId ?? "xia") === r.id);
+      const rt2 = all.filter((t) => t.tier === 2 && (t.regionId ?? "xia") === r.id);
+      const k1 = `${st}-${r.id}-t1`;
+      const k2 = `${st}-${r.id}-t2`;
+      state.comps[k1] = { key: k1, name: `VCT-P ${r.label} · ${sName}`, stage: st, teamIds: rt1.map((t) => t.id), standings: {} };
+      state.comps[k2] = { key: k2, name: `挑战者联赛 ${r.label} · ${sName}`, stage: st, teamIds: rt2.map((t) => t.id), standings: {} };
+      buildLeague(state.fixtures, { comp: k1, name: `${r.label}联赛`, stage: st, teamIds: rt1.map((t) => t.id), startDay: start + 2, endDay: end, bo: 3, rng });
+      buildLeague(state.fixtures, { comp: k2, name: `${r.label}挑战者联赛`, stage: st, teamIds: rt2.map((t) => t.id), startDay: start + 2, endDay: end, bo: 3, rng });
+    }
+  }
+  // 清掉上一赛季遗留的 comp（去年的 Masters/旧 key 联赛不残留到总览）
+  for (const k of Object.keys(state.comps)) {
+    if (!/^(stage1|stage2)-(xia|yao)-t[12]$/.test(k) && k !== "cup") delete state.comps[k];
+  }
+  for (const comp of Object.values(state.comps)) {
+    if (comp.key === "cup" || comp.key === "masters") continue;
+    for (const id of comp.teamIds) {
+      comp.standings[id] = { teamId: id, w: 0, l: 0, mapW: 0, mapL: 0, roundW: 0, roundL: 0, pts: 0 };
+    }
+  }
+}
+
+/** Masters 国际赛（GDD §7.3）：Stage1 双赛区 VCT-P 各前 4 晋级，夏季窗口单败淘汰 */
+function buildMasters(state: GameState, notes: NewsItem[]): void {
+  const rng = new Rng(hashString(`${state.seed}:masters:${state.year}`));
+  const qualified: string[] = [];
+  for (const r of REGIONS) {
+    const table = Object.values(state.comps[`stage1-${r.id}-t1`]?.standings ?? {}).sort(
+      (x, y) => y.pts - x.pts || (y.mapW - y.mapL) - (x.mapW - x.mapL) || (y.roundW - y.roundL) - (x.roundW - x.roundL),
+    );
+    for (const s of table.slice(0, 4)) qualified.push(s.teamId);
+  }
+  if (qualified.length !== 8) return;
+  state.comps["masters"] = { key: "masters", name: "Masters 国际赛", stage: "masters", teamIds: qualified, standings: {} };
+  for (const id of qualified) {
+    state.comps["masters"]!.standings[id] = { teamId: id, w: 0, l: 0, mapW: 0, mapL: 0, roundW: 0, roundL: 0, pts: 0 };
+  }
+  buildCup(state.fixtures, { comp: "masters", name: "Masters", stage: "masters", teamIds: qualified, startDay: CALENDAR.mastersStart, gapDays: 7, bo: 3, rng });
+  notes.push({ day: state.day, kind: "league", important: true, text: "🌍 Masters 国际赛抽签完成：双赛区 Stage 1 前四晋级，单败淘汰。" });
 }
 
 function applyStandings(state: GameState, compKey: string, teamA: string, teamB: string, mapScore: [number, number], maps: { score: [number, number] }[]): void {
@@ -232,7 +270,11 @@ function awardLeagueTitle(state: GameState, compKey: string, notes: NewsItem[]):
     const p = state.players[pid];
     if (p) p.career.titles++;
   }
-  notes.push({ day: state.day, kind: "league", important: true, text: `🏆 ${state.teams[champ]?.name} 加冕 ${compKey.includes("t2") ? "挑战者联赛" : "霞赛区联赛"}${compKey.includes("stage2") ? " Stage 2" : " Stage 1"} 冠军` });
+  const m = /^stage(\d)-([a-z]+)-t(\d)$/.exec(compKey);
+  const label = m
+    ? `${regionLabel(m[2]!)}${m[3] === "2" ? "挑战者联赛" : "联赛"} Stage ${m[1]}`
+    : compKey;
+  notes.push({ day: state.day, kind: "league", important: true, text: `🏆 ${state.teams[champ]?.name} 加冕 ${label} 冠军` });
 }
 
 /** 推进一天。onMatch：每场结束回调。mineHold：我的比赛开打前暂停（返回 true 表示拦截，由调用方带参重放）。 */
@@ -268,10 +310,14 @@ export function advanceDay(
       notes.push({ day: state.day, kind: "club", important: true, text: state.objective.text });
     }
   } else if (state.day === CALENDAR.summerStart) {
-    // Stage1 收官：结算目标 + 冠军荣誉
-    settleObjective(state, "stage1-t1", "Stage 1", notes);
-    awardLeagueTitle(state, "stage1-t1", notes);
-    awardLeagueTitle(state, "stage1-t2", notes);
+    // Stage1 收官：结算目标 + 冠军荣誉 + Masters 抽签
+    const myRegion = state.myTeamId ? (state.teams[state.myTeamId] as GameState["teams"][string] | undefined)?.regionId ?? "xia" : "xia";
+    settleObjective(state, `stage1-${myRegion}-t1`, "Stage 1", notes);
+    for (const r of REGIONS) {
+      awardLeagueTitle(state, `stage1-${r.id}-t1`, notes);
+      awardLeagueTitle(state, `stage1-${r.id}-t2`, notes);
+    }
+    buildMasters(state, notes);
     notes.push({ day: state.day, kind: "league", text: "—— 进入夏季窗口（休整与练兵）——" });
   } else if (state.day === CALENDAR.stage2Start) {
     notes.push({ day: state.day, kind: "league", text: "—— 进入 Stage 2 联赛 ——" });
@@ -281,9 +327,12 @@ export function advanceDay(
     }
   } else if (state.day === CALENDAR.offseasonStart) {
     // Stage2 收官
-    settleObjective(state, "stage2-t1", "Stage 2", notes);
-    awardLeagueTitle(state, "stage2-t1", notes);
-    awardLeagueTitle(state, "stage2-t2", notes);
+    const myRegion = state.myTeamId ? (state.teams[state.myTeamId] as GameState["teams"][string] | undefined)?.regionId ?? "xia" : "xia";
+    settleObjective(state, `stage2-${myRegion}-t1`, "Stage 2", notes);
+    for (const r of REGIONS) {
+      awardLeagueTitle(state, `stage2-${r.id}-t1`, notes);
+      awardLeagueTitle(state, `stage2-${r.id}-t2`, notes);
+    }
     notes.push({ day: state.day, kind: "league", text: "—— 进入休赛期 ——" });
   }
 
@@ -303,14 +352,14 @@ export function advanceDay(
     const line = `${f.label}（补赛）｜${tagA} ${rec.score[0]}-${rec.score[1]} ${tagB}`;
     notes.push({ day: state.day, kind: "match", text: line, important: mine });
     if (mine) playedMine.push(f.id);
-    if (f.label.includes("总决赛") && state.day >= CALENDAR.cupStart && state.day <= CALENDAR.cupEnd) {
+    if (f.label.includes("总决赛") && (f.comp === "cup" || f.comp === "masters")) {
       const champ = rec.winner === "A" ? f.teamA : f.teamB;
       const champTeam = state.teams[champ] as GameState["teams"][string];
       for (const pid of champTeam.roster) {
         const p = state.players[pid];
         if (p) p.career.titles++;
       }
-      notes.push({ day: state.day, kind: "league", important: true, text: `🏆 ${champTeam.name} 夺得揭幕杯冠军！` });
+      notes.push({ day: state.day, kind: "league", important: true, text: `🏆 ${champTeam.name} 夺得${f.comp === "masters" ? "Masters 国际赛" : "揭幕杯"}冠军！` });
     }
   }
 
@@ -341,14 +390,14 @@ export function advanceDay(
     notes.push({ day: state.day, kind: "match", text: line, important: mine });
     if (mine) playedMine.push(f.id);
     // 杯赛冠军
-    if (f.label.includes("总决赛") && state.day >= CALENDAR.cupStart && state.day <= CALENDAR.cupEnd) {
+    if (f.label.includes("总决赛") && (f.comp === "cup" || f.comp === "masters")) {
       const champ = rec.winner === "A" ? f.teamA : f.teamB;
       const champTeam = state.teams[champ] as GameState["teams"][string];
       for (const pid of champTeam.roster) {
         const p = state.players[pid];
         if (p) p.career.titles++; // 冠军荣誉：退役转教练公式与名人堂的输入（GDD §8.3）
       }
-      notes.push({ day: state.day, kind: "league", important: true, text: `🏆 ${champTeam.name} 夺得揭幕杯冠军！` });
+      notes.push({ day: state.day, kind: "league", important: true, text: `🏆 ${champTeam.name} 夺得${f.comp === "masters" ? "Masters 国际赛" : "揭幕杯"}冠军！` });
     }
   }
 
@@ -473,14 +522,14 @@ export function playHeldMatch(
   const tagB = (state.teams[f.teamB] as GameState["teams"][string]).tag;
   notes.push({ day: state.day, kind: "match", text: `${f.label}｜${tagA} ${rec.score[0]}-${rec.score[1]} ${tagB}`, important: true });
   onMatch?.(rec, f.id, true);
-  if (f.label.includes("总决赛") && state.day >= CALENDAR.cupStart && state.day <= CALENDAR.cupEnd) {
+  if (f.label.includes("总决赛") && (f.comp === "cup" || f.comp === "masters")) {
     const champ = rec.winner === "A" ? f.teamA : f.teamB;
     const champTeam = state.teams[champ] as GameState["teams"][string];
     for (const pid of champTeam.roster) {
       const p = state.players[pid];
       if (p) p.career.titles++;
     }
-    notes.push({ day: state.day, kind: "league", important: true, text: `🏆 ${champTeam.name} 夺得揭幕杯冠军！` });
+    notes.push({ day: state.day, kind: "league", important: true, text: `🏆 ${champTeam.name} 夺得${f.comp === "masters" ? "Masters 国际赛" : "揭幕杯"}冠军！` });
   }
   for (const n of notes) {
     state.news.push(n);

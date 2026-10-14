@@ -32,6 +32,16 @@ const T2_NAMES: [string, string][] = [
   ["野草电竞", "YC"], ["屿风电竞", "YF"], ["拾光电竞", "SG"], ["白鸽电竞", "BG"],
   ["麦浪电竞", "ML"], ["夜航电竞", "YH"], ["青苔电竞", "QT"], ["飞鸟电竞", "FN"],
 ];
+/** 曜赛区（v0.6-1 第二赛区）：一级 10 队 + 挑战者 8 队 */
+const YA_T1_NAMES: [string, string][] = [
+  ["曜石电竞", "YS"], ["苍狼电竞", "CL"], ["银翼电竞", "YY"], ["赤焰电竞", "CY"],
+  ["玄夜电竞", "XN"], ["天狼电竞", "TL"], ["破军电竞", "PJ"], ["惊鸿电竞", "JH"],
+  ["流影电竞", "LYY"], ["狂澜电竞", "KL"],
+];
+const YA_T2_NAMES: [string, string][] = [
+  ["磐石电竞", "PS"], ["疾风电竞", "JF"], ["晨曦电竞", "CX2"], ["夜雨电竞", "YY2"],
+  ["烈日电竞", "LR"], ["寒霜电竞", "HS"], ["紫电电竞", "ZD"], ["青鸾电竞", "QL"],
+];
 
 const COACH_NAMES = ["老K", "阿澈", "白熊", "萧然", "陆离", "顾行", "苏木", "陈野", "洛尘", "祁风", "温叙", "关山"];
 
@@ -159,7 +169,7 @@ function makePlayer(
   };
 }
 
-function makeTeam(rng: Rng, id: string, name: string, tag: string, tier: 1 | 2, players: Player[], usedIgns: Set<string>): Team {
+function makeTeam(rng: Rng, id: string, name: string, tag: string, tier: 1 | 2, regionId: string, players: Player[], usedIgns: Set<string>): Team {
   const baseMean = tier === 1 ? 74 : 66.5;
   const sd = tier === 1 ? 5.5 : 4.5;
   const roster: string[] = [];
@@ -208,6 +218,7 @@ function makeTeam(rng: Rng, id: string, name: string, tag: string, tier: 1 | 2, 
     name,
     tag,
     tier,
+    regionId,
     roster,
     starters,
     coach: {
@@ -241,10 +252,17 @@ export function generateWorld(seed: number): GameState {
   const usedIgns = new Set<string>();
 
   T1_NAMES.forEach(([name, tag], i) => {
-    teams[`T${i}`] = makeTeam(rng, `T${i}`, name, tag, 1, players, usedIgns);
+    teams[`T${i}`] = makeTeam(rng, `T${i}`, name, tag, 1, "xia", players, usedIgns);
   });
   T2_NAMES.forEach(([name, tag], i) => {
-    teams[`C${i}`] = makeTeam(rng, `C${i}`, name, tag, 2, players, usedIgns);
+    teams[`C${i}`] = makeTeam(rng, `C${i}`, name, tag, 2, "xia", players, usedIgns);
+  });
+  // 曜赛区（v0.6-1 第二赛区）
+  YA_T1_NAMES.forEach(([name, tag], i) => {
+    teams[`YT${i}`] = makeTeam(rng, `YT${i}`, name, tag, 1, "yao", players, usedIgns);
+  });
+  YA_T2_NAMES.forEach(([name, tag], i) => {
+    teams[`YC${i}`] = makeTeam(rng, `YC${i}`, name, tag, 2, "yao", players, usedIgns);
   });
 
   const playerMap: Record<string, Player> = {};
@@ -333,7 +351,7 @@ export function makeSyntheticTeam(id: string, tag: string, targetOverall: number
   const mapPref: Record<string, number> = {};
   for (const m of MAPS) mapPref[m.id] = 50;
   const team: Team = {
-    id, name: tag, tag, tier: 1, roster, starters: roster.slice(),
+    id, name: tag, tag, tier: 1, regionId: "xia", roster, starters: roster.slice(),
     coach: { name: "测试教练", tactics: 60, development: 60, motivation: 60 },
     facilities: 60, budget: 5_000_000, reputation: 60,
     personality: "steady", mapPref, bond: 50, presets: {},

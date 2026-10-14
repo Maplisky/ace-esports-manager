@@ -99,6 +99,8 @@ function migrate(state: GameState): GameState {
   for (const t of Object.values(state.teams)) {
     t.sponsors ??= [];
     t.presets ??= {};
+    // v0.6-1 双赛区：旧档单赛区队伍归入霞赛区
+    t.regionId ??= "xia";
   }
   state.finances ??= { log: [] };
   state.sponsorOffers ??= [];
