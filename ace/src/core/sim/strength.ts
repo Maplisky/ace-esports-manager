@@ -185,6 +185,7 @@ export function computeSide(input: TeamMapInput): SideStrength {
 
   const avg = (k: keyof Player["attrs"]) => (lineup.length ? lineup.reduce((s, p) => s + p.attrs[k], 0) / lineup.length : 55);
   const iglPlayer = lineup.find((p) => p.isIgl) ?? lineup.slice().sort((a, b) => b.attrs.igl - a.attrs.igl)[0];
+  const vicePlayer = lineup.find((p) => p.viceIgl);
   const iglAttr = iglPlayer?.attrs.igl ?? 0;
 
   const iglMod = iglPlayer ? (iglAttr - 60) * 0.09 : -4;
@@ -237,7 +238,8 @@ export function computeSide(input: TeamMapInput): SideStrength {
 
   const atk = scaledBase + iglMod + chemMod + coachMod + mapMod + prepMod + metaMod + familiarityMod + shortHandedMod + styleAtk + aimMod + mapTacticsMod;
   const def = scaledBase + iglMod + chemMod + coachMod + mapMod + prepMod + metaMod + familiarityMod + shortHandedMod + styleDef + awareMod + DEF_BONUS + mapTacticsMod;
-  const mid = (avg("clutch") - 65) * 0.05 + iglAttr * 0.06;
+  // 副指挥：逆境追分微加成（其指挥属性的低权重计入 mid）
+  const mid = (avg("clutch") - 65) * 0.05 + iglAttr * 0.06 + (vicePlayer ? vicePlayer.attrs.igl * 0.015 : 0);
 
   return {
     teamId: team.id,

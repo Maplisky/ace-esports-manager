@@ -182,6 +182,21 @@ self.onmessage = (e: MessageEvent) => {
       if (msg.schedules) state.schedules = msg.schedules as Record<string, string>;
     }
     reply({ type: "snapshot", ...snapshot() });
+  } else if (type === "setCommander") {
+    if (state && state.myTeamId) {
+      const team = state.teams[state.myTeamId];
+      if (team) {
+        const mainId = msg.mainId as string;
+        const viceId = msg.viceId as string | null;
+        for (const pid of team.roster) {
+          const p = state.players[pid];
+          if (!p) continue;
+          p.isIgl = pid === mainId;
+          p.viceIgl = !!viceId && pid === viceId && pid !== mainId;
+        }
+      }
+    }
+    reply({ type: "snapshot", ...snapshot() });
   } else if (type === "setAgentTraining") {
     if (state) {
       const picks = msg.picks as Record<string, string>;

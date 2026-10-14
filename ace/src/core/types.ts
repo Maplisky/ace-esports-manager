@@ -89,6 +89,8 @@ export interface Player {
   agentPool: string[];
   agentPro: Record<string, number>; // 0-100
   isIgl: boolean;
+  /** 副指挥（最多 1 人；强度 mid 微加成，GDD 外用户需求） */
+  viceIgl?: boolean;
   /** 承诺角色（GDD §6.4 出场期望）：core/starter/rotation/bench */
   promisedRole: "core" | "starter" | "rotation" | "bench";
   /** 个人训练经验池（attr key → 0-100，攒满 +1 属性；GDD §6.3） */

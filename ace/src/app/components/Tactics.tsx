@@ -1,9 +1,11 @@
 import { useState } from "react";
-import type { GameState, Preset } from "../../core/types.ts";
+import type { GameState, Player, Preset } from "../../core/types.ts";
 import { AGENT_BY_ID, AGENTS } from "../../core/data/agents.ts";
 import { MAPS } from "../../core/data/maps.ts";
 import { useStore } from "../store.ts";
 import { PlayerDossier } from "./PlayerDossier.tsx";
+
+const DUTY_CN: Record<string, string> = { duelist: "决斗者", initiator: "先锋", controller: "控场", sentinel: "哨卫" };
 
 /** 战术页（GDD §7.1 v1.3）：每图多预案（快照）+ 首选 + 替补智能适配提示 + 轮换 */
 export function TacticsPage(props: { state: GameState }) {
@@ -33,6 +35,28 @@ export function TacticsPage(props: { state: GameState }) {
   const currentAgents: Record<string, string> = {};
   if (preferred) Object.assign(currentAgents, preferred.agents);
   for (const p of starters) if (!currentAgents[p.id]) currentAgents[p.id] = draft[p.id] ?? bestAgentOf(p);
+
+  /** 位置倾向（主职业+副职业，参照原作）：英雄池按熟练度加权的职责向量取前二 */
+  const dutyTendency = (p: Player): { main: string; second: string | null } => {
+    const sum = { duelist: 0, initiator: 0, controller: 0, sentinel: 0 };
+    let w = 0;
+    for (const agentId of p.agentPool) {
+      const a = AGENT_BY_ID.get(agentId);
+      if (!a) continue;
+      const pro = p.agentPro[agentId] ?? 0;
+      for (const k of ["duelist", "initiator", "controller", "sentinel"] as const) sum[k] += a.duty[k] * pro;
+      w += pro;
+    }
+    if (w <= 0) return { main: "—", second: null };
+    const ranked = (Object.keys(sum) as (keyof typeof sum)[]).sort((x, y) => sum[y] / w - sum[x] / w);
+    const main = ranked[0]!;
+    const second = ranked[1]!;
+    // 副职业：份额 ≥ 主职业 40% 才显示（防止凑数第二）
+    return { main: DUTY_CN[main] ?? main, second: sum[second] / w >= (sum[main] / w) * 0.4 ? DUTY_CN[second] ?? second : null };
+  };
+  const appoint = useStore((s) => s.appointCommander);
+  const mainIgl = team.starters.find((pid) => state.players[pid]?.isIgl) ?? null;
+  const viceIgl = team.starters.find((pid) => state.players[pid]?.viceIgl) ?? null;
 
   const mapFit = (agentId: string) => {
     void agentId;
@@ -94,10 +118,14 @@ export function TacticsPage(props: { state: GameState }) {
                     >
                       {p.ign}
                     </span>
-                    {p.isIgl && <span className="tag" style={{ marginLeft: 6 }}>指挥</span>}
+                    {p.isIgl && <span className="tag" style={{ marginLeft: 6 }}>主指挥</span>}
+                    {p.viceIgl && <span className="tag" style={{ marginLeft: 6 }}>副指挥</span>}
                     {pendingOut === p.id && <span className="tag orange" style={{ marginLeft: 6 }}>待换下</span>}
                   </td>
-                  <td className="muted small">{p.agentPool.map((a) => AGENT_BY_ID.get(a)?.name).join(" / ")}</td>
+                  <td className="small">
+                    <span className="tag">{dutyTendency(p).main}</span>
+                    {dutyTendency(p).second && <span className="muted small" style={{ marginLeft: 6 }}>{dutyTendency(p).second}</span>}
+                  </td>
                   <td>
                     <select
                       value={current}
@@ -127,6 +155,36 @@ export function TacticsPage(props: { state: GameState }) {
             })}
           </tbody>
         </table>
+
+        <div className="card" style={{ padding: "10px 14px", marginTop: 12 }}>
+          <h3 style={{ marginBottom: 8 }}>🎖 场上指挥（主指挥恰 1 名 · 副指挥至多 1 名，可空）</h3>
+          <div className="row" style={{ gap: 18, flexWrap: "wrap" }}>
+            <span className="row" style={{ gap: 8, alignItems: "center" }}>
+              <span className="muted small">主指挥</span>
+              <select
+                value={mainIgl ?? ""}
+                onChange={(e) => void appoint(e.target.value, viceIgl !== e.target.value ? viceIgl : null)}
+              >
+                {team.starters.map((pid) => (
+                  <option key={pid} value={pid}>{state.players[pid]?.ign}（指挥属性 {state.players[pid]?.attrs.igl}）</option>
+                ))}
+              </select>
+            </span>
+            <span className="row" style={{ gap: 8, alignItems: "center" }}>
+              <span className="muted small">副指挥</span>
+              <select
+                value={viceIgl ?? ""}
+                onChange={(e) => void appoint(mainIgl ?? team.starters[0]!, e.target.value || null)}
+              >
+                <option value="">（无）</option>
+                {team.starters.filter((pid) => pid !== mainIgl).map((pid) => (
+                  <option key={pid} value={pid}>{state.players[pid]?.ign}（指挥属性 {state.players[pid]?.attrs.igl}）</option>
+                ))}
+              </select>
+            </span>
+            <span className="muted small">副指挥提供小幅逆境追分加成（其指挥属性的低权重计入）。</span>
+          </div>
+        </div>
 
         <div className="row" style={{ marginTop: 10, flexWrap: "wrap", gap: 8, alignItems: "center" }}>
           <span className="muted small">轮换：</span>
