@@ -246,13 +246,13 @@ function simMap(state: GameState, mapId: string, A: SimTeam, B: SimTeam, rng: Rn
     const killsThisRound: Record<string, number> = {};
     const firstKiller = pickWeighted(atkPlayers, atkAliveSet, (p) => dutyEntryWeight(dutyOf(p)) * (p.attrs.aim / 60) * traitMul(p, "first"), rng);
     const firstVictim = loseDead.length > 0 ? (loseDead[0] as Player) : (defPlayers[0] as Player);
-    events.push({ t: "kill", s: firstKiller.id, v: firstVictim.id, first: true });
+    events.push({ t: "kill", s: firstKiller.id, v: firstVictim.id, first: true, dmg: 150 });
     killsThisRound[firstKiller.id] = 1;
     addUlt(ultPoints, firstKiller.id, 1, winSim, events);
 
     const credit = (killer: Player, victim: Player) => {
       killsThisRound[killer.id] = (killsThisRound[killer.id] ?? 0) + 1;
-      events.push({ t: "kill", s: killer.id, v: victim.id });
+      events.push({ t: "kill", s: killer.id, v: victim.id, dmg: 150 });
       addUlt(ultPoints, killer.id, 1, winSim, events);
     };
     for (let i = 1; i < loseDead.length; i++) {
@@ -311,7 +311,9 @@ function simMap(state: GameState, mapId: string, A: SimTeam, B: SimTeam, rng: Rn
       }
     }
 
-    // lines 累计
+    // lines 累计（残伤与助攻同步记入 end，供实时 ACS/助攻揭示——GDD §5.4）
+    const endDmg: Record<string, number> = {};
+    const endAssists: string[] = [];
     for (const p of allPlayers) {
       const line = lines[p.id] as PlayerLine;
       line.rounds++;
@@ -320,7 +322,9 @@ function simMap(state: GameState, mapId: string, A: SimTeam, B: SimTeam, rng: Rn
         : (winSide === "B" ? winAlive : loseAll);
       const k = killsThisRound[p.id] ?? 0;
       line.kills += k;
-      line.damage += k * 150 + (mySideAlive.has(p.id) ? rng.range(20, 55) : rng.range(0, 15));
+      const chip = mySideAlive.has(p.id) ? rng.range(20, 55) : rng.range(0, 15);
+      line.damage += k * 150 + chip;
+      endDmg[p.id] = chip; // 原始小数入 end——实时 ACS 求和必须与 line.damage 完全一致
     }
     for (const victim of [...loseDead, ...winDead]) {
       const line = lines[victim.id] as PlayerLine;
@@ -332,6 +336,7 @@ function simMap(state: GameState, mapId: string, A: SimTeam, B: SimTeam, rng: Rn
     for (const p of winSim.players) {
       if (winAlive.has(p.id) && !(killsThisRound[p.id] > 0) && rng.chance(0.42 * traitMul(p, "assist"))) {
         lines[p.id]!.assists++;
+        endAssists.push(p.id);
       }
     }
     if (round === 12) {
@@ -349,6 +354,8 @@ function simMap(state: GameState, mapId: string, A: SimTeam, B: SimTeam, rng: Rn
         how,
         alive: { A: winSide === "A" ? winnerAlive : loserAlive, B: winSide === "B" ? winnerAlive : loserAlive },
         score: [a, b],
+        assists: endAssists,
+        dmgBonus: endDmg,
       },
     });
 

@@ -1,19 +1,19 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { liveLines, summarizeMatch, pickMvps } from "../src/core/sim/matchstats.ts";
+import { liveLines, liveAcs, summarizeMatch, pickMvps } from "../src/core/sim/matchstats.ts";
 import type { MapRecord, PlayerLine } from "../src/core/types.ts";
 
 function line(p: Partial<PlayerLine>): PlayerLine {
   return { kills: 0, deaths: 0, assists: 0, firstKills: 0, firstDeaths: 0, clutches: 0, damage: 0, rounds: 0, acs: 0, ...p };
 }
 
-function mapRec(lines: Record<string, PlayerLine>, events: { t: "kill"; s: string; v: string; first?: boolean }[][]): MapRecord {
+function mapRec(lines: Record<string, PlayerLine>, events: { t: "kill"; s: string; v: string; first?: boolean; dmg?: number }[][]): MapRecord {
   return {
     map: "ascent",
     score: [13, 9],
     rounds: events.map((evs, i) => ({
       n: i + 1, atk: "A" as const, buys: { A: "full" as const, B: "eco" as const }, events: evs as never,
-      end: { win: "A" as const, how: "elim" as const, alive: { A: 3, B: 1 }, score: [13, 9] },
+      end: { win: "A" as const, how: "elim" as const, alive: { A: 3, B: 1 }, score: [13, 9], assists: [] as string[], dmgBonus: {} as Record<string, number> },
     })),
     lines,
     mvp: null,
@@ -27,18 +27,42 @@ test("实时战绩：播放进度内已揭示事件聚合，进度外不计", ()
     [{ t: "kill", s: "a1", v: "b1", first: true }, { t: "kill", s: "a1", v: "b2" }],
     [{ t: "kill", s: "b1", v: "a2" }],
   ])];
-  // 第 2 回合只揭示到 0 号事件：b1 的击杀应计入，之前 a1 两杀一 FK
-  const live = liveLines(maps, { mi: 0, ri: 1, ei: 0 });
+  // 第 2 回合只揭示到 0 号事件：b1 的击杀应计入，之前 a1 两杀一 FK（旧档击杀 dmg 缺省 150）
+  const { lines: live, rounds } = liveLines(maps, { mi: 0, ri: 1, ei: 0 });
   assert.equal(live.a1?.k, 2);
   assert.equal(live.a1?.fk, 1);
+  assert.equal(live.a1?.dmg, 300);
   assert.equal(live.b1?.d, 1);
   assert.equal(live.b2?.d, 1);
   assert.equal(live.b1?.k, 1);
   assert.equal(live.a2?.d, 1);
+  assert.equal(rounds, 1); // 第 2 回合未完成，不计入 ACS 分母
   // 回退到第 1 回合：b1 无死亡
   const live2 = liveLines(maps, { mi: 0, ri: 0, ei: -1 });
-  assert.equal(live2.b1?.d ?? 0, 0);
-  assert.equal(live2.a1?.k ?? 0, 0);
+  assert.equal(live2.lines.b1?.d ?? 0, 0);
+  assert.equal(live2.lines.a1?.k ?? 0, 0);
+  assert.equal(live2.rounds, 0);
+});
+
+test("实时 ACS：残伤与助攻随回合结果揭示，与赛后口径一致", () => {
+  const maps = [mapRec({}, [
+    [{ t: "kill", s: "a1", v: "b1", first: true, dmg: 150 }],
+    [{ t: "kill", s: "b1", v: "a2" }],
+  ])];
+  maps[0]!.rounds[0]!.end.dmgBonus = { a1: 40 };
+  maps[0]!.rounds[0]!.end.assists = ["b2"];
+  maps[0]!.rounds[1]!.end.dmgBonus = { a1: 10 };
+  // ei=1 ≥ events.length(1) → 第 2 回合结果已揭示：两回合全部计入
+  const { lines: live, rounds } = liveLines(maps, { mi: 0, ri: 1, ei: 1 });
+  assert.equal(rounds, 2);
+  assert.equal(live.a1?.dmg, 200);
+  assert.equal(live.b2?.a, 1);
+  assert.equal(liveAcs(live.a1!.dmg, rounds), Math.round((200 / 2) * 1.45));
+  // ei=-1 → 第 2 回合结果未揭示：残伤/助攻不计，分母 = 1
+  const mid = liveLines(maps, { mi: 0, ri: 1, ei: -1 });
+  assert.equal(mid.rounds, 1);
+  assert.equal(mid.lines.a1?.dmg, 190);
+  assert.equal(mid.lines.b2?.a ?? 0, 1); // 第 1 回合的助攻已揭示
 });
 
 test("赛后汇总：跨图求和、ACS 按回合加权、队属标注正确", () => {

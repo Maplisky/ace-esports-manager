@@ -8,7 +8,7 @@ import { AGENT_BY_ID } from "../../core/data/agents.ts";
 import { AgentIcon, PlayerFace, TeamLogo } from "./Avatar.tsx";
 import { MAP_BY_ID } from "../../core/data/maps.ts";
 import { Tactical2D } from "./Tactical2D.tsx";
-import { liveLines, summarizeMatch, pickMvps, type StatRow } from "../../core/sim/matchstats.ts";
+import { liveLines, liveAcs, summarizeMatch, pickMvps, type StatRow } from "../../core/sim/matchstats.ts";
 import type { GameState, MatchRecord, RoundEvent } from "../../core/types.ts";
 
 const SLOW_MS = 850;
@@ -229,6 +229,7 @@ export function MatchPlayer(props: { record: MatchRecord; state: GameState; onCl
                   <div className="fevent big">
                     🏁 {(round.end.win === "A" ? teamA?.tag : teamB?.tag)} 拿下回合（{howText(round.end.how)}）
                     · 存活 {round.end.alive.A}-{round.end.alive.B}
+                    {(round.end.assists?.length ?? 0) > 0 && <> · 助攻：{round.end.assists!.map(ign).join("、")}</>}
                   </div>
                 )}
               </div>
@@ -264,7 +265,7 @@ export function MatchPlayer(props: { record: MatchRecord; state: GameState; onCl
   );
 }
 
-/** 对局中双方选手实时战绩板（GDD §5.4）：已揭示事件聚合，阵亡灰显、本回合击杀高亮 */
+/** 对局中双方选手实时战绩板（GDD §5.4）：K/D/★FK/助攻/实时 ACS（已完成回合口径），阵亡灰显 */
 function LiveScoreboard({ record, state, pos }: { record: MatchRecord; state: GameState; pos: Pos }) {
   const live = useMemo(() => liveLines(record.maps, pos), [record.maps, pos]);
   const map = record.maps[pos.mi];
@@ -275,36 +276,49 @@ function LiveScoreboard({ record, state, pos }: { record: MatchRecord; state: Ga
   const ign = (pid: string) => state.players[pid]?.ign ?? pid;
   const teamA = state.teams[record.teamA];
   const teamB = state.teams[record.teamB];
-  const col = (team: typeof teamA, side: "A" | "B") =>
-    (team?.starters ?? []).map((pid) => ({ pid, line: live[pid] ?? { k: 0, d: 0, fk: 0 }, dead: deadNow.has(pid), side }));
-  const rowsA = col(teamA, "A");
-  const rowsB = col(teamB, "B");
-  const cell = (r: { pid: string; line: { k: number; d: number; fk: number }; dead: boolean }) => (
+  const col = (team: typeof teamA) =>
+    (team?.starters ?? []).map((pid) => ({ pid, line: live.lines[pid] ?? { k: 0, d: 0, a: 0, fk: 0, dmg: 0 }, dead: deadNow.has(pid) }));
+  const rowsA = col(teamA);
+  const rowsB = col(teamB);
+  const acsColor = (v: number) => (v >= 230 ? "var(--green)" : v < 110 ? "var(--muted)" : "inherit");
+  const row = (r: { pid: string; line: { k: number; d: number; a: number; fk: number; dmg: number }; dead: boolean }) => (
     <div
       key={r.pid}
       className="small"
       style={{
-        display: "flex", justifyContent: "space-between", gap: 8, padding: "1px 6px", borderRadius: 4,
+        display: "flex", alignItems: "center", gap: 8, padding: "1px 6px", borderRadius: 4,
         background: r.dead ? "rgba(238,80,80,0.10)" : "rgba(255,255,255,0.03)",
         opacity: r.dead ? 0.5 : 1,
       }}
     >
-      <span style={{ minWidth: 78, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ign(r.pid)}</span>
-      <span className="muted" style={{ fontVariantNumeric: "tabular-nums" }}>
-        <b style={{ color: "inherit" }}>{r.line.k}</b> / {r.line.d}
-        {r.line.fk > 0 && <span style={{ color: "#fb923c", marginLeft: 4 }}>★{r.line.fk}</span>}
+      <span style={{ minWidth: 76, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ign(r.pid)}</span>
+      <span className="muted" style={{ fontVariantNumeric: "tabular-nums", width: 52, textAlign: "right" }}>
+        <b style={{ color: "inherit" }}>{r.line.k}</b>/{r.line.d}
+        {r.line.fk > 0 && <span style={{ color: "#fb923c" }}>★{r.line.fk}</span>}
       </span>
+      <span className="muted" style={{ fontVariantNumeric: "tabular-nums", width: 24, textAlign: "right" }}>{r.line.a}</span>
+      <span style={{ fontVariantNumeric: "tabular-nums", width: 34, textAlign: "right", fontWeight: 700, color: acsColor(liveAcs(r.line.dmg, live.rounds)) }}>
+        {liveAcs(r.line.dmg, live.rounds)}
+      </span>
+    </div>
+  );
+  const head = (tag: string | undefined, color: string) => (
+    <div className="muted small" style={{ padding: "0 6px", color, display: "flex", gap: 8 }}>
+      <span style={{ minWidth: 76 }}>{tag} 战绩</span>
+      <span style={{ width: 52, textAlign: "right" }}>K/D</span>
+      <span style={{ width: 24, textAlign: "right" }}>A</span>
+      <span style={{ width: 34, textAlign: "right" }}>ACS</span>
     </div>
   );
   return (
     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
       <div style={{ flex: 1, minWidth: 240, border: "1px solid var(--line)", borderRadius: 8, padding: "4px 6px", display: "flex", flexDirection: "column", gap: 2 }}>
-        <div className="muted small" style={{ padding: "0 6px", color: "var(--green)" }}>{teamA?.tag ?? "A"} 战绩</div>
-        {rowsA.map(cell)}
+        {head(teamA?.tag, "var(--green)")}
+        {rowsA.map(row)}
       </div>
       <div style={{ flex: 1, minWidth: 240, border: "1px solid var(--line)", borderRadius: 8, padding: "4px 6px", display: "flex", flexDirection: "column", gap: 2 }}>
-        <div className="muted small" style={{ padding: "0 6px", color: "#60a5fa" }}>{teamB?.tag ?? "B"} 战绩</div>
-        {rowsB.map(cell)}
+        {head(teamB?.tag, "#60a5fa")}
+        {rowsB.map(row)}
       </div>
     </div>
   );

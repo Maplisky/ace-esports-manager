@@ -5,41 +5,63 @@
  */
 import type { MapRecord } from "../types.ts";
 
-/** 实时一行：击杀/死亡/首杀（助攻不进事件流，实时板只列 K/D/FK） */
+/** 实时一行：击杀/死亡/助攻/首杀/伤害（实时 ACS 的原料） */
 export interface LiveLine {
   k: number;
   d: number;
+  a: number;
   fk: number;
+  dmg: number;
 }
 
-/** 播放进度 (mi, ri, ei) 内已揭示事件的实时战绩 */
+/** 实时 ACS：伤害 ÷ 已完成回合 × 1.45（与引擎赛后同式；rounds=0 时为 0） */
+export function liveAcs(dmg: number, rounds: number): number {
+  return rounds > 0 ? Math.round((dmg / rounds) * 1.45) : 0;
+}
+
+/**
+ * 播放进度 (mi, ri, ei) 内已揭示内容的实时战绩。
+ * 击杀事件即时计（旧档 dmg 缺省按 150）；回合残伤与助攻随回合结果揭示（end.dmgBonus/end.assists）。
+ * 返回已完成回合数——实时 ACS 的分母（进行中的回合不计入，与转播口径一致）。
+ */
 export function liveLines(
   maps: MapRecord[],
   upTo: { mi: number; ri: number; ei: number },
-): Record<string, LiveLine> {
+): { lines: Record<string, LiveLine>; rounds: number } {
   const out: Record<string, LiveLine> = {};
   const add = (pid: string, patch: Partial<LiveLine>) => {
-    const cur = out[pid] ?? { k: 0, d: 0, fk: 0 };
+    const cur = out[pid] ?? { k: 0, d: 0, a: 0, fk: 0, dmg: 0 };
     cur.k += patch.k ?? 0;
     cur.d += patch.d ?? 0;
+    cur.a += patch.a ?? 0;
     cur.fk += patch.fk ?? 0;
+    cur.dmg += patch.dmg ?? 0;
     out[pid] = cur;
   };
+  let rounds = 0;
   for (let mi = 0; mi < maps.length && mi <= upTo.mi; mi++) {
     const m = maps[mi]!;
-    const rounds = mi < upTo.mi ? m.rounds : m.rounds.slice(0, upTo.ri + 1);
-    for (let ri = 0; ri < rounds.length; ri++) {
-      const r = rounds[ri]!;
-      const events = mi === upTo.mi && ri === upTo.ri ? r.events.slice(0, Math.max(0, upTo.ei + 1)) : r.events;
+    const roundsHere = mi < upTo.mi ? m.rounds.length : upTo.ri + 1;
+    for (let ri = 0; ri < roundsHere; ri++) {
+      const r = m.rounds[ri]!;
+      const isCurrent = mi === upTo.mi && ri === upTo.ri;
+      const events = isCurrent ? r.events.slice(0, Math.max(0, upTo.ei + 1)) : r.events;
       for (const e of events) {
         if (e.t !== "kill" || !e.s || !e.v) continue;
-        add(e.s, { k: 1 });
+        add(e.s, { k: 1, dmg: e.dmg ?? 150 });
         add(e.v, { d: 1 });
         if (e.first) add(e.s, { fk: 1 });
       }
+      // 回合完成（历史回合，或当前回合结果已揭示）→ 残伤与助攻揭晓
+      const completed = !isCurrent || upTo.ei >= r.events.length;
+      if (completed) {
+        rounds++;
+        for (const [pid, n] of Object.entries(r.end.dmgBonus ?? {})) add(pid, { dmg: n });
+        for (const pid of r.end.assists ?? []) add(pid, { a: 1 });
+      }
     }
   }
-  return out;
+  return { lines: out, rounds };
 }
 
 export interface StatRow {

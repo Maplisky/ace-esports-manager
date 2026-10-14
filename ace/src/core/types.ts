@@ -242,6 +242,8 @@ export interface RoundEvent {
   /** 大招就绪的档位 */
   tier?: UltTier;
   side?: "A" | "B";
+  /** 击杀伤害（实时 ACS 用；旧档缺省按 150） */
+  dmg?: number;
 }
 
 export interface RoundRecord {
@@ -255,6 +257,10 @@ export interface RoundRecord {
     how: "elim" | "spike" | "defuse" | "time";
     alive: { A: number; B: number };
     score: [number, number];
+    /** 回合末助攻名单（胜方存活无击杀者的 teamplay 判定；旧档缺省 []） */
+    assists?: string[];
+    /** 回合残伤（选手 id → 非击杀伤害；实时 ACS 揭示用，旧档缺省 {}） */
+    dmgBonus?: Record<string, number>;
   };
 }
 

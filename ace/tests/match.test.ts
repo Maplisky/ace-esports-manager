@@ -95,3 +95,22 @@ test("比赛引擎：大招就绪事件存在且档位合法", () => {
   }
   assert.ok(sawUlt, "40+ 回合里应出现大招就绪");
 });
+
+test("比赛引擎：实时数据流与赛后 lines 收敛（K/D/A/ACS 完全一致）", async () => {
+  const { liveLines, liveAcs } = await import("../src/core/sim/matchstats.ts");
+  const { state } = buildTwoTeamState(80, 78, 99);
+  const rec = simMatch(state, "TA", "TB", 3, 4242, "MCV");
+  for (const m of rec.maps) {
+    const { lines: live, rounds } = liveLines([m], { mi: 0, ri: m.rounds.length - 1, ei: 99 });
+    assert.equal(rounds, m.rounds.length);
+    for (const [pid, line] of Object.entries(m.lines)) {
+      const l = live[pid];
+      assert.ok(l, `${pid} 缺实时行`);
+      assert.equal(l.k, line.kills, `${pid} 击杀不收敛`);
+      assert.equal(l.d, line.deaths, `${pid} 死亡不收敛`);
+      assert.equal(l.a, line.assists, `${pid} 助攻不收敛`);
+      assert.equal(l.fk, line.firstKills, `${pid} 首杀不收敛`);
+      assert.equal(liveAcs(l.dmg, rounds), line.acs, `${pid} 实时 ACS 与赛后不一致`);
+    }
+  }
+});
