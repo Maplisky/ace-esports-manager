@@ -386,6 +386,7 @@ function makeTeamSkeleton(rng: Rng, id: string, name: string, tag: string, tier:
       mapTactics: { name: rng.pick(COACH_NAMES) + "（战术）", value: clamp(Math.round(rng.clampNorm(tier === 1 ? 60 : 52, 12, 20, 90)), 20, 90) },
       match: { name: rng.pick(COACH_NAMES) + "（比赛）", value: clamp(Math.round(rng.clampNorm(tier === 1 ? 58 : 50, 12, 20, 90)), 20, 90) },
     },
+    academy: [],
     patternUsage: {},
     mapPref,
     bond: rng.int(45, 65),
@@ -455,6 +456,18 @@ export function generateWorld(seed: number): GameState {
         const cp = players.find((x) => x.id === cut)!;
         cp.teamId = null;
         cp.promisedRole = "bench";
+      }
+      // 青训营（v0.9）：每队初始 2 名 ≤18 岁学员（不占一线名单，训练 ×1.5）
+      for (let ai = 0; ai < 2; ai++) {
+        const duty = STARTER_TEMPLATE[(realRoster.length + ai) % 4];
+        const ap = makePlayer(rng, id, tier, tier === 1 ? 58 : 52, duty, false, [16, 18], usedIgns, true, {
+          ign: rng.pick(SYN_NAMES[region] ?? SYN_NAMES.china!) + rng.pick(SYN_SUFFIX),
+          synthetic: "academy",
+          age: rng.int(16, 18),
+        });
+        ap.promisedRole = "bench";
+        players.push(ap);
+        skeleton.academy.push(ap.id);
       }
       skeleton.roster = realRoster;
       skeleton.starters = realRoster.slice(0, 5); // vlr roster 顺序即首发优先
@@ -611,6 +624,7 @@ export function makeSyntheticTeam(id: string, tag: string, targetOverall: number
       mapTactics: { name: "合成战术", value: 50 },
       match: { name: "合成比赛", value: 50 },
     },
+    academy: [],
     patternUsage: {},
   };
   return { team, players };

@@ -189,14 +189,16 @@ function weeklyTick(state: GameState, rng: Rng): void {
   for (const p of Object.values(state.players)) {
     if (p.injuredUntilDay > state.day) continue;
     const isMine = myTeam != null && p.teamId === myTeam.id;
+    // 青训营成长加速（GDD §6.5，v0.9 落地）：≤18 岁青训学员个人经验 ×1.5（比赛经验 ×0.5 在 lines 侧不可区分，跳过）
+    const acadF = p.homegrown && p.age <= 18 && myTeam?.academy?.includes(p.id) ? 1.5 : 1;
     if (isMine) {
       p.xp = p.xp ?? {};
       // ── 团队层选手效果：复盘日给全队意识/沟通经验（与个人训练并行的团队通道）──
       const reviewDays = state.teamSchedule.filter((s) => s === "review").length;
       const cap = Math.min(99, p.potential + 5);
       if (reviewDays > 0) {
-        p.xp.awareness = (p.xp.awareness ?? 0) + reviewDays * 1.2;
-        p.xp.communication = (p.xp.communication ?? 0) + reviewDays * 0.6;
+        p.xp.awareness = (p.xp.awareness ?? 0) + reviewDays * 1.2 * acadF;
+        p.xp.communication = (p.xp.communication ?? 0) + reviewDays * 0.6 * acadF;
       }
       // ── 个人层（并行）：每周一个项目，非休息日按天积累经验（GDD §6.3）──
       // 比赛日占槽：训练日按比赛天数折减
@@ -213,7 +215,7 @@ function weeklyTick(state: GameState, rng: Rng): void {
           const staffF = 1 + ((myTeam.staff?.training?.value ?? 0) * 0.004); // 训练助教（GDD §8.3：99 点 ≈ ×1.40）
           const moodF = (state.manager?.life?.mood ?? 70) < 30 ? 0.9 : 1; // 教练心情低落 → 训练收益 -10%（GDD v0.5-5）
           const facF = 0.85 + (myTeam.facilities ?? 50) / 250; // 设施乘数（v0.8 落地：40 设施 ×1.01，95 设施 ×1.23）
-          const gain = rng.range(XP_PER_DAY[0], XP_PER_DAY[1]) * effTrainDays * moraleF * fatigueF * coachF * commF * staffF * moodF * facF;
+          const gain = rng.range(XP_PER_DAY[0], XP_PER_DAY[1]) * effTrainDays * moraleF * fatigueF * coachF * commF * staffF * moodF * facF * acadF;
           p.xp[opt.attr] = (p.xp[opt.attr] ?? 0) + gain;
         }
       } else if (focus === "rest") {

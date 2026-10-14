@@ -176,6 +176,8 @@ export function TrainingPage(props: { state: GameState }) {
         </div>
       </div>
 
+      <AcademyCard />
+
             <div className="card" style={{ padding: "12px 16px", marginTop: 14 }}>
         <h3>🎭 练英雄（GDD §6.3：最多 5 人/周，熟练 +4.2×效率/周；效率 = 0.7 +（意识+道具）/400）</h3>
         <div className="muted small" style={{ margin: "6px 0" }}>
@@ -228,6 +230,69 @@ export function TrainingPage(props: { state: GameState }) {
       >
         📌 保存训练计划（团队 + 个人）
       </button>
+    </div>
+  );
+}
+
+/** 青训营（v0.9）：查看学员 + 晋升一线（名单满时选择换下一人） */
+function AcademyCard() {
+  const state = useStore((s) => s.state)!;
+  const promoteFromAcademy = useStore((s) => s.promoteFromAcademy);
+  const myId = state.myTeamId ?? "";
+  const team = state.teams[myId];
+  const [promotePid, setPromotePid] = useState<string | null>(null);
+  if (!team) return null;
+  const academy = (team.academy ?? []).map((pid) => state.players[pid]!).filter(Boolean);
+
+  return (
+    <div className="card" style={{ padding: "12px 16px", marginTop: 14 }}>
+      <h3>🎓 青训营（≤18 岁学员 · 个人训练经验 ×1.5 · 不占一线名单）</h3>
+      {academy.length === 0 && <div className="muted small">青训营暂无学员（每年休赛期青训营补充）。</div>}
+      {academy.length > 0 && (
+        <table>
+          <thead>
+            <tr><th>学员</th><th>位置倾向</th><th>能力/潜力</th><th>年龄</th><th>操作</th></tr>
+          </thead>
+          <tbody>
+            {academy.map((p) => (
+              <tr key={p.id}>
+                <td style={{ whiteSpace: "nowrap" }}>
+                  <span className="row" style={{ alignItems: "center", gap: 6 }}>
+                    <PlayerFace p={p} size={22} showTag={false} />
+                    <span>{p.ign}</span>
+                    <span className="tag green">青训</span>
+                  </span>
+                </td>
+                <td className="muted small">{p.agentPool.map((a) => AGENT_BY_ID.get(a)?.name ?? a).join(" / ")}</td>
+                <td><b>{p.overall}</b> <span className="muted small">/ {p.potential}</span></td>
+                <td className="muted">{p.age}</td>
+                <td>
+                  {promotePid === p.id ? (
+                    <select
+                      className="small"
+                      defaultValue=""
+                      autoFocus
+                      onChange={(e) => { if (e.target.value) { void promoteFromAcademy(p.id, e.target.value); setPromotePid(null); } }}
+                    >
+                      <option value="">换下谁…</option>
+                      {team.starters.map((sid) => (
+                        <option key={sid} value={sid}>{state.players[sid]?.ign}（{state.players[sid]?.overall}）</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <button className="small" onClick={() => setPromotePid(p.id)}>
+                      晋升一线
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      <div className="muted small" style={{ marginTop: 6 }}>
+        晋升后学员进入一线名单（名单满 7/7 时需指名换下一人）；一线轮换出场同样吃经验，青训经验倍率只对 ≤18 岁学员生效。
+      </div>
     </div>
   );
 }

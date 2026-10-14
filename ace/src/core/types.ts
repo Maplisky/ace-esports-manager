@@ -177,6 +177,8 @@ export interface Team {
     mapTactics?: { name: string; value: number };
     match?: { name: string; value: number };
   };
+  /** 青训营（v0.9）：≤18 岁选手池，不占一线名单；成长 ×1.5、比赛经验 ×0.5（GDD §6.5） */
+  academy: string[];
   /** 招牌战术使用计数（key = mapId；对手针对性准备的泄露来源，GDD §6.4） */
   patternUsage: Record<string, number>;
   /** 玩家可用预案：每图多套（key = mapId）；v0.1 core 仅存储，由战术层消费 */

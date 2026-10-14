@@ -321,6 +321,37 @@ function handleWorkerMessage(e: MessageEvent) {
       }
     }
     reply({ type: "snapshot", ...snapshot(), message });
+  } else if (type === "promoteFromAcademy") {
+    // 青训晋升（v0.9）：学员进入一线名单，名单 ≥7 时需指名换下一人
+    if (state && state.myTeamId) {
+      const team = state.teams[state.myTeamId];
+      const pid = msg.pid as string;
+      const outId = (msg.outId as string) ?? null;
+      const p = state.players[pid];
+      let message = "该学员不在青训营。";
+      if (p && team && team.academy.includes(pid)) {
+        if (team.roster.length >= 7 && !outId) {
+          message = "名单已满（7/7），需选择换下一人。";
+        } else if (outId && !team.roster.includes(outId)) {
+          message = "换下对象不在一线名单。";
+        } else {
+          if (outId) {
+            team.roster = team.roster.filter((id) => id !== outId);
+            const outP = state.players[outId];
+            if (outP) { outP.promisedRole = "bench"; outP.listedWeeks = 0; }
+          }
+          team.roster.push(pid);
+          team.academy = team.academy.filter((id) => id !== pid);
+          if (team.starters.length < 5) team.starters.push(pid);
+          p.promisedRole = "rotation";
+          message = `${p.ign} 从青训营晋升一线名单。`;
+          state.transferFeed.push({ day: state.day, year: state.year, kind: "done", text: `${team.name} 青训晋升：${p.ign}（${p.overall}）进入一线名单。` });
+        }
+      }
+      reply({ type: "snapshot", ...snapshot(), message });
+    } else {
+      reply({ type: "snapshot", ...snapshot() });
+    }
   } else if (type === "upgradeFacility") {
     // 设施升级（v0.8，原作公式 60000 + f²×90）：俱乐部预算支出，训练收益乘数上限 95
     let message = "无俱乐部。";
