@@ -68,14 +68,11 @@ export interface PosOpts {
   isAttacking: boolean;
   roundN: number;
   pid: string;
-  plantRevealed: boolean;
   /** 该棋子所在队伍的画布方位（teamB=top） */
   side: Side2;
-  /** 引擎开局战术：如 "atk:rush:A" / "def:stack:B" / "atk:default" / "def:aggro"（旧档缺省 default/standard） */
+  /** 引擎开局战术：如 "atk:rush:A" / "def:stack:B" / "atk:default"（旧档缺省 default/standard） */
   tactic: string;
-  /** 本回合已揭示击杀数——驱动压进程度 */
-  killsRevealed: number;
-  /** 同区第几个棋子（错开重叠） */
+  /** 同区第几个棋子（网格铺开错位） */
   slot: number;
 }
 
@@ -87,15 +84,14 @@ function zoneCenter(z: PlanZone): { x: number; y: number } {
 }
 
 /** 战术 → 进攻方各职责的布置区（参考 valoplant 预设：默认 2-1-2 分推 / 快攻 4-1 / 中路夹击 2-1-2 / eco 抱团） */
-function atkSetupZone(plan: MapPlan, tactic: string, duty: AnchorDuty, plant: PlanZone | null): PlanZone {
+function atkSetupZone(plan: MapPlan, tactic: string, duty: AnchorDuty): PlanZone {
   const lane = (L: string) => plan.zones.find((z) => z.id === "lane" + L);
   const site = (L: string) => plan.zones.find((z) => z.id === "site" + L);
   const midZ = plan.mid;
   const fallback = plan.sites[0] ?? plan.spawnAtk;
-  const other = plant ? plan.sites.find((s) => s.id !== plant.id) ?? plant : fallback;
   const kind = tactic.split(":")[1] ?? "default";
   const target = tactic.split(":")[2] ?? "";
-  const rushSite = target ? (site(target) ?? plant ?? fallback) : (plant ?? fallback);
+  const rushSite = target ? (site(target) ?? fallback) : fallback;
   switch (kind) {
     case "rush": { // 快攻 4-1：4 人压目标通道口，1 人（哨卫）中路策应
       const mainLane = (target ? lane(target) : undefined) ?? lane("A") ?? plan.zones.find((z) => z.kind === "lane");
@@ -103,13 +99,13 @@ function atkSetupZone(plan: MapPlan, tactic: string, duty: AnchorDuty, plant: Pl
       return mainLane ?? rushSite;
     }
     case "midSplit": // 中路夹击 2-1-2：控场+先锋控中，决斗+哨卫走 A 侧，机动位 B 侧
-      if (duty === "controller" || duty === "initiator") return midZ ?? other;
+      if (duty === "controller" || duty === "initiator") return midZ ?? fallback;
       if (duty === "duelist" || duty === "sentinel") return lane("A") ?? rushSite;
-      return lane("B") ?? other;
+      return lane("B") ?? fallback;
     case "ecoStack": // eco 抱团：全员缩在进攻出生压后（避免分散送头）
       return plan.spawnAtk;
     default: { // 默认分推 2-1-2：决斗+哨卫包点通道、先锋+机动位次通道、控场中路
-      const mainLane = lane(plant?.id.replace("site", "") ?? "A") ?? midZ ?? plant ?? plan.spawnAtk;
+      const mainLane = lane("A") ?? midZ ?? plan.spawnAtk;
       const secondLane = plan.zones.find((z) => z.kind === "lane" && z.id !== mainLane.id) ?? midZ ?? plan.spawnAtk;
       if (duty === "duelist" || duty === "sentinel") return mainLane;
       if (duty === "initiator" || duty === "flex") return secondLane;
@@ -154,56 +150,31 @@ function defSetupZone(plan: MapPlan, tactic: string, duty: AnchorDuty): PlanZone
   }
 }
 
-/** 站位主函数：布置位 →（击杀压进）→（下包收拢），全部确定性 */
+/** 站位主函数：只算「回合开始布置位」（网格铺开防扎堆）。
+ *  回合中的移动（击杀压进/下包收拢）由播放器按事件序列模拟——击杀事件不带走位信息，
+ *  必须让击杀者移动到受害者位置，否则会出现 A 点击倒 B 点敌人的荒诞画面。 */
 export function positionFor(mapId: string, opts: PosOpts): { x: number; y: number; zoneId: string } {
   const plan = PLANS[mapId];
-  if (!plan) return { x: PLAN_W / 2, y: PLAN_H / 2, zoneId: "mid" };
-  const plant = plantZoneOf(mapId, opts.roundN, opts.tactic);
+  if (!plan) return { x: PLAN_W / 2, y: PLAN_H / 2, zoneId: 'mid' };
   const isAtk = opts.isAttacking;
-  const setupZone = isAtk ? atkSetupZone(plan, opts.tactic, opts.duty, plant) : defSetupZone(plan, opts.tactic, opts.duty);
+  const setupZone = isAtk ? atkSetupZone(plan, opts.tactic, opts.duty) : defSetupZone(plan, opts.tactic, opts.duty);
 
-  // 目标区：下包后全员涌向包点；未下包时仅进攻方随击杀压向包点，防守方轻微收缩
-  const targetZone = opts.plantRevealed
-    ? plant ?? setupZone
-    : isAtk && opts.killsRevealed > 0
-      ? plant ?? setupZone
-      : setupZone;
-  const blend = opts.plantRevealed
-    ? 1
-    : isAtk ? Math.min(0.45, opts.killsRevealed * 0.16)
-      : Math.min(0.3, opts.killsRevealed * 0.1);
-
-  const jitterOf = (z: PlanZone, salt: string) => {
-    const c = zoneCenter(z);
-    const h = hashString(`${mapId}:${opts.pid}:${opts.roundN}:${z.id}:${salt}`);
-    const jx = ((h % 100) / 100 - 0.5) * Math.max(10, z.w * 0.55);
-    const jy = (((h >>> 9) % 100) / 100 - 0.5) * Math.max(10, z.h * 0.55);
-    return { jx, jy };
+  // 网格铺开：同区棋子按槽位 3 列 2 行铺开（单元 ≥22px，抖动 ±20% 单元）——任意两人间距 ≥13px
+  const gx = opts.slot % 3;
+  const gy = Math.floor(opts.slot / 3) % 2;
+  const cellW = Math.max(22, setupZone.w * 0.42);
+  const cellH = Math.max(22, setupZone.h * 0.42);
+  const h = hashString(`${mapId}:${opts.pid}:${opts.roundN}:${setupZone.id}`);
+  const jx = ((h % 100) / 100 - 0.5) * cellW * 0.4;
+  const jy = (((h >>> 9) % 100) / 100 - 0.5) * cellH * 0.4;
+  const c = zoneCenter(setupZone);
+  return {
+    x: clamp(c.x + (gx - 1) * cellW + jx, 10, PLAN_W - 10),
+    y: clamp(c.y + (gy - 0.5) * cellH + jy, 10, PLAN_H - 10),
+    zoneId: setupZone.id,
   };
-  const slotShift = (slot: number) => ({ dx: ((slot % 3) - 1) * 15, dy: (Math.floor(slot / 3) - 0.5) * 15 });
-
-  const sj = jitterOf(setupZone, "s");
-  const sc = zoneCenter(setupZone);
-  const sx = clamp(sc.x + sj.jx + slotShift(opts.slot).dx, 8, PLAN_W - 8);
-  const sy = clamp(sc.y + sj.jy + slotShift(opts.slot).dy, 8, PLAN_H - 8);
-
-  let fx: number;
-  let fy: number;
-  if (blend <= 0) {
-    fx = sx;
-    fy = sy;
-  } else {
-    const tj = jitterOf(targetZone, "t");
-    const tc = zoneCenter(targetZone);
-    const tx = clamp(tc.x + tj.jx + slotShift(opts.slot).dx, 8, PLAN_W - 8);
-    const ty = clamp(tc.y + tj.jy + slotShift(opts.slot).dy, 8, PLAN_H - 8);
-    fx = lerp(sx, tx, blend);
-    fy = lerp(sy, ty, blend);
-  }
-  return { x: clamp(fx, 10, PLAN_W - 10), y: clamp(fy, 10, PLAN_H - 10), zoneId: setupZone.id };
 }
 
-/** 开局战术中文标签（RoundRecord.tacticAtk/tacticDef → 展示） */
 export const TACTIC_LABEL: Record<string, string> = {
   "atk:default": "默认分推",
   "atk:midSplit": "中路夹击",

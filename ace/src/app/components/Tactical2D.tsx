@@ -50,7 +50,7 @@ export function Tactical2D(props: {
   const atkTag = atkSide === "A" ? (state.teams[teamAId]?.tag ?? "A") : (state.teams[teamBId]?.tag ?? "B");
   const atkTacticLabel = tacticLabel(atkSide === "A" ? tacticAtk : tacticDef);
 
-  // 统一位姿：先按 zoneId 分组发槽位（错开重叠），再算最终坐标
+  // 布置位：先按 zoneId 分组发槽位（网格铺开防扎堆），再算最终坐标
   const dutyOf = (pid: string): AnchorDuty => {
     const a = AGENT_BY_ID.get(mapRec.agents?.[pid] ?? "");
     return (a ? primaryDuty(a.duty) : "flex") as AnchorDuty;
@@ -63,8 +63,8 @@ export function Tactical2D(props: {
   const zoneOf = new Map<string, string>();
   for (const pc of pieceList) {
     zoneOf.set(pc.pid, positionFor(mapRec.map, {
-      duty: dutyOf(pc.pid), isAttacking: atkSide === pc.side, roundN, pid: pc.pid, plantRevealed,
-      side: pc.canvas, tactic: atkSide === pc.side ? tacticAtk : tacticDef, killsRevealed, slot: 0,
+      duty: dutyOf(pc.pid), isAttacking: atkSide === pc.side, roundN, pid: pc.pid,
+      side: pc.canvas, tactic: atkSide === pc.side ? tacticAtk : tacticDef, slot: 0,
     }).zoneId);
   }
   const slotCount = new Map<string, number>();
@@ -74,9 +74,50 @@ export function Tactical2D(props: {
     const slot = slotCount.get(zid) ?? 0;
     slotCount.set(zid, slot + 1);
     posOf.set(pc.pid, positionFor(mapRec.map, {
-      duty: dutyOf(pc.pid), isAttacking: atkSide === pc.side, roundN, pid: pc.pid, plantRevealed,
-      side: pc.canvas, tactic: atkSide === pc.side ? tacticAtk : tacticDef, killsRevealed, slot,
+      duty: dutyOf(pc.pid), isAttacking: atkSide === pc.side, roundN, pid: pc.pid,
+      side: pc.canvas, tactic: atkSide === pc.side ? tacticAtk : tacticDef, slot,
     }));
+  }
+  // 事件序列位姿模拟（逐事件推进）：击杀者扑向受害者位置（交火发生在受害者处），
+  // 下包后进攻方收拢包点、防守方回防——杜绝「A 点击倒 B 点敌人」的跨图击杀画面
+  const plant = plantZoneOf(mapRec.map, roundN, tacticAtk);
+  for (const e of revealed) {
+    if (e.t === "kill" && e.s && e.v) {
+      const k = posOf.get(e.s);
+      const v = posOf.get(e.v);
+      if (k && v) {
+        k.x = k.x + (v.x - k.x) * 0.85;
+        k.y = k.y + (v.y - k.y) * 0.85;
+      }
+    } else if (e.t === "plant" && plant) {
+      const t = { x: plant.x + plant.w / 2, y: plant.y + plant.h / 2 };
+      for (const pc of pieceList) {
+        const p = posOf.get(pc.pid)!;
+        const pull = atkSide === pc.side ? 0.8 : 0.5;
+        p.x = p.x + (t.x - p.x) * pull;
+        p.y = p.y + (t.y - p.y) * pull;
+      }
+    }
+  }
+
+  // 碰撞松弛：不同区可能地理相邻（如 A 主道挨着中路），最终落位逐对推开保证可读间距
+  for (let pass = 0; pass < 3; pass++) {
+    for (let i = 0; i < pieceList.length; i++) {
+      for (let j = i + 1; j < pieceList.length; j++) {
+        const a = posOf.get(pieceList[i]!.pid)!;
+        const b = posOf.get(pieceList[j]!.pid)!;
+        const dx = b.x - a.x, dy = b.y - a.y;
+        const d = Math.hypot(dx, dy) || 0.01;
+        if (d < 14) {
+          const push = (14 - d) / 2;
+          const ux = dx / d, uy = dy / d;
+          a.x = Math.max(10, Math.min(PLAN_W - 10, a.x - ux * push));
+          a.y = Math.max(10, Math.min(PLAN_H - 10, a.y - uy * push));
+          b.x = Math.max(10, Math.min(PLAN_W - 10, b.x + ux * push));
+          b.y = Math.max(10, Math.min(PLAN_H - 10, b.y + uy * push));
+        }
+      }
+    }
   }
 
   return (

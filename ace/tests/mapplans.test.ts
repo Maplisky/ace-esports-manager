@@ -22,37 +22,42 @@ test("地图平面：每张真实地图都有标定区域、底图与完整结�
   }
 });
 
-test("站位：战术×职责×事件全组合确定性、界内、下包收拢到包点", () => {
+test("布置位：全组合确定性、界内；同区多人网格铺开不扎堆", () => {
   for (const m of MAPS) {
-    for (const duty of DUTIES) {
-      for (const tactic of TACTICS) {
-        for (const isAtk of [true, false]) {
-          for (const kills of [0, 1, 3]) {
-            for (const plant of [false, true]) {
-              const o = { duty, isAttacking: isAtk, roundN: 7, pid: "p1", plantRevealed: plant, side: "bottom" as const, tactic, killsRevealed: kills, slot: 1 };
-              const a = positionFor(m.id, o);
-              const b = positionFor(m.id, o);
-              assert.deepEqual(a, b, `${m.id}/${tactic}/${duty} 站位不确定`);
-              assert.ok(a.x >= 0 && a.x <= PLAN_W && a.y >= 0 && a.y <= PLAN_H, `${m.id}/${tactic}/${duty} 站位越界`);
-              assert.ok(a.zoneId.length > 0);
-            }
+    for (const tactic of TACTICS) {
+      for (const isAtk of [true, false]) {
+        const pos: { duty: string; x: number; y: number; zoneId: string }[] = [];
+        DUTIES.forEach((duty, slot) => {
+          const o = { duty, isAttacking: isAtk, roundN: 7, pid: duty, side: "bottom" as const, tactic, slot };
+          const a = positionFor(m.id, o);
+          const b = positionFor(m.id, o);
+          assert.deepEqual(a, b, `${m.id}/${tactic}/${duty} 站位不确定`);
+          assert.ok(a.x >= 0 && a.x <= PLAN_W && a.y >= 0 && a.y <= PLAN_H, `${m.id}/${tactic}/${duty} 站位越界`);
+          pos.push({ duty, x: a.x, y: a.y, zoneId: a.zoneId });
+        });
+        // 防扎堆：同区任意两人间距 ≥ 13px（网格铺开的下限）。
+        // 跨区贴近是地图真实相邻（如 A 主道挨着中路），由播放器碰撞松弛处理
+        for (let i = 0; i < pos.length; i++) {
+          for (let j = i + 1; j < pos.length; j++) {
+            if (pos[i]!.zoneId !== pos[j]!.zoneId) continue;
+            const d = Math.hypot(pos[i]!.x - pos[j]!.x, pos[i]!.y - pos[j]!.y);
+            assert.ok(d >= 13, `${m.id}/${tactic} ${pos[i]!.duty}-${pos[j]!.duty} 同区间距仅 ${Math.round(d)}px，扎堆`);
           }
         }
       }
     }
-    // 下包后：所有棋子收缩到预期包点区（快攻战术强制下包点=快攻目标）
-    const plan = planOf(m.id)!;
-    const pz = plantZoneOf(m.id, 9, "atk:rush:A")!;
-    for (const duty of DUTIES) {
-      const pos = positionFor(m.id, { duty, isAttacking: true, roundN: 9, pid: "px", plantRevealed: true, side: "top", tactic: "atk:rush:A", killsRevealed: 2, slot: 0 });
-      assert.ok(pos.x >= pz.x - 1 && pos.x <= pz.x + pz.w + 1 && pos.y >= pz.y - 1 && pos.y <= pz.y + pz.h + 1,
-        `${m.id} 下包后未收缩到 ${pz.id}: ${JSON.stringify(pos)}`);
+  }
+});
+
+test("快攻强制下包点语义：rush:X → plantZone 必为 siteX", () => {
+  for (const m of MAPS) {
+    for (const L of ["A", "B", "C"] as const) {
+      if (L === "C" && m.sites < 3) continue;
+      const pz = plantZoneOf(m.id, 9, `atk:rush:${L}`);
+      assert.equal(pz?.id, "site" + L, `${m.id} rush:${L} 未强制下包点`);
     }
-    // 击杀压进：kills 增大时进攻棋子应向包点靠近（距包点中心单调不增的统计趋势）
-    const far = positionFor(m.id, { duty: "duelist", isAttacking: true, roundN: 5, pid: "pz", plantRevealed: false, side: "bottom", tactic: "atk:default", killsRevealed: 0, slot: 0 });
-    const near = positionFor(m.id, { duty: "duelist", isAttacking: true, roundN: 5, pid: "pz", plantRevealed: false, side: "bottom", tactic: "atk:default", killsRevealed: 3, slot: 0 });
-    const d2 = (p: { x: number; y: number }) => Math.hypot(p.x - (pz.x + pz.w / 2), p.y - (pz.y + pz.h / 2));
-    assert.ok(d2(near) <= d2(far) + 40, `${m.id} 击杀后未呈现压进趋势`);
+    // 无战术时确定性
+    assert.equal(plantZoneOf(m.id, 9)?.id, plantZoneOf(m.id, 9)?.id);
   }
 });
 
