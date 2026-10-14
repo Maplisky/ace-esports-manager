@@ -167,7 +167,7 @@ export function TacticsPage(props: { state: GameState }) {
                 onChange={(e) => void appoint(e.target.value, viceIgl !== e.target.value ? viceIgl : null)}
               >
                 {team.starters.map((pid) => (
-                  <option key={pid} value={pid}>{state.players[pid]?.ign}（指挥属性 {state.players[pid]?.attrs.igl}）</option>
+                  <option key={pid} value={pid}>{state.players[pid]?.ign}（指挥属性 {Math.round(state.players[pid]?.attrs.igl ?? 0)}）</option>
                 ))}
               </select>
             </span>
@@ -179,7 +179,7 @@ export function TacticsPage(props: { state: GameState }) {
               >
                 <option value="">（无）</option>
                 {team.starters.filter((pid) => pid !== mainIgl).map((pid) => (
-                  <option key={pid} value={pid}>{state.players[pid]?.ign}（指挥属性 {state.players[pid]?.attrs.igl}）</option>
+                  <option key={pid} value={pid}>{state.players[pid]?.ign}（指挥属性 {Math.round(state.players[pid]?.attrs.igl ?? 0)}）</option>
                 ))}
               </select>
             </span>
