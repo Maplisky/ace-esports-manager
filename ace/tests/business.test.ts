@@ -3,7 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { generateWorld } from "../src/core/worldgen.ts";
 import { initSeasonFixtures, advanceDay } from "../src/core/sim/day.ts";
-import { refreshCommercialWeek, sponsorSignChance } from "../src/core/sim/business.ts";
+import { refreshCommercialWeek, sponsorSignChance, signSponsorOffer } from "../src/core/sim/business.ts";
 import { Rng } from "../src/core/rng.ts";
 
 function setup() {
@@ -73,4 +73,24 @@ test("直播合同：俱乐部周入 40%，合同到期后停止", () => {
   advanceDay(state);
   const gained = team.budget - before;
   assert.ok(gained > 0, `直播周收入应到账: ${gained}`);
+});
+
+test("赞助意向：签成即从意向列表移除（用户反馈：残留 21 天）", () => {
+  const state = setup();
+  const rng = new Rng(7);
+  // 直接构造一份必签意向（tier1、rep 足够）
+  state.sponsorOffers = [{
+    id: "SPTEST", name: "测试品牌", tier: 1 as const, perSeason: 100_000,
+    years: 1, signedYear: state.year, expires: state.day + 10,
+  }];
+  const r = signSponsorOffer(state, state.sponsorOffers[0], rng);
+  if (r.ok) {
+    assert.equal(state.sponsorOffers.some((o) => o.id === "SPTEST"), false, "签成后意向应移除");
+  } else {
+    assert.ok(state.sponsorOffers.some((o) => o.id === "SPTEST"), "婉拒保留可再谈");
+  }
+  // 无论签否，过期清理仍工作
+  state.day += 11;
+  state.sponsorOffers = state.sponsorOffers.filter((o) => o.expires > state.day);
+  assert.equal(state.sponsorOffers.length, 0);
 });

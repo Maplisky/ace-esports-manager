@@ -4,12 +4,15 @@
 import { useState } from "react";
 import type { GameState, Player } from "../../core/types.ts";
 import { AGENT_BY_ID } from "../../core/data/agents.ts";
-import { marketValue, salaryExpectation, inTransferWindow } from "../../core/sim/transfer.ts";
+import { marketValue, salaryExpectation, inTransferWindow, evaluateOffer } from "../../core/sim/transfer.ts";
 import { useStore } from "../store.ts";
 import { PlayerFace, SyntheticBadge } from "./Avatar.tsx";
+import { dutyTendencyOf, DUTY_ORDER } from "./AgentSelect.tsx";
+import { AGENTS } from "../../core/data/agents.ts";
 import { PlayerDossier } from "./PlayerDossier.tsx";
 
 const ROLE_CN: Record<string, string> = { core: "核心", starter: "首发", rotation: "轮换", bench: "替补" };
+const DUTY_LABEL: Record<string, string> = { duelist: "决斗者", initiator: "先锋", controller: "控场", sentinel: "哨卫" };
 const fmt = (v: number) => (v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(1)}M` : `$${Math.round(v / 1000)}K`);
 
 export function TransferPage(props: { state: GameState }) {
@@ -20,13 +23,40 @@ export function TransferPage(props: { state: GameState }) {
   const team = state.teams[myId];
   const [negPlayer, setNegPlayer] = useState<Player | null>(null);
   const [releaseTarget, setReleaseTarget] = useState<string | null>(null);
+  const [dutyFilter, setDutyFilter] = useState(""); // ""=全部 / duelist…（按主职业）
+  const [agentFilter, setAgentFilter] = useState(""); // ""=全部 / 英雄 id（池含）
+  const [minOvr, setMinOvr] = useState("");
+  const [minPot, setMinPot] = useState("");
+  const [ageMax, setAgeMax] = useState("");
+  const [minValue, setMinValue] = useState("");
+  const [sortBy, setSortBy] = useState("value");
+  const [inquiry, setInquiry] = useState<Record<string, string>>({}); // 问价结果（免费反馈）
   if (!team) return null;
 
   const inWindow = inTransferWindow(state.day);
   const grace = !inWindow ? "关窗宽限：只能完成在谈交易" : null;
-  const freeAgents = Object.values(state.players)
-    .filter((p) => !p.teamId && p.injuredUntilDay <= state.day)
-    .sort((a, b) => b.overall - a.overall);
+  const allFreeAgents = Object.values(state.players).filter((p) => !p.teamId && p.injuredUntilDay <= state.day);
+  // 筛选 + 排序（用户需求：按位置/英雄/能力/潜力/年龄/身价）
+  const freeAgents = allFreeAgents
+    .filter((p) => {
+      if (dutyFilter && dutyTendencyOf(p).main !== DUTY_LABEL[dutyFilter]) return false;
+      if (agentFilter && !p.agentPool.includes(agentFilter)) return false;
+      if (minOvr && p.overall < Number(minOvr)) return false;
+      if (minPot && p.potential < Number(minPot)) return false;
+      if (ageMax && p.age > Number(ageMax)) return false;
+      if (minValue && marketValue(p, team.tier) < Number(minValue)) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case "ovr": return b.overall - a.overall;
+        case "pot": return b.potential - a.potential;
+        case "ageAsc": return a.age - b.age;
+        case "ageDesc": return b.age - a.age;
+        case "valueAsc": return marketValue(a, team.tier) - marketValue(b, team.tier);
+        default: return marketValue(b, team.tier) - marketValue(a, team.tier);
+      }
+    });
   const feed = state.transferFeed.slice(-12).reverse();
 
   return (
@@ -107,24 +137,100 @@ export function TransferPage(props: { state: GameState }) {
 
       {/* 自由市场 */}
       <div className="card">
-        <h3>🛒 自由市场（{freeAgents.length} 人 · 报价花 1 行动力）</h3>        <table>
+        <h3>🛒 自由市场（{freeAgents.length}/{allFreeAgents.length} 人 · 报价花 1 行动力 · 问价免费）</h3>
+        {/* 筛选/排序条 */}
+        <div className="row" style={{ flexWrap: "wrap", gap: 10, marginBottom: 10, alignItems: "center" }}>
+          <span className="row" style={{ gap: 4, alignItems: "center" }}>
+            <span className="muted small">位置</span>
+            <select value={dutyFilter} onChange={(e) => setDutyFilter(e.target.value)}>
+              <option value="">全部</option>
+              {DUTY_ORDER.map((d) => <option key={d.key} value={d.key}>{d.label}</option>)}
+            </select>
+          </span>
+          <span className="row" style={{ gap: 4, alignItems: "center" }}>
+            <span className="muted small">英雄</span>
+            <select value={agentFilter} onChange={(e) => setAgentFilter(e.target.value)}>
+              <option value="">全部</option>
+              {AGENTS.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+            </select>
+          </span>
+          <span className="row" style={{ gap: 4, alignItems: "center" }}>
+            <span className="muted small">能力≥</span>
+            <input type="number" value={minOvr} onChange={(e) => setMinOvr(e.target.value)} style={{ width: 56 }} />
+          </span>
+          <span className="row" style={{ gap: 4, alignItems: "center" }}>
+            <span className="muted small">潜力≥</span>
+            <input type="number" value={minPot} onChange={(e) => setMinPot(e.target.value)} style={{ width: 56 }} />
+          </span>
+          <span className="row" style={{ gap: 4, alignItems: "center" }}>
+            <span className="muted small">年龄≤</span>
+            <input type="number" value={ageMax} onChange={(e) => setAgeMax(e.target.value)} style={{ width: 56 }} />
+          </span>
+          <span className="row" style={{ gap: 4, alignItems: "center" }}>
+            <span className="muted small">身价≥$K</span>
+            <input type="number" value={minValue} onChange={(e) => setMinValue(e.target.value)} style={{ width: 70 }} />
+          </span>
+          <span className="row" style={{ gap: 4, alignItems: "center" }}>
+            <span className="muted small">排序</span>
+            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+              <option value="value">身价 高→低</option>
+              <option value="valueAsc">身价 低→高</option>
+              <option value="ovr">能力 高→低</option>
+              <option value="pot">潜力 高→低</option>
+              <option value="ageAsc">年龄 低→高</option>
+              <option value="ageDesc">年龄 高→低</option>
+            </select>
+          </span>
+        </div>
+        <table>
           <thead>
             <tr><th>选手</th><th>位置倾向</th><th>能力</th><th>潜力</th><th>年龄</th><th>身价参考</th><th></th></tr>
           </thead>
           <tbody>
             {freeAgents.map((p) => {
-              const names = p.agentPool.map((a) => AGENT_BY_ID.get(a)?.name ?? a).join(" / ");
+              const tendency = dutyTendencyOf(p);
+              const exp = salaryExpectation(p, team.tier);
+              // 问价反馈（免费、确定性）：按市场公允条款评估意愿
+              const inquiryText = inquiry[p.id];
               return (
+              <>
               <tr key={p.id}>
                 <td><span className="row" style={{ alignItems: "center", gap: 6 }}><PlayerFace p={p} size={22} showTag={false} /><span style={{ cursor: "pointer", textDecoration: "underline dotted" }} onClick={() => setDossier(p.id)}>{p.ign}</span><SyntheticBadge p={p} /></span></td>
-                <td className="muted small">{names}</td>
+                <td className="small" style={{ whiteSpace: "nowrap" }}>
+                  <span className="tag">{tendency.main}</span>
+                  {tendency.second && <span className="muted small" style={{ marginLeft: 4 }}>{tendency.second}</span>}
+                  {p.isIgl && <span className="tag" style={{ marginLeft: 4 }}>指挥</span>}
+                  {p.viceIgl && <span className="muted small" style={{ marginLeft: 4 }}>副指挥</span>}
+                </td>
                 <td><b>{p.overall}</b></td>
                 <td className="muted">{p.potential}</td>
                 <td className="muted">{p.age}</td>
                 <td className="muted">{fmt(marketValue(p, team.tier))}</td>
-                <td>
+                <td style={{ whiteSpace: "nowrap" }}>
+                  <button
+                    className="small"
+                    onClick={() =>
+                      setInquiry((prev) => {
+                        const probe = {
+                          id: `INQ_${p.id}`, playerId: p.id, fromTeam: p.teamId, toTeam: myId,
+                          fee: Math.round(marketValue(p, team.tier) * 1.1 / 1000) * 1000,
+                          salary: Math.round(salaryExpectation(p, 1) * 1.2), years: 2,
+                          signingBonus: 0, promisedRole: "starter" as const, day: state.day, round: 0,
+                          demand: "", attitude: 0,
+                        };
+                        const ev = evaluateOffer(state, p, probe, team);
+                        const text = ev.insulting
+                          ? "（公允口径）他态度存疑，先备好诚意。"
+                          : `意愿 ≈ ${Math.round(ev.chance * 100)}%${ev.objection ? ` · 诉求：${ev.objection}` : " · 无明显短板"}`;
+                        return { ...prev, [p.id]: text };
+                      })
+                    }
+                  >
+                    问价
+                  </button>
                   <button
                     className="small primary"
+                    style={{ marginLeft: 6 }}
                     disabled={!inWindow || state.actionPoints < 1 || team.roster.length >= 7}
                     onClick={() => setNegPlayer(p)}
                   >
@@ -132,6 +238,14 @@ export function TransferPage(props: { state: GameState }) {
                   </button>
                 </td>
               </tr>
+              {inquiryText && (
+                <tr key={p.id + ":inq"} style={{ opacity: 0.85 }}>
+                  <td colSpan={7} className="muted small">
+                    💬 <b>{p.ign}</b> 的问价反馈：{inquiryText}（薪资期望 ~{fmt(exp)}/年 · 身价参考 {fmt(marketValue(p, team.tier))}）
+                  </td>
+                </tr>
+              )}
+              </>
               );
             })}
           </tbody>

@@ -96,3 +96,25 @@ export function AgentChip({ agentId, size = 30 }: { agentId: string; size?: numb
     </span>
   );
 }
+
+/** 位置倾向（主职业+副职业，参照原作）：英雄池按熟练度加权的职责向量取前二；副职业份额 ≥ 主 40% 才显示 */
+export function dutyTendencyOf(p: Player): { main: string; second: string | null } {
+  const sum = { duelist: 0, initiator: 0, controller: 0, sentinel: 0 };
+  let w = 0;
+  for (const agentId of p.agentPool) {
+    const a = AGENT_BY_ID.get(agentId);
+    if (!a) continue;
+    const pro = p.agentPro[agentId] ?? 0;
+    for (const k of ["duelist", "initiator", "controller", "sentinel"] as const) sum[k] += a.duty[k] * pro;
+    w += pro;
+  }
+  if (w <= 0) return { main: "—", second: null };
+  const ranked = (Object.keys(sum) as (keyof typeof sum)[]).sort((x, y) => sum[y] / w - sum[x] / w);
+  const main = ranked[0]!;
+  const second = ranked[1]!;
+  const label = (k: string) => DUTY_ORDER.find((d) => d.key === k)?.label ?? k;
+  return {
+    main: label(main),
+    second: sum[second] / w >= (sum[main] / w) * 0.4 ? label(second) : null,
+  };
+}
