@@ -32,7 +32,9 @@ export function MatchPlayer(props: { record: MatchRecord; state: GameState; onCl
   const [finished, setFinished] = useState(startAtEnd);
   const [view, setView] = useState<"text" | "2d">("2d");
   const [sumTab, setSumTab] = useState(0); // 结算页：0=系列赛汇总，1..n=单图
+  const [stinger, setStinger] = useState<{ main: string; sub: string } | null>(null); // 高光横幅（ACE/残局/零封）
   const timer = useRef<number | null>(null);
+  const stingerTimer = useRef<number | null>(null);
 
   const map = record.maps[pos.mi];
   const round = map?.rounds[pos.ri];
@@ -55,6 +57,37 @@ export function MatchPlayer(props: { record: MatchRecord; state: GameState; onCl
 
   const revealed = round ? round.events.slice(0, Math.max(0, pos.ei + 1)) : [];
   const showResult = round !== undefined && pos.ei >= round.events.length;
+
+  // 高光 stinger：最新揭示的事件为 ACE/残局/零封时，弹全屏大字横幅（自动导播仪式感）
+  useEffect(() => {
+    if (!round || pos.ei < 0 || pos.ei >= round.events.length) return;
+    const e = round.events[pos.ei]!;
+    if (e.t !== "ace" && e.t !== "clutch" && e.t !== "flawless") return;
+    const main = e.t === "ace" ? "ACE！" : e.t === "clutch" ? `1v${e.vs ?? 1} 残局！` : "零封！";
+    const sub = e.t === "flawless" ? "满编无伤拿下回合" : `${ign(e.s ?? "")} 力挽狂澜`;
+    setStinger({ main, sub });
+    if (stingerTimer.current) window.clearTimeout(stingerTimer.current);
+    stingerTimer.current = window.setTimeout(() => setStinger(null), 1700);
+    return () => { if (stingerTimer.current) window.clearTimeout(stingerTimer.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pos.mi, pos.ri, pos.ei]);
+
+  // 回合内双方存活数（从已揭示击杀反推）
+  const aliveCounts = useMemo(() => {
+    let da = 0;
+    let db = 0;
+    for (const e of revealed) {
+      if (e.t !== "kill" || !e.v) continue;
+      if (teamA && (teamA.starters.includes(e.v) || teamA.roster.includes(e.v))) da++;
+      else db++;
+    }
+    return [5 - da, 5 - db];
+  }, [revealed, teamA]);
+
+  // 特工头像与队伍色（击杀流转播化）
+  const iconOf = (pid: string) => map?.agents?.[pid] ?? "";
+  const sideColor = (pid: string) =>
+    teamA && (teamA.starters.includes(pid) || teamA.roster.includes(pid)) ? "#4ade80" : "#60a5fa";
 
   // 系列赛比分：播放中 = 当前图之前的胜场；结算 = 全部图（否则 2-0 横扫在结算页只显示 1:0）
   const series = useMemo(() => {
@@ -125,9 +158,37 @@ export function MatchPlayer(props: { record: MatchRecord; state: GameState; onCl
               {isKeyRound && !finished && <span className="tag orange" style={{ marginLeft: 8 }}>⚡ 关键回合 · 自动导播</span>}
             </div>
             <div style={{ fontSize: 26, fontWeight: 800 }}>{liveScore[0]} — {liveScore[1]}</div>
+            {round && (
+              <div className="muted" style={{ fontSize: 11.5, display: "flex", gap: 10, justifyContent: "center", alignItems: "center" }}>
+                <span style={{ color: "#4ade80" }}>存活 {aliveCounts[0]}</span>
+                <span style={{ opacity: 0.4 }}>·</span>
+                <span style={{ color: "#60a5fa" }}>{aliveCounts[1]} 存活</span>
+              </div>
+            )}
           </div>
           <div className="team right" style={{ display: "flex", alignItems: "center", gap: 6 }}>{teamB?.tag}{teamB && <TeamLogo team={teamB} size={22} />}</div>
         </div>
+
+        {/* 回合历史条（转播式）：每回合一个小方块，绿/蓝=胜方，当前回合脉冲 */}
+        {map && !finished && (
+          <div className="roundstrip">
+            {map.rounds.slice(0, pos.ri + 1).map((r, i) => {
+              const isCur = i === pos.ri;
+              const winA = r.end.win === "A";
+              const done = i < pos.ri || showResult;
+              return (
+                <span
+                  key={r.n}
+                  className={"rsq" + (isCur && !showResult ? " cur" : "")}
+                  title={`第 ${r.n} 回合 · ${(winA ? teamA : teamB)?.tag} 拿下`}
+                  style={done
+                    ? { background: winA ? "#4ade80" : "#60a5fa" }
+                    : { background: "rgba(255,255,255,0.14)" }}
+                />
+              );
+            })}
+          </div>
+        )}
 
         {finished ? (() => {
           const winnerTeam: "A" | "B" = record.score[0] > record.score[1] ? "A" : "B";
@@ -226,7 +287,15 @@ export function MatchPlayer(props: { record: MatchRecord; state: GameState; onCl
               <LiveScoreboard record={record} state={state} pos={pos} />
             )}
 
-            {/* 击杀流（逐步揭示）+ 2D 战术视图并排 */}
+            {/* 高光 stinger（ACE/残局/零封） */}
+      {stinger && !finished && (
+        <div className="stinger">
+          <div className="stinger-main">{stinger.main}</div>
+          <div className="stinger-sub">{stinger.sub}</div>
+        </div>
+      )}
+
+      {/* 击杀流（逐步揭示）+ 2D 战术视图并排 */}
             <div className="row" style={{ gap: 12, alignItems: "flex-start", flexWrap: "wrap" }}>
               {view === "2d" && round && map && (
                 <Tactical2D
@@ -244,7 +313,7 @@ export function MatchPlayer(props: { record: MatchRecord; state: GameState; onCl
               )}
               <div className="killfeed" style={{ flex: 1, minWidth: 260 }}>
                 {revealed.map((e, i) => (
-                  <FeedRow key={i} e={e} state={state} ign={ign} agentName={agentName} />
+                  <FeedRow key={i} e={e} state={state} ign={ign} agentName={agentName} iconOf={iconOf} sideColor={sideColor} />
                 ))}
                 {showResult && round && (
                   <div className="fevent big">
@@ -518,15 +587,30 @@ function FeedRow(props: {
   state: GameState;
   ign: (pid: string) => string;
   agentName: (pid: string) => string;
+  iconOf: (pid: string) => string;
+  sideColor: (pid: string) => string;
 }) {
-  const { e, ign, agentName } = props;
+  const { e, ign, agentName, iconOf, sideColor } = props;
   if (e.t === "kill") {
-    const k = `${ign(e.s ?? "")}${agentName(e.s ?? "") ? `（${agentName(e.s ?? "")}）` : ""}`;
-    const v = `${ign(e.v ?? "")}${agentName(e.v ?? "") ? `（${agentName(e.v ?? "")}）` : ""}`;
+    const kName = ign(e.s ?? "");
+    const vName = ign(e.v ?? "");
+    const kAid = iconOf(e.s ?? "");
+    const vAid = iconOf(e.v ?? "");
+    const kColor = sideColor(e.s ?? "");
+    const vColor = sideColor(e.v ?? "");
     return (
-      <div className="fevent kill">
-        {e.first && <span className="tag orange" style={{ marginRight: 8 }}>首杀</span>}
-        💥 {k} <span className="muted">击倒</span> {v}
+      <div className="fevent kill" style={{ display: "flex", alignItems: "center", gap: 7 }}>
+        {e.first && <span className="tag orange" style={{ marginRight: 4 }}>首杀</span>}
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 5, minWidth: 0 }}>
+          {kAid && <AgentIcon agentId={kAid} size={19} name={agentName(e.s ?? "")} />}
+          <b style={{ color: kColor, whiteSpace: "nowrap" }}>{kName}</b>
+        </span>
+        <span className="muted" style={{ fontSize: 11 }}>击倒</span>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 5, minWidth: 0, opacity: 0.85 }}>
+          {vAid && <AgentIcon agentId={vAid} size={19} name={agentName(e.v ?? "")} />}
+          <span style={{ color: vColor, whiteSpace: "nowrap" }}>{vName}</span>
+        </span>
+        <span style={{ marginLeft: "auto", fontSize: 11, opacity: 0.55 }}>💀</span>
       </div>
     );
   }
