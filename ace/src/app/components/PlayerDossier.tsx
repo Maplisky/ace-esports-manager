@@ -115,7 +115,18 @@ export function PlayerDossier(props: { state: GameState; player: Player; onClose
                 <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                   {g.agents.map((a) => (
                     <span key={a.id} className="row" style={{ gap: 8, alignItems: "center", background: "rgba(255,255,255,0.03)", borderRadius: 8, padding: "5px 9px" }}>
-                      <img src={`assets/agents/${a.id}.png`} alt={a.id} width={28} height={28} style={{ borderRadius: "50%", objectFit: "cover", background: "#2a2a33" }} />
+                      <img
+                        src={`assets/agents/${a.id}.png`}
+                        alt={a.id}
+                        width={28}
+                        height={28}
+                        style={{ borderRadius: "50%", objectFit: "cover", background: "#2a2a33" }}
+                        onError={(e) => {
+                          // 图标缺失回退：显示英文名首二字符（数据链上 id 与名称同源，不可能是他英雄的图）
+                          (e.target as HTMLImageElement).style.display = "none";
+                          (e.currentTarget.parentElement as HTMLElement).innerText = (AGENT_BY_ID.get(a.id)?.name ?? a.id).slice(0, 3);
+                        }}
+                      />
                       <span className="small" style={{ flex: 1 }}>{AGENT_BY_ID.get(a.id)?.name ?? a.id}</span>
                       <span className="bar-track" style={{ width: 56 }}>
                         <span className="bar-fill" style={{ width: `${a.pro}%`, background: a.pro >= 80 ? "var(--green)" : a.pro >= 55 ? "var(--accent)" : "var(--orange)" }} />
