@@ -7,7 +7,8 @@ import { Rng, clamp, hashString } from "../rng.ts";
 import type { GameState, Player, Team, TransferOffer } from "../types.ts";
 
 /** 转会窗（自然年内）：季前 · 夏季窗口 · 休赛期 */
-const WINDOWS: [number, number][] = [[1, 24], [123, 152], [233, 366]];
+export const TRANSFER_WINDOWS: [number, number][] = [[1, 24], [123, 152], [233, 366]];
+const WINDOWS = TRANSFER_WINDOWS;
 export function inTransferWindow(day: number): boolean {
   return WINDOWS.some(([a, b]) => day >= a && day <= b);
 }

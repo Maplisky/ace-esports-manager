@@ -4,6 +4,7 @@
  * 抽取时绑定目标选手并把 {ign}/{teamName} 代入文案；resolveEvent 按选项结算数值效果。
  */
 import { Rng, clamp } from "../rng.ts";
+import { TRANSFER_WINDOWS } from "./transfer.ts";
 import { EVENT_POOL } from "../data/events.ts";
 import type { GameState, PendingEventCard, Player, Team } from "../types.ts";
 
@@ -40,7 +41,7 @@ export function spawnDailyEvents(state: GameState, rng: Rng): void {
   const idleDays = state.day - (state.lastEventDay ?? 0);
   const starved = idleDays >= 6;
   // Deadline Day（GDD §18 #6 落地 v0.8）：转会窗最后 3 天事件密度 ×2（阈值 0.35→0.55，单日上限 3→6）
-  const windows: [number, number][] = [[1, 24], [123, 152], [233, 366]];
+  const windows = TRANSFER_WINDOWS;
   const deadlineSoon = windows.some(([a, b]) => state.day >= b - 2 && state.day <= b);
   let draws = 0;
   if (starved) draws = 1;
