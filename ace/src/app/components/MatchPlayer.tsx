@@ -5,10 +5,10 @@
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AGENT_BY_ID } from "../../core/data/agents.ts";
-import { TeamLogo } from "./Avatar.tsx";
+import { AgentIcon, PlayerFace, TeamLogo } from "./Avatar.tsx";
 import { MAP_BY_ID } from "../../core/data/maps.ts";
 import { Tactical2D } from "./Tactical2D.tsx";
-import { liveLines, summarizeMatch } from "../../core/sim/matchstats.ts";
+import { liveLines, summarizeMatch, pickMvps, type StatRow } from "../../core/sim/matchstats.ts";
 import type { GameState, MatchRecord, RoundEvent } from "../../core/types.ts";
 
 const SLOW_MS = 850;
@@ -30,6 +30,7 @@ export function MatchPlayer(props: { record: MatchRecord; state: GameState; onCl
   const [speed, setSpeed] = useState(2);
   const [finished, setFinished] = useState(startAtEnd);
   const [view, setView] = useState<"text" | "2d">("2d");
+  const [sumTab, setSumTab] = useState(0); // 结算页：0=系列赛汇总，1..n=单图
   const timer = useRef<number | null>(null);
 
   const map = record.maps[pos.mi];
@@ -111,7 +112,7 @@ export function MatchPlayer(props: { record: MatchRecord; state: GameState; onCl
 
   return (
     <div className="viewer-backdrop" onClick={() => { /* 点背景不关闭，防误触 */ }}>
-      <div className="viewer" onClick={(e) => e.stopPropagation()}>
+      <div className="viewer" onClick={(e) => e.stopPropagation()} style={{ maxHeight: "92vh", overflowY: "auto" }}>
         {/* 记分牌 */}
         <div className="scorebug">
           <div className="team" style={{ color: "var(--accent)", display: "flex", alignItems: "center", gap: 6 }}>{teamA && <TeamLogo team={teamA} size={22} />}{teamA?.tag}</div>
@@ -126,25 +127,60 @@ export function MatchPlayer(props: { record: MatchRecord; state: GameState; onCl
           <div className="team right" style={{ display: "flex", alignItems: "center", gap: 6 }}>{teamB?.tag}{teamB && <TeamLogo team={teamB} size={22} />}</div>
         </div>
 
-        {finished ? (
-          <div style={{ textAlign: "center" }}>
-            <div className="card" style={{ textAlign: "center", padding: 26 }}>
-              <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 8 }}>
-                🏁 {(record.score[0] > record.score[1] ? teamA?.name : teamB?.name)} 获胜！
+        {finished ? (() => {
+          const winnerTeam: "A" | "B" = record.score[0] > record.score[1] ? "A" : "B";
+          const teamAPids = new Set([...(teamA?.roster ?? []), ...(teamA?.starters ?? [])]);
+          const seriesRows = summarizeMatch(record.maps, teamAPids);
+          const mvps = pickMvps(seriesRows, winnerTeam);
+          const hasSeries = record.maps.length > 1;
+          const isSeriesView = hasSeries && sumTab === 0;
+          const mapIdx = isSeriesView ? -1 : hasSeries ? sumTab - 1 : 0;
+          const viewMap = mapIdx >= 0 ? record.maps[mapIdx] : null;
+          const rows = isSeriesView ? seriesRows : summarizeMatch(viewMap ? [viewMap] : record.maps, teamAPids);
+          return (
+            <div style={{ textAlign: "center" }}>
+              <div className="card" style={{ textAlign: "center", padding: "16px 26px" }}>
+                <div style={{ fontSize: 20, fontWeight: 800, marginBottom: 6 }}>
+                  🏁 {(winnerTeam === "A" ? teamA?.name : teamB?.name)} 获胜！
+                </div>
+                <div className="muted">
+                  比分 {record.score[0]}-{record.score[1]}
+                  {mvps.mvp && <> · <b style={{ color: "#fbbf24" }}>MVP</b>：<b>{ign(mvps.mvp)}</b></>}
+                  {mvps.smvp && <> · <b>SMVP</b>（败方）：<b>{ign(mvps.smvp)}</b></>}
+                </div>
+                <button className="primary" style={{ marginTop: 12 }} onClick={onClose}>
+                  关闭回放
+                </button>
               </div>
-              <div className="muted">
-                比分 {record.score[0]}-{record.score[1]}
-                {record.mvp && <> · MVP：<b>{ign(record.mvp)}</b>（{agentName(record.mvp)}）</>}
-              </div>
-              <button className="primary" style={{ marginTop: 14 }} onClick={onClose}>
-                关闭回放
-              </button>
+
+              {/* 页签：系列赛汇总 / 单图数据（单图页含特工头像） */}
+              {hasSeries && (
+                <div className="row" style={{ justifyContent: "center", gap: 6, margin: "10px 0" }}>
+                  <button className={sumTab === 0 ? "primary small" : "small"} onClick={() => setSumTab(0)}>📊 系列赛汇总</button>
+                  {record.maps.map((m, i) => (
+                    <button key={m.map + i} className={sumTab === i + 1 ? "primary small" : "small"} onClick={() => setSumTab(i + 1)}>
+                      第 {i + 1} 图 · {MAP_BY_ID.get(m.map)?.name ?? m.map}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <StatsTable
+                state={state}
+                record={record}
+                rows={rows}
+                winnerTeam={winnerTeam}
+                mvpPid={mvps.mvp}
+                smvpPid={mvps.smvp}
+                agents={viewMap?.agents}
+                title={isSeriesView
+                  ? `比赛总结 · 双方选手数据（全部 ${record.maps.length} 图汇总）`
+                  : `第 ${mapIdx + 1} 图数据 · ${MAP_BY_ID.get(viewMap?.map ?? "")?.name ?? ""}`}
+              />
+              {isSeriesView && <AttributionTable record={record} state={state} />}
             </div>
-            {/* 比赛总结：双方选手战绩 / ACS / FK·FD（职业数据，GDD §5.4） */}
-            <MatchStatsTable record={record} state={state} />
-            <AttributionTable record={record} state={state} />
-          </div>
-        ) : (
+          );
+        })() : (
           <>
             {/* 回合信息条 */}
             {round && (
@@ -274,59 +310,95 @@ function LiveScoreboard({ record, state, pos }: { record: MatchRecord; state: Ga
   );
 }
 
-/** 比赛总结页数据表（GDD §5.4）：双方选手 KDA / ± / ACS / FK·FD（首杀首死）/ 残局，跨图汇总按 ACS 排序 */
-function MatchStatsTable({ record, state }: { record: MatchRecord; state: GameState }) {
-  const teamAPids = new Set([
-    ...(state.teams[record.teamA]?.roster ?? []),
-    ...(state.teams[record.teamA]?.starters ?? []),
-  ]);
-  const rows = useMemo(() => summarizeMatch(record.maps, teamAPids), [record]);
+/** 结算数据表（GDD §5.4 v2.3）：选手头像 + 按队伍分组（胜方在前）；单图页含特工头像；MVP/SMVP 行标 */
+function StatsTable(props: {
+  state: GameState;
+  record: MatchRecord;
+  rows: StatRow[];
+  winnerTeam: "A" | "B";
+  mvpPid: string | null;
+  smvpPid: string | null;
+  agents?: Record<string, string>;
+  title: string;
+}) {
+  const { state, record, rows, winnerTeam, mvpPid, smvpPid, agents, title } = props;
   const ign = (pid: string) => state.players[pid]?.ign ?? pid;
-  const tagA = state.teams[record.teamA]?.tag ?? "A";
-  const tagB = state.teams[record.teamB]?.tag ?? "B";
   if (rows.length === 0) return null;
-  const kda = (r: { k: number; d: number; a: number }) => {
-    const eff = r.d === 0 ? r.k + r.a : (r.k + r.a) / r.d;
-    return eff.toFixed(2);
-  };
+  const kda = (r: { k: number; d: number; a: number }) => (r.d === 0 ? r.k + r.a : (r.k + r.a) / r.d);
+  const teamIds = [...new Set(rows.map((r) => r.team))].sort(
+    (a, b) => (a === winnerTeam ? -1 : 1) - (b === winnerTeam ? -1 : 1),
+  );
   return (
-    <div style={{ textAlign: "left", marginTop: 12 }}>
-      <div className="muted small" style={{ textAlign: "center", marginBottom: 6 }}>
-        比赛总结 · 双方选手数据（全部 {record.maps.length} 图汇总 · 按战斗评分排序）
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th style={{ textAlign: "left" }}>选手</th>
-            <th>战队</th>
-            <th>K / D / A</th>
-            <th>KDA</th>
-            <th>ACS</th>
-            <th>FK / FD</th>
-            <th>残局</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <tr key={r.pid} style={{ background: r.pid === record.mvp ? "rgba(251,191,36,0.08)" : undefined }}>
-              <td style={{ textAlign: "left" }}>
-                <b>{ign(r.pid)}</b>
-                {r.pid === record.mvp && <span className="tag" style={{ marginLeft: 6 }}>MVP</span>}
-              </td>
-              <td style={{ color: r.team === "A" ? "var(--green)" : "#60a5fa" }}>{r.team === "A" ? tagA : tagB}</td>
-              <td style={{ fontVariantNumeric: "tabular-nums" }}>{r.k} / {r.d} / {r.a}</td>
-              <td style={{ fontVariantNumeric: "tabular-nums" }}>{kda(r)}</td>
-              <td style={{ fontVariantNumeric: "tabular-nums", fontWeight: 700 }}>{r.acs}</td>
-              <td style={{ fontVariantNumeric: "tabular-nums" }}>
-                <span style={{ color: "#fb923c" }}>{r.fk}</span> / <span style={{ color: "#f87171" }}>{r.fd}</span>
-              </td>
-              <td style={{ fontVariantNumeric: "tabular-nums" }}>{r.clutches > 0 ? <span className="tag green">{r.clutches}</span> : <span className="muted">0</span>}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <div className="muted small" style={{ textAlign: "center", marginTop: 4 }}>
-        ACS＝战斗评分/回合（伤害加权）· FK/FD＝首杀/首死 · 残局＝1vX 得手
+    <div style={{ textAlign: "left", marginTop: 10 }}>
+      <div className="muted small" style={{ textAlign: "center", marginBottom: 6 }}>{title}</div>
+      {teamIds.map((t) => {
+        const team = state.teams[t === "A" ? record.teamA : record.teamB];
+        const tRows = rows.filter((r) => r.team === t);
+        return (
+          <div key={t} style={{ marginBottom: 8 }}>
+            <div className="row" style={{ gap: 8, alignItems: "center", margin: "4px 2px" }}>
+              {team && <TeamLogo team={team} size={18} />}
+              <b style={{ color: t === "A" ? "var(--green)" : "#60a5fa" }}>{team?.name ?? t}</b>
+              {t === winnerTeam ? <span className="tag green">胜方</span> : <span className="tag">败方</span>}
+              <span className="muted small">队均 ACS {Math.round(tRows.reduce((s, r) => s + r.acs, 0) / Math.max(1, tRows.length))}</span>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th style={{ textAlign: "left" }}>选手</th>
+                  {agents && <th style={{ textAlign: "left" }}>特工</th>}
+                  <th>K / D / A</th>
+                  <th>KDA</th>
+                  <th>ACS</th>
+                  <th>FK / FD</th>
+                  <th>残局</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tRows.map((r) => {
+                  const pl = state.players[r.pid];
+                  const aid = agents?.[r.pid];
+                  const aDef = aid ? AGENT_BY_ID.get(aid) : undefined;
+                  return (
+                    <tr
+                      key={r.pid}
+                      style={{ background: r.pid === mvpPid ? "rgba(251,191,36,0.09)" : r.pid === smvpPid ? "rgba(148,163,184,0.08)" : undefined }}
+                    >
+                      <td style={{ textAlign: "left", whiteSpace: "nowrap" }}>
+                        <span className="row" style={{ gap: 6, alignItems: "center" }}>
+                          {pl && <PlayerFace p={pl} size={22} showTag={false} />}
+                          <b>{ign(r.pid)}</b>
+                          {r.pid === mvpPid && <span className="tag" style={{ background: "#fbbf24", color: "#1a1a24" }}>MVP</span>}
+                          {r.pid === smvpPid && <span className="tag">SMVP</span>}
+                        </span>
+                      </td>
+                      {agents && (
+                        <td style={{ whiteSpace: "nowrap" }}>
+                          {aid ? (
+                            <span className="row" style={{ gap: 5, alignItems: "center" }}>
+                              <AgentIcon agentId={aid} size={22} name={aDef?.name} />
+                              <span className="muted small">{aDef?.name ?? aid}</span>
+                            </span>
+                          ) : null}
+                        </td>
+                      )}
+                      <td style={{ fontVariantNumeric: "tabular-nums" }}>{r.k} / {r.d} / {r.a}</td>
+                      <td style={{ fontVariantNumeric: "tabular-nums" }}>{kda(r).toFixed(2)}</td>
+                      <td style={{ fontVariantNumeric: "tabular-nums", fontWeight: 700 }}>{r.acs}</td>
+                      <td style={{ fontVariantNumeric: "tabular-nums" }}>
+                        <span style={{ color: "#fb923c" }}>{r.fk}</span> / <span style={{ color: "#f87171" }}>{r.fd}</span>
+                      </td>
+                      <td style={{ fontVariantNumeric: "tabular-nums" }}>{r.clutches > 0 ? <span className="tag green">{r.clutches}</span> : <span className="muted">0</span>}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        );
+      })}
+      <div className="muted small" style={{ textAlign: "center", marginTop: 2 }}>
+        ACS＝战斗评分/回合（伤害加权{agents ? "" : "，跨图按回合数加权"}） · FK/FD＝首杀/首死 · 残局＝1vX 得手 · MVP＝胜方最佳，SMVP＝败方最佳
       </div>
     </div>
   );

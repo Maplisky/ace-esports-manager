@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { liveLines, summarizeMatch } from "../src/core/sim/matchstats.ts";
+import { liveLines, summarizeMatch, pickMvps } from "../src/core/sim/matchstats.ts";
 import type { MapRecord, PlayerLine } from "../src/core/types.ts";
 
 function line(p: Partial<PlayerLine>): PlayerLine {
@@ -66,4 +66,17 @@ test("赛后汇总：跨图求和、ACS 按回合加权、队属标注正确", (
   assert.equal(b1.team, "B");
   // 按 ACS 降序
   assert.ok(rows[0]!.acs >= rows[rows.length - 1]!.acs);
+});
+
+test("结算 MVP 派生：总 MVP=胜方最佳，SMVP=败方最佳", () => {
+  const maps = [mapRec({
+    a1: line({ kills: 18, deaths: 14, rounds: 22, acs: 260 }),
+    a2: line({ kills: 20, deaths: 12, rounds: 22, acs: 290 }),
+    b1: line({ kills: 22, deaths: 11, rounds: 22, acs: 310 }),
+  }, [])];
+  const rows = summarizeMatch(maps, new Set(["a1", "a2"]));
+  // 全局 ACS 最高是败方 b1（310），但总 MVP 必须取胜方最佳 a2，b1 标 SMVP
+  const { mvp, smvp } = pickMvps(rows, "A");
+  assert.equal(mvp, "a2");
+  assert.equal(smvp, "b1");
 });

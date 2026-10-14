@@ -458,11 +458,12 @@ export function simMatch(state: GameState, teamAId: string, teamBId: string, bo:
 
   let matchMvp: string | null = null;
   let matchMvpScore = -1;
+  // 总 MVP 只从获胜方产生（GDD §5.4 v2.3：败方最佳另标 SMVP，UI 层推导）
+  const winnerPlayers = wins.A > wins.B ? A.players : B.players;
   for (const [pid, acs] of Object.entries(mvpAggregate)) {
-    const onWinning = wins.A > wins.B ? A.players.some((p) => p.id === pid) : B.players.some((p) => p.id === pid);
-    const score = acs + (onWinning ? 18 : 0);
-    if (score > matchMvpScore) {
-      matchMvpScore = score;
+    if (!winnerPlayers.some((p) => p.id === pid)) continue;
+    if (acs > matchMvpScore) {
+      matchMvpScore = acs;
       matchMvp = pid;
     }
   }

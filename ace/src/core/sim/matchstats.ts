@@ -82,3 +82,12 @@ export function summarizeMatch(maps: MapRecord[], teamAPids: Set<string>): StatR
   rows.sort((x, y) => y.acs - x.acs);
   return rows;
 }
+
+/** 结算 MVP 派生：总 MVP = 胜方最佳（引擎 record.mvp 同规则），SMVP = 败方最佳 */
+export function pickMvps(rows: StatRow[], winnerTeam: "A" | "B"): { mvp: string | null; smvp: string | null } {
+  const bestOf = (team: "A" | "B") =>
+    rows
+      .filter((r) => r.team === team)
+      .sort((a, b) => b.acs - a.acs || b.k - a.k)[0]?.pid ?? null;
+  return { mvp: bestOf(winnerTeam), smvp: bestOf(winnerTeam === "A" ? "B" : "A") };
+}
