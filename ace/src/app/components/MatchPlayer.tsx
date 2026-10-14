@@ -7,6 +7,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AGENT_BY_ID } from "../../core/data/agents.ts";
 import { AgentIcon, PlayerFace, TeamLogo } from "./Avatar.tsx";
 import { MAP_BY_ID } from "../../core/data/maps.ts";
+import { tacticLabel } from "../../core/data/mapplans.ts";
 import { Tactical2D } from "./Tactical2D.tsx";
 import { liveLines, liveAcs, summarizeMatch, pickMvps, type StatRow } from "../../core/sim/matchstats.ts";
 import type { GameState, MatchRecord, RoundEvent } from "../../core/types.ts";
@@ -187,6 +188,7 @@ export function MatchPlayer(props: { record: MatchRecord; state: GameState; onCl
               <div className="roundline">
                 <span>
                   第 {round.n} 回合 · {round.atk === "A" ? teamA?.tag : teamB?.tag} 进攻
+                  <span className="muted"> · 战术：{tacticLabel(round.atk === "A" ? (round.tacticAtk ?? "atk:default") : (round.tacticDef ?? "def:standard"))}</span>
                   {round.n === 1 || round.n === 13 || round.n === 25 ? " · 手枪局" : ""}
                 </span>
                 <span className="muted">
@@ -219,6 +221,9 @@ export function MatchPlayer(props: { record: MatchRecord; state: GameState; onCl
                   teamAId={record.teamA}
                   teamBId={record.teamB}
                   atkSide={round.atk}
+                  roundN={round.n}
+                  tacticAtk={round.tacticAtk ?? "atk:default"}
+                  tacticDef={round.tacticDef ?? "def:standard"}
                 />
               )}
               <div className="killfeed" style={{ flex: 1, minWidth: 260 }}>

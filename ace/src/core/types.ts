@@ -251,6 +251,9 @@ export interface RoundRecord {
   /** 本回合进攻方 */
   atk: "A" | "B";
   buys: { A: BuyType; B: BuyType };
+  /** 开局战术（GDD §5.4 二期；旧档缺省 default/standard） */
+  tacticAtk?: string;
+  tacticDef?: string;
   events: RoundEvent[];
   end: {
     win: "A" | "B";

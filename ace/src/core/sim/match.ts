@@ -4,7 +4,7 @@
  * 模拟与呈现分离：本文件只产出数据，播放器消费 MatchRecord（§5.1）。
  * 注意：会修改 state（生涯累计、赛后疲劳/状态/士气）——由日推进统一调度。
  */
-import { Rng, clamp } from "../rng.ts";
+import { Rng, clamp, hashString } from "../rng.ts";
 import { MAP_BY_ID, MAPS } from "../data/maps.ts";
 import { AGENT_BY_ID, ULT_TIER_BONUS } from "../data/agents.ts";
 import {
@@ -18,6 +18,32 @@ import type { BuyType, GameState, MapRecord, MatchRecord, Player, PlayerLine, Ro
 const ULT_READY_POINTS = 7;
 const ULT_BONUS_CAP = 2.5;
 const MAX_ROUNDS = 80;
+
+/** 开局战术（GDD §5.4 二期）：确定性 hash 选择，不消耗 RNG——同图同回合同经济必出同战术 */
+function tacticForAtk(mapId: string, round: number, buy: BuyType, iglId: string, aware: number): string {
+  const r = hashString(`${mapId}:${round}:${buy}:${iglId}:atk`) % 100;
+  if (buy === "eco") return r < 55 ? "atk:ecoStack" : r < 80 ? "atk:rush:A" : "atk:rush:B";
+  if (buy === "force") return r < 45 ? "atk:rush:A" : r < 90 ? "atk:rush:B" : "atk:ecoStack";
+  // 长枪局：意识高的指挥更倾向中路夹击与针对性快攻
+  if (aware >= 70) return r < 30 ? "atk:midSplit" : r < 60 ? "atk:rush:A" : r < 85 ? "atk:rush:B" : "atk:default";
+  return r < 20 ? "atk:midSplit" : r < 45 ? "atk:rush:A" : r < 65 ? "atk:rush:B" : "atk:default";
+}
+
+function tacticForDef(mapId: string, round: number, iglId: string, aware: number): string {
+  const h = hashString(`${mapId}:${round}:${iglId}:def`);
+  const r = h % 100;
+  const site = h % 2 === 0 ? "A" : "B";
+  if (aware >= 70) return r < 25 ? "def:aggro" : r < 55 ? `def:stack:${site}` : "def:standard";
+  return r < 15 ? "def:aggro" : r < 40 ? `def:stack:${site}` : "def:standard";
+}
+
+/** 队内指挥的意识值与 id（无指挥用队长位=首发第一人） */
+function iglInfo(team: Team, state: GameState): { id: string; aware: number } {
+  const igl = team.roster.map((pid) => state.players[pid]).find((p) => p?.isIgl);
+  if (igl) return { id: igl.id, aware: igl.attrs.awareness };
+  const first = team.roster.map((pid) => state.players[pid]).find(Boolean);
+  return { id: first?.id ?? team.id, aware: first?.attrs.awareness ?? 50 };
+}
 
 interface SimTeam {
   side: "A" | "B";
@@ -171,6 +197,11 @@ function simMap(state: GameState, mapId: string, A: SimTeam, B: SimTeam, rng: Rn
     }
     const buyA = decideBuy(A.money, pistol, rng);
     const buyB = decideBuy(B.money, pistol, rng);
+    // 开局战术（GDD §5.4 二期）：确定性 hash 选择——不消耗 RNG，模拟结果与此前逐位一致
+    const atkIgl = iglInfo(atkSide === "A" ? A.team : B.team, state);
+    const defIgl = iglInfo(atkSide === "A" ? B.team : A.team, state);
+    const tacticAtk = tacticForAtk(mapId, round, atkSide === "A" ? buyA : buyB, atkIgl.id, atkIgl.aware);
+    const tacticDef = tacticForDef(mapId, round, defIgl.id, defIgl.aware);
     if (!pistol) {
       A.money = Math.max(0, A.money - (buyA === "full" ? 3900 : buyA === "force" ? 2300 : 500));
       B.money = Math.max(0, B.money - (buyB === "full" ? 3900 : buyB === "force" ? 2300 : 500));
@@ -348,6 +379,8 @@ function simMap(state: GameState, mapId: string, A: SimTeam, B: SimTeam, rng: Rn
       n: round,
       atk: atkSide,
       buys: { A: buyA, B: buyB },
+      tacticAtk,
+      tacticDef,
       events,
       end: {
         win: winSide,

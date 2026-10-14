@@ -1,258 +1,210 @@
 /**
- * 地图平面示意图（v0.9-5 对局美术打磨，GDD §5.4）：
- * 每张真实地图一张专属俯视布局（非 1:1 复刻——区域拓扑按真实地图手工标定），
- * 驱动 2D 战术视图的背景绘制与棋子站位锚点。坐标系固定 400×300 横向。
+ * 地图平面数据 v2（v0.9-5 对局美术打磨二期，GDD §5.4）：
+ * 真实俯视图（valorant-api displayicon，本地 assets/maps/*.png）+ 官方 callouts 标定区域
+ * （mapplans.gen.ts，node calibrate.mjs 生成）。坐标系 400×400，与底图逐像素对齐。
+ * 站位锚点按 开局战术×职责×攻防×回合事件 推演：布置 → 交火压进 → 下包收拢。
  */
-import { MAP_BY_ID } from "./maps.ts";
+import { MAPS } from "./maps.ts";
 import { hashString } from "../rng.ts";
+import { GEN_ZONES } from "./mapplans.gen.ts";
 
 export const PLAN_W = 400;
-export const PLAN_H = 300;
+export const PLAN_H = 400;
 
-export type ZoneKind = "site" | "mid" | "lane" | "spawnA" | "spawnB" | "feature";
+export const MAP_ART: Record<string, string> = Object.fromEntries(MAPS.map((m) => [m.id, `assets/maps/${m.id}.png`]));
 
 export interface PlanZone {
-  /** 锚点引用 id：siteA / siteB / siteC / mid / laneA / laneB / spawnA / spawnB */
   id: string;
-  kind: ZoneKind;
+  kind: "site" | "mid" | "lane" | "spawnA" | "spawnB";
+  label?: string;
   x: number;
   y: number;
   w: number;
   h: number;
-  label?: string;
 }
 
 export interface MapPlan {
   zones: PlanZone[];
-  /** 结构性装饰：细墙/箱体（x, y, w, h） */
-  walls?: [number, number, number, number][];
-  /** 特殊连接（如 Bind 传送器）：两锚点 zoneId 虚线相连 */
-  links?: [string, string, string][]; // [fromId, toId, 标注]
+  sites: PlanZone[];
+  spawnAtk: PlanZone;
+  spawnDef: PlanZone;
+  mid: PlanZone | null;
 }
 
-/** 所有地图共用：出生带（teamA=下 / teamB=上），站点区按各图排布 */
-function spawns(): PlanZone[] {
-  return [
-    { id: "spawnA", kind: "spawnA", x: 128, y: 264, w: 144, h: 28, label: "A 队出生" },
-    { id: "spawnB", kind: "spawnB", x: 128, y: 8, w: 144, h: 28, label: "B 队出生" },
-  ];
+const PLANS: Record<string, MapPlan> = {};
+for (const [mapId, gen] of Object.entries(GEN_ZONES)) {
+  const zones = gen as PlanZone[];
+  PLANS[mapId] = {
+    zones,
+    sites: zones.filter((z) => z.kind === "site"),
+    spawnAtk: zones.find((z) => z.id === "spawnA") ?? zones[0]!,
+    spawnDef: zones.find((z) => z.id === "spawnB") ?? zones[0]!,
+    mid: zones.find((z) => z.kind === "mid") ?? null,
+  };
 }
-
-function site(id: string, x: number, y: number, w: number, h: number): PlanZone {
-  return { id, kind: "site", x, y, w, h, label: id === "siteC" ? "C 点" : id === "siteA" ? "A 点" : "B 点" };
-}
-function mid(x: number, y: number, w: number, h: number, label = "中路"): PlanZone {
-  return { id: "mid", kind: "mid", x, y, w, h, label };
-}
-function lane(id: string, x: number, y: number, w: number, h: number): PlanZone {
-  return { id, kind: "lane", x, y, w, h };
-}
-
-export const MAP_PLANS: Record<string, MapPlan> = {
-  // 双点 · 中庭大图：A 右 / B 左 / 中庭纵贯
-  ascent: {
-    zones: [
-      ...spawns(),
-      site("siteA", 268, 72, 104, 68),
-      site("siteB", 28, 72, 104, 68),
-      mid(162, 56, 76, 148),
-      lane("laneA", 236, 150, 36, 106),
-      lane("laneB", 128, 150, 36, 106),
-    ],
-    walls: [[190, 20, 20, 36], [190, 244, 20, 20], [280, 96, 30, 18], [90, 96, 30, 18]],
-  },
-  // 双点 · 无中路：A 右 / B 左，传送器相连（标志性）
-  bind: {
-    zones: [
-      ...spawns(),
-      site("siteA", 252, 62, 116, 74),
-      site("siteB", 32, 62, 116, 74),
-      lane("laneA", 244, 150, 40, 106),
-      lane("laneB", 116, 150, 40, 106),
-      { id: "mid", kind: "feature", x: 178, y: 118, w: 44, h: 64, label: "无中路" },
-    ],
-    walls: [[190, 40, 20, 60], [190, 200, 20, 56]],
-    links: [["siteA", "siteB", "传送器"]],
-  },
-  // 双点 · 海岛开阔图：A 右 / B 左 / 中路峡谷
-  breeze: {
-    zones: [
-      ...spawns(),
-      site("siteA", 254, 64, 122, 96),
-      site("siteB", 24, 64, 122, 96),
-      mid(168, 56, 64, 152, "中路·洞窟"),
-      lane("laneA", 240, 168, 40, 88),
-      lane("laneB", 120, 168, 40, 88),
-    ],
-    walls: [[192, 24, 16, 32], [192, 244, 16, 20]],
-  },
-  // 三点 · 天堂：A 右 / B 中 / C 左
-  haven: {
-    zones: [
-      ...spawns(),
-      site("siteA", 262, 52, 110, 62),
-      site("siteB", 148, 44, 104, 56),
-      site("siteC", 28, 52, 110, 62),
-      mid(156, 128, 88, 84, "车库·中路"),
-      lane("laneA", 282, 122, 36, 134),
-      lane("laneB", 168, 220, 64, 36),
-      lane("laneC", 82, 122, 36, 134),
-    ],
-    walls: [[60, 130, 14, 40], [326, 130, 14, 40]],
-  },
-  // 双点 · 极地寒棚：A 左上 / B 右 / 中路管道
-  icebox: {
-    zones: [
-      ...spawns(),
-      site("siteA", 40, 44, 106, 72),
-      site("siteB", 254, 44, 116, 72),
-      mid(164, 60, 72, 128, "中路·管道"),
-      lane("laneA", 64, 124, 36, 132),
-      lane("laneB", 300, 124, 36, 132),
-    ],
-    walls: [[120, 70, 28, 20], [252, 70, 28, 20], [186, 196, 28, 24]],
-  },
-  // 三点 · 莲华：A 右上 / C 左上 / B 下中，中央庭院
-  lotus: {
-    zones: [
-      ...spawns(),
-      site("siteA", 266, 58, 108, 66),
-      site("siteC", 26, 58, 108, 66),
-      mid(158, 52, 84, 84, "中央庭院"),
-      site("siteB", 146, 168, 108, 56),
-      lane("laneA", 286, 132, 36, 88),
-      lane("laneC", 78, 132, 36, 88),
-      lane("laneB", 150, 232, 100, 24),
-    ],
-    walls: [[190, 144, 20, 20]],
-  },
-  // 双点 · 玄冥塔楼：A 右 / B 左 / 中路纵贯（绳索）
-  split: {
-    zones: [
-      ...spawns(),
-      site("siteA", 264, 52, 110, 72),
-      site("siteB", 26, 52, 110, 72),
-      mid(168, 44, 64, 148, "中路·绳索"),
-      lane("laneA", 282, 132, 36, 124),
-      lane("laneB", 82, 132, 36, 124),
-      lane("sewer", 168, 200, 64, 56),
-    ],
-    walls: [[190, 252, 20, 12]],
-  },
-  // 双点 · 日落之城：A 左 / B 右 / 中路市集
-  sunset: {
-    zones: [
-      ...spawns(),
-      site("siteA", 30, 60, 112, 72),
-      site("siteB", 258, 60, 112, 72),
-      mid(162, 76, 76, 96, "市集·中路"),
-      lane("laneA", 68, 140, 36, 116),
-      lane("laneB", 296, 140, 36, 116),
-      lane("midLane", 168, 180, 64, 76),
-    ],
-    walls: [[40, 96, 24, 16], [336, 96, 24, 16]],
-  },
-  // 双点 · 深渊：开阔平台，桥位关键
-  abyss: {
-    zones: [
-      ...spawns(),
-      site("siteA", 252, 58, 120, 88),
-      site("siteB", 28, 58, 120, 88),
-      mid(170, 50, 60, 148, "中路·悬桥"),
-      lane("laneA", 262, 154, 36, 102),
-      lane("laneB", 102, 154, 36, 102),
-    ],
-    walls: [[188, 208, 24, 16]],
-  },
-  // 双点 · 腐蚀：A 左上 / B 右 / 中路走廊
-  corrode: {
-    zones: [
-      ...spawns(),
-      site("siteA", 38, 52, 112, 72),
-      site("siteB", 250, 52, 112, 72),
-      mid(166, 68, 68, 118, "中路走廊"),
-      lane("laneA", 68, 132, 36, 124),
-      lane("laneB", 296, 132, 36, 124),
-    ],
-    walls: [[60, 88, 24, 14], [316, 88, 24, 14]],
-  },
-};
 
 export function planOf(mapId: string): MapPlan | null {
-  return MAP_PLANS[mapId] ?? null;
+  return PLANS[mapId] ?? null;
 }
 
 /** 本回合的预期下包点（确定性：按图+回合哈希在站点中选一） */
-export function plantZoneOf(mapId: string, roundN: number): string {
-  const plan = MAP_PLANS[mapId];
-  const sites = plan ? plan.zones.filter((z) => z.kind === "site").map((z) => z.id) : ["siteA"];
+export function plantZoneOf(mapId: string, roundN: number): PlanZone | null {
+  const plan = PLANS[mapId];
+  if (!plan) return null;
   const h = hashString(`${mapId}:${roundN}:plant`);
-  return sites[h % sites.length]!;
+  return plan.sites[h % plan.sites.length] ?? null;
 }
 
-/** 站位职责（由所操作英雄的主职责驱动） */
 export type AnchorDuty = "duelist" | "initiator" | "controller" | "sentinel" | "flex";
+export type Side2 = "top" | "bottom";
 
-/** 按攻防/职责/事件推站位：返回棋子中心坐标（图内确定性散布）。slot 为同区第几个棋子，用于错开重叠 */
-export function positionFor(
-  mapId: string,
-  opts: {
-    duty: AnchorDuty;
-    isAttacking: boolean;
-    roundN: number;
-    pid: string;
-    plantRevealed: boolean;
-    side: "top" | "bottom"; // 该棋子所在队伍的画布方位（teamB=top）
-    slot?: number;
-  },
-): { x: number; y: number; zoneId: string } {
-  const plan = MAP_PLANS[mapId];
-  if (!plan) return { x: PLAN_W / 2, y: PLAN_H / 2, zoneId: "mid" };
-  const zones = (id: string) => plan.zones.find((z) => z.id === id);
-  const sites = plan.zones.filter((z) => z.kind === "site");
-  const lanes = plan.zones.filter((z) => z.kind === "lane");
-  const plant = plantZoneOf(mapId, opts.roundN);
+export interface PosOpts {
+  duty: AnchorDuty;
+  isAttacking: boolean;
+  roundN: number;
+  pid: string;
+  plantRevealed: boolean;
+  /** 该棋子所在队伍的画布方位（teamB=top） */
+  side: Side2;
+  /** 引擎开局战术：如 "atk:rush:A" / "def:stack:B" / "atk:default" / "def:aggro"（旧档缺省 default/standard） */
+  tactic: string;
+  /** 本回合已揭示击杀数——驱动压进程度 */
+  killsRevealed: number;
+  /** 同区第几个棋子（错开重叠） */
+  slot: number;
+}
 
-  let zoneId: string;
-  if (opts.isAttacking) {
-    if (opts.plantRevealed) {
-      // 下包后：进攻方全员涌向包点
-      zoneId = plant;
-    } else {
-      // 推开：决斗走包点对应通道先行，先锋次通道佯攻，控场控中路，哨卫出生压后
-      const plantLane = lanes.find((l) => l.id === "lane" + plant.replace("site", "")) ?? lanes[0];
-      const secondLane = lanes.find((l) => l.id !== (plantLane?.id ?? "")) ?? plantLane;
-      switch (opts.duty) {
-        case "duelist": zoneId = plantLane?.id ?? plant; break;
-        case "initiator": zoneId = secondLane?.id ?? "mid"; break;
-        case "controller": zoneId = plan.zones.some((z) => z.kind === "mid") ? "mid" : secondLane?.id ?? "spawnA"; break;
-        default: zoneId = opts.side === "bottom" ? "spawnA" : "spawnB";
-      }
+const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+
+function zoneCenter(z: PlanZone): { x: number; y: number } {
+  return { x: z.x + z.w / 2, y: z.y + z.h / 2 };
+}
+
+/** 战术 → 进攻方各职责的布置区（找不到 lane 回退 mid/site） */
+function atkSetupZone(plan: MapPlan, tactic: string, duty: AnchorDuty, plant: PlanZone | null): PlanZone {
+  const lane = (L: string) => plan.zones.find((z) => z.id === "lane" + L);
+  const site = (L: string) => plan.zones.find((z) => z.id === "site" + L);
+  const midZ = plan.mid;
+  const fallback = plan.sites[0] ?? plan.spawnAtk;
+  const other = plant ? plan.sites.find((s) => s.id !== plant.id) ?? plant : fallback;
+  const kind = tactic.split(":")[1] ?? "default";
+  const target = tactic.split(":")[2] ?? "";
+  const rushSite = target ? (site(target) ?? plant ?? fallback) : (plant ?? fallback);
+  switch (kind) {
+    case "rush": { // 集群快攻：4 人压目标通道，1 人中路策应
+      const mainLane = (target ? lane(target) : undefined) ?? lane("A") ?? plan.zones.find((z) => z.kind === "lane");
+      if (duty === "sentinel") return midZ ?? mainLane ?? plan.spawnAtk;
+      return mainLane ?? rushSite;
     }
-  } else {
-    if (opts.plantRevealed) {
-      // 包点被下：防守方回防收缩
-      zoneId = plant;
-    } else {
-      // 防守布防：哨卫守主点，控场守次点，先锋守第三点（三点图），决斗游走中路
-      const ordered = [sites[0]?.id, sites[1]?.id, sites[2]?.id];
-      switch (opts.duty) {
-        case "sentinel": zoneId = ordered[0] ?? "mid"; break;
-        case "controller": zoneId = ordered[1] ?? ordered[0] ?? "mid"; break;
-        case "initiator": zoneId = ordered[2] ?? (plan.zones.some((z) => z.kind === "mid") ? "mid" : ordered[1] ?? "mid"); break;
-        default: zoneId = plan.zones.some((z) => z.kind === "mid") ? "mid" : ordered[1] ?? "mid";
+    case "midSplit": // 中路夹击：控场+先锋控中，决斗+哨卫走两侧
+      if (duty === "controller" || duty === "initiator") return midZ ?? other;
+      if (duty === "duelist") return lane("A") ?? rushSite;
+      return lane("B") ?? other;
+    case "ecoStack": // 经济局抱团：全员缩在进攻出生压后
+      return plan.spawnAtk;
+    default: { // 默认分推：决斗走包点通道、先锋次通道、控场中路、哨卫压后
+      if (duty === "duelist") return lane(plant?.id.replace("site", "") ?? "A") ?? plant ?? plan.spawnAtk;
+      if (duty === "initiator") {
+        const mainLane = lane(plant?.id.replace("site", "") ?? "A");
+        const second = plan.zones.find((z) => z.kind === "lane" && z.id !== mainLane?.id);
+        return second ?? midZ ?? plan.spawnAtk;
       }
+      if (duty === "controller") return midZ ?? plan.spawnAtk;
+      return plan.spawnAtk;
     }
   }
-  const zone = zones(zoneId) ?? plan.zones.find((z) => z.kind === "site") ?? plan.zones[0]!;
-  // 区内确定性散布（每人每回合稳定），留 12px 内边距避让边框
-  const h = hashString(`${mapId}:${opts.pid}:${opts.roundN}:${zoneId}`);
-  const px = 12;
-  const jx = zone.w > px * 2 ? h % (zone.w - px * 2) : zone.w / 2;
-  const jy = zone.h > px * 2 ? (h >>> 8) % (zone.h - px * 2) : zone.h / 2;
-  const slot = opts.slot ?? 0;
-  const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
-  const x = clamp(zone.x + px + jx + ((slot % 3) - 1) * 15, zone.x + 10, zone.x + zone.w - 10);
-  const y = clamp(zone.y + px + jy + (Math.floor(slot / 3) - 0.5) * 15, zone.y + 10, zone.y + zone.h - 10);
-  return { x, y, zoneId };
+}
+
+/** 战术 → 防守方各职责的布置区 */
+function defSetupZone(plan: MapPlan, tactic: string, duty: AnchorDuty): PlanZone {
+  const kind = tactic.split(":")[1] ?? "standard";
+  const target = tactic.split(":")[2] ?? "";
+  const site = (L: string) => plan.zones.find((z) => z.id === "site" + L);
+  const [s1, s2, s3] = [site("A"), site("B"), site("C")];
+  const midZ = plan.mid;
+  const lane = (L: string) => plan.zones.find((z) => z.id === "lane" + L);
+  switch (kind) {
+    case "stack": { // 重心堆积：3 人囤目标点，其余看另一侧
+      const t = site(target) ?? s1!;
+      const others = [s1, s2, s3].filter((s) => s && s.id !== t.id);
+      if (duty === "sentinel" || duty === "duelist") return t;
+      if (duty === "controller") return t;
+      return others[0] ?? midZ ?? t;
+    }
+    case "aggro": // 前顶压制：各职责顶到通道口
+      if (duty === "sentinel") return lane("A") ?? s1!;
+      if (duty === "controller") return midZ ?? lane("B") ?? s2!;
+      if (duty === "initiator") return lane("B") ?? s2!;
+      return lane("C") ?? midZ ?? s2!;
+    default: // 常规布防：哨卫主点 / 控场次点 / 先锋第三点或中路 / 决斗游走
+      if (duty === "sentinel") return s1!;
+      if (duty === "controller") return s2 ?? s1!;
+      if (duty === "initiator") return s3 ?? midZ ?? s2!;
+      return midZ ?? s2!;
+  }
+}
+
+/** 站位主函数：布置位 →（击杀压进）→（下包收拢），全部确定性 */
+export function positionFor(mapId: string, opts: PosOpts): { x: number; y: number; zoneId: string } {
+  const plan = PLANS[mapId];
+  if (!plan) return { x: PLAN_W / 2, y: PLAN_H / 2, zoneId: "mid" };
+  const plant = plantZoneOf(mapId, opts.roundN);
+  const isAtk = opts.isAttacking;
+  const setupZone = isAtk ? atkSetupZone(plan, opts.tactic, opts.duty, plant) : defSetupZone(plan, opts.tactic, opts.duty);
+
+  // 目标区：下包后全员涌向包点；未下包时仅进攻方随击杀压向包点，防守方轻微收缩
+  const targetZone = opts.plantRevealed
+    ? plant ?? setupZone
+    : isAtk && opts.killsRevealed > 0
+      ? plant ?? setupZone
+      : setupZone;
+  const blend = opts.plantRevealed
+    ? 1
+    : isAtk ? Math.min(0.45, opts.killsRevealed * 0.16)
+      : Math.min(0.3, opts.killsRevealed * 0.1);
+
+  const jitterOf = (z: PlanZone, salt: string) => {
+    const c = zoneCenter(z);
+    const h = hashString(`${mapId}:${opts.pid}:${opts.roundN}:${z.id}:${salt}`);
+    const jx = ((h % 100) / 100 - 0.5) * Math.max(10, z.w * 0.55);
+    const jy = (((h >>> 9) % 100) / 100 - 0.5) * Math.max(10, z.h * 0.55);
+    return { jx, jy };
+  };
+  const slotShift = (slot: number) => ({ dx: ((slot % 3) - 1) * 15, dy: (Math.floor(slot / 3) - 0.5) * 15 });
+
+  const sj = jitterOf(setupZone, "s");
+  const sc = zoneCenter(setupZone);
+  const sx = clamp(sc.x + sj.jx + slotShift(opts.slot).dx, 8, PLAN_W - 8);
+  const sy = clamp(sc.y + sj.jy + slotShift(opts.slot).dy, 8, PLAN_H - 8);
+
+  let fx: number;
+  let fy: number;
+  if (blend <= 0) {
+    fx = sx;
+    fy = sy;
+  } else {
+    const tj = jitterOf(targetZone, "t");
+    const tc = zoneCenter(targetZone);
+    const tx = clamp(tc.x + tj.jx + slotShift(opts.slot).dx, 8, PLAN_W - 8);
+    const ty = clamp(tc.y + tj.jy + slotShift(opts.slot).dy, 8, PLAN_H - 8);
+    fx = lerp(sx, tx, blend);
+    fy = lerp(sy, ty, blend);
+  }
+  return { x: clamp(fx, 10, PLAN_W - 10), y: clamp(fy, 10, PLAN_H - 10), zoneId: setupZone.id };
+}
+
+/** 开局战术中文标签（RoundRecord.tacticAtk/tacticDef → 展示） */
+export const TACTIC_LABEL: Record<string, string> = {
+  "atk:default": "默认分推",
+  "atk:midSplit": "中路夹击",
+  "atk:ecoStack": "抢攻抱团",
+  "def:standard": "常规布防",
+  "def:aggro": "前顶压制",
+  "def:stack:A": "重心 A",
+  "def:stack:B": "重心 B",
+  "def:stack:C": "重心 C",
+};
+export function tacticLabel(tactic: string): string {
+  return TACTIC_LABEL[tactic] ?? tactic.split(":")[1] ?? tactic;
 }
