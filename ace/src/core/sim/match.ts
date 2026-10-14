@@ -42,6 +42,31 @@ function sideOf(sim: { A: SimTeam; B: SimTeam }, s: "A" | "B"): SimTeam {
   return s === "A" ? sim.A : sim.B;
 }
 
+/** 特质乘数（v0.8）：kind 决定查询维度；无特质 = 1 */
+function traitMul(p: Player, kind: "first" | "kill" | "death" | "assist" | "clutch"): number {
+  const ts = p.traits;
+  if (!ts || ts.length === 0) return 1;
+  const has = (k: string) => ts.includes(k);
+  let m = 1;
+  if (kind === "first") {
+    if (has("entry")) m *= 1.35;
+    if (has("baiter")) m *= 0.5;
+  } else if (kind === "kill") {
+    if (has("carry")) m *= 1.25;
+    if (has("headshot")) m *= 1.1;
+    if (has("glass")) m *= 1.15;
+  } else if (kind === "death") {
+    if (has("survivor")) m *= 0.8;
+    if (has("glass")) m *= 1.3;
+    if (has("anchor")) m *= 0.9;
+  } else if (kind === "assist") {
+    if (has("enabler")) m *= 1.3;
+  } else if (kind === "clutch") {
+    if (has("clutch")) m *= 3;
+  }
+  return m;
+}
+
 function attackSideOf(round: number, aAttacksFirst: boolean): "A" | "B" {
   const first = aAttacksFirst ? "A" : "B";
   const second = aAttacksFirst ? "B" : "A";
@@ -196,8 +221,12 @@ function simMap(state: GameState, mapId: string, A: SimTeam, B: SimTeam, rng: Rn
     const winnerAlive = 5 - winnerDeaths;
 
     const winAlive = new Set(winSim.players.map((p) => p.id));
-    const loseDead = rng.shuffle(loseSim.players).slice(0, 5 - loserAlive);
-    const winDead = rng.shuffle(winSim.players).slice(0, winnerDeaths);
+    const loseDead = rng.shuffle(loseSim.players)
+      .sort((a, b) => traitMul(b, "death") - traitMul(a, "death"))
+      .slice(0, 5 - loserAlive);
+    const winDead = rng.shuffle(winSim.players)
+      .sort((a, b) => traitMul(b, "death") - traitMul(a, "death"))
+      .slice(0, winnerDeaths);
     const loseAll = new Set(loseSim.players.map((p) => p.id));
     const winAll = new Set(winSim.players.map((p) => p.id));
     const atkAliveSet = attackerWins ? winAlive : loseAll;
@@ -213,7 +242,7 @@ function simMap(state: GameState, mapId: string, A: SimTeam, B: SimTeam, rng: Rn
 
     // 击杀分配
     const killsThisRound: Record<string, number> = {};
-    const firstKiller = pickWeighted(atkPlayers, atkAliveSet, (p) => dutyEntryWeight(dutyOf(p)) * (p.attrs.aim / 60), rng);
+    const firstKiller = pickWeighted(atkPlayers, atkAliveSet, (p) => dutyEntryWeight(dutyOf(p)) * (p.attrs.aim / 60) * traitMul(p, "first"), rng);
     const firstVictim = loseDead.length > 0 ? (loseDead[0] as Player) : (defPlayers[0] as Player);
     events.push({ t: "kill", s: firstKiller.id, v: firstVictim.id, first: true });
     killsThisRound[firstKiller.id] = 1;
@@ -226,11 +255,11 @@ function simMap(state: GameState, mapId: string, A: SimTeam, B: SimTeam, rng: Rn
     };
     for (let i = 1; i < loseDead.length; i++) {
       const victim = loseDead[i] as Player;
-      const killer = pickWeighted(winSim.players, winAlive, (p) => dutyKillWeight(dutyOf(p)) * (p.attrs.aim / 70), rng);
+      const killer = pickWeighted(winSim.players, winAlive, (p) => dutyKillWeight(dutyOf(p)) * (p.attrs.aim / 70) * traitMul(p, "kill"), rng);
       credit(killer, victim);
     }
     for (const victim of winDead) {
-      const killer = pickWeighted(loseSim.players, loseAll, (p) => dutyKillWeight(dutyOf(p)) * (p.attrs.aim / 70), rng);
+      const killer = pickWeighted(loseSim.players, loseAll, (p) => dutyKillWeight(dutyOf(p)) * (p.attrs.aim / 70) * traitMul(p, "kill"), rng);
       credit(killer, victim);
     }
 
@@ -248,7 +277,7 @@ function simMap(state: GameState, mapId: string, A: SimTeam, B: SimTeam, rng: Rn
       if (k >= 5) events.push({ t: "ace", s: pid });
     }
     if (winnerDeaths >= 4) {
-      const clutchHero = winSim.players.find((p) => winAlive.has(p.id)) ?? (winSim.players[0] as Player);
+      const clutchHero = winSim.players.filter((p) => winAlive.has(p.id)).sort((a, b) => traitMul(b, "clutch") - traitMul(a, "clutch"))[0] ?? (winSim.players[0] as Player);
       lines[clutchHero.id]!.clutches++;
       events.push({ t: "clutch", s: clutchHero.id, vs: Math.max(1, loserAlive) });
     }
@@ -299,7 +328,7 @@ function simMap(state: GameState, mapId: string, A: SimTeam, B: SimTeam, rng: Rn
     lines[firstKiller.id]!.firstKills++;
     lines[firstVictim.id]!.firstDeaths++;
     for (const p of winSim.players) {
-      if (winAlive.has(p.id) && !(killsThisRound[p.id] > 0) && rng.chance(0.42)) {
+      if (winAlive.has(p.id) && !(killsThisRound[p.id] > 0) && rng.chance(0.42 * traitMul(p, "assist"))) {
         lines[p.id]!.assists++;
       }
     }

@@ -41,13 +41,13 @@ function loadPair(state: ReturnType<typeof benchState>, pair: number, targetA: n
   return { a: t1.team.id, b: t2.team.id };
 }
 
-test("T1：87 vs 72 → BO3 胜率 68-78%（2 对夹具 × 500 场均值）", () => {
+test("T1：87 vs 72 → BO3 胜率 68-78%（5 对夹具 × 400 场均值）", () => {
   const state = benchState();
   let wins = 0;
   let total = 0;
-  for (let pair = 0; pair < 2; pair++) {
+  for (let pair = 0; pair < 5; pair++) {
     const { a, b } = loadPair(state, pair, 87, 72);
-    for (let i = 0; i < 500; i++) {
+    for (let i = 0; i < 400; i++) {
       resetVitality(state);
       const r = simMatch(state, a, b, 3, 50000 + pair * 100000 + i, `T1-${pair}-${i}`);
       if (r.winner === "A") wins++;

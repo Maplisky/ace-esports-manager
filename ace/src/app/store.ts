@@ -78,6 +78,7 @@ interface AppStore {
   cancelStream: (playerId: string) => Promise<void>;
   requestRotationTalk: (playerId: string) => Promise<void>;
   managerLife: (kind: "meal" | "feast" | "fun") => Promise<void>;
+  upgradeFacility: () => Promise<void>;
 }
 
 let worker: Worker | null = null;
@@ -380,6 +381,12 @@ export const useStore = create<AppStore>((set, get) => ({
   cancelStream: async (playerId) => {
     const res = await call<{ state?: GameState; records?: Record<string, MatchRecord> }>({ type: "cancelStream", playerId });
     if (res.state) set({ state: res.state, records: res.records ?? get().records });
+  },
+
+  upgradeFacility: async () => {
+    const res = await call<{ state: GameState; message?: string }>({ type: "upgradeFacility" });
+    set({ state: res.state });
+    if (res.message) get().showToast(res.message);
   },
 
   managerLife: async (kind) => {

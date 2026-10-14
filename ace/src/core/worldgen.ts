@@ -91,6 +91,36 @@ export function resetPlayerSeq(): void {
 
 const AGENT_IDS = new Set(AGENTS.map((a) => a.id));
 
+/** 特质推导（v0.8）：真实选手按 vlr 生涯统计特征打标；虚拟选手按职责+随机。0-3 条。 */
+function deriveTraits(vlrId: number | null, duty: string, attrs: PlayerAttrs, rng: Rng): string[] {
+  const out: string[] = [];
+  if (vlrId != null) {
+    // 真实选手：按统计特征（fk/fd 比、kd、生存）+ 少量随机
+    const p = REAL_PLAYERS_BY_VLR.get(vlrId);
+    const w = p ? weightedStats(p) : null;
+    if (w) {
+      const fkShare = w.fkRate + w.fdRate > 0 ? w.fkRate / (w.fkRate + w.fdRate) : 0.5;
+      if (fkShare >= 0.62) out.push("entry");
+      if (w.kd >= 1.15 && w.rating >= 1.1) out.push("carry");
+      if (fkShare <= 0.38 && w.kd >= 1.0) out.push("survivor");
+      if (fkShare <= 0.35) out.push("baiter");
+      if (Math.abs(w.kpr - 0.72) < 0.04 && w.kd >= 1.05) out.push("headshot");
+      if (w.apr >= 0.3) out.push("enabler");
+      if (w.rating >= 1.05 && Math.abs(w.rating - 1.05) < 0.08) out.push("consistent");
+    }
+  }
+  if (out.length === 0) {
+    // 虚拟/无统计：职责锚点 + 随机 0-2
+    const anchor = { duelist: "entry", initiator: "enabler", controller: "anchor", sentinel: "anchor" }[duty] ?? "anchor";
+    if (rng.chance(0.7)) out.push(anchor);
+    if (attrs.clutch >= 75 && !out.includes("clutch") && rng.chance(0.5)) out.push("clutch");
+    if (attrs.aim >= 80 && !out.includes("carry") && rng.chance(0.4)) out.push("carry");
+    if (rng.chance(0.12)) out.push("glass");
+    if (rng.chance(0.06) && !out.includes("entry")) out.push("baiter");
+  }
+  return [...new Set(out)].slice(0, 3);
+}
+
 /** 场上位置展示序（决斗→先锋→控场→哨卫；与 UI 分组一致） */
 const DUTY_DISPLAY_ORDER = ["duelist", "initiator", "controller", "sentinel"];
 
@@ -217,6 +247,7 @@ function makePlayer(
     listed: false,
     releaseClause: rng.chance(0.06) ? Math.round(salaryFor(overall, tier) * 14 / 1000) * 1000 : 0,
     noPoach: false,
+    traits: deriveTraits(null, duty, attrs, rng),
     promisedRole: "starter",
     injuredUntilDay: 0,
     homegrown,
@@ -311,6 +342,7 @@ function makeRealPlayer(rng: Rng, vlrP: VlrPlayerStat, teamId: string, tier: 1 |
     listed: false,
     releaseClause,
     noPoach: false,
+    traits: deriveTraits(vlrP.vlrId, usedDuty, attrs, rng),
     promisedRole: "starter",
     injuredUntilDay: 0,
     homegrown: false,

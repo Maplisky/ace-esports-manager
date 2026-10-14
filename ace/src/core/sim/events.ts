@@ -39,11 +39,16 @@ export function spawnDailyEvents(state: GameState, rng: Rng): void {
 
   const idleDays = state.day - (state.lastEventDay ?? 0);
   const starved = idleDays >= 6;
+  // Deadline Day（GDD §18 #6 落地 v0.8）：转会窗最后 3 天事件密度 ×2（阈值 0.35→0.55，单日上限 3→6）
+  const windows: [number, number][] = [[1, 24], [123, 152], [233, 366]];
+  const deadlineSoon = windows.some(([a, b]) => state.day >= b - 2 && state.day <= b);
   let draws = 0;
   if (starved) draws = 1;
   else {
+    const threshold = deadlineSoon ? 0.55 : 0.35;
+    const cap = deadlineSoon ? 6 : 3;
     let roll = rng.next();
-    while (roll < 0.35 && draws < 3 && state.pendingEvents.length + draws < 4) {
+    while (roll < threshold && draws < cap && state.pendingEvents.length + draws < (deadlineSoon ? 6 : 4)) {
       draws++;
       roll = rng.next();
     }

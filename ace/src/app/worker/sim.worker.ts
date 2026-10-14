@@ -321,6 +321,26 @@ function handleWorkerMessage(e: MessageEvent) {
       }
     }
     reply({ type: "snapshot", ...snapshot(), message });
+  } else if (type === "upgradeFacility") {
+    // 设施升级（v0.8，原作公式 60000 + f²×90）：俱乐部预算支出，训练收益乘数上限 95
+    let message = "无俱乐部。";
+    if (state && state.myTeamId) {
+      const t = state.teams[state.myTeamId];
+      if (t) {
+        const f = t.facilities ?? 50;
+        if (f >= 95) message = "训练设施已是顶级水平。";
+        else {
+          const cost = Math.round(60000 + f * f * 90);
+          if (t.budget >= cost) {
+            t.budget -= cost;
+            t.facilities = f + 1;
+            message = `训练设施升级完成（${f + 1} 级），花费 $${(cost / 1000).toFixed(0)}K。训练收益 +${(((f + 1) / 250 - (f / 250)) * 100).toFixed(1)}%。`;
+            state.transferFeed.push({ day: state.day, year: state.year, kind: "done", text: `${t.name} 升级训练设施至 ${f + 1} 级（$${(cost / 1000).toFixed(0)}K）。` });
+          } else message = `预算不足：升级需要 $${(cost / 1000).toFixed(0)}K（现有 $${(t.budget / 1000).toFixed(0)}K）。`;
+        }
+      }
+    }
+    reply({ type: "snapshot", ...snapshot(), message });
   } else if (type === "requestRotationTalk") {
     if (state && state.myTeamId) {
       const weekIdx = Math.floor(state.day / 7);

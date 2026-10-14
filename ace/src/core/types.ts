@@ -105,6 +105,8 @@ export interface Player {
   noPoach: boolean;
   /** 已挂牌周数（AI 摘牌计时；我方挂牌显示用） */
   listedWeeks?: number;
+  /** 选手特质（0-3 条，原作 traits 移植）：key 见 data/traits.ts */
+  traits?: string[];
   injuredUntilDay: number;
   /** 导师型替补绑定的弟子 id */
   apprenticeId?: string;

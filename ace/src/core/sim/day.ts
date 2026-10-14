@@ -210,7 +210,8 @@ function weeklyTick(state: GameState, rng: Rng): void {
           const commF = 1 - 0.25 * Math.min(2, p.commercialDays ?? 0); // 商务占用惩罚（GDD §8.4）
           const staffF = 1 + ((myTeam.staff?.training?.value ?? 0) * 0.004); // 训练助教（GDD §8.3：99 点 ≈ ×1.40）
           const moodF = (state.manager?.life?.mood ?? 70) < 30 ? 0.9 : 1; // 教练心情低落 → 训练收益 -10%（GDD v0.5-5）
-          const gain = rng.range(XP_PER_DAY[0], XP_PER_DAY[1]) * effTrainDays * moraleF * fatigueF * coachF * commF * staffF * moodF;
+          const facF = 0.85 + (myTeam.facilities ?? 50) / 250; // 设施乘数（v0.8 落地：40 设施 ×1.01，95 设施 ×1.23）
+          const gain = rng.range(XP_PER_DAY[0], XP_PER_DAY[1]) * effTrainDays * moraleF * fatigueF * coachF * commF * staffF * moodF * facF;
           p.xp[opt.attr] = (p.xp[opt.attr] ?? 0) + gain;
         }
       } else if (focus === "rest") {

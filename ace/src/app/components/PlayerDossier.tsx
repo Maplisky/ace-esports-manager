@@ -7,6 +7,7 @@ import type { GameState, Player } from "../../core/types.ts";
 import { AGENT_BY_ID } from "../../core/data/agents.ts";
 import { marketValue, salaryExpectation } from "../../core/sim/transfer.ts";
 import { PlayerFace, SyntheticBadge } from "./Avatar.tsx";
+import { TRAIT_BY_KEY } from "../../core/data/traits.ts";
 import { buildAgentGroups, DUTY_ORDER } from "./AgentSelect.tsx";
 
 const ATTR_CN: Record<string, string> = {
@@ -105,6 +106,31 @@ export function PlayerDossier(props: { state: GameState; player: Player; onClose
             {p.injuredUntilDay > state.day ? ` · 🤕 伤停至第 ${p.injuredUntilDay} 天` : ""}
             <span style={{ marginLeft: 10 }}>角色倾向：{p.promisedRole === "core" ? "核心" : p.promisedRole === "starter" ? "首发" : p.promisedRole === "rotation" ? "轮换" : "替补"}</span>
           </div>
+          {/* 特质徽章（原作 traits） */}
+          {(p.traits ?? []).length > 0 && (
+            <div className="row" style={{ gap: 6, marginTop: 8, flexWrap: "wrap" }}>
+              {(p.traits ?? []).map((k) => {
+                const def = TRAIT_BY_KEY.get(k);
+                if (!def) return null;
+                return (
+                  <span
+                    key={k}
+                    title={def.desc}
+                    className="tag"
+                    style={{
+                      background: def.good ? "rgba(34,197,94,0.18)" : "rgba(239,68,68,0.18)",
+                      color: def.good ? "#4ade80" : "#f87171",
+                      border: `1px solid ${def.good ? "#22c55e55" : "#ef444455"}`,
+                      fontWeight: 700,
+                    }}
+                  >
+                    {def.good ? "★ " : "⚠ "}
+                    {def.label}
+                  </span>
+                );
+              })}
+            </div>
+          )}
 
           {/* 英雄池：按位置分组、纯熟练度（vlr 数据只体现在熟练度数值里） */}
           <h3 style={{ margin: "14px 0 8px" }}>🎭 英雄池（按场上位置 · 熟练度）</h3>
