@@ -5,6 +5,7 @@ import { AGENTS, AGENT_BY_ID } from "../../core/data/agents.ts";
 import { INDIVIDUAL_OPTIONS, OPTION_BY_KEY, recommendFocus, XP_PER_DAY, XP_PER_ATTR_POINT } from "../../core/data/training.ts";
 import { useStore } from "../store.ts";
 import { AgentIcon, PlayerFace } from "./Avatar.tsx";
+import { AgentSelect } from "./AgentSelect.tsx";
 
 const TEAM_SLOTS: { key: string; name: string; desc: string }[] = [
   { key: "map", name: "跑图", desc: "所选地图熟练 +0.4/天（上限 95）" },
@@ -193,10 +194,11 @@ export function TrainingPage(props: { state: GameState }) {
                 <PlayerFace p={p} size={26} showTag={false} />
                 <span className="small" style={{ minWidth: 60 }}>{p.ign}</span>
                 {aid && <AgentIcon agentId={aid} size={24} name={AGENT_BY_ID.get(aid)?.name} />}
-                <select
+                <AgentSelect
+                  player={p}
                   value={aid}
-                  onChange={(e) => {
-                    const v = e.target.value;
+                  mode="training"
+                  onChange={(v) => {
                     setAgentPicks((prev) => {
                       const n = { ...prev };
                       if (!v) delete n[pid];
@@ -204,15 +206,7 @@ export function TrainingPage(props: { state: GameState }) {
                       return n;
                     });
                   }}
-                >
-                  <option value="">（不练）</option>
-                  <optgroup label="英雄池">
-                    {p.agentPool.map((a) => <option key={a} value={a}>{AGENT_BY_ID.get(a)?.name ?? a}（{Math.round(p.agentPro[a] ?? 0)}）</option>)}
-                  </optgroup>
-                  <optgroup label="新英雄（34 起步）">
-                    {AGENTS.filter((a) => !p.agentPool.includes(a.id)).map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
-                  </optgroup>
-                </select>
+                />
                 {aid && <span className="muted small">{Math.round(curPro)} → {Math.min(100, Math.round((curPro + 4.2 * eff) * 10) / 10)}/周</span>}
               </span>
             );

@@ -91,10 +91,13 @@ export function resetPlayerSeq(): void {
 
 const AGENT_IDS = new Set(AGENTS.map((a) => a.id));
 
+/** 场上位置展示序（决斗→先锋→控场→哨卫；与 UI 分组一致） */
+const DUTY_DISPLAY_ORDER = ["duelist", "initiator", "controller", "sentinel"];
+
 /** vlr 逐英雄统计 → rounds 加权综合（只计内部英雄池内的行） */
 function weightedStats(vlrP: VlrPlayerStat) {
   let rounds = 0, rating = 0, acs = 0, kd = 0, kast = 0, adr = 0, kpr = 0, apr = 0, fk = 0, fd = 0;
-  const byAgent: { agent: string; rounds: number; share: number }[] = [];
+  const byAgent: { agent: string; rounds: number; share: number; rating: number }[] = [];
   for (const s of vlrP.stats) {
     if (!AGENT_IDS.has(s.agent) || s.rounds <= 0) continue;
     rounds += s.rounds;
@@ -107,7 +110,7 @@ function weightedStats(vlrP: VlrPlayerStat) {
     apr += s.apr * s.rounds;
     fk += s.fk;
     fd += s.fd;
-    byAgent.push({ agent: s.agent, rounds: s.rounds, share: 0 });
+    byAgent.push({ agent: s.agent, rounds: s.rounds, share: 0, rating: s.rating });
   }
   if (rounds === 0) return null;
   for (const a of byAgent) a.share = a.rounds / rounds;
@@ -236,9 +239,23 @@ function makeRealPlayer(rng: Rng, vlrP: VlrPlayerStat, teamId: string, tier: 1 |
   let agentPro: Record<string, number>;
   if (w) {
     attrs = attrsFromVlr(w, usedDuty, isIgl);
-    agentPool = w.byAgent.slice(0, 5).map((a) => a.agent);
+    const dutyRank = (agentId: string) => {
+      const a = AGENTS.find((x) => x.id === agentId);
+      if (!a) return 9;
+      let best = 9;
+      let bv = -1;
+      for (const [k, v] of Object.entries(a.duty)) {
+        if ((v as number) > bv) { bv = v as number; best = DUTY_DISPLAY_ORDER.indexOf(k); }
+      }
+      return best;
+    };
+    agentPool = w.byAgent
+      .slice(0, 5)
+      .map((a) => a.agent)
+      .sort((x, y) => dutyRank(x) - dutyRank(y));
     agentPro = {};
-    for (const a of w.byAgent.slice(0, 5)) agentPro[a.agent] = clamp(55 + a.share * 75, 55, 95);
+    // 初始熟练度 = vlr 使用占比 + 效率评分加权（48 + 55×占比 + 22×(评分−1)，clamp 45-95）
+    for (const a of w.byAgent.slice(0, 5)) agentPro[a.agent] = clamp(48 + a.share * 55 + (a.rating - 1) * 22, 45, 95);
   } else {
     const target = tier === 1 ? 71 : 63;
     attrs = generateAttrs(rng, target + rng.int(-4, 4), usedDuty, isIgl);

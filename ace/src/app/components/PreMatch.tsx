@@ -8,6 +8,7 @@ import type { GameState, Player } from "../../core/types.ts";
 import { AGENTS, AGENT_BY_ID } from "../../core/data/agents.ts";
 import { computeFit } from "../../core/sim/fit.ts";
 import { PlayerFace, AgentIcon } from "./Avatar.tsx";
+import { AgentSelect } from "./AgentSelect.tsx";
 import { MAPS } from "../../core/data/maps.ts";
 import { intelOf, estimateMapStrength, starsOf } from "../../core/sim/intel.ts";
 import { hashString } from "../../core/rng.ts";
@@ -477,21 +478,16 @@ export function PreMatch(props: {
                   {p.isIgl && <span className="tag" style={{ marginLeft: 6 }}>指挥</span>}
                 </span>
                 <AgentIcon agentId={current} size={36} name={curAgent?.name} />
-                <select
+                <AgentSelect
+                  player={p}
                   value={current}
-                  onChange={(e) => {
+                  onChange={(aid) => {
                     setPicks((prev) => ({
                       ...prev,
-                      [mapId]: { ...(prev[mapId] ?? {}), [p.id]: e.target.value },
+                      [mapId]: { ...(prev[mapId] ?? {}), [p.id]: aid },
                     }));
                   }}
-                >
-                  {AGENTS.filter((a) => p.agentPool.includes(a.id)).map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.name}（{Math.round((p.agentPro[a.id] ?? 0) * 10) / 10}%）
-                    </option>
-                  ))}
-                </select>
+                />
                 <span className="small" style={{ display: "inline-flex", flexDirection: "column", lineHeight: 1.3, minWidth: 90 }}>
                   <span>熟练 <b>{pro}</b>%</span>
                   <span className={fit >= 1.06 ? "tag green" : fit <= 0.94 ? "tag orange" : "muted"} style={{ fontSize: 10 }}>图适 {Math.round(fit * 100)}%</span>
