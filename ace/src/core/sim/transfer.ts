@@ -4,7 +4,7 @@
  * 一切随机经显式 Rng（确定性约定 §11.1）。
  */
 import { Rng, clamp, hashString } from "../rng.ts";
-import type { GameState, Player, Team, TransferOffer, TransferInquiry } from "../types.ts";
+import type { GameState, Player, Team, TransferOffer } from "../types.ts";
 
 /** 转会窗（自然年内）：季前 · 夏季窗口 · 休赛期 */
 const WINDOWS: [number, number][] = [[1, 24], [123, 152], [233, 366]];

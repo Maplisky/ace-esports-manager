@@ -1,10 +1,11 @@
 import { useState } from "react";
-import type { GameState, Player, Preset } from "../../core/types.ts";
+import type { GameState, Preset } from "../../core/types.ts";
 import { AGENT_BY_ID, AGENTS } from "../../core/data/agents.ts";
 import { MAPS } from "../../core/data/maps.ts";
 import { useStore } from "../store.ts";
 import { PlayerDossier } from "./PlayerDossier.tsx";
 import { PlayerFace, SyntheticBadge } from "./Avatar.tsx";
+import { dutyTendencyOf } from "./AgentSelect.tsx";
 
 const DUTY_CN: Record<string, string> = { duelist: "决斗者", initiator: "先锋", controller: "控场", sentinel: "哨卫" };
 
@@ -28,6 +29,12 @@ export function TacticsPage(props: { state: GameState }) {
   const starters = team.starters.map((pid) => state.players[pid]!);
   const bench = team.roster.map((pid) => state.players[pid]!).filter((p) => !team.starters.includes(p.id));
   const swap = (outId: string, inId: string) => {
+    // 防幽灵换人：跨页操作（转会/解约）可能已让 outId 离队——此时拒绝并清标记，避免「直接签入」式超员
+    if (!team.starters.includes(outId)) {
+      setPendingOut(null);
+      setAdaptMsg("待换下的选手已不在首发（可能已被交易/解约），轮换取消。");
+      return;
+    }
     void setStarters(team.starters.filter((id) => id !== outId).concat(inId));
     setPendingOut(null);
   };
@@ -44,27 +51,13 @@ export function TacticsPage(props: { state: GameState }) {
   if (preferred) Object.assign(currentAgents, preferred.agents);
   for (const p of starters) if (!currentAgents[p.id]) currentAgents[p.id] = draft[p.id] ?? bestAgentOf(p);
 
-  /** 位置倾向（主职业+副职业，参照原作）：英雄池按熟练度加权的职责向量取前二 */
-  const dutyTendency = (p: Player): { main: string; second: string | null } => {
-    const sum = { duelist: 0, initiator: 0, controller: 0, sentinel: 0 };
-    let w = 0;
-    for (const agentId of p.agentPool) {
-      const a = AGENT_BY_ID.get(agentId);
-      if (!a) continue;
-      const pro = p.agentPro[agentId] ?? 0;
-      for (const k of ["duelist", "initiator", "controller", "sentinel"] as const) sum[k] += a.duty[k] * pro;
-      w += pro;
-    }
-    if (w <= 0) return { main: "—", second: null };
-    const ranked = (Object.keys(sum) as (keyof typeof sum)[]).sort((x, y) => sum[y] / w - sum[x] / w);
-    const main = ranked[0]!;
-    const second = ranked[1]!;
-    // 副职业：份额 ≥ 主职业 40% 才显示（防止凑数第二）
-    return { main: DUTY_CN[main] ?? main, second: sum[second] / w >= (sum[main] / w) * 0.4 ? DUTY_CN[second] ?? second : null };
-  };
   const appoint = useStore((s) => s.appointCommander);
-  const mainIgl = team.starters.find((pid) => state.players[pid]?.isIgl) ?? null;
-  const viceIgl = team.starters.find((pid) => state.players[pid]?.viceIgl) ?? null;
+  // 指挥身份随选手走（可能在替补席）——任命卡显示全队现状，选下拉则重新任命到首发
+  const mainIglAll = team.roster.find((pid) => state.players[pid]?.isIgl) ?? null;
+  const viceIglAll = team.roster.find((pid) => state.players[pid]?.viceIgl) ?? null;
+  const mainIgl = team.starters.includes(mainIglAll ?? "") ? mainIglAll : null;
+  const viceIgl = team.starters.includes(viceIglAll ?? "") ? viceIglAll : null;
+  const benchIglNote = mainIglAll && !mainIgl ? `现任主指挥 ${state.players[mainIglAll]?.ign} 在替补席——替补上场时才生效。` : null;
 
   const mapFit = (agentId: string) => {
     void agentId;
@@ -131,8 +124,8 @@ export function TacticsPage(props: { state: GameState }) {
                     {pendingOut === p.id && <span className="tag orange" style={{ marginLeft: 6 }}>待换下</span>}
                   </td>
                   <td className="small">
-                    <span className="tag">{dutyTendency(p).main}</span>
-                    {dutyTendency(p).second && <span className="muted small" style={{ marginLeft: 6 }}>{dutyTendency(p).second}</span>}
+                    <span className="tag">{dutyTendencyOf(p).main}</span>
+                    {dutyTendencyOf(p).second && <span className="muted small" style={{ marginLeft: 6 }}>{dutyTendencyOf(p).second}</span>}
                   </td>
                   <td>
                     <select
@@ -192,7 +185,8 @@ export function TacticsPage(props: { state: GameState }) {
             </span>
             <span className="muted small">副指挥提供小幅逆境追分加成（其指挥属性的低权重计入）。</span>
           </div>
-        </div>
+          {benchIglNote && <div className="small" style={{ marginTop: 6, color: "var(--orange)" }}>⚠ {benchIglNote}</div>}
+          </div>
 
         <div className="card" style={{ padding: "10px 14px", marginTop: 12, background: "rgba(255,255,255,0.02)" }}>
           <h3 style={{ marginBottom: 8 }}>🪑 替补席 · 轮换（点「提上首发」后选择换下谁；与阵容页共用名单状态）</h3>
@@ -211,8 +205,8 @@ export function TacticsPage(props: { state: GameState }) {
                     </span>
                   </td>
                   <td className="small" style={{ whiteSpace: "nowrap" }}>
-                    <span className="tag">{dutyTendency(p).main}</span>
-                    {dutyTendency(p).second && <span className="muted small" style={{ marginLeft: 4 }}>{dutyTendency(p).second}</span>}
+                    <span className="tag">{dutyTendencyOf(p).main}</span>
+                    {dutyTendencyOf(p).second && <span className="muted small" style={{ marginLeft: 4 }}>{dutyTendencyOf(p).second}</span>}
                   </td>
                   <td><b>{p.overall}</b></td>
                   <td style={{ minWidth: 70 }}><VitalBar v={p.form} color="var(--green)" /></td>

@@ -8,7 +8,6 @@ import type { Player } from "../../core/types.ts";
 import { AGENTS, AGENT_BY_ID } from "../../core/data/agents.ts";
 import type { AgentDef } from "../../core/types.ts";
 import { REAL_PLAYERS_BY_VLR } from "../../core/data/real/real-data.ts";
-import { AgentIcon } from "./Avatar.tsx";
 
 export const DUTY_ORDER: { key: string; label: string }[] = [
   { key: "duelist", label: "决斗者" },

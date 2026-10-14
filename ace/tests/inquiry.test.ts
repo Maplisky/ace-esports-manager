@@ -3,8 +3,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { generateWorld } from "../src/core/worldgen.ts";
 import { initSeasonFixtures, advanceDay } from "../src/core/sim/day.ts";
-import { askInquiry, resolveInquiries, inTransferWindow, marketValue } from "../src/core/sim/transfer.ts";
-import { Rng, hashString } from "../src/core/rng.ts";
+import { askInquiry, resolveInquiries, marketValue } from "../src/core/sim/transfer.ts";
+import { Rng } from "../src/core/rng.ts";
 
 function setup(seed = 202) {
   const state = generateWorld(seed);
