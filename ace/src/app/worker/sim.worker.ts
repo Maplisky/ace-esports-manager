@@ -153,6 +153,16 @@ function handleWorkerMessage(e: MessageEvent) {
     doAdvance(1);
   } else if (type === "advanceToNextMatch") {
     doAdvance(320); // 跨越休赛期 + 季前 + 揭幕杯（最长约 160 天）
+    // Deadline 强制停靠（GDD §18 #6 v0.9 完整化）：窗口关闭日停下来提醒处理挂牌/问价
+    if (state && [24, 152, 366].includes(state.day)) {
+      const wName = state.day === 24 ? "季前窗" : state.day === 152 ? "夏季窗口" : "休赛期窗";
+      reply({
+        type: "snapshot",
+        ...snapshot(),
+        notes: ["⏰ 转会窗关闭：" + wName + "已截止（宽限 3 天仅限完成在谈交易）。队内挂牌与问价意向请尽快处理。"],
+      });
+      return;
+    }
   } else if (type === "setStarters") {
     if (state?.myTeamId) {
       const team = state.teams[state.myTeamId];
