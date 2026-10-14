@@ -517,6 +517,22 @@ export function advanceDay(
     }
     for (const p of Object.values(state.players)) {
       p.age++;
+      // 青训毕业（v0.9 补丁）：学员满 19 岁自动毕业——一线有空位直接补入，否则进自由市场（避免废人占营）
+      if (p.homegrown && p.age > 18) {
+        const owner = Object.values(state.teams).find((t) => t.academy.includes(p.id));
+        if (owner) {
+          owner.academy = owner.academy.filter((id) => id !== p.id);
+          if (owner.roster.length < 7) {
+            owner.roster.push(p.id);
+            p.promisedRole = "rotation";
+            notes.push({ day: 1, kind: "transfer", important: true, text: `🎓 ${owner.name} 青训毕业：${p.ign}（${p.overall}）直升一线名单。` });
+          } else {
+            p.teamId = null;
+            p.promisedRole = "bench";
+            notes.push({ day: 1, kind: "transfer", text: `🎓 青训毕业：${p.ign}（${p.overall}）因一线名单满，进入自由市场。` });
+          }
+        }
+      }
       if (p.contractYears > 0) p.contractYears--;
       p.lastEventDay = 0;
       p.stream = null; // 直播合同按绝对 day 计，跨年统一作废（周界差值在翻年后为负，永不触发）
