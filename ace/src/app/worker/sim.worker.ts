@@ -2,7 +2,7 @@
 import { generateWorld, resetPlayerSeq, salaryFor, spawnFreeAgents, migrateMapsToRealPool } from "../../core/worldgen.ts";
 import { initSeasonFixtures, advanceDay, playHeldMatch, migrateLegacyComps } from "../../core/sim/day.ts";
 import { resolveEvent } from "../../core/sim/events.ts";
-import { startNegotiation, reNegotiate, finalizeOffer, completeTransfer, releasePlayer, inTransferWindow, graceRemain } from "../../core/sim/transfer.ts";
+import { startNegotiation, reNegotiate, finalizeOffer, completeTransfer, releasePlayer, inTransferWindow, graceRemain, askInquiry } from "../../core/sim/transfer.ts";
 import { signSponsorOffer, cancelSponsorById, acceptGig, declineGig, signStream, cancelStream } from "../../core/sim/business.ts";
 import { Rng, hashString } from "../../core/rng.ts";
 import type { GameState, MatchRecord, Preset, TransferOffer } from "../../core/types.ts";
@@ -111,6 +111,8 @@ function migrate(state: GameState): GameState {
   state.pendingEvents ??= [];
   state.lastEventDay ??= 0;
   state.scouting ??= {};
+  state.agentTraining ??= {};
+  state.inquiries ??= [];
   // v0.6-1：旧单赛区 comp key → 霞赛区新命名（过渡年结算/Masters 依赖）
   migrateLegacyComps(state);
   // v0.7 真实数据包：旧档虚构地图 id 全量映射到真实图池（逻辑在 core，可测）
@@ -182,6 +184,12 @@ self.onmessage = (e: MessageEvent) => {
       if (msg.schedules) state.schedules = msg.schedules as Record<string, string>;
     }
     reply({ type: "snapshot", ...snapshot() });
+  } else if (type === "askInquiry") {
+    if (state) {
+      const msg2 = state.actionPoints >= 1 ? askInquiry(state, msg.playerId as string, new Rng(hashString(state.seed + ":inq:" + state.day + ":" + (msg.playerId as string)))) : "行动力不足。";
+      if (msg2 && !msg2.includes("等待答复") && !msg2.includes("问价中")) { /* 失败不扣点 */ } else if (msg2) state.actionPoints--;
+      reply({ type: "snapshot", ...snapshot(), message: msg2 });
+    }
   } else if (type === "setCommander") {
     if (state && state.myTeamId) {
       const team = state.teams[state.myTeamId];

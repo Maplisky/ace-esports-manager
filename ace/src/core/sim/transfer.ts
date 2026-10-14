@@ -3,8 +3,8 @@
  * 四窗口 · 身价/薪资期望 · logistic 谈判（即时三轮 + 态度条）· 挂牌/解约金/noPoach · AI 挖角与紧急补位。
  * 一切随机经显式 Rng（确定性约定 §11.1）。
  */
-import { Rng, clamp } from "../rng.ts";
-import type { GameState, Player, Team, TransferOffer } from "../types.ts";
+import { Rng, clamp, hashString } from "../rng.ts";
+import type { GameState, Player, Team, TransferOffer, TransferInquiry } from "../types.ts";
 
 /** 转会窗（自然年内）：季前 · 夏季窗口 · 休赛期 */
 const WINDOWS: [number, number][] = [[1, 24], [123, 152], [233, 366]];
@@ -235,4 +235,41 @@ export function aiWeeklyTransfers(state: GameState, rng: Rng, onBid: (offer: Tra
     }
   }
   return notes;
+}
+
+/** 问价（原作式异步，GDD §8.2 v0.8）：花 1 行动力不花钱；2-5 天后给要价（身价×0.9~1.3）+ 本人意向 */
+export function askInquiry(state: GameState, playerId: string, rng: Rng): string {
+  const p = state.players[playerId] as Player;
+  if (!p) return "选手不存在。";
+  if (!inTransferWindow(state.day)) return "转会窗口已关闭，不能新报价或问价，只能答复在谈的事。";
+  if (state.inquiries.some((q) => q.playerId === playerId && !q.done)) return "该选手问价中，等待答复。";
+  const resolveDay = state.day + rng.int(2, 5);
+  state.inquiries.push({
+    id: `INQ_${state.day}_${playerId}`,
+    playerId,
+    askDay: state.day,
+    resolveDay,
+    done: false,
+    askingFee: 0,
+    intent: "",
+  });
+  return `已就 ${p.ign} 问价，等待答复（约 ${resolveDay - state.day} 天后）。`;
+}
+
+/** 日推进结算：到反馈日的问价出要价+意向（确定性：id 哈希定浮动、评估器定意向） */
+export function resolveInquiries(state: GameState): void {
+  for (const q of state.inquiries) {
+    if (q.done || state.day < q.resolveDay) continue;
+    const p = state.players[q.playerId];
+    q.done = true;
+    if (!p) {
+      q.intent = "选手已不知所踪。";
+      continue;
+    }
+    q.askingFee = Math.round(marketValue(p, 1) * (0.9 + ((hashString(q.id) % 40) / 100)));
+    const willing = !p.teamId || p.morale >= 45;
+    q.intent = willing ? (p.morale >= 65 ? "本人意愿强烈，愿谈。" : "本人愿意接触。") : "本人倾向留队，需要更大诚意。";
+  }
+  // 保留最近 20 条；完成超 30 天的清掉
+  state.inquiries = state.inquiries.filter((q) => !q.done || state.day - q.resolveDay <= 30).slice(-20);
 }

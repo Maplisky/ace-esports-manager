@@ -57,6 +57,7 @@ interface AppStore {
   setTeamSchedule: (slots: string[], maps: string[], schedules?: Record<string, string>) => Promise<void>;
   setAgentTraining: (picks: Record<string, string>) => Promise<void>;
   appointCommander: (mainId: string, viceId: string | null) => Promise<void>;
+  askInquiry: (playerId: string) => Promise<void>;
   openViewer: (fixtureId: string) => void;
   closeViewer: () => void;
   showToast: (t: string | null) => void;
@@ -233,6 +234,12 @@ export const useStore = create<AppStore>((set, get) => ({
     records = res.records;
     set({ state: res.state, records });
     get().showToast("训练计划已安排（团队 + 个人并行，七天一轮）");
+  },
+
+  askInquiry: async (playerId) => {
+    const res = await call<{ state: GameState; message?: string }>({ type: "askInquiry", playerId });
+    set({ state: res.state });
+    if (res.message) get().showToast(res.message);
   },
 
   appointCommander: async (mainId, viceId) => {

@@ -179,6 +179,20 @@ export interface SponsorOffer extends Sponsor {
   expires: number;
 }
 
+export interface TransferInquiry {
+  id: string;
+  playerId: string;
+  /** 发起日 */
+  askDay: number;
+  /** 反馈日（askDay + 2~5） */
+  resolveDay: number;
+  done: boolean;
+  /** 反馈：俱乐部要价（美元） */
+  askingFee: number;
+  /** 反馈：本人意向文案 */
+  intent: string;
+}
+
 export interface GigOffer {
   id: string;
   playerId: string;
@@ -429,6 +443,8 @@ export interface GameState {
   rotationTalks: { week: number; used: number };
   /** 练英雄（GDD §6.3）：pid → 目标英雄；≤5 人/周，周结算熟练 +4.2×效率（0.7+(意识+道具)/400），池外英雄 34 入池 */
   agentTraining: Record<string, string>;
+  /** 问价（GDD §8.2 原作式异步）：发起后 2-5 天出要价+意向，结果置顶可从结果报价 */
+  inquiries: TransferInquiry[];
   /** 待决策事件卡队列（先进先出，玩家逐张处理；GDD §9.3） */
   pendingEvents: PendingEventCard[];
   /** 上次事件日（空回合补偿用） */

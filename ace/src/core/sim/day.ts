@@ -7,7 +7,7 @@ import { Rng, clamp, hashString } from "../rng.ts";
 import { computeOverall, spawnFreeAgents } from "../worldgen.ts";
 import { OPTION_BY_KEY, XP_PER_ATTR_POINT, XP_PER_DAY } from "../data/training.ts";
 import { spawnDailyEvents, spawnBirthdays } from "./events.ts";
-import { aiWeeklyTransfers } from "./transfer.ts";
+import { aiWeeklyTransfers, resolveInquiries } from "./transfer.ts";
 import { decayIntel } from "./intel.ts";
 import { refreshCommercialWeek, weeklySponsorIncome } from "./business.ts";
 import type { PlayerAttrs } from "../types.ts";
@@ -428,6 +428,9 @@ export function advanceDay(
       notes.push({ day: state.day, kind: "league", important: true, text: `🏆 ${champTeam.name} 夺得${f.comp === "masters" ? "Masters 国际赛" : "揭幕杯"}冠军！` });
     }
   }
+
+  // 问价结算（GDD §8.2 原作式异步）：到反馈日出要价+意向
+  resolveInquiries(state);
 
   // 事件卡：生日 + 每日抽取（队列上限 4，抑制器与空档补偿，GDD §9.3）
   spawnBirthdays(state);

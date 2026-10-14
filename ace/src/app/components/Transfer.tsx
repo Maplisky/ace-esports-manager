@@ -4,7 +4,7 @@
 import { useState } from "react";
 import type { GameState, Player } from "../../core/types.ts";
 import { AGENTS } from "../../core/data/agents.ts";
-import { marketValue, salaryExpectation, inTransferWindow, evaluateOffer } from "../../core/sim/transfer.ts";
+import { marketValue, salaryExpectation, inTransferWindow } from "../../core/sim/transfer.ts";
 import { useStore } from "../store.ts";
 import { PlayerFace, SyntheticBadge } from "./Avatar.tsx";
 import { dutyTendencyOf, DUTY_ORDER } from "./AgentSelect.tsx";
@@ -16,7 +16,7 @@ const fmt = (v: number) => (v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(1)}M` :
 
 export function TransferPage(props: { state: GameState }) {
   const { state } = props;
-  const { respondBid, listToggle, releasePlayer, startNegotiation } = useStore();
+  const { respondBid, listToggle, releasePlayer, startNegotiation, askInquiry } = useStore();
   const [dossier, setDossier] = useState<string | null>(null);
   const myId = state.myTeamId ?? "";
   const team = state.teams[myId];
@@ -29,7 +29,6 @@ export function TransferPage(props: { state: GameState }) {
   const [ageMax, setAgeMax] = useState("");
   const [minValue, setMinValue] = useState("");
   const [sortBy, setSortBy] = useState("value");
-  const [inquiry, setInquiry] = useState<Record<string, string>>({}); // 问价结果（免费反馈）
   if (!team) return null;
 
   const inWindow = inTransferWindow(state.day);
@@ -58,10 +57,44 @@ export function TransferPage(props: { state: GameState }) {
         default: return valueOf.get(b.id)! - valueOf.get(a.id)!;
       }
     });
+  const pendingInquiryCount = state.inquiries.filter((q) => !q.done).length;
   const feed = state.transferFeed.slice(-12).reverse();
 
   return (
     <div>
+      {/* 问价结果（原作式：置顶显示，从结果报价） */}
+      {(state.inquiries.length > 0 || pendingInquiryCount > 0) && (
+        <div className="card">
+          <h3>📋 问价结果（{state.inquiries.filter((q) => q.done).length} 人可以报价 · {pendingInquiryCount} 人问价中）</h3>
+          {state.inquiries.slice().reverse().map((q) => {
+            const p = state.players[q.playerId];
+            if (!p) return null;
+            return (
+              <div key={q.id} className="row" style={{ padding: "8px 0", borderBottom: "1px dashed var(--line)", flexWrap: "wrap", alignItems: "center" }}>
+                <span className="row" style={{ alignItems: "center", gap: 6, width: 130 }}><PlayerFace p={p} size={24} showTag={false} /><b>{p.ign}</b><SyntheticBadge p={p} /></span>
+                {!q.done ? (
+                  <span className="muted small">问价中（约第 {q.resolveDay} 天答复）</span>
+                ) : (
+                  <>
+                    <span className="small" style={{ width: 300 }}>
+                      {state.teams[p.teamId as string]?.name ?? "自由市场"} 开价约 <b>{fmt(q.askingFee)}</b> · {q.intent}
+                    </span>
+                    <span className="grow" />
+                    <button
+                      className="small primary"
+                      disabled={!inWindow || state.actionPoints < 1 || team.roster.length >= 7}
+                      onClick={() => setNegPlayer(p)}
+                    >
+                      从结果报价
+                    </button>
+                  </>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       {/* 待答复挖角 */}
       {state.incomingBids.length > 0 && (
         <div className="card">
@@ -192,7 +225,6 @@ export function TransferPage(props: { state: GameState }) {
               const tendency = dutyTendencyOf(p);
               const exp = salaryExpectation(p, team.tier);
               // 问价反馈（免费、确定性）：按市场公允条款评估意愿
-              const inquiryText = inquiry[p.id];
               return (
               <>
               <tr key={p.id}>
@@ -210,24 +242,11 @@ export function TransferPage(props: { state: GameState }) {
                 <td style={{ whiteSpace: "nowrap" }}>
                   <button
                     className="small"
-                    onClick={() =>
-                      setInquiry((prev) => {
-                        const probe = {
-                          id: `INQ_${p.id}`, playerId: p.id, fromTeam: p.teamId, toTeam: myId,
-                          fee: Math.round((valueOf.get(p.id) ?? 0) * 1.1 / 1000) * 1000,
-                          salary: Math.round(salaryExpectation(p, 1) * 1.2), years: 2,
-                          signingBonus: 0, promisedRole: "starter" as const, day: state.day, round: 0,
-                          demand: "", attitude: 0,
-                        };
-                        const ev = evaluateOffer(state, p, probe, team);
-                        const text = ev.insulting
-                          ? "（公允口径）他态度存疑，先备好诚意。"
-                          : `意愿 ≈ ${Math.round(ev.chance * 100)}%${ev.objection ? ` · 诉求：${ev.objection}` : " · 无明显短板"}`;
-                        return { ...prev, [p.id]: text };
-                      })
-                    }
+                    disabled={!inWindow || state.actionPoints < 1 || !!state.inquiries.some((q) => q.playerId === p.id && !q.done)}
+                    onClick={() => void askInquiry(p.id)}
+                    title="花 1 行动力不花钱，2-5 天后给出要价与本人意向"
                   >
-                    问价
+                    {state.inquiries.some((q) => q.playerId === p.id && !q.done) ? "问价中" : "问价"}
                   </button>
                   <button
                     className="small primary"
@@ -239,13 +258,6 @@ export function TransferPage(props: { state: GameState }) {
                   </button>
                 </td>
               </tr>
-              {inquiryText && (
-                <tr key={p.id + ":inq"} style={{ opacity: 0.85 }}>
-                  <td colSpan={7} className="muted small">
-                    💬 <b>{p.ign}</b> 的问价反馈：{inquiryText}（薪资期望 ~{fmt(exp)}/年 · 身价参考 {fmt(valueOf.get(p.id) ?? 0)}）
-                  </td>
-                </tr>
-              )}
               </>
               );
             })}
