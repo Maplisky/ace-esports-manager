@@ -1,11 +1,15 @@
 /** Zustand store + Worker 桥：主线程渲染快照，模拟全在 Worker（GDD §11.1）。 */
 import { create } from "zustand";
 import type { GameState, MatchRecord, Preset, TransferOffer } from "../core/types.ts";
-import { loadGame, saveGame, type SavedGame } from "./save.ts";
+import {
+  loadGame, saveGame, saveSlot, saveBackup, loadKey, deleteSave as deleteSaveKey,
+  listSaves, migrateLegacyAutosave, exportJson, importJson,
+  type SavedGame, type SaveEntry,
+} from "./save.ts";
 import type { PreMatchResult } from "./components/PreMatch.tsx";
 
 type Screen = "start" | "main";
-type Page = "overview" | "schedule" | "squad" | "tactics" | "training" | "transfer" | "business" | "manager" | "career";
+type Page = "overview" | "schedule" | "squad" | "tactics" | "training" | "transfer" | "business" | "manager" | "career" | "system";
 
 export interface NegotiationState {
   offer: TransferOffer;
@@ -42,6 +46,8 @@ interface AppStore {
   held: HeldMatch | null;
   /** 进行中的转会谈判（含实时态度） */
   negotiation: NegotiationState | null;
+  /** 存档清单（v1.0-9 §11.4：自动/手动槽/每日备份） */
+  saves: SaveEntry[];
 
   boot: () => Promise<void>;
   newGame: (seed: number, teamId: string, origin?: "legend" | "grassroots" | "analyst", difficulty?: "normal" | "hard" | "pro") => Promise<void>;
@@ -89,6 +95,13 @@ interface AppStore {
   applyJob: (teamId: string) => Promise<void>;
   /** 选秀权交易（v1.0-8，GDD §13）：转会窗内卖出/买进下届选秀签 */
   draftPickTrade: (action: "sell" | "buy") => Promise<void>;
+  /** 存档管理（v1.0-9，GDD §11.4）：手动槽/读取任意档/删除/导出导入 */
+  refreshSaves: () => Promise<void>;
+  saveToSlot: (slot: string) => Promise<void>;
+  loadFromKey: (key: string) => Promise<void>;
+  removeSave: (key: string) => Promise<void>;
+  exportSave: () => void;
+  importSaveText: (text: string) => Promise<void>;
   promoteFromAcademy: (pid: string, outId: string | null) => Promise<void>;
 }
 
@@ -142,6 +155,7 @@ async function persist(state: GameState | null): Promise<void> {
   if (!state) return;
   try {
     await saveGame(state, records);
+    await saveBackup(state, records); // 每日轮换备份（当天首份持久化时复制，留 3 份）——v1.0-9 §11.4
   } catch {
     /* 配额不足等场景：静默，v0.1 可接受 */
   }
@@ -161,10 +175,12 @@ export const useStore = create<AppStore>((set, get) => ({
   toast: null,
   held: null,
   negotiation: null,
+  saves: [],
 
   boot: async () => {
-    const saved: SavedGame | null = await loadGame();
-    set({ hasSave: saved !== null, ready: true });
+    await migrateLegacyAutosave(); // v1.0-9：旧单键 'autosave' → 'auto'（写成功才删旧键）
+    const entries = await listSaves();
+    set({ hasSave: entries.length > 0, ready: true, saves: entries });
   },
 
   newGame: async (seed, teamId, origin, difficulty) => {
@@ -178,7 +194,13 @@ export const useStore = create<AppStore>((set, get) => ({
   },
 
   continueGame: async () => {
-    const saved = await loadGame();
+    // 自动档优先；自动档被清时回退到最近修改的手动槽/备份（v1.0-9：不丢可玩档）
+    let saved: SavedGame | null = await loadGame();
+    if (!saved) {
+      const entries = await listSaves();
+      const newest = entries.filter((e) => e.key !== "auto").sort((a, b) => b.savedAt.localeCompare(a.savedAt))[0];
+      if (newest) saved = await loadKey(newest.key);
+    }
     if (!saved) return;
     records = saved.records;
     const res = await call<{ held?: HeldMatch | null }>({ type: "load", save: { state: saved.state, records: saved.records } });
@@ -286,8 +308,8 @@ export const useStore = create<AppStore>((set, get) => ({
 
   openViewer: (viewerFixtureId) => set({ viewerFixtureId, viewerStartFinished: false }),
   closeViewer: () => {
-    const fid = get().viewerFixtureId;
-    if (fid) void get().matchFinish(fid); // v1.0-8：中途关闭也要结算（幂等；worker 另有推进/读档兜底）
+    // v1.0-8：关闭 ≠ 结算——中途关掉的交互式比赛保持「已模拟未结算」，
+    // 可从赛程页 ▶ 回放 重开直播继续喊话；自然播完/快进才结算，推进与读档另有兜底
     set({ viewerFixtureId: null });
   },
   matchIntervene: async (fixtureId, mapIdx, round, tactic, igl) => {
@@ -446,6 +468,66 @@ export const useStore = create<AppStore>((set, get) => ({
     await persist(res.state);
     set({ state: res.state, records, notes: res.notes.length > 0 ? [...get().notes, ...res.notes] : get().notes });
     get().showToast(res.message);
+  },
+
+  refreshSaves: async () => {
+    set({ saves: await listSaves() });
+  },
+
+  saveToSlot: async (slot) => {
+    const st = get().state;
+    if (!st) return;
+    await saveSlot(st, records, slot);
+    await get().refreshSaves();
+    get().showToast(`已保存到手动档（${slot.replace("slot", "槽 ")}）`);
+  },
+
+  loadFromKey: async (key) => {
+    const saved = await loadKey(key);
+    if (!saved) {
+      get().showToast("该存档已不存在。");
+      return;
+    }
+    records = saved.records;
+    const res = await call<{ held?: HeldMatch | null }>({ type: "load", save: { state: saved.state, records: saved.records } });
+    const snap = await call<{ state: GameState; records: Record<string, MatchRecord> }>({ type: "getSnapshot" });
+    set({ state: snap.state, records, screen: "main", page: "overview", held: res.held ?? null, viewerFixtureId: null, viewerStartFinished: false, toast: null, negotiation: null });
+    get().showToast(`已读取存档（${saved.meta?.label ?? key}）`);
+  },
+
+  removeSave: async (key) => {
+    await deleteSaveKey(key);
+    await get().refreshSaves();
+  },
+
+  exportSave: () => {
+    const st = get().state;
+    if (!st) return;
+    const text = exportJson(st, records);
+    const blob = new Blob([text], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    const m = st.teams[st.myTeamId ?? ""];
+    a.download = `ACE-save-${m?.tag ?? "coach"}-Y${st.year}D${st.day}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    get().showToast("存档已导出为 JSON 文件");
+  },
+
+  importSaveText: async (text) => {
+    const payload = importJson(text);
+    if (!payload) {
+      get().showToast("导入失败：不是有效的 ACE 存档文件。");
+      return;
+    }
+    records = payload.records ?? {};
+    await saveGame(payload.state, records); // 导入即落自动档（原自动档被覆盖——导出文件在手，可随时找回）
+    const res = await call<{ held?: HeldMatch | null }>({ type: "load", save: { state: payload.state, records } });
+    const snap = await call<{ state: GameState; records: Record<string, MatchRecord> }>({ type: "getSnapshot" });
+    set({ state: snap.state, records, screen: "main", page: "overview", held: res.held ?? null, viewerFixtureId: null, viewerStartFinished: false, negotiation: null });
+    await get().refreshSaves();
+    get().showToast("存档已导入并写入自动档");
   },
 
   upgradeFacility: async () => {

@@ -462,7 +462,7 @@ export function MatchPlayer(props: {
                 {speed}x
               </button>
               <button onClick={jumpToEnd}>⏭ 跳到结果</button>
-              {interactive && (
+              {interactive && map && (
                 <button
                   disabled={timeoutsLeft <= 0 || callLocked}
                   title={callLocked ? "上一条喊话仍在生效期" : timeoutsLeft <= 0 ? "暂停次数已用完" : "回合间喊话，效果持续 3 回合"}

@@ -12,11 +12,12 @@ import { CareerPage } from "./components/Career.tsx";
 import { TransferPage } from "./components/Transfer.tsx";
 import { MatchPlayer } from "./components/MatchPlayer.tsx";
 import { PreMatch } from "./components/PreMatch.tsx";
+import { SystemPage } from "./components/SystemPage.tsx";
 import { REGIONS } from "../core/sim/day.ts";
 import { ErrorBoundary } from "./components/ErrorBoundary.tsx";
 import { EventCardModal } from "./components/EventCards.tsx";
 
-const PAGES: { key: "overview" | "schedule" | "squad" | "tactics" | "training" | "business" | "transfer" | "manager" | "career"; label: string }[] = [
+const PAGES: { key: "overview" | "schedule" | "squad" | "tactics" | "training" | "business" | "transfer" | "manager" | "career" | "system"; label: string }[] = [
   { key: "overview", label: "总览" },
   { key: "schedule", label: "赛程" },
   { key: "squad", label: "阵容" },
@@ -26,6 +27,7 @@ const PAGES: { key: "overview" | "schedule" | "squad" | "tactics" | "training" |
   { key: "transfer", label: "转会" },
   { key: "manager", label: "经理" },
   { key: "career", label: "名人堂" },
+  { key: "system", label: "系统" },
 ];
 
 export function App() {
@@ -114,6 +116,7 @@ export function App() {
           {page === "business" && <BusinessPage state={state} />}
           {page === "manager" && <ManagerPage state={state} />}
           {page === "career" && <CareerPage state={state} />}
+          {page === "system" && <SystemPage />}
         </main>
       </div>
 

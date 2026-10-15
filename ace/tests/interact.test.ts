@@ -5,7 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { generateWorld, resetPlayerSeq } from "../src/core/worldgen.ts";
-import { initSeasonFixtures, playHeldMatch, settleMatch } from "../src/core/sim/day.ts";
+import { initSeasonFixtures, playHeldMatch, interveneHeldMatch, settleMatch } from "../src/core/sim/day.ts";
 import { resetFixtureSeq } from "../src/core/sim/fixtures.ts";
 import { simMatch, applyMatchEffects } from "../src/core/sim/match.ts";
 import { PLAYER_CALLS, callDefOf } from "../src/core/sim/tactics.ts";
@@ -171,6 +171,30 @@ test("结算语义：交互式 settled=false 显式落档；旧档缺省回填 t
   if (old.settled === undefined) old.settled = true;
   assert.equal(old.settled, true, "旧档缺省 → 回填 true");
   assert.equal(f.settled, false, "交互式 false 不被回填误伤");
+});
+
+test("干预→结算全链路：interveneHeldMatch 重模拟 → settleMatch 按最终 Record 入账一次", () => {
+  const s = build(91);
+  const f = myLeagueFixture(s);
+  const rec0 = playHeldMatch(s, f.id, {});
+  assert.ok(rec0);
+  // 干预：第 5 回合喊慢速默认（重模拟）
+  const rec1 = interveneHeldMatch(s, f.id, { map: 0, round: 5, tactic: "atk:slowDefault" });
+  assert.ok(rec1);
+  assert.deepEqual(rec1!.interventions, [{ map: 0, round: 5, tactic: "atk:slowDefault" }], "干预随 fixture 落档并回写 Record");
+  // 干预过的比赛中途关闭不结算（store 语义）——此处直接结算，入账必须按干预后的 rec1
+  const pids = [...s.teams[f.teamA]!.roster, ...s.teams[f.teamB]!.roster];
+  const killsBefore = new Map(pids.map((pid) => [pid, s.players[pid]!.career.kills]));
+  assert.equal(settleMatch(s, f.id, rec1, () => {}), true);
+  for (const m of rec1!.maps) {
+    for (const [pid, line] of Object.entries(m.lines)) {
+      const p = s.players[pid];
+      if (!p) continue;
+      assert.equal(p.career.kills - (killsBefore.get(pid) ?? 0) >= line.kills, true);
+    }
+    break; // 逐图累计只断言第一图的增量下界（跨图累计由 settleMatch 测试锁定等价）
+  }
+  assert.equal(f.winnerTeamId, rec1!.winner === "A" ? f.teamA : f.teamB, "胜者按干预后的 Record 落档");
 });
 
 test("喊话表完备性：八条玩家战术带攻防侧与描述；AI rush/steady 数值与 v1.0-7 完全一致", () => {
