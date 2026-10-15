@@ -211,3 +211,30 @@ h1.title em { color: var(--accent); font-style: normal; text-shadow: 0 0 22px rg
 .roundstrip .rsq { width: 14px; height: 9px; border-radius: 2px; opacity: 0.85; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.3); }
 .roundstrip .rsq.cur { outline: 1.5px solid rgba(255, 255, 255, 0.9); opacity: 1; animation: rsqPulse 1.2s ease infinite; }
 @keyframes rsqPulse { 0%, 100% { outline-color: rgba(255, 255, 255, 0.9); } 50% { outline-color: rgba(255, 255, 255, 0.2); } }
+
+/* ===== 移动端伴侣模式（v1.0-10，GDD §18-8）：收件箱/推进/课表/市场四场景 375px 可用；
+   比赛观看与战术编辑桌面优先——不追求全量 parity ===== */
+@media (max-width: 720px) {
+  .layout { flex-direction: column; }
+  .sidenav {
+    flex-direction: row;
+    overflow-x: auto;
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background: var(--panel);
+    border-bottom: 1px solid var(--line);
+    padding: 0 8px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .sidenav button { flex: 0 0 auto; padding: 10px 12px; }
+  .content { padding: 12px 10px; max-width: 100%; width: 100%; }
+  /* 宽表格横向滚动（伴侣场景核心：市场/阵容/赛程可读可滚） */
+  .content table, .viewer table { display: block; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+  .viewer { width: 98vw !important; max-width: 98vw !important; }
+  .killfeed { min-width: 0 !important; }
+  .controls { flex-wrap: wrap; gap: 6px; }
+}
+@media (max-width: 720px) {
+  .topbar { flex-wrap: wrap; gap: 4px 12px; height: auto; padding: 6px 10px; }
+}

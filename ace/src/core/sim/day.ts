@@ -605,7 +605,7 @@ function settleFinal(state: GameState, f: { comp: string; label: string; teamA: 
   }
   const compName = f.comp === "masters" ? "Masters 国际赛" : f.comp === "champions" ? "Champions 世界冠军赛" : "揭幕杯";
   notes.push({ day: state.day, kind: "league", important: true, text: `🏆 ${champTeam.name} 夺得${compName}冠军！` });
-  noteManagerTitle(state, champ); // 经理生涯冠军计数（v1.0-6）
+  noteManagerTitle(state, champ, f.comp as "cup" | "masters" | "champions"); // 经理生涯冠军计数（v1.0-6；分类入账 v1.0-10）
   if (f.comp !== "champions") awardCupCircuitPoints(state, f.comp as "cup" | "masters", notes, champ);
 }
 
@@ -613,7 +613,7 @@ function awardLeagueTitle(state: GameState, compKey: string, notes: NewsItem[]):
   const table = sortedTable(state, compKey);
   const champ = table[0]?.teamId;
   if (!champ) return;
-  noteManagerTitle(state, champ); // 经理生涯冠军计数（v1.0-6）
+  noteManagerTitle(state, champ, "league"); // 经理生涯冠军计数（v1.0-6；分类入账 v1.0-10）
   // 冠军积分（v1.0 国际赛资格）：仅 t1 合作联赛计入（挑战者不计）
   if (/t1$/.test(compKey)) awardLeagueCircuitPoints(state, compKey);
   for (const pid of (state.teams[champ] as GameState["teams"][string]).roster) {

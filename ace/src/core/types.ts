@@ -564,8 +564,14 @@ export interface GameState {
       origin?: "legend" | "grassroots" | "analyst";
       /** 终局（下课/收官/强制退休）：写入后 App 停止推进并显示结局卡 */
       ending?: { kind: "fired" | "retired" | "hall" | "contract"; year: number; day: number };
+      /** 冠军分类计数（v1.0-10 成就：大满贯判定）：league / cup / masters / champions */
+      titleKinds?: Record<string, number>;
+      /** 跳槽次数（v1.0-10 雇佣兵线） */
+      jobHops?: number;
     };
   };
+  /** 已解锁成就（v1.0-10，GDD §10.4 剧本路径）：id → 解锁时间 */
+  achievements?: Record<string, { year: number; day: number }>;
   /** 转会动态（最近 300 条） */
   transferFeed: TransferFeedItem[];
   /** 教练自由池（v1.0 退役转教练；worker migrate 兜底） */

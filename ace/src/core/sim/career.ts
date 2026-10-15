@@ -75,10 +75,16 @@ function fireManager(state: GameState, notes: NewsItem[], reason: string): void 
   });
 }
 
-/** 经理冠军计数（联赛/国际赛夺冠时调用；champTeamId 为我队才计） */
-export function noteManagerTitle(state: GameState, champTeamId: string): void {
+/** 经理冠军计数（联赛/国际赛夺冠时调用；champTeamId 为我队才计）。kind 进分类账本（v1.0-10 大满贯判定） */
+export function noteManagerTitle(state: GameState, champTeamId: string, kind?: "league" | "cup" | "masters" | "champions"): void {
   const c = state.manager.career;
-  if (c && !c.ending && champTeamId === state.myTeamId) c.titles++;
+  if (c && !c.ending && champTeamId === state.myTeamId) {
+    c.titles++;
+    if (kind) {
+      c.titleKinds ??= {};
+      c.titleKinds[kind] = (c.titleKinds[kind] ?? 0) + 1;
+    }
+  }
 }
 
 /** 跳槽目标市场：声望差距 ≤15 的 t1 队（非我队），按声望降序 */
@@ -90,8 +96,8 @@ export function jobOffers(state: GameState): Team[] {
     .slice(0, 8);
 }
 
-/** 门下弟子数（跳槽背书加成）：我队现役 overall ≥75 且属我培养（青训/选秀/接班人） */
-function discipleCount(state: GameState): number {
+/** 门下弟子数（跳槽背书加成；成就页数据源）：我队现役 overall ≥75 且属我培养（青训/选秀/接班人） */
+export function discipleCount(state: GameState): number {
   if (!state.myTeamId) return 0;
   const my = state.myTeamId;
   return Object.values(state.players).filter(
@@ -116,7 +122,10 @@ export function applyJob(state: GameState, teamId: string, rng: Rng, notes: News
     state.manager.reputation = clamp(rep + 2, 20, 99);
     state.boardConfidence = 60;
     state.objective = null;
-    if (c) c.warned = false;
+    if (c) {
+      c.warned = false;
+      c.jobHops = (c.jobHops ?? 0) + 1; // 雇佣兵线成就数据源（v1.0-10）
+    }
     notes.push({
       day: state.day, kind: "club", important: true,
       text: `🤝 ${target.name} 宣布新任主帅：${state.manager.name}（自 ${oldName} 跳槽而来，签约成功）。`,

@@ -6,6 +6,7 @@ import { resolveEvent } from "../../core/sim/events.ts";
 import { signCoach } from "../../core/sim/retirement.ts";
 import { initCareer, applyJob } from "../../core/sim/career.ts";
 import { draftPickTrade } from "../../core/sim/draft.ts";
+import { evaluateAchievements } from "../../core/sim/achievements.ts";
 import { startNegotiation, reNegotiate, finalizeOffer, completeTransfer, releasePlayer, inTransferWindow, graceRemain, askInquiry } from "../../core/sim/transfer.ts";
 import { signSponsorOffer, cancelSponsorById, acceptGig, declineGig, signStream, cancelStream } from "../../core/sim/business.ts";
 import { Rng, hashString } from "../../core/rng.ts";
@@ -56,6 +57,11 @@ function doAdvance(maxDays = 1): void {
     seasonEnded = r.seasonEnded;
     if (replyHeld) break; // 停车等待赛前准备
   }
+  // v1.0-10：日推进后评估成就（新解锁进新闻流；教学局不走 noteMatchResult，天然不计）
+  const achNotes: { day: number; kind: string; text: string; important?: boolean }[] = [];
+  evaluateAchievements(state, achNotes as never);
+  pushNews(achNotes);
+  notes.push(...achNotes.map((a) => a.text));
   if (seasonEnded) records = {}; // 翻年清回放：旧赛季 fixture 已重建，链接不再可达；防无限增长拖慢每帧快照克隆
   reply({
     type: "advanced",
@@ -151,6 +157,7 @@ function migrate(state: GameState): GameState {
   state.retireLog ??= [];
   state.circuitPoints ??= {};
   state.draftPickMoves ??= []; // v1.0-8 选秀权交易账本
+  state.achievements ??= {}; // v1.0-10 成就解锁账本
   // v1.0-8 交互式结算迁移：旧档 played 场次都是打完即结算（settled 字段缺省）→ 回填 true；
   // 交互式场次由 playHeldMatch 显式写 settled=false，读档兜底结算依赖此语义，不可回填
   for (const f of state.fixtures) {
@@ -351,9 +358,13 @@ function handleWorkerMessage(e: MessageEvent) {
     // v1.0-8 播放结束/关闭：结算交互式比赛（幂等；推进/读档另有兜底）。新闻已由 settleMatch 入池。
     if (state) {
       const texts: string[] = [];
+      const achNotes: { day: number; kind: string; text: string; important?: boolean }[] = [];
       settleMatch(state, msg.fixtureId as string, records[msg.fixtureId as string] ?? null, (ns) => {
         for (const n of ns) texts.push(n.text);
       });
+      evaluateAchievements(state, achNotes as never); // v1.0-10：结算即时评估（首胜/首冠当场点亮）
+      pushNews(achNotes);
+      for (const n of achNotes) texts.push(n.text);
       reply({ type: "snapshot", ...snapshot(), notes: texts });
     } else {
       reply({ type: "snapshot", state: null, records: {} });
