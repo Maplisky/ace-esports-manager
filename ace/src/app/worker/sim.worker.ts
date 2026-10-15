@@ -117,6 +117,7 @@ function migrate(state: GameState): GameState {
   state.inquiries ??= [];
   state.coachPool ??= [];
   state.retireLog ??= [];
+  state.circuitPoints ??= {};
   // v0.6-1：旧单赛区 comp key → 霞赛区新命名（过渡年结算/Masters 依赖）
   migrateLegacyComps(state);
   // v0.7 真实数据包：旧档虚构地图 id 全量映射到真实图池（逻辑在 core，可测）

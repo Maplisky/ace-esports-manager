@@ -309,12 +309,50 @@ function myLeagueCompKey(state: GameState, stage: "stage1" | "stage2"): string |
 }
 
 /** 联赛冠军荣誉（career.titles 是退役转教练与名人堂的输入，GDD §8.3） */
-function awardLeagueTitle(state: GameState, compKey: string, notes: NewsItem[]): void {
-  const table = Object.values(state.comps[compKey]?.standings ?? {}).sort(
-    (x, y) => y.pts - x.pts || (y.mapW - y.mapL) - (x.mapW - x.mapL),
+/** 冠军积分表（GDD §7.3 v1.0：揭幕杯 [6,4,3,2] / 联赛 [9,7,5,4,3,3,2,2] / Masters 12,9,7,5,4,4） */
+const CUP_CIRCUIT = [6, 4, 3, 2];
+const LEAGUE_CIRCUIT = [9, 7, 5, 4, 3, 3, 2, 2];
+const MASTERS_CIRCUIT = [12, 9, 7, 5, 4, 4, 4, 4]; // 当前 8 队单败口径；瑞士轮改制后用 [12,9,7,5,4,4]
+
+function addCircuit(state: GameState, teamId: string, pts: number): void {
+  state.circuitPoints ??= {};
+  state.circuitPoints[teamId] = (state.circuitPoints[teamId] ?? 0) + pts;
+}
+
+function sortedTable(state: GameState, compKey: string) {
+  return Object.values(state.comps[compKey]?.standings ?? {}).sort(
+    (x, y) => y.pts - x.pts || (y.mapW - y.mapL) - (x.mapW - x.mapL) || (y.roundW - y.roundL) - (x.roundW - x.roundL),
   );
+}
+
+/** 联赛收官发积分（仅 t1 合作联赛计入国际赛积分；挑战者不计） */
+export function awardLeagueCircuitPoints(state: GameState, compKey: string): void {
+  if (!/t1$/.test(compKey)) return;
+  const table = sortedTable(state, compKey);
+  table.slice(0, LEAGUE_CIRCUIT.length).forEach((s, i) => addCircuit(state, s.teamId, LEAGUE_CIRCUIT[i]!));
+}
+
+/** 杯赛/Masters 总决赛落幕发积分：冠军/亚军/半决赛败者按名次入账 */
+export function awardCupCircuitPoints(state: GameState, comp: "cup" | "masters", notes: NewsItem[], champTeamId: string): void {
+  const table = comp === "masters" ? MASTERS_CIRCUIT : CUP_CIRCUIT;
+  const final = state.fixtures.find((f) => f.comp === comp && f.label.includes("总决赛") && f.played);
+  if (!final) return;
+  const runnerUp = final.teamA === champTeamId ? final.teamB : final.teamA;
+  const sfLosers = state.fixtures
+    .filter((f) => f.comp === comp && f.label.includes("半决赛") && f.played)
+    .map((f) => (f.teamA === final.teamA || f.teamA === final.teamB ? f.teamB : f.teamA));
+  [champTeamId, runnerUp, ...sfLosers].forEach((tid, i) => {
+    if (tid) addCircuit(state, tid, table[i] ?? table[table.length - 1]!);
+  });
+  notes.push({ day: state.day, kind: "league", text: `📈 ${state.teams[champTeamId]?.name} 收获 ${table[0]} 冠军积分（Champions 资格竞逐）。` });
+}
+
+function awardLeagueTitle(state: GameState, compKey: string, notes: NewsItem[]): void {
+  const table = sortedTable(state, compKey);
   const champ = table[0]?.teamId;
   if (!champ) return;
+  // 冠军积分（v1.0 国际赛资格）：仅 t1 合作联赛计入（挑战者不计）
+  if (/t1$/.test(compKey)) awardLeagueCircuitPoints(state, compKey);
   for (const pid of (state.teams[champ] as GameState["teams"][string]).roster) {
     const p = state.players[pid];
     if (p) p.career.titles++;
@@ -412,6 +450,7 @@ export function advanceDay(
         if (p) p.career.titles++;
       }
       notes.push({ day: state.day, kind: "league", important: true, text: `🏆 ${champTeam.name} 夺得${f.comp === "masters" ? "Masters 国际赛" : "揭幕杯"}冠军！` });
+      awardCupCircuitPoints(state, f.comp as "cup" | "masters", notes, champ);
     }
   }
 
@@ -450,6 +489,7 @@ export function advanceDay(
         if (p) p.career.titles++; // 冠军荣誉：退役转教练公式与名人堂的输入（GDD §8.3）
       }
       notes.push({ day: state.day, kind: "league", important: true, text: `🏆 ${champTeam.name} 夺得${f.comp === "masters" ? "Masters 国际赛" : "揭幕杯"}冠军！` });
+      awardCupCircuitPoints(state, f.comp as "cup" | "masters", notes, champ);
     }
   }
 

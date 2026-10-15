@@ -159,6 +159,44 @@ export function OverviewPage(props: {
         </div>
       )}
 
+      {/* 冠军积分榜（v1.0 国际赛资格；揭幕杯/联赛/Masters 入账） */}
+      {(() => {
+        const pts = state.circuitPoints ?? {};
+        const rows = Object.entries(pts)
+          .map(([tid, v]) => ({ tid, v, t: state.teams[tid] }))
+          .filter((r) => r.t)
+          .sort((a, b) => b.v - a.v || a.t!.name.localeCompare(b.t!.name));
+        if (rows.length === 0) return null;
+        return (
+          <div className="card">
+            <h3>🌍 冠军积分榜 · Champions 资格竞逐（揭幕杯/联赛/Masters 入账）</h3>
+            <table>
+              <thead>
+                <tr><th>#</th><th style={{ textAlign: "left" }}>战队</th><th>积分</th></tr>
+              </thead>
+              <tbody>
+                {rows.slice(0, 10).map((r, i) => (
+                  <tr key={r.tid} className={r.tid === myId ? "me" : ""}>
+                    <td>{i + 1}</td>
+                    <td style={{ textAlign: "left" }}>
+                      <span className="row" style={{ alignItems: "center", gap: 6 }}>
+                        {r.t && <TeamLogo team={r.t} size={18} />}
+                        <b>{r.t!.name}</b>
+                        {r.tid === myId && <span className="tag">我队</span>}
+                      </span>
+                    </td>
+                    <td style={{ fontVariantNumeric: "tabular-nums", fontWeight: 700 }}>{r.v}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="muted small" style={{ marginTop: 4 }}>
+              积分构成：揭幕杯 6/4/3/2 · 联赛 9/7/5/4/3/3/2/2 · Masters 12/9/7/5/4/4。Champions 年末按积分与赛果定席位。
+            </div>
+          </div>
+        );
+      })()}
+
       {Object.values(state.comps)
         .filter((c) => {
           if (Object.keys(c.standings).length === 0) return false;

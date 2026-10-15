@@ -512,6 +512,8 @@ export interface GameState {
   coachPool?: CoachFreeAgent[];
   /** 退役留档（名人堂页数据源） */
   retireLog?: RetireLogItem[];
+  /** 冠军积分账本（v1.0 国际赛资格；worker migrate 兜底） */
+  circuitPoints?: Record<string, number>;
   /** 待答复的 AI 报价（挖角我方；7 天答复窗） */
   incomingBids: TransferOffer[];
   /** 轮换沟通豁免（本周已沟通的选手 id；周重置，每周 2 次） */
