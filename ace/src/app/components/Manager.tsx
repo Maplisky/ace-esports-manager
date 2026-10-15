@@ -23,6 +23,9 @@ export function ManagerPage(props: { state: GameState }) {
         <h3>👔 经理档案</h3>
         <div className="row" style={{ flexWrap: "wrap", gap: 18 }}>
           <span>声望 <b>{Math.round(mgr.reputation)}</b></span>
+          <span className={`tag${state.difficulty === "pro" ? " red" : state.difficulty === "hard" ? " orange" : ""}`}>
+            {state.difficulty === "pro" ? "职业难度" : state.difficulty === "hard" ? "困难难度" : "普通难度"}
+          </span>
           <span className="muted small">
             谈判 {mgr.skills.negotiation ?? 50} · 训练 {mgr.skills.training ?? 50} · 商务 {mgr.skills.business ?? 50}
           </span>

@@ -536,6 +536,8 @@ export interface GameState {
   lastDraft?: { year: number; picks: { pickNo: number; teamId: string; playerId: string }[] };
   /** 赛区风格 META（v1.0-5，GDD §18-3）：每赛区 t1 队伍聚合的风格倾向（展示+国际赛叙事） */
   regionMeta?: Record<string, { style: string; aggr: number }>;
+  /** 难度（v1.0-7，GDD §9.5）：normal=普通 / hard=困难（AI 侦察+预算微调）/ pro=职业（AI 读图更准+侦察更深）；开档后不可下调 */
+  difficulty?: "normal" | "hard" | "pro";
   /** 待答复的 AI 报价（挖角我方；7 天答复窗） */
   incomingBids: TransferOffer[];
   /** 轮换沟通豁免（本周已沟通的选手 id；周重置，每周 2 次） */

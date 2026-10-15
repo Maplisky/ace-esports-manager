@@ -148,9 +148,11 @@ function addUlt(ult: Map<string, number>, pid: string, n: number, team: SimTeam,
 function simMap(state: GameState, mapId: string, A: SimTeam, B: SimTeam, rng: Rng, agentLock?: Record<string, Record<string, string>>, intlPlayoff = false): MapRecord {
   const map = MAP_BY_ID.get(mapId) ?? MAPS[0]!;
   // 每图重算强度（图池熟练/meta/玩家预案英雄随图变化）
-  // 针对准备（GDD §7.2）：我方对对手的情报点 → 针对加成（×0.22，最高 +2.2）；AI 侧 v0.5 不启用情报
-  const intelA = A.team.id === state.myTeamId ? intelOf(state, B.team.id) : 0;
-  const intelB = B.team.id === state.myTeamId ? intelOf(state, A.team.id) : 0;
+  // 针对准备（GDD §7.2）：我方对对手的情报点 → 针对加成（×0.22，最高 +2.2）；AI 侧默认不启用
+  // 难度（v1.0-7）：困难/职业下 AI 会侦察我队（对手对我 intel 2/4 → 针对加成 +0.44/+0.88）
+  const aiIntelOf = state.difficulty === "pro" ? 4 : state.difficulty === "hard" ? 2 : 0;
+  const intelA = A.team.id === state.myTeamId ? intelOf(state, B.team.id) : B.team.id === state.myTeamId ? aiIntelOf : 0;
+  const intelB = B.team.id === state.myTeamId ? intelOf(state, A.team.id) : A.team.id === state.myTeamId ? aiIntelOf : 0;
   // 招牌战术反向泄露（GDD §6.4）：我方重复使用同一图预案 → 对手针对性准备提升
   const leakToB = A.team.id === state.myTeamId ? Math.min(1.2, (A.team.patternUsage[mapId] ?? 0) * 0.12) : 0;
   const leakToA = B.team.id === state.myTeamId ? Math.min(1.2, (B.team.patternUsage[mapId] ?? 0) * 0.12) : 0;
@@ -468,7 +470,8 @@ export function simMatch(state: GameState, teamAId: string, teamBId: string, bo:
   const rng = new Rng(seed);
   const teamA = state.teams[teamAId] as Team;
   const teamB = state.teams[teamBId] as Team;
-  const veto = mapLock && mapLock.length > 0 ? { maps: mapLock.slice(), log: ["手动 BP"] } : runVeto(teamA, teamB, bo, rng);
+  // 难度（v1.0-7，GDD §9.5）：职业难度 AI BP 读图更准（噪声 ±3）；调用次数不变，普通难度逐位一致
+  const veto = mapLock && mapLock.length > 0 ? { maps: mapLock.slice(), log: ["手动 BP"] } : runVeto(teamA, teamB, bo, rng, state.difficulty === "pro" ? 3 : 6);
 
   const makeSim = (side: "A" | "B", team: Team): SimTeam => {
     const roster = team.starters

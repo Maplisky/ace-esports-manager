@@ -19,14 +19,15 @@ const ACTIONS_BY_BO: Record<number, ("ban" | "pick")[]> = {
   5: ["ban", "ban", "pick", "pick", "pick", "pick"],
 };
 
-export function runVeto(teamA: Team, teamB: Team, bo: 1 | 3 | 5, rng: Rng): VetoResult {
+export function runVeto(teamA: Team, teamB: Team, bo: 1 | 3 | 5, rng: Rng, noise = 6): VetoResult {
   const pool = MAPS.map((m) => m.id);
   const log: string[] = [];
   const actions = ACTIONS_BY_BO[bo] ?? ACTIONS_BY_BO[3]!;
   const need = bo === 1 ? 1 : bo === 3 ? 3 : 5;
   const picked: string[] = [];
 
-  const pref = (team: Team, mapId: string) => (team.mapPref[mapId] ?? 50) + rng.range(-6, 6);
+  // 噪声幅度：职业难度 AI 读图更准（±3，v1.0-7）；调用次数不变 → 普通难度模拟逐位一致
+  const pref = (team: Team, mapId: string) => (team.mapPref[mapId] ?? 50) + rng.range(-noise, noise);
 
   // BP 先手掷硬币（v0.7：固定 teamA 先 pick 会因顺序统计量（先手拿无约束最大值图）
   // 造成每场约 +3% 的系统性胜率偏置；真实规则 BP 顺序亦随机）

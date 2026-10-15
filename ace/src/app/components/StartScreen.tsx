@@ -10,6 +10,7 @@ export function StartScreen() {
   const [seed, setSeed] = useState(() => Math.floor(Math.random() * 900000) + 1000);
   const [selected, setSelected] = useState<string | null>(null);
   const [origin, setOrigin] = useState<"legend" | "grassroots" | "analyst" | null>(null);
+  const [difficulty, setDifficulty] = useState<"normal" | "hard" | "pro">("normal");
 
   // 预览世界：同步生成一次性只读世界（~550 人，毫秒级），换种子即刷新
   const world = useMemo(() => generateWorld(seed), [seed]);
@@ -102,11 +103,27 @@ export function StartScreen() {
         </div>
       </div>
 
+      <div className="card">
+        <h3>4 · 难度（开档后不可下调）</h3>
+        <div className="startgrid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))" }}>
+          {([
+            { key: "normal", label: "普通", desc: "标准体验：AI 不侦察你，预算对等" },
+            { key: "hard", label: "困难", desc: "AI 每场侦察你（针对加成 +0.44）· AI 一级队每周 +$6K 补贴" },
+            { key: "pro", label: "职业", desc: "AI 深度侦察（+0.88）· BP 读图噪声减半（±3）· AI 每周 +$12K" },
+          ] as const).map((d) => (
+            <div key={d.key} className={`teamcard${difficulty === d.key ? " sel" : ""}`} onClick={() => setDifficulty(d.key)}>
+              <b>{d.label}</b>
+              <div className="muted small" style={{ marginTop: 6 }}>{d.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <div className="row" style={{ marginTop: 14 }}>
         <button
           className="primary"
           disabled={!selected || !origin || busy}
-          onClick={() => selected && origin && void newGame(seed, selected, origin)}
+          onClick={() => selected && origin && void newGame(seed, selected, origin, difficulty)}
         >
           {busy ? "生成世界中…" : "开始职业生涯 →"}
         </button>

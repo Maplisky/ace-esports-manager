@@ -154,6 +154,8 @@ function handleWorkerMessage(e: MessageEvent) {
     // 出身 3 选 1（v1.0-6，GDD §9.5）：声望/技能/资源差异
     const origin = msg.origin as "legend" | "grassroots" | "analyst" | undefined;
     initCareer(state, origin ?? "grassroots");
+    // 难度三档（v1.0-7，GDD §9.5）：AI 侦察/BP 读图/预算补贴
+    state.difficulty = (msg.difficulty as "normal" | "hard" | "pro" | undefined) ?? "normal";
     reply({ type: "ready", ...snapshot() });
   } else if (type === "applyJob") {
     // 跳槽申请（v1.0-6，GDD §9.5）：声望+荣誉+门下弟子加成，成功即切换俱乐部

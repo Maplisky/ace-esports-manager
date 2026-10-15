@@ -366,6 +366,13 @@ function applyStandings(state: GameState, compKey: string, teamA: string, teamB:
 /** 周结算（每 7 天）：团队课表与个人训练并行（GDD §6.3 v1.1）+ 疲劳恢复、状态/士气回归 */
 function weeklyTick(state: GameState, rng: Rng): void {
   const myTeam = state.myTeamId ? state.teams[state.myTeamId] : null;
+  // 难度预算微调（v1.0-7，GDD §9.5）：困难/职业下 AI 一级队每周联盟补贴，转会市场更有竞争力
+  const aiSub = state.difficulty === "pro" ? 12_000 : state.difficulty === "hard" ? 6_000 : 0;
+  if (aiSub > 0) {
+    for (const t of Object.values(state.teams)) {
+      if (t.tier === 1 && t.id !== state.myTeamId) t.budget += aiSub;
+    }
+  }
   const myPlayers = myTeam ? myTeam.roster.map((id) => state.players[id]).filter((p): p is NonNullable<typeof p> => !!p) : [];
   const trainDays = state.teamSchedule.filter((s) => s !== "rest").length;
   // 比赛日占槽（GDD §6.3 v1.9 检错）：本周我的正式比赛天数折减训练收益
