@@ -373,9 +373,10 @@ function NegotiationModal(props: { state: GameState; player: Player; onClose: ()
   const [years, setYears] = useState(2);
   const [bonus, setBonus] = useState(0);
   const [role, setRole] = useState<Player["promisedRole"]>("starter");
+  const [track, setTrack] = useState<Player["track"] | undefined>(undefined);
   const neg = useStore((s) => s.negotiation);
 
-  const terms = () => ({ fee, salary, years, signingBonus: bonus, promisedRole: role });
+  const terms = () => ({ fee, salary, years, signingBonus: bonus, promisedRole: role, track: role === "bench" || role === "rotation" ? track : undefined });
   const budgetLeft = myTeam.budget - fee - bonus;
 
   if (neg?.result) {
@@ -437,10 +438,20 @@ function NegotiationModal(props: { state: GameState; player: Player; onClose: ()
             </td><td className="muted small">≥3 年对老将有吸引力</td></tr>
             <tr><td>签字费</td><td><input type="number" value={bonus} step={10000} onChange={(e) => setBonus(Number(e.target.value) || 0)} style={{ width: 130 }} /></td><td className="muted small">即时支付，大幅提升态度</td></tr>
             <tr><td>角色承诺</td><td>
-              <select value={role} onChange={(e) => setRole(e.target.value as Player["promisedRole"])}>
+              <select value={role} onChange={(e) => { setRole(e.target.value as Player["promisedRole"]); setTrack(undefined); }}>
                 {Object.entries(ROLE_CN).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
               </select>
             </td><td className="muted small">承诺未兑现会积累不满（GDD §6.4）</td></tr>
+            {(role === "bench" || role === "rotation") && (
+              <tr><td>替补三正路</td><td>
+                <select value={track ?? ""} onChange={(e) => setTrack((e.target.value || undefined) as Player["track"])}>
+                  <option value="">不选择</option>
+                  <option value="successor" disabled={player.age > 21}>接班人计划（≤21 岁：降档转收益 +8）</option>
+                  <option value="learner" disabled={player.age > 21}>学习型替补（≤21 岁：训练 +10%）</option>
+                  <option value="mentor" disabled={player.age < 28}>导师型替补（≥28 岁：降档惩罚减半）</option>
+                </select>
+              </td><td className="muted small">按年龄限定；影响谈判意愿与后续成长（GDD §6.4）</td></tr>
+            )}
           </tbody>
         </table>
 

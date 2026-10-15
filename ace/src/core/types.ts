@@ -113,8 +113,12 @@ export interface Player {
   ambition?: number;
   /** 导师型替补起始年（v1.0 替补三正路；旧档缺省无） */
   mentorSince?: number;
+  /** 替补三正路（v1.0）：接班人 / 导师 / 学习型（GDD §6.4；旧档缺省无） */
+  track?: "successor" | "mentor" | "learner";
+  /** 接班人的导师（队内首发老将 id；离队触发自动转正） */
+  mentorId?: string;
   injuredUntilDay: number;
-  /** 导师型替补绑定的弟子 id */
+  /** 导师型替补绑定的弟子 id（= track 为 successor 的选手） */
   apprenticeId?: string;
   /** 本队青训标记 */
   homegrown: boolean;
@@ -426,6 +430,8 @@ export interface TransferOffer {
   years: number;
   signingBonus: number;
   promisedRole: "core" | "starter" | "rotation" | "bench";
+  /** 替补三正路（v1.0）：bench/rotation 定位时可附 teleport 接班人/导师/学习型（GDD §6.4） */
+  track?: "successor" | "mentor" | "learner";
   /** 报价日（答复窗 7 天） */
   day: number;
   /** 谈判轮次（1-3）；0 = 尚未开谈 */

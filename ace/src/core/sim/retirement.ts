@@ -207,6 +207,7 @@ export function resolveRetireCard(
       const chance = clamp(0.55 + (p.traits?.includes("enabler") ? 0.12 : 0), 0.3, 0.85);
       if (rng.chance(chance)) {
         p.promisedRole = "bench";
+        p.track = "mentor";
         p.mentorSince = state.year;
         p.morale = clamp(p.morale + 4, 10, 100);
         return successText("转任导师型替补");

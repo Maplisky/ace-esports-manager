@@ -182,6 +182,18 @@ function handleWorkerMessage(e: MessageEvent) {
       if (team) team.starters = msg.starters as string[];
     }
     reply({ type: "snapshot", ...snapshot() });
+  } else if (type === "setMentor") {
+    // 替补三正路（v1.0）：接班人指派导师（须为本队首发且 ≥27 岁）
+    if (state?.myTeamId) {
+      const p = state.players[msg.playerId as string];
+      const mentor = state.players[msg.mentorId as string];
+      const team = state.teams[state.myTeamId];
+      if (p && mentor && mentor.age >= 27 && team && team.starters.includes(mentor.id)) {
+        p.track = "successor";
+        p.mentorId = mentor.id;
+      }
+    }
+    reply({ type: "snapshot", ...snapshot() });
   } else if (type === "setPreset") {
     if (state?.myTeamId) {
       const team = state.teams[state.myTeamId];

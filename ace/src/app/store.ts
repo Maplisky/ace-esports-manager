@@ -52,6 +52,7 @@ interface AppStore {
   setScreen: (s: Screen) => void;
   setPage: (p: Page) => void;
   setStarters: (starters: string[]) => Promise<void>;
+  setMentor: (playerId: string, mentorId: string) => Promise<void>;
   setPreset: (mapId: string, preset: Preset) => Promise<void>;
   applyPreset: (mapId: string, name: string) => Promise<void>;
   setTeamSchedule: (slots: string[], maps: string[], schedules?: Record<string, string>) => Promise<void>;
@@ -231,6 +232,11 @@ export const useStore = create<AppStore>((set, get) => ({
     const res = await call<{ state: GameState; records: Record<string, MatchRecord> }>({ type: "setStarters", starters });
     records = res.records;
     set({ state: res.state, records });
+  },
+
+  setMentor: async (playerId, mentorId) => {
+    const res = await call<{ state: GameState }>({ type: "setMentor", playerId, mentorId });
+    set({ state: res.state });
   },
 
   setPreset: async (mapId, preset) => {

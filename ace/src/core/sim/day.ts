@@ -216,7 +216,8 @@ function weeklyTick(state: GameState, rng: Rng): void {
           const staffF = 1 + ((myTeam.staff?.training?.value ?? 0) * 0.004); // 训练助教（GDD §8.3：99 点 ≈ ×1.40）
           const moodF = (state.manager?.life?.mood ?? 70) < 30 ? 0.9 : 1; // 教练心情低落 → 训练收益 -10%（GDD v0.5-5）
           const facF = 0.85 + (myTeam.facilities ?? 50) / 250; // 设施乘数（v0.8 落地：40 设施 ×1.01，95 设施 ×1.23）
-          const gain = rng.range(XP_PER_DAY[0], XP_PER_DAY[1]) * effTrainDays * moraleF * fatigueF * coachF * commF * staffF * moodF * facF * acadF;
+          const learnF = p.track === "learner" ? 1.1 : 1; // 学习型替补：坐板凳偷学 +10%（GDD §6.4）
+          const gain = rng.range(XP_PER_DAY[0], XP_PER_DAY[1]) * effTrainDays * moraleF * fatigueF * coachF * commF * staffF * moodF * facF * acadF * learnF;
           p.xp[opt.attr] = (p.xp[opt.attr] ?? 0) + gain;
         }
       } else if (focus === "rest") {
@@ -253,7 +254,18 @@ function weeklyTick(state: GameState, rng: Rng): void {
     const team = p.teamId ? state.teams[p.teamId] : null;
     if (team) {
       if (team.starters.includes(p.id)) p.benchedWeeks = 0;
-      else p.benchedWeeks++;
+      else if (p.track === "successor" || p.track === "mentor") {
+        // 替补三正路（GDD §6.4）：接班人出场期望减半 / 导师型传帮带——不积累板凳不满
+        // 接班人的导师离队 → 自动转正为首发承诺（忠诚 +15 折算为士气与安定）
+        if (p.track === "successor" && p.mentorId && !team.roster.includes(p.mentorId)) {
+          p.promisedRole = "starter";
+          p.morale = clamp(p.morale + 15, 10, 100);
+          p.track = undefined;
+          p.mentorId = undefined;
+          state.transferFeed.push({ day: state.day, year: state.year, kind: "list", text: `⭐ 导师离队：${team.name} 的 ${p.ign} 按接班人计划自动升为首发承诺。` });
+          if (state.transferFeed.length > 300) state.transferFeed.splice(0, state.transferFeed.length - 300);
+        }
+      } else p.benchedWeeks++;
     }
   }
 }

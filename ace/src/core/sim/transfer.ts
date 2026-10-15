@@ -44,6 +44,8 @@ export interface OfferTerms {
   years: number;
   signingBonus: number;
   promisedRole: "core" | "starter" | "rotation" | "bench";
+  /** 替补三正路（v1.0，GDD §6.4）：bench 定位可附接班人/导师/学习型 */
+  track?: "successor" | "mentor" | "learner";
 }
 
 const ROLE_RANK = { bench: 0, rotation: 1, starter: 2, core: 3 } as const;
@@ -76,7 +78,19 @@ export function evaluateOffer(state: GameState, p: Player, offer: OfferTerms, to
   fs.push({ v: (offer.salary / salaryExp - 1) * 60, why: "薪资低于他的期望" });
   fs.push({ v: offer.signingBonus / Math.max(1, salaryExp) * 26, why: "签字费缺乏吸引力" });
   const roleDelta = ROLE_RANK[offer.promisedRole] - ROLE_RANK[p.promisedRole];
-  fs.push({ v: roleDelta >= 0 ? roleDelta * 11 : roleDelta * 16, why: offer.promisedRole === "starter" || offer.promisedRole === "core" ? "他希望更核心的位置" : "不接受替补定位" });
+  let roleV = roleDelta >= 0 ? roleDelta * 11 : roleDelta * 16;
+  let roleWhy = offer.promisedRole === "starter" || offer.promisedRole === "core" ? "他希望更核心的位置" : "不接受替补定位";
+  // 替补三正路（GDD §6.4）：接班人（≤21，降档转收益 +8）/ 导师型（≥28，降档惩罚减半）
+  if (roleV < 0 && offer.track && offer.promisedRole === "bench") {
+    if (offer.track === "successor" && p.age <= 21) {
+      roleV = 8;
+      roleWhy = "接班人计划：替补定位是承诺的成长路径";
+    } else if (offer.track === "mentor" && p.age >= 28) {
+      roleV = roleV / 2;
+      roleWhy = "导师型替补：传帮带定位可以接受";
+    }
+  }
+  fs.push({ v: roleV, why: roleWhy });
   fs.push({ v: (toTeam.reputation - (curTeam?.reputation ?? 40)) * 0.9, why: "认为这支球队不如他现在的平台" });
   if (curTeam) fs.push({ v: toTeam.tier < curTeam.tier ? 18 : toTeam.tier > curTeam.tier ? -22 : 0, why: "不愿意降级去次级联赛" });
   fs.push({ v: p.listed ? 7 : 0, why: "" });
@@ -160,9 +174,12 @@ export function completeTransfer(state: GameState, offer: TransferOffer, rng: Rn
   p.teamId = toTeam.id;
   p.salary = offer.salary;
   p.contractYears = offer.years;
+  p.promisedRole = offer.promisedRole; // 承诺定位落地（此前缺失：谈判承诺签完即失效——检错修复）
   p.morale = clamp(p.morale + 8, 10, 100);
   p.benchedWeeks = 0;
   p.listed = false;
+  // 替补三正路（v1.0，GDD §6.4）：签约落 track（bench/rotation 才有意义）
+  p.track = offer.promisedRole === "bench" || offer.promisedRole === "rotation" ? offer.track : undefined;
   p.career.clubs.push(toTeam.id);
   const feed = state.transferFeed;
   feed.push({ day: state.day, year: state.year, kind: "done", text: `${toTeam.name} 以 ${fmt(offer.fee)} 从 ${fromTeam?.name ?? "自由市场"} 签下 ${p.ign}（${p.overall}）。` });

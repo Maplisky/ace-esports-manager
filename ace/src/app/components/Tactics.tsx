@@ -12,7 +12,7 @@ const DUTY_CN: Record<string, string> = { duelist: "决斗者", initiator: "先�
 /** 战术页（GDD §7.1 v1.3）：每图多预案（快照）+ 首选 + 替补智能适配提示 + 轮换 */
 export function TacticsPage(props: { state: GameState }) {
   const { state } = props;
-  const { setPreset, applyPreset, setStarters } = useStore();
+  const { setPreset, applyPreset, setStarters, setMentor } = useStore();
   const myId = state.myTeamId ?? "";
   const team = state.teams[myId];
   const [mapId, setMapId] = useState(MAPS[0]!.id);
@@ -207,6 +207,26 @@ export function TacticsPage(props: { state: GameState }) {
                       <span style={{ cursor: "pointer", textDecoration: "underline dotted" }} onClick={() => setDossier(p.id)}>{p.ign}</span>
                       <SyntheticBadge p={p} />
                     </span>
+                    {p.track && (
+                      <span className="muted small" style={{ display: "block", marginTop: 2 }}>
+                        {p.track === "successor" && <>🧬 接班人{p.mentorId && state.players[p.mentorId] ? ` · 导师 ${state.players[p.mentorId]!.ign}` : " · 未指派导师"}</>}
+                        {p.track === "mentor" && `🎓 导师型替补${p.mentorSince ? `（${p.mentorSince} 起）` : ""}`}
+                        {p.track === "learner" && "📚 学习型替补"}
+                      </span>
+                    )}
+                    {p.track === "successor" && !p.mentorId && (
+                      <select
+                        className="small"
+                        defaultValue=""
+                        style={{ marginTop: 3, maxWidth: 170 }}
+                        onChange={(e) => e.target.value && void setMentor(p.id, e.target.value)}
+                      >
+                        <option value="">指派导师（首发 ≥27 岁）…</option>
+                        {starters.filter((sp) => sp.age >= 27).map((sp) => (
+                          <option key={sp.id} value={sp.id}>{sp.ign}（{sp.age} 岁）</option>
+                        ))}
+                      </select>
+                    )}
                   </td>
                   <td className="small" style={{ whiteSpace: "nowrap" }}>
                     <DutyTendency p={p} />
