@@ -3,6 +3,7 @@ import { AGENT_BY_ID } from "../../core/data/agents.ts";
 import { MAPS } from "../../core/data/maps.ts";
 import { PlayerFace, TeamLogo } from "./Avatar.tsx";
 import { intelOf, estimateMapStrength, starsOf } from "../../core/sim/intel.ts";
+import { useStore } from "../store.ts";
 
 export function TopBar(props: {
   teamTag: string; teamName: string; year: number; day: number; stage: string;
@@ -70,8 +71,33 @@ export function OverviewPage(props: {
   const intel = nextOppId ? intelOf(state, nextOppId) : 0;
   const intelLv = intel >= 6 ? 3 : intel >= 3 ? 2 : intel >= 1 ? 1 : 0;
 
+  // 开局引导清单（GDD §3 v1.2）：首季三件事——完成对应动作自动打勾，全勾或第二赛季起隐藏
+  const ob = state.onboarding;
+  const firstSeason = (state.manager.career?.seasons ?? 1) <= 1;
+  const showOnboarding = firstSeason && ob && !(ob.lineup && ob.agents && ob.schedule);
+  const setPage = useStore((s) => s.setPage);
+  const obTasks: { done: boolean; label: string; page: "squad" | "tactics" | "training"; hint: string }[] = [
+    { done: !!ob?.lineup, label: "① 定首发", page: "squad", hint: "阵容页确认你的五名首发（替补可换人）" },
+    { done: !!ob?.agents, label: "② 选英雄", page: "tactics", hint: "战术页为地图保存一套阵容预案（英雄分配）" },
+    { done: !!ob?.schedule, label: "③ 排第一周训练", page: "training", hint: "训练页安排团队课表（跑图/复盘/对抗/休息）" },
+  ];
+
   return (
     <div>
+      {showOnboarding && (
+        <div className="card" style={{ borderColor: "var(--accent)" }}>
+          <h3>🎯 上任三件事</h3>
+          {obTasks.map((t) => (
+            <div key={t.page} className="row" style={{ justifyContent: "space-between", alignItems: "center", gap: 8, padding: "4px 0" }}>
+              <span className={t.done ? "muted" : ""} style={{ textDecoration: t.done ? "line-through" : "none" }}>
+                {t.done ? "✅" : "⬜"} <b>{t.label}</b> <span className="muted small">{t.hint}</span>
+              </span>
+              <button className="small" onClick={() => setPage(t.page)}>{t.done ? "回看" : "前往"}</button>
+            </div>
+          ))}
+          <div className="muted small" style={{ marginTop: 4 }}>完成动作会自动打勾——做完这三件事再推进，第一场会更稳。</div>
+        </div>
+      )}
       {/* 助教建议（GDD §9.1 收件箱 v1） */}
       <div className="card">
         <h3>📋 收件箱</h3>

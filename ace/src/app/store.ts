@@ -50,7 +50,7 @@ interface AppStore {
   saves: SaveEntry[];
 
   boot: () => Promise<void>;
-  newGame: (seed: number, teamId: string, origin?: "legend" | "grassroots" | "analyst", difficulty?: "normal" | "hard" | "pro") => Promise<void>;
+  newGame: (seed: number, teamId: string, origin?: "legend" | "grassroots" | "analyst", difficulty?: "normal" | "hard" | "pro", talents?: Record<string, number>) => Promise<void>;
   continueGame: () => Promise<void>;
   advance: () => Promise<void>;
   advanceToNextMatch: () => Promise<void>;
@@ -184,10 +184,10 @@ export const useStore = create<AppStore>((set, get) => ({
     set({ hasSave: entries.length > 0, ready: true, saves: entries });
   },
 
-  newGame: async (seed, teamId, origin, difficulty) => {
+  newGame: async (seed, teamId, origin, difficulty, talents) => {
     set({ busy: true });
     records = {};
-    await call({ type: "new", seed, teamId, origin, difficulty });
+    await call({ type: "new", seed, teamId, origin, difficulty, talents });
     const snap = await call<{ state: GameState; records: Record<string, MatchRecord> }>({ type: "getSnapshot" });
     records = snap.records;
     await persist(snap.state);

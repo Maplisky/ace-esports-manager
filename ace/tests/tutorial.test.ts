@@ -66,12 +66,12 @@ test("script 优势红线：非教学局（tutorial 缺省）模拟逐位一致�
   assert.equal(JSON.stringify(rA), JSON.stringify(rB), "缺省 script 零影响");
 });
 
-test("解锁表：D1 基础四页开；D4 训练/D8 转会/D12 商务/D20 成就；第二赛季全开（旧档兼容）", () => {
+test("解锁表：D1 基础页与训练开（v1.2 §3 引导要求）/D8 转会/D12 商务/D20 成就；第二赛季全开（旧档兼容）", () => {
   const s = build();
   s.day = 1;
   assert.equal(pageUnlocked("overview", s), true);
   assert.equal(pageUnlocked("tactics", s), true);
-  assert.equal(pageUnlocked("training", s), false);
+  assert.equal(pageUnlocked("training", s), true, "v1.2：GDD §3 First 30 Minutes 要求开局排课表——训练 D1 即开");
   assert.equal(pageUnlocked("transfer", s), false);
   assert.equal(pageUnlocked("business", s), false);
   assert.equal(pageUnlocked("achievements", s), false);
@@ -92,5 +92,5 @@ test("解锁表：D1 基础四页开；D4 训练/D8 转会/D12 商务/D20 成就
   for (const pg of ["training", "transfer", "business", "achievements", "career", "manager"] as const) {
     assert.equal(pageUnlocked(pg, s), true, `${pg} 第二赛季应全开`);
   }
-  assert.ok(pageUnlockDay("training") === 4 && pageUnlockDay("transfer") === 8 && pageUnlockDay("business") === 12);
+  assert.ok(pageUnlockDay("training") === 1 && pageUnlockDay("transfer") === 8 && pageUnlockDay("business") === 12);
 });

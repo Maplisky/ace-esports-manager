@@ -7,6 +7,35 @@ import type { GameState, NewsItem, PendingEventCard, Team } from "../types.ts";
 
 export const MILESTONE_CARD_ID = "milestone";
 
+/** 经理八维技能键（GDD §6.1 manager.skills） */
+export type ManagerSkillKey = "training" | "negotiation" | "tactics" | "scouting" | "medical" | "business" | "locker" | "youth";
+
+export const SKILL_CN: Record<ManagerSkillKey, string> = {
+  training: "训练", negotiation: "谈判", tactics: "战术", scouting: "眼光",
+  medical: "医疗", business: "商务", locker: "更衣室", youth: "青训",
+};
+
+/** 天赋分配（GDD §3 v1.2）：基础 50 + 点数池 24（每点 +1，单项封顶 70）。红线上：只写 skills 初值、零 RNG */
+export const TALENT_POOL = 24;
+export const TALENT_BASE = 50;
+export const TALENT_CAP = 70;
+
+/** 推荐配置（一键）：四套预制各恰好用满 24 点 */
+export const TALENT_PRESETS: { key: string; label: string; desc: string; points: Record<ManagerSkillKey, number> }[] = [
+  { key: "even", label: "均衡推荐", desc: "八维各 +3——没有短板的新帅", points: { training: 3, negotiation: 3, tactics: 3, scouting: 3, medical: 3, business: 3, locker: 3, youth: 3 } },
+  { key: "tactics", label: "战术大师", desc: "战术 +7、眼光 +5——针对准备与读图先行", points: { training: 4, negotiation: 2, tactics: 7, scouting: 5, medical: 1, business: 1, locker: 3, youth: 1 } },
+  { key: "youth", label: "青训教父", desc: "青训 +7、训练 +5——门下弟子与跳槽背书", points: { training: 5, negotiation: 2, tactics: 1, scouting: 4, medical: 1, business: 1, locker: 3, youth: 7 } },
+  { key: "business", label: "金牌经理", desc: "商务 +7、谈判 +5——把俱乐部钱袋子攥在手里", points: { training: 1, negotiation: 5, tactics: 2, scouting: 3, medical: 1, business: 7, locker: 4, youth: 1 } },
+];
+
+/** 应用天赋点（在 initCareer 之前调用：出身加成叠加在天赋之上） */
+export function applyTalents(state: GameState, points: Partial<Record<ManagerSkillKey, number>>): void {
+  const mgr = state.manager;
+  for (const k of Object.keys(SKILL_CN) as ManagerSkillKey[]) {
+    mgr.skills[k] = clamp(TALENT_BASE + (points[k] ?? 0), 15, TALENT_CAP);
+  }
+}
+
 /** 出身定义（开档 3 选 1：2 强 1 弱 + 起始资源差异，GDD §9.5） */
 export const ORIGINS: { key: "legend" | "grassroots" | "analyst"; label: string; desc: string }[] = [
   { key: "legend", label: "前豪门名宿", desc: "声望 +15、谈判 +5、个人钱包 +$60K——名头好借，期望也高" },

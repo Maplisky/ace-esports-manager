@@ -4,7 +4,7 @@ import { initSeasonFixtures, advanceDay, playHeldMatch, interveneHeldMatch, sett
 import { simMatch } from "../../core/sim/match.ts";
 import { resolveEvent } from "../../core/sim/events.ts";
 import { signCoach } from "../../core/sim/retirement.ts";
-import { initCareer, applyJob } from "../../core/sim/career.ts";
+import { initCareer, applyJob, applyTalents, type ManagerSkillKey } from "../../core/sim/career.ts";
 import { draftPickTrade } from "../../core/sim/draft.ts";
 import { evaluateAchievements } from "../../core/sim/achievements.ts";
 import { UNLOCK_NOTES } from "../guide.ts";
@@ -163,6 +163,7 @@ function migrate(state: GameState): GameState {
   state.scouting ??= {};
   state.styleCounter ??= {}; // 风格特训应对熟练度（GDD §5.6 v1.1）
   state.scrimLog ??= []; // 训练赛记录（GDD §5.6 v1.1）
+  state.onboarding ??= {}; // 开局引导清单（GDD §3 v1.2；旧档不弹卡——只有新档 new 时置空对象并首季展示）
   state.agentTraining ??= {};
   state.inquiries ??= [];
   state.coachPool ??= [];
@@ -206,7 +207,10 @@ function handleWorkerMessage(e: MessageEvent) {
     initSeasonFixtures(state);
     // 出身 3 选 1（v1.0-6，GDD §9.5）：声望/技能/资源差异
     const origin = msg.origin as "legend" | "grassroots" | "analyst" | undefined;
+    // 天赋分配（v1.2，GDD §3）：先于出身应用——出身加成叠加在天赋初值上；零 RNG，世界逐位不变
+    if (msg.talents) applyTalents(state, msg.talents as Partial<Record<ManagerSkillKey, number>>);
     initCareer(state, origin ?? "grassroots");
+    state.onboarding = {}; // 开局引导清单（GDD §3 v1.2）
     // 难度三档（v1.0-7，GDD §9.5）：AI 侦察/BP 读图/预算补贴
     state.difficulty = (msg.difficulty as "normal" | "hard" | "pro" | undefined) ?? "normal";
     reply({ type: "ready", ...snapshot() });
@@ -257,6 +261,8 @@ function handleWorkerMessage(e: MessageEvent) {
     if (state?.myTeamId) {
       const team = state.teams[state.myTeamId];
       if (team) team.starters = msg.starters as string[];
+      state.onboarding ??= {};
+      state.onboarding.lineup = true; // 开局引导（GDD §3 v1.2）
     }
     reply({ type: "snapshot", ...snapshot() });
   } else if (type === "setMentor") {
@@ -282,6 +288,8 @@ function handleWorkerMessage(e: MessageEvent) {
         if (existing >= 0) list[existing] = preset;
         else list.push(preset);
         team.presets[mapId] = list.slice(-8);
+        state.onboarding ??= {};
+        state.onboarding.agents = true; // 开局引导（GDD §3 v1.2）
       }
     }
     reply({ type: "snapshot", ...snapshot() });
@@ -304,6 +312,8 @@ function handleWorkerMessage(e: MessageEvent) {
       state.teamSchedule = msg.slots as string[];
       state.trainingMaps = msg.maps as string[];
       if (msg.schedules) state.schedules = msg.schedules as Record<string, string>;
+      state.onboarding ??= {};
+      state.onboarding.schedule = true; // 开局引导（GDD §3 v1.2）
     }
     reply({ type: "snapshot", ...snapshot() });
   } else if (type === "askInquiry") {

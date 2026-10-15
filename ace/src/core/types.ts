@@ -631,6 +631,8 @@ export interface GameState {
   styleCounter?: Record<string, number>;
   /** 训练赛记录（GDD §5.6 v1.1）：不产生 MatchRecord、不计个人数据，仅面板展示（留最近 20 场） */
   scrimLog?: { day: number; oppId: string; mapId: string; goal: ScrimGoal; score: [number, number]; won: boolean }[];
+  /** 开局引导清单（GDD §3 v1.2）：定首发/选英雄/排第一周训练——完成动作时打勾，第二赛季起不再展示 */
+  onboarding?: { lineup?: boolean; agents?: boolean; schedule?: boolean };
 }
 
 /** 训练赛目标三选一（GDD §5.6 v1.1）：磨合 / 风格特训 / 图池特训 */
