@@ -21,6 +21,7 @@ export const TRAITS: readonly TraitDef[] = [
   { key: "clutch", label: "残局王", good: true, desc: "1vX 残局胜率显著提升" },
   { key: "glass", label: "玻璃大炮", good: false, desc: "高产出但容易送" },
   { key: "baiter", label: "苟", good: false, desc: "躲队友身后，首杀贡献低" },
+  { key: "choker", label: "大赛软脚虾", good: false, desc: "国际赛淘汰赛心态 debuff（老将 IGL/高激励教练可压阵减半）" },
 ];
 
 export const TRAIT_BY_KEY: ReadonlyMap<string, TraitDef> = new Map(TRAITS.map((t) => [t.key, t]));

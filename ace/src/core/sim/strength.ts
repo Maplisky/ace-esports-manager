@@ -59,6 +59,10 @@ export interface TeamMapInput {
   agentAssign?: Record<string, string>;
   /** 当前版本 meta（GDD §4.3：agentId → 系数），缺省 = 全 1 */
   patchMeta?: Record<string, number>;
+  /** 风格克制修正（GDD §7.1/§18-3，v1.0-5）：本方对对手风格的相性值，克制 +1.8 / 被克 -1.0 / 无 0（跨赛区遭遇战由调用方折半） */
+  styleCounter?: number;
+  /** 大赛怯场修正（GDD §18-3，v1.0-5）：国际赛淘汰赛心态 debuff（负值，进 mid 项） */
+  chokeMod?: number;
 }
 
 export interface SideStrength {
@@ -88,8 +92,37 @@ export interface SideStrength {
   clutchAvg: number;
 }
 
-function dutyVectorOf(p: Player): DutyVector {
-  // 选手职责 = 英雄池职责向量加权（熟练度权重）
+/** 五风格（GDD §7.1/§18-3，v1.0-5）：由阵容进攻性（决斗+先锋职责占比）分档 */
+export type StyleKey = "rush" | "aggro" | "balanced" | "methodical" | "lockdown";
+export const STYLE_LABEL: Record<StyleKey, string> = { rush: "快攻", aggro: "侵略", balanced: "均衡", methodical: "稳健", lockdown: "锁死" };
+/** 环形克制：快攻→均衡→侵略→稳健→锁死→快攻（GDD §7.1 五风格相性表） */
+export const STYLE_BEATS: Record<StyleKey, StyleKey> = {
+  rush: "balanced", balanced: "aggro", aggro: "methodical", methodical: "lockdown", lockdown: "rush",
+};
+
+/** 首发阵容进攻性 0-1（决斗+先锋职责占比均值；缺人按现有均值） */
+export function aggrOfLineup(lineup: Player[]): number {
+  if (lineup.length === 0) return 0.5;
+  let aggr = 0;
+  for (const p of lineup) {
+    const dv = dutyVectorOf(p);
+    aggr += dv.duelist + dv.initiator;
+  }
+  return aggr / lineup.length;
+}
+
+export function styleOf(aggr: number): StyleKey {
+  return aggr >= 0.6 ? "rush" : aggr >= 0.55 ? "aggro" : aggr > 0.45 ? "balanced" : aggr > 0.4 ? "methodical" : "lockdown";
+}
+
+/** 风格相性值：克制 +1.8 / 被克 -1.0 / 中性 0（不对称：克制的优势大于被克的劣势） */
+export function styleCounterOf(mine: StyleKey, theirs: StyleKey): number {
+  if (STYLE_BEATS[mine] === theirs) return 1.8;
+  if (STYLE_BEATS[theirs] === mine) return -1.0;
+  return 0;
+}
+
+function dutyVectorOf(p: Player): DutyVector {  // 选手职责 = 英雄池职责向量加权（熟练度权重）
   const sum: DutyVector = { duelist: 0, initiator: 0, controller: 0, sentinel: 0 };
   let w = 0;
   for (const agentId of p.agentPool) {
@@ -234,6 +267,8 @@ export function computeSide(input: TeamMapInput): SideStrength {
   aggr /= Math.max(1, lineup.length);
   const styleAtk = (aggr - 0.5) * 3;
   const styleDef = -(aggr - 0.5) * 2;
+  // 风格克制（v1.0-5）：对手风格相性（克制 +1.8 / 被克 -1.0；跨赛区遭遇战由调用方折半后传入）
+  const counter = input.styleCounter ?? 0;
 
   const aimMod = (avg("aim") - 65) * 0.05;
   const awareMod = (avg("awareness") - 65) * 0.05;
@@ -241,10 +276,10 @@ export function computeSide(input: TeamMapInput): SideStrength {
   // 地图战术助教（GDD §8.3 v1.7）：预案质量折算攻防修正（最高 +1.2）
   const mapTacticsMod = team.staff?.mapTactics ? clamp((team.staff.mapTactics.value - 60) * 0.02, 0, 1.2) : 0;
 
-  const atk = scaledBase + iglMod + chemMod + coachMod + mapMod + prepMod + metaMod + familiarityMod + shortHandedMod + styleAtk + aimMod + mapTacticsMod;
-  const def = scaledBase + iglMod + chemMod + coachMod + mapMod + prepMod + metaMod + familiarityMod + shortHandedMod + styleDef + awareMod + DEF_BONUS + mapTacticsMod;
-  // 副指挥：逆境追分微加成（其指挥属性的低权重计入 mid）
-  const mid = (avg("clutch") - 65) * 0.05 + iglAttr * 0.06 + (vicePlayer ? vicePlayer.attrs.igl * 0.015 : 0);
+  const atk = scaledBase + iglMod + chemMod + coachMod + mapMod + prepMod + metaMod + familiarityMod + shortHandedMod + styleAtk + aimMod + mapTacticsMod + counter;
+  const def = scaledBase + iglMod + chemMod + coachMod + mapMod + prepMod + metaMod + familiarityMod + shortHandedMod + styleDef + awareMod + DEF_BONUS + mapTacticsMod + counter * 0.5;
+  // 副指挥：逆境追分微加成（其指挥属性的低权重计入 mid）+ 大赛怯场（国际赛淘汰赛心态 debuff）
+  const mid = (avg("clutch") - 65) * 0.05 + iglAttr * 0.06 + (vicePlayer ? vicePlayer.attrs.igl * 0.015 : 0) + (input.chokeMod ?? 0);
 
   return {
     teamId: team.id,

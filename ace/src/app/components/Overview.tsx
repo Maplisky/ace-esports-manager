@@ -133,6 +133,28 @@ export function OverviewPage(props: {
         </div>
       )}
 
+      {/* 赛区风格 META（v1.0-5，GDD §18-3）：四赛区聚合风格 + 我队定位 */}
+      {(() => {
+        const meta = state.regionMeta ?? {};
+        const regions = Object.entries(meta);
+        if (regions.length === 0 || !myTeam) return null;
+        const STYLE_LABEL: Record<string, string> = { rush: "快攻", aggro: "侵略", balanced: "均衡", methodical: "稳健", lockdown: "锁死" };
+        const REGIONS_INFO: Record<string, string> = { americas: "Americas", emea: "EMEA", pacific: "Pacific", china: "China" };
+        return (
+          <div className="card">
+            <h3>🌐 赛区风格 META</h3>
+            <div className="row small" style={{ flexWrap: "wrap", gap: 10 }}>
+              {regions.map(([rid, m]) => (
+                <span key={rid} className={myTeam.regionId === rid ? "tag" : "tag"} style={{ opacity: myTeam.regionId === rid ? 1 : 0.75 }}>
+                  {REGIONS_INFO[rid] ?? rid} · <b>{STYLE_LABEL[m.style] ?? "均衡"}</b>（进攻性 {(m.aggr * 100).toFixed(0)}）
+                </span>
+              ))}
+              <span className="muted">风格克制：快攻→均衡→侵略→稳健→锁死→快攻（±1.8）；国际赛遭遇海外风格相性折半。</span>
+            </div>
+          </div>
+        );
+      })()}
+
       {myTeam && (
         <div className="card">
           <h3>🏟 {myTeam.name} · 首发五人</h3>

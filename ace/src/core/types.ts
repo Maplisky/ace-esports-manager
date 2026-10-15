@@ -520,6 +520,8 @@ export interface GameState {
   circuitPoints?: Record<string, number>;
   /** 最近一届选秀留档（v1.0-4；名人堂/生涯页数据源） */
   lastDraft?: { year: number; picks: { pickNo: number; teamId: string; playerId: string }[] };
+  /** 赛区风格 META（v1.0-5，GDD §18-3）：每赛区 t1 队伍聚合的风格倾向（展示+国际赛叙事） */
+  regionMeta?: Record<string, { style: string; aggr: number }>;
   /** 待答复的 AI 报价（挖角我方；7 天答复窗） */
   incomingBids: TransferOffer[];
   /** 轮换沟通豁免（本周已沟通的选手 id；周重置，每周 2 次） */

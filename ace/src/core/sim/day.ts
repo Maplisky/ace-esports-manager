@@ -16,6 +16,7 @@ import { runDraft } from "./draft.ts";
 import { refreshCommercialWeek, weeklySponsorIncome } from "./business.ts";
 import type { PlayerAttrs } from "../types.ts";
 import { simMatch } from "./match.ts";
+import { aggrOfLineup, styleOf, STYLE_LABEL } from "./strength.ts";
 import { buildCup, buildLeague, buildSwissRound, buildDoubleElim, createFixture, fillNextSlot, pairSwissRound } from "./fixtures.ts";
 import type { GameState, Fixture, MatchRecord, NewsItem } from "../types.ts";
 
@@ -116,6 +117,16 @@ export function initSeasonFixtures(state: GameState): void {
   for (const k of Object.keys(state.comps)) {
     if (!/^stage\d+-[a-z]+-t\d$/.test(k) && k !== "cup") delete state.comps[k];
   }
+  // 赛区风格 META 聚合（v1.0-5，GDD §18-3）：每赛区 t1 队伍首发进攻性均值 → 风格标签（展示+国际赛叙事）
+  state.regionMeta = {};
+  for (const r of REGIONS) {
+    const t1Teams = all.filter((t) => t.tier === 1 && (t.regionId ?? "xia") === r.id);
+    const aggrs = t1Teams
+      .map((t) => aggrOfLineup(t.starters.map((id) => state.players[id]).filter((p): p is NonNullable<typeof p> => !!p)))
+      .filter((v) => v > 0);
+    const aggr = aggrs.length ? aggrs.reduce((s, v) => s + v, 0) / aggrs.length : 0.5;
+    state.regionMeta[r.id] = { style: styleOf(aggr), aggr };
+  }
   for (const comp of Object.values(state.comps)) {
     if (comp.key === "cup" || comp.key === "masters") continue;
     for (const id of comp.teamIds) {
@@ -148,9 +159,12 @@ function buildMasters(state: GameState, notes: NewsItem[]): void {
   // 瑞士轮第 1 轮：第 2 名档 × 第 3 名档循环错位，保证首轮不撞同赛区
   const pairs = pot2.map((t, i): [string, string] => [t, pot3[(i + 1) % pot3.length]!]);
   buildSwissRound(state.fixtures, { comp: "masters", name: "Masters", stage: "masters", pairs, day: CALENDAR.mastersStart, roundNo: 1, bo: 3 });
+  const styleNote = REGIONS
+    .map((r) => `${r.label}=${STYLE_LABEL[(state.regionMeta?.[r.id]?.style ?? "balanced") as keyof typeof STYLE_LABEL] ?? "均衡"}`)
+    .join("、");
   notes.push({
     day: state.day, kind: "league", important: true,
-    text: `🌍 Masters 国际赛开抽：${direct.map((id) => state.teams[id]?.tag ?? "?").join("/")} 以赛区头名直通淘汰赛，8 队瑞士轮（两胜出线、两败淘汰）决出另外 4 席，淘汰赛双败。`,
+    text: `🌍 Masters 国际赛开抽：${direct.map((id) => state.teams[id]?.tag ?? "?").join("/")} 以赛区头名直通淘汰赛，8 队瑞士轮（两胜出线、两败淘汰）决出另外 4 席，淘汰赛双败。赛区风格 META：${styleNote}——遭遇海外风格时相性折算（遭遇战规则）。`,
   });
 }
 

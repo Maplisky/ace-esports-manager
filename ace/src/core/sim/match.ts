@@ -9,6 +9,7 @@ import { MAP_BY_ID, MAPS } from "../data/maps.ts";
 import { AGENT_BY_ID, ULT_TIER_BONUS, ultCostOf } from "../data/agents.ts";
 import {
   computeSide, dutyKillWeight, dutyEntryWeight,
+  styleOf, aggrOfLineup, styleCounterOf,
   effectiveOverall, LOGISTIC_K, SWING_SD,
 } from "./strength.ts";
 import { intelOf } from "./intel.ts";
@@ -144,7 +145,7 @@ function addUlt(ult: Map<string, number>, pid: string, n: number, team: SimTeam,
   }
 }
 
-function simMap(state: GameState, mapId: string, A: SimTeam, B: SimTeam, rng: Rng, agentLock?: Record<string, Record<string, string>>): MapRecord {
+function simMap(state: GameState, mapId: string, A: SimTeam, B: SimTeam, rng: Rng, agentLock?: Record<string, Record<string, string>>, intlPlayoff = false): MapRecord {
   const map = MAP_BY_ID.get(mapId) ?? MAPS[0]!;
   // 每图重算强度（图池熟练/meta/玩家预案英雄随图变化）
   // 针对准备（GDD §7.2）：我方对对手的情报点 → 针对加成（×0.22，最高 +2.2）；AI 侧 v0.5 不启用情报
@@ -161,8 +162,27 @@ function simMap(state: GameState, mapId: string, A: SimTeam, B: SimTeam, rng: Rn
   };
   // 当前版本 meta（GDD §4.3）传入阵容强度（fit × meta 联合）
   const patchMetaMap = Object.fromEntries((state.patchNotes?.slice(-1)[0]?.changes ?? []).map((c) => [c.agentId, c.meta]));
-  A.str = computeSide({ team: A.team, players: state.players, map, day: state.day, agentAssign: assignFor(A.team), intel: intelA, patchMeta: patchMetaMap });
-  B.str = computeSide({ team: B.team, players: state.players, map, day: state.day, agentAssign: assignFor(B.team), intel: intelB, patchMeta: patchMetaMap });
+  // 风格克制（GDD §7.1/§18-3，v1.0-5）：双方首发风格相性；跨赛区遭遇战对海外风格不熟 → 相性折半
+  const crossRegion = (A.team.regionId ?? "") !== (B.team.regionId ?? "");
+  const styleA = styleOf(aggrOfLineup(A.players));
+  const styleB = styleOf(aggrOfLineup(B.players));
+  const counterA = styleCounterOf(styleA, styleB) * (crossRegion ? 0.5 : 1);
+  const counterB = styleCounterOf(styleB, styleA) * (crossRegion ? 0.5 : 1);
+  // 怯场（GDD §18-3，v1.0-5）：国际赛淘汰赛，≤19 岁新兵/大赛软脚虾特质 → 心态 debuff（mid）；
+  // 老将 IGL（≥28 岁）或高激励教练（motivation ≥70）压阵 → 减半
+  const chokeOf = (t: SimTeam): number => {
+    if (!intlPlayoff) return 0;
+    let sources = 0;
+    for (const p of t.players) {
+      if (p.age <= 19) sources += 0.5;
+      if (p.traits?.includes("choker")) sources += 1;
+    }
+    if (sources === 0) return 0;
+    const anchored = t.players.some((p) => p.isIgl && p.age >= 28) || t.team.coach.motivation >= 70;
+    return -Math.min(1.2, sources) * (anchored ? 0.5 : 1);
+  };
+  A.str = computeSide({ team: A.team, players: state.players, map, day: state.day, agentAssign: assignFor(A.team), intel: intelA, patchMeta: patchMetaMap, styleCounter: counterA, chokeMod: chokeOf(A) });
+  B.str = computeSide({ team: B.team, players: state.players, map, day: state.day, agentAssign: assignFor(B.team), intel: intelB, patchMeta: patchMetaMap, styleCounter: counterB, chokeMod: chokeOf(B) });
 
   const lines: Record<string, PlayerLine> = {};
   const allPlayers = [...A.players, ...B.players];
@@ -476,13 +496,17 @@ export function simMatch(state: GameState, teamAId: string, teamBId: string, bo:
   const A = makeSim("A", teamA);
   const B = makeSim("B", teamB);
 
+  // 国际赛淘汰赛标记（怯场机制，GDD §18-3）：Masters/Champions 的胜者组/败者组/总决赛
+  const fx = state.fixtures.find((f) => f.id === matchId);
+  const intlPlayoff = !!fx && (fx.comp === "masters" || fx.comp === "champions") && /胜者组|败者组|总决赛/.test(fx.label);
+
   const wins = { A: 0, B: 0 };
   const maps: MapRecord[] = [];
   const mvpAggregate: Record<string, number> = {};
 
   for (const mapId of veto.maps) {
     if (wins.A >= Math.ceil(bo / 2) || wins.B >= Math.ceil(bo / 2)) break;
-    const mapRec = simMap(state, mapId, A, B, rng, agentLock);
+    const mapRec = simMap(state, mapId, A, B, rng, agentLock, intlPlayoff);
     if (mapRec.score[0] > mapRec.score[1]) wins.A++;
     else if (mapRec.score[1] > mapRec.score[0]) wins.B++;
     maps.push(mapRec);
