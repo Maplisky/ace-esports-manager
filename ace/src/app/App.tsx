@@ -1,5 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useStore } from "./store.ts";
+import { decodeReplay } from "../core/sim/share.ts";
+import type { GameState, MatchRecord } from "../core/types.ts";
 import { StartScreen } from "./components/StartScreen.tsx";
 import { TopBar, OverviewPage } from "./components/Overview.tsx";
 import { SchedulePage } from "./components/Schedule.tsx";
@@ -35,12 +37,44 @@ const PAGES: { key: "overview" | "schedule" | "squad" | "tactics" | "training" |
 
 export function App() {
   const { ready, screen, page, state, records, viewerFixtureId, viewerStartFinished, held, busy, toast, boot, setPage, closeViewer, advance, advanceToNextMatch, playHeld, scoutTeam, managerLife, matchIntervene, matchFinish } = useStore();
+  const [replayShell, setReplayShell] = useState<{ state: GameState; record: MatchRecord } | null>(null);
 
   useEffect(() => {
     void boot();
   }, [boot]);
 
+  // 分享回放链接（v1.0-12，GDD §9.4）：#replay=<code> → 解码 → 壳世界渲染播放器（无需存档）
+  useEffect(() => {
+    const m = /#replay=([A-Za-z0-9\-_]+)/.exec(location.hash);
+    if (!m) return;
+    void decodeReplay(m[1]!).then((p) => {
+      if (!p) return;
+      const shell = {
+        day: p.rec.day,
+        year: p.rec.day > 300 ? p.rec.day : 1,
+        teams: {
+          [p.rec.teamA]: { ...p.teams.A, starters: p.teams.A.roster.slice(0, 5) },
+          [p.rec.teamB]: { ...p.teams.B, starters: p.teams.B.roster.slice(0, 5) },
+        },
+        players: Object.fromEntries(Object.entries(p.players).map(([pid, v]) => [pid, { ...v, agentPool: [] }])),
+      } as unknown as GameState;
+      setReplayShell({ state: shell, record: p.rec });
+    });
+  }, []);
+
   if (!ready) return <div className="muted" style={{ padding: 40 }}>加载中…</div>;
+  if (replayShell) {
+    return (
+      <MatchPlayer
+        record={replayShell.record}
+        state={replayShell.state}
+        onClose={() => {
+          history.replaceState(null, "", location.pathname);
+          setReplayShell(null);
+        }}
+      />
+    );
+  }
   if (screen === "start" || !state) return <StartScreen />;
 
   const myTeam = state.teams[state.myTeamId ?? ""];

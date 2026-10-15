@@ -11,6 +11,7 @@ import { tacticLabel } from "../../core/data/mapplans.ts";
 import { Tactical2D } from "./Tactical2D.tsx";
 import { liveLines, liveMeta, summarizeMatch, pickMvps, type StatRow } from "../../core/sim/matchstats.ts";
 import { PLAYER_CALLS, callLabel, callDesc, type TacticCallDef } from "../../core/sim/tactics.ts";
+import { buildReplayPayload, anonymizeReplay, shareLinkOf } from "../../core/sim/share.ts";
 import type { GameState, IglReading, MatchRecord, RoundEvent } from "../../core/types.ts";
 
 const SLOW_MS = 850;
@@ -56,6 +57,9 @@ export function MatchPlayer(props: {
   const [stinger, setStinger] = useState<{ main: string; sub: string } | null>(null); // 高光横幅（ACE/残局/零封）
   const [menuOpen, setMenuOpen] = useState(false); // v1.0-8 情境化暂停菜单
   const [iglCard, setIglCard] = useState<{ mi: number; reading: IglReading } | null>(null); // v1.0-8 IGL 场上阅读
+  const [shareOpen, setShareOpen] = useState(false); // v1.0-12 分享面板
+  const [shareAnon, setShareAnon] = useState(true); // 匿名化默认开（版权暴露面可控，§14）
+  const [shareUrl, setShareUrl] = useState("");
   const iglHandled = useRef<Set<string>>(new Set());
   const finishedNotified = useRef(false);
   const awaitingRecord = useRef(false); // 干预后暂停，新 Record 到位再续播
@@ -128,7 +132,7 @@ export function MatchPlayer(props: {
     return n;
   }, [map, mySide, lastEnd]);
   const oppTeamId = mySide === "A" ? record.teamB : record.teamA;
-  const intelPts = state.scouting[oppTeamId]?.points ?? 0;
+  const intelPts = state.scouting?.[oppTeamId]?.points ?? 0;
   const matchCoach = myTeamId ? state.teams[myTeamId]?.staff?.match?.value ?? 0 : 0;
   const hintPrecise = intelPts >= 1 && matchCoach >= 50; // 预期提示精度 = 情报 × 比赛型教练（GDD §5.4）
 
@@ -137,6 +141,7 @@ export function MatchPlayer(props: {
     setPlaying(false);
     setMenuOpen(false);
     setIglCard(null);
+    setShareUrl(""); // 重模拟后旧分享链接作废（v1.0-12）
     props.onIntervene?.(mapIdx, roundNo, tactic, igl);
   };
   useEffect(() => {
@@ -489,9 +494,44 @@ export function MatchPlayer(props: {
               <button onClick={() => setView((v) => (v === "2d" ? "text" : "2d"))}>
                 {view === "2d" ? "📄 文字" : "🗺 2D 战术"}
               </button>
+              <button onClick={() => { setShareOpen((o) => !o); setShareUrl(""); }}>🔗 分享回放</button>
               <div className="grow" />
               <button className="ghost" onClick={onClose}>关闭 ✕</button>
             </div>
+
+            {/* 分享面板（v1.0-12，GDD §9.4）：回放链接 + 匿名化开关（默认开，§14 版权暴露面） */}
+            {shareOpen && (
+              <div className="card" style={{ margin: "10px 0", padding: "10px 14px", textAlign: "left" }}>
+                <b>🔗 分享这场回放</b>
+                <div className="muted small" style={{ margin: "6px 0" }}>
+                  链接包含完整比赛记录（压缩编码，无需存档即可观看）。匿名化导出会把真实选手与队名替换为虚构名，建议公开分享时保持开启。
+                </div>
+                <label className="row small" style={{ gap: 6, margin: "6px 0" }}>
+                  <input type="checkbox" checked={shareAnon} onChange={(e) => { setShareAnon(e.target.checked); setShareUrl(""); }} />
+                  匿名化（隐藏真实选手/战队名）
+                </label>
+                <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
+                  <button
+                    className="primary small"
+                    onClick={() => {
+                      void (async () => {
+                        const payload = buildReplayPayload(state, record);
+                        const final = shareAnon ? anonymizeReplay(payload) : payload;
+                        const url = await shareLinkOf(final);
+                        setShareUrl(url);
+                        try {
+                          await navigator.clipboard.writeText(url);
+                        } catch { /* 无剪贴板权限时仅展示 */ }
+                      })();
+                    }}
+                  >
+                    生成链接（自动复制）
+                  </button>
+                  {shareUrl && <span className="muted small">✅ 链接已复制（{(shareUrl.length / 1024).toFixed(1)}KB）</span>}
+                </div>
+                {shareUrl && <div className="muted small" style={{ marginTop: 6, wordBreak: "break-all", maxHeight: 60, overflowY: "auto" }}>{shareUrl}</div>}
+              </div>
+            )}
 
             {/* 情境化暂停战术菜单（v1.0-8，GDD §5.4）：按攻防方×经济×大招状态过滤 */}
             {menuOpen && (
