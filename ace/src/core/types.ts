@@ -22,6 +22,8 @@ export interface AgentDef {
   duty: DutyVector;
   /** 大招档位（可多标签，首个为主档；GDD §5.4 v1.6 多标签规则） */
   ultTiers: UltTier[];
+  /** 大招所需点数（v1.0 按真实游戏逐特工实录：芮娜/赛博/不死鸟/幻棱 6，杰斯/猎枭/贤者等 8） */
+  ultCost: number;
   /** 机制标签：驱动地图适配 fit 与推荐训练项（侦察/烟幕/闪光/信息/机动/哨置/治疗/强开） */
   mechTags: string[];
   newUntilVersion?: string;

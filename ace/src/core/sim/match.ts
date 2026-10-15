@@ -6,7 +6,7 @@
  */
 import { Rng, clamp, hashString } from "../rng.ts";
 import { MAP_BY_ID, MAPS } from "../data/maps.ts";
-import { AGENT_BY_ID, ULT_TIER_BONUS } from "../data/agents.ts";
+import { AGENT_BY_ID, ULT_TIER_BONUS, ultCostOf } from "../data/agents.ts";
 import {
   computeSide, dutyKillWeight, dutyEntryWeight,
   effectiveOverall, LOGISTIC_K, SWING_SD,
@@ -15,7 +15,6 @@ import { intelOf } from "./intel.ts";
 import { runVeto } from "./veto.ts";
 import type { BuyType, GameState, MapRecord, MatchRecord, Player, PlayerLine, RoundEvent, RoundRecord, Team } from "../types.ts";
 
-const ULT_READY_POINTS = 7;
 const ULT_BONUS_CAP = 2.5;
 const MAX_ROUNDS = 80;
 
@@ -134,9 +133,10 @@ function pickWeighted(players: Player[], alive: Set<string>, weight: (p: Player)
 function addUlt(ult: Map<string, number>, pid: string, n: number, team: SimTeam, events: RoundEvent[]): void {
   if (team.ultReady.has(pid)) return;
   const cur = (ult.get(pid) ?? 0) + n;
-  if (cur >= ULT_READY_POINTS) {
+  const agentId = team.str?.agents[pid];
+  const cost = ultCostOf(agentId ?? ""); // 逐特工阈值（v1.0 按真实游戏实录）
+  if (cur >= cost) {
     team.ultReady.add(pid);
-    const agentId = team.str?.agents[pid];
     const tier = agentId ? (AGENT_BY_ID.get(agentId)?.ultTiers?.[0] ?? "utility") : "utility";
     events.push({ t: "ultReady", s: pid, tier, side: team.side });
   } else {
@@ -394,7 +394,7 @@ function simMap(state: GameState, mapId: string, A: SimTeam, B: SimTeam, rng: Rn
           const snap: Record<string, number> = {};
           for (const p of allPlayers) {
             const ready = (A.players.some((q) => q.id === p.id) ? A.ultReady : B.ultReady).has(p.id);
-            snap[p.id] = ready ? 7 : (ultPoints.get(p.id) ?? 0);
+            snap[p.id] = ready ? ultCostOf(A.str!.agents[p.id] ?? B.str!.agents[p.id] ?? "") : (ultPoints.get(p.id) ?? 0);
           }
           return snap;
         })(),

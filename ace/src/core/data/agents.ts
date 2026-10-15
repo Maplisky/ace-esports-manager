@@ -10,41 +10,46 @@ function dv(duelist: number, initiator: number, controller: number, sentinel: nu
 }
 
 export const AGENTS: readonly AgentDef[] = [
-  // ── 决斗系 ──
-  { id: "jett", name: "捷风", duty: dv(1, 0, 0, 0), ultTiers: ["harvest"], mechTags: ["mobility", "entry"] },
-  { id: "raze", name: "雷兹", duty: dv(1, 0, 0, 0), ultTiers: ["core", "harvest"], mechTags: ["entry", "area"] },
-  { id: "yoru", name: "夜露", duty: dv(0.85, 0.15, 0, 0), ultTiers: ["combo"], mechTags: ["mobility", "entry"] },
-  { id: "phoenix", name: "不死鸟", duty: dv(1, 0, 0, 0), ultTiers: ["core"], mechTags: ["entry", "flash"] },
-  { id: "reyna", name: "芮娜", duty: dv(1, 0, 0, 0), ultTiers: ["harvest"], mechTags: ["entry"] },
-  { id: "neon", name: "霓虹", duty: dv(1, 0, 0, 0), ultTiers: ["core"], mechTags: ["mobility", "entry"] },
-  { id: "iso", name: "壹决", duty: dv(1, 0, 0, 0), ultTiers: ["harvest"], mechTags: ["entry"] },
-  { id: "waylay", name: "暮蝶", duty: dv(1, 0, 0, 0), ultTiers: ["harvest"], mechTags: ["mobility", "entry"], newUntilVersion: "2026-S1" },
+  // ── 决斗系 ──（ultCost 按真实游戏逐特工实录：自足型 6 / 团队型 7 / 团灭·复活型 8）
+  { id: "jett", name: "捷风", duty: dv(1, 0, 0, 0), ultTiers: ["harvest"], ultCost: 8, mechTags: ["mobility", "entry"] },
+  { id: "raze", name: "雷兹", duty: dv(1, 0, 0, 0), ultTiers: ["core", "harvest"], ultCost: 8, mechTags: ["entry", "area"] },
+  { id: "yoru", name: "夜露", duty: dv(0.85, 0.15, 0, 0), ultTiers: ["combo"], ultCost: 7, mechTags: ["mobility", "entry"] },
+  { id: "phoenix", name: "不死鸟", duty: dv(1, 0, 0, 0), ultTiers: ["core"], ultCost: 6, mechTags: ["entry", "flash"] },
+  { id: "reyna", name: "芮娜", duty: dv(1, 0, 0, 0), ultTiers: ["harvest"], ultCost: 6, mechTags: ["entry"] },
+  { id: "neon", name: "霓虹", duty: dv(1, 0, 0, 0), ultTiers: ["core"], ultCost: 7, mechTags: ["mobility", "entry"] },
+  { id: "iso", name: "壹决", duty: dv(1, 0, 0, 0), ultTiers: ["harvest"], ultCost: 8, mechTags: ["entry"] },
+  { id: "waylay", name: "暮蝶", duty: dv(1, 0, 0, 0), ultTiers: ["harvest"], ultCost: 7, mechTags: ["mobility", "entry"], newUntilVersion: "2026-S1" },
   // ── 先锋系 ──
-  { id: "sova", name: "猎枭", duty: dv(0, 1, 0, 0), ultTiers: ["combo"], mechTags: ["recon"] },
-  { id: "breach", name: "铁臂", duty: dv(0, 1, 0, 0), ultTiers: ["core"], mechTags: ["flash", "entry"] },
-  { id: "skye", name: "斯凯", duty: dv(0.15, 0.85, 0, 0), ultTiers: ["core"], mechTags: ["flash", "heal", "recon"] },
-  { id: "kayo", name: "K/O", duty: dv(0, 1, 0, 0), ultTiers: ["core"], mechTags: ["suppress", "recon"] },
-  { id: "fade", name: "黑梦", duty: dv(0, 1, 0, 0), ultTiers: ["info"], mechTags: ["recon"] },
-  { id: "gekko", name: "盖可", duty: dv(0.1, 0.9, 0, 0), ultTiers: ["core"], mechTags: ["recon", "entry"] },
-  { id: "tejo", name: "钛狐", duty: dv(0, 1, 0, 0), ultTiers: ["core"], mechTags: ["recon", "area"], newUntilVersion: "2026-S1" },
+  { id: "sova", name: "猎枭", duty: dv(0, 1, 0, 0), ultTiers: ["combo"], ultCost: 8, mechTags: ["recon"] },
+  { id: "breach", name: "铁臂", duty: dv(0, 1, 0, 0), ultTiers: ["core"], ultCost: 8, mechTags: ["flash", "entry"] },
+  { id: "skye", name: "斯凯", duty: dv(0.15, 0.85, 0, 0), ultTiers: ["core"], ultCost: 7, mechTags: ["flash", "heal", "recon"] },
+  { id: "kayo", name: "K/O", duty: dv(0, 1, 0, 0), ultTiers: ["core"], ultCost: 7, mechTags: ["suppress", "recon"] },
+  { id: "fade", name: "黑梦", duty: dv(0, 1, 0, 0), ultTiers: ["info"], ultCost: 7, mechTags: ["recon"] },
+  { id: "gekko", name: "盖可", duty: dv(0.1, 0.9, 0, 0), ultTiers: ["core"], ultCost: 7, mechTags: ["recon", "entry"] },
+  { id: "tejo", name: "钛狐", duty: dv(0, 1, 0, 0), ultTiers: ["core"], ultCost: 7, mechTags: ["recon", "area"], newUntilVersion: "2026-S1" },
   // ── 控场系 ──
-  { id: "brimstone", name: "炼狱", duty: dv(0, 0, 1, 0), ultTiers: ["core"], mechTags: ["smoke", "area"] },
-  { id: "omen", name: "幽影", duty: dv(0, 0.2, 0.8, 0), ultTiers: ["core"], mechTags: ["smoke", "mobility"] },
-  { id: "astra", name: "星礈", duty: dv(0, 0, 1, 0), ultTiers: ["core"], mechTags: ["smoke", "area"] },
-  { id: "viper", name: "蝰蛇", duty: dv(0, 0, 0.9, 0.1), ultTiers: ["core"], mechTags: ["smoke", "area"] },
-  { id: "harbor", name: "海神", duty: dv(0, 0, 1, 0), ultTiers: ["core"], mechTags: ["smoke", "area"] },
-  { id: "clove", name: "幻棱", duty: dv(0, 0, 1, 0), ultTiers: ["core"], mechTags: ["smoke"] },
+  { id: "brimstone", name: "炼狱", duty: dv(0, 0, 1, 0), ultTiers: ["core"], ultCost: 7, mechTags: ["smoke", "area"] },
+  { id: "omen", name: "幽影", duty: dv(0, 0.2, 0.8, 0), ultTiers: ["core"], ultCost: 7, mechTags: ["smoke", "mobility"] },
+  { id: "astra", name: "星礈", duty: dv(0, 0, 1, 0), ultTiers: ["core"], ultCost: 7, mechTags: ["smoke", "area"] },
+  { id: "viper", name: "蝰蛇", duty: dv(0, 0, 0.9, 0.1), ultTiers: ["core"], ultCost: 7, mechTags: ["smoke", "area"] },
+  { id: "harbor", name: "海神", duty: dv(0, 0, 1, 0), ultTiers: ["core"], ultCost: 7, mechTags: ["smoke", "area"] },
+  { id: "clove", name: "幻棱", duty: dv(0, 0, 1, 0), ultTiers: ["core"], ultCost: 6, mechTags: ["smoke"] },
   // ── 哨卫系 ──
-  { id: "sage", name: "贤者", duty: dv(0, 0, 0.5, 0.5), ultTiers: ["utility"], mechTags: ["heal", "anchor"] },
-  { id: "cypher", name: "零", duty: dv(0, 0, 0, 1), ultTiers: ["info"], mechTags: ["recon", "anchor"] },
-  { id: "killjoy", name: "奇乐", duty: dv(0, 0, 0, 1), ultTiers: ["core"], mechTags: ["anchor", "area"] },
-  { id: "chamber", name: "尚勃勒", duty: dv(0.4, 0, 0, 0.6), ultTiers: ["harvest"], mechTags: ["anchor"] },
-  { id: "deadlock", name: "钢锁", duty: dv(0, 0, 0, 1), ultTiers: ["harvest"], mechTags: ["anchor", "area"] },
-  { id: "vyse", name: "维斯", duty: dv(0, 0, 0.1, 0.9), ultTiers: ["core"], mechTags: ["anchor", "suppress"], newUntilVersion: "2026-S1" },
-  { id: "veto", name: "禁灭", duty: dv(0, 0.3, 0, 0.7), ultTiers: ["core"], mechTags: ["anchor", "suppress", "recon"], newUntilVersion: "2026-S1" },
+  { id: "sage", name: "贤者", duty: dv(0, 0, 0.5, 0.5), ultTiers: ["utility"], ultCost: 8, mechTags: ["heal", "anchor"] },
+  { id: "cypher", name: "零", duty: dv(0, 0, 0, 1), ultTiers: ["info"], ultCost: 6, mechTags: ["recon", "anchor"] },
+  { id: "killjoy", name: "奇乐", duty: dv(0, 0, 0, 1), ultTiers: ["core"], ultCost: 8, mechTags: ["anchor", "area"] },
+  { id: "chamber", name: "尚勃勒", duty: dv(0.4, 0, 0, 0.6), ultTiers: ["harvest"], ultCost: 8, mechTags: ["anchor"] },
+  { id: "deadlock", name: "钢锁", duty: dv(0, 0, 0, 1), ultTiers: ["harvest"], ultCost: 8, mechTags: ["anchor", "area"] },
+  { id: "vyse", name: "维斯", duty: dv(0, 0, 0.1, 0.9), ultTiers: ["core"], ultCost: 8, mechTags: ["anchor", "suppress"], newUntilVersion: "2026-S1" },
+  { id: "veto", name: "禁灭", duty: dv(0, 0.3, 0, 0.7), ultTiers: ["core"], ultCost: 8, mechTags: ["anchor", "suppress", "recon"], newUntilVersion: "2026-S1" },
 ];
 
 export const AGENT_BY_ID: ReadonlyMap<string, AgentDef> = new Map(AGENTS.map((a) => [a.id, a]));
+
+/** 大招所需点数（按特工区分；未知 id 缺省 7） */
+export function ultCostOf(agentId: string): number {
+  return AGENT_BY_ID.get(agentId)?.ultCost ?? 7;
+}
 
 /** 大招就绪加成（GDD §5.4 v1.5 调参表） */
 export const ULT_TIER_BONUS: Record<string, number> = {

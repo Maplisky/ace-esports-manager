@@ -4,7 +4,7 @@
  * 只吃 MatchRecord——渲染与模拟完全分离（§5.1）。
  */
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AGENT_BY_ID } from "../../core/data/agents.ts";
+import { AGENT_BY_ID, ultCostOf } from "../../core/data/agents.ts";
 import { AgentIcon, PlayerFace, TeamLogo } from "./Avatar.tsx";
 import { MAP_BY_ID } from "../../core/data/maps.ts";
 import { tacticLabel } from "../../core/data/mapplans.ts";
@@ -402,7 +402,8 @@ function LiveScoreboard({ record, state, pos }: { record: MatchRecord; state: Ga
     </div>
   );
   const row = (r: { pid: string; k: number; d: number; a: number; ult?: number; agent?: string; dead: boolean }, accent: string, teamMoney: number | null | undefined) => {
-    const ultReady = r.ult !== undefined && r.ult >= 7;
+    const ultCost = r.agent ? ultCostOf(r.agent) : 7;
+    const ultReady = r.ult !== undefined && r.ult >= ultCost;
     const agentDef = r.agent ? AGENT_BY_ID.get(r.agent) : undefined;
     return (
       <div
@@ -422,16 +423,16 @@ function LiveScoreboard({ record, state, pos }: { record: MatchRecord; state: Ga
         <span style={{ width: 26, textAlign: "center", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{r.k}</span>
         <span className="muted" style={{ width: 26, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>{r.d}</span>
         <span className="muted" style={{ width: 26, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>{r.a}</span>
-        <span style={{ width: 58, display: "flex", alignItems: "center", gap: 4 }}>
+        <span style={{ width: 58, display: "flex", alignItems: "center", gap: 4 }} title={`大招点数 ${r.ult ?? 0}/${ultCost}`}>
           {r.ult === undefined ? (
             <span className="muted" style={{ fontSize: 10 }}>—</span>
           ) : ultReady ? (
             <span title="大招就绪" style={{ color: "#fbbf24", fontSize: 12, textShadow: "0 0 6px rgba(251,191,36,0.6)" }}>◆ 就绪</span>
           ) : (
             <>
-              <span className="muted" style={{ fontVariantNumeric: "tabular-nums", fontSize: 10.5, width: 20 }}>{r.ult}/7</span>
+              <span className="muted" style={{ fontVariantNumeric: "tabular-nums", fontSize: 10.5, width: 24 }}>{r.ult}/{ultCost}</span>
               <span style={{ flex: 1, height: 4, borderRadius: 2, background: "rgba(255,255,255,0.10)", overflow: "hidden" }}>
-                <span style={{ display: "block", height: "100%", width: `${((r.ult ?? 0) / 7) * 100}%`, background: "#8b7cf6", borderRadius: 2 }} />
+                <span style={{ display: "block", height: "100%", width: `${((r.ult ?? 0) / ultCost) * 100}%`, background: "#8b7cf6", borderRadius: 2 }} />
               </span>
             </>
           )}

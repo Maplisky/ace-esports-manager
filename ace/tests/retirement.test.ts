@@ -119,6 +119,15 @@ test("教练签约：自由池签入槽位、重复签约报错", () => {
   assert.equal(s.coachPool!.length, 0);
 });
 
+test("大招点数逐特工：全员 6-8 且低点数特工先就绪", async () => {
+  const { AGENTS, ultCostOf } = await import("../src/core/data/agents.ts");
+  for (const a of AGENTS) {
+    assert.ok(a.ultCost >= 6 && a.ultCost <= 8, `${a.id} ultCost=${a.ultCost} 越界`);
+  }
+  // 自足型（芮娜 6）先于团队型（杰斯 8）就绪
+  assert.ok(ultCostOf("reyna") < ultCostOf("jett"));
+});
+
 test("名望与教练能力折算：冠军/MVP/沟通驱动", () => {
   resetPlayerSeq();
   const s = generateWorld(7);
