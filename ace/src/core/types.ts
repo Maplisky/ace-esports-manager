@@ -75,7 +75,7 @@ export interface Player {
   /** 头像（public/assets 相对路径） */
   avatar?: string;
   /** 虚拟生成标注：academy=青训补充 / free=自由池（非 vlr.gg 数据，UI 需标注） */
-  synthetic?: "academy" | "free";
+  synthetic?: "academy" | "free" | "rookie";
   age: number;
   teamId: string | null;
   attrs: PlayerAttrs;
@@ -480,6 +480,8 @@ export interface PendingEventCard {
   targetPlayerId?: string;
   day: number;
   options: PendingEventOption[];
+  /** 卡专属数据（如选秀卡携带冻结新秀 id 列表；随存档序列化） */
+  payload?: Record<string, unknown>;
 }
 
 export interface Objective {
@@ -516,6 +518,8 @@ export interface GameState {
   retireLog?: RetireLogItem[];
   /** 冠军积分账本（v1.0 国际赛资格；worker migrate 兜底） */
   circuitPoints?: Record<string, number>;
+  /** 最近一届选秀留档（v1.0-4；名人堂/生涯页数据源） */
+  lastDraft?: { year: number; picks: { pickNo: number; teamId: string; playerId: string }[] };
   /** 待答复的 AI 报价（挖角我方；7 天答复窗） */
   incomingBids: TransferOffer[];
   /** 轮换沟通豁免（本周已沟通的选手 id；周重置，每周 2 次） */

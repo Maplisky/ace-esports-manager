@@ -6,6 +6,7 @@
 import { Rng, clamp } from "../rng.ts";
 import { TRANSFER_WINDOWS } from "./transfer.ts";
 import { RETIRE_CARD_ID, resolveRetireCard } from "./retirement.ts";
+import { DRAFT_CARD_ID, resolveDraftCard } from "./draft.ts";
 import { EVENT_POOL } from "../data/events.ts";
 import type { GameState, PendingEventCard, Player, Team } from "../types.ts";
 
@@ -108,6 +109,11 @@ export function resolveEvent(state: GameState, uid: string, optionIndex: number,
   if (card.cardId === RETIRE_CARD_ID) {
     state.pendingEvents.splice(idx, 1);
     return resolveRetireCard(state, card, optionIndex, rng);
+  }
+  // 选秀卡：专属结算（新秀签约入队无法用数值效果表达）；先出队再结算
+  if (card.cardId === DRAFT_CARD_ID) {
+    state.pendingEvents.splice(idx, 1);
+    return resolveDraftCard(state, card, optionIndex);
   }
   const opt = card.options[optionIndex];
   if (!opt) return null;

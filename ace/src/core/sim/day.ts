@@ -12,6 +12,7 @@ import { aiWeeklyTransfers, resolveInquiries } from "./transfer.ts";
 import { rollPatch } from "./patch.ts";
 import { decayIntel } from "./intel.ts";
 import { seasonRetirements } from "./retirement.ts";
+import { runDraft } from "./draft.ts";
 import { refreshCommercialWeek, weeklySponsorIncome } from "./business.ts";
 import type { PlayerAttrs } from "../types.ts";
 import { simMatch } from "./match.ts";
@@ -43,6 +44,7 @@ const CALENDAR = {
   stage2End: 232,
   championsDraw: 236,
   championsGroupStart: 240,
+  draftDay: 280,
   offseasonStart: 233,
 } as const;
 
@@ -663,6 +665,9 @@ export function advanceDay(
   } else if (state.day === CALENDAR.championsDraw) {
     // Champions 年末冠军赛（v1.0-3b 真实赛制）：全年冠军积分前 16 入围
     buildChampions(state, notes);
+  } else if (state.day === CALENDAR.draftDay) {
+    // 年度选秀（v1.0-4，GDD §18-2）：休赛期联盟分发新血，倒序选人
+    runDraft(state, notes);
   }
 
   // 逾期清扫（v1.9 检错修复：PreMatch 停车期间刷新存档 → 我的比赛 day 已过、永不匹配）

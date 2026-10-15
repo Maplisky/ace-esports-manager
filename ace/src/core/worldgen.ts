@@ -187,7 +187,7 @@ function makePlayer(
   ageRange: [number, number],
   usedIgns: Set<string>,
   homegrown: boolean,
-  opts?: { ign?: string; synthetic?: "academy" | "free"; realName?: string; country?: string; avatar?: string; age?: number },
+  opts?: { ign?: string; synthetic?: "academy" | "free" | "rookie"; realName?: string; country?: string; avatar?: string; age?: number },
 ): Player {
   let ign = opts?.ign ?? "";
   if (ign) {
@@ -601,6 +601,27 @@ export function spawnFreeAgents(state: GameState, rng: Rng, count: number): void
     fa.promisedRole = "bench";
     state.players[fa.id] = fa;
   }
+}
+
+/**
+ * 生成选秀新秀池（GDD §18-2，v1.0-4）：16-18 岁联盟新血，不入队（teamId=null）。
+ * 潜力分层：基础 overall 54-66，少量「本届天才」potential 拔高到 86-94（新闻素材+叙事钩子）。
+ */
+export function spawnRookieClass(state: GameState, rng: Rng, count: number): Player[] {
+  const usedIgns = new Set(Object.values(state.players).map((p) => p.ign));
+  const rookies: Player[] = [];
+  for (let i = 0; i < count; i++) {
+    const r = makePlayer(rng, null, 1, rng.int(54, 66), rng.pick(DUTY_KEYS), false, [16, 18], usedIgns, false, { synthetic: "rookie" });
+    rookies.push(r);
+    state.players[r.id] = r;
+  }
+  // 天才分层：按潜力排序，前 ~12% 拔高（保持反垄断叙事：天才也可能被中后段顺位捡走）
+  const prodigy = Math.max(1, Math.round(count * 0.12));
+  const byPotential = rookies.slice().sort((a, b) => b.potential - a.potential);
+  for (const r of byPotential.slice(0, prodigy)) {
+    r.potential = clamp(Math.min(94, r.potential + rng.int(6, 14)), r.overall, 94);
+  }
+  return rookies;
 }
 
 /** 供测试：直接构造指定 overall 均值的队伍（平衡性基准用） */
