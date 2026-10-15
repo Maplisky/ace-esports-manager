@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useStore } from "../store.ts";
 import { generateWorld } from "../../core/worldgen.ts";
 import { REGIONS } from "../../core/sim/day.ts";
@@ -20,6 +20,22 @@ export function StartScreen() {
   const [difficulty, setDifficulty] = useState<"normal" | "hard" | "pro">("normal");
   const [talents, setTalents] = useState<Record<ManagerSkillKey, number>>(() => ({ ...TALENT_PRESETS[0]!.points }));
   const [sortBy, setSortBy] = useState<"region" | "reputation" | "payroll">("region");
+  // 种子挑战赛模式（GDD §11.5 v1.x）：挑战页带参跳转 → 锁 seed/出身/难度，过滤不符档位；开始后清除
+  const [challenge] = useState<{ id: string; name: string; seed: number; origin?: string; difficulty?: string; tier?: number; maxAge?: number } | null>(() => {
+    try {
+      const raw = localStorage.getItem("ace-challenge");
+      return raw ? (JSON.parse(raw) as never) : null;
+    } catch {
+      return null;
+    }
+  });
+  useEffect(() => {
+    if (!challenge) return;
+    setSeed(challenge.seed);
+    if (challenge.origin === "legend" || challenge.origin === "grassroots" || challenge.origin === "analyst") setOrigin(challenge.origin);
+    if (challenge.difficulty === "normal" || challenge.difficulty === "hard" || challenge.difficulty === "pro") setDifficulty(challenge.difficulty);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 预览世界：同步生成一次性只读世界（~550 人，毫秒级），换种子即刷新
   const world = useMemo(() => generateWorld(seed), [seed]);
@@ -94,6 +110,15 @@ export function StartScreen() {
         </div>
       )}
 
+      {challenge && (
+        <div className="card" style={{ borderColor: "var(--accent)" }}>
+          <b>🏁 挑战模式：{challenge.name}</b>
+          <div className="muted small" style={{ marginTop: 4 }}>
+            种子 {challenge.seed}、出身/难度已按挑战锁定{challenge.tier ? `、只能选择${challenge.tier === 2 ? "挑战者" : "VCT 合作队"}俱乐部` : ""}{challenge.maxAge ? `、名单需全员 ≤${challenge.maxAge} 岁（超龄队伍会被判不计分）` : ""}。成绩在「挑战」页查看并提交。
+          </div>
+        </div>
+      )}
+
       <div className="card">
         <h3>1 · 世界种子</h3>
         <div className="row">
@@ -101,10 +126,11 @@ export function StartScreen() {
           <input
             type="number"
             value={seed}
+            disabled={!!challenge}
             onChange={(e) => setSeed(Number(e.target.value) || 1000)}
             style={{ width: 120 }}
           />
-          <button onClick={() => setSeed(Math.floor(Math.random() * 900000) + 1000)}>随机</button>
+          <button disabled={!!challenge} onClick={() => setSeed(Math.floor(Math.random() * 900000) + 1000)}>随机</button>
           <span className="muted small">同一种子 = 同一个联盟（选手与属性完全一致）</span>
         </div>
       </div>
@@ -183,7 +209,12 @@ export function StartScreen() {
             { key: "hard", label: "困难", desc: "AI 每场侦察你（针对加成 +0.44）· AI 一级队每周 +$6K 补贴" },
             { key: "pro", label: "职业", desc: "AI 深度侦察（+0.88）· BP 读图噪声减半（±3）· AI 每周 +$12K" },
           ] as const).map((d) => (
-            <div key={d.key} className={`teamcard${difficulty === d.key ? " sel" : ""}`} onClick={() => setDifficulty(d.key)}>
+            <div
+              key={d.key}
+              className={`teamcard${difficulty === d.key ? " sel" : ""}${challenge?.difficulty && challenge.difficulty !== d.key ? " muted" : ""}`}
+              onClick={() => { if (!challenge?.difficulty) setDifficulty(d.key); }}
+              style={challenge?.difficulty && challenge.difficulty !== d.key ? { opacity: 0.4, pointerEvents: "none" } : undefined}
+            >
               <b>{d.label}</b>
               <div className="muted small" style={{ marginTop: 6 }}>{d.desc}</div>
             </div>
@@ -194,12 +225,19 @@ export function StartScreen() {
       <div className="row" style={{ marginTop: 14 }}>
         <button
           className="primary"
-          disabled={!selected || !origin || busy}
-          onClick={() => selected && origin && void newGame(seed, selected, origin, difficulty, talents)}
+          disabled={!selected || !origin || busy || (!!challenge?.tier && !!selected && teams.find((t) => t.id === selected)?.tier !== challenge.tier)}
+          onClick={() => {
+            if (!selected || !origin) return;
+            if (challenge?.tier && teams.find((t) => t.id === selected)?.tier !== challenge.tier) return;
+            try { if (challenge) localStorage.removeItem("ace-challenge"); } catch { /* 忽略 */ }
+            void newGame(seed, selected, origin, difficulty, talents);
+          }}
         >
-          {busy ? "生成世界中…" : "开始职业生涯 →"}
+          {busy ? "生成世界中…" : challenge ? "开始挑战 →" : "开始职业生涯 →"}
         </button>
-        <span className="muted small">出身决定起步资源与声望；下课、跳槽与名人堂在生涯中等着你。</span>
+        <span className="muted small">
+          {challenge ? "挑战参数已锁定；开局后到「挑战」页查看成绩与提交。" : "出身决定起步资源与声望；下课、跳槽与名人堂在生涯中等着你。"}
+        </span>
       </div>
     </div>
   );

@@ -89,7 +89,7 @@
 
 ## v1.x 候选池（§13/§18）
 
-- **种子挑战赛**（发布后第一个运营活动，GDD §11.5 v2.5）：官方 seed+约束经静态 JSON 下发，本地确定性演算，成绩以回放链接为凭证——零服务端模拟，规模 S~M
+- **种子挑战赛**：✅ 引擎落地（2026-10-16，180/180；激活待发布）——core/sim/challenge.ts（挑战包解析校验/开局约束 validateChallengeStart 种子·档位·出身·难度·年龄/成绩演算 titles·circuit+完赛判定/challengeReport 摘要）+ 官方示例包 public/challenges/c-2026-01.json（青春风暴：t2 草草出身 U22 一赛季比冠军数）+ 挑战页（包列表/开始挑战锁参开档/成绩与复制摘要——回放链接凭证走分享面板）+ StartScreen 挑战模式（锁 seed/出身/难度、档位过滤、横幅）；tests/challenge.test.ts 5 项。部署工作流 .github/workflows/deploy-pages.yml 就位（push 到 main + 仓库 Pages 选 Actions 即上线——**启用与推送等用户确认发布形态**）
 - 集锦海报（§9.4；回放链接已提发布线 v1.0-12，海报仍留此）
 - 挑战剧本（§18-7：全青训夺冠 / 全年零转会 / 次级队十年一城 / 仅 U24——成就判定复用 v1.0-10）
 - 异步 PvP 联赛 / Steam 创意工坊（自定义联盟/选手包）/ 解说语音 TTS

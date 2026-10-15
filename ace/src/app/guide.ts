@@ -7,7 +7,7 @@ import type { GameState } from "../core/types.ts";
 
 export type GuidePage =
   | "overview" | "schedule" | "squad" | "tactics" | "training" | "finance" | "business"
-  | "transfer" | "manager" | "achievements" | "career" | "library" | "replays" | "system";
+  | "transfer" | "manager" | "achievements" | "career" | "library" | "replays" | "challenge" | "system";
 
 /** 解锁日（当年第 N 天；GDD §9.1：D8 转会 → D12 商务 → D20 情报全开。
  *  v1.2 修订：训练页 D1 即开——GDD §3 First 30 Minutes 要求开局 10 分钟内排第一周课表，与原 D4 解锁冲突，以 §3 为准） */
@@ -21,6 +21,7 @@ export const UNLOCK_DAYS: Record<GuidePage, number> = {
   finance: 1,
   library: 1,
   replays: 1,
+  challenge: 1,
   transfer: 8,
   business: 12,
   manager: 12,

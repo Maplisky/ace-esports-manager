@@ -1,0 +1,14 @@
+{
+  "id": "C-2026-01",
+  "name": "青春风暴",
+  "desc": "次级联赛草根出身，接手一支挑战者俱乐部，只用 22 岁以下的年轻人打一个赛季——看能拿几座冠军。全员同种子同世界，冠军数论英雄。",
+  "seed": 880042,
+  "seasons": 1,
+  "goal": "titles",
+  "constraints": {
+    "origin": "grassroots",
+    "difficulty": "normal",
+    "tier": 2,
+    "maxAge": 22
+  }
+}

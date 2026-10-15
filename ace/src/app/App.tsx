@@ -11,6 +11,7 @@ import { TrainingPage } from "./components/Training.tsx";
 import { FinancePage } from "./components/FinancePage.tsx";
 import { LibraryPage } from "./components/LibraryPage.tsx";
 import { ReplaysPage } from "./components/ReplaysPage.tsx";
+import { ChallengePage } from "./components/ChallengePage.tsx";
 import { BusinessPage } from "./components/Business.tsx";
 import { ManagerPage } from "./components/Manager.tsx";
 import { CareerPage } from "./components/Career.tsx";
@@ -25,7 +26,7 @@ import { cashFlowForecast } from "../core/sim/finance.ts";
 import { ErrorBoundary } from "./components/ErrorBoundary.tsx";
 import { EventCardModal } from "./components/EventCards.tsx";
 
-const PAGES: { key: "overview" | "schedule" | "squad" | "tactics" | "training" | "finance" | "business" | "transfer" | "manager" | "achievements" | "career" | "library" | "replays" | "system"; label: string }[] = [
+const PAGES: { key: "overview" | "schedule" | "squad" | "tactics" | "training" | "finance" | "business" | "transfer" | "manager" | "achievements" | "career" | "library" | "replays" | "challenge" | "system"; label: string }[] = [
   { key: "overview", label: "总览" },
   { key: "schedule", label: "赛程" },
   { key: "squad", label: "阵容" },
@@ -39,6 +40,7 @@ const PAGES: { key: "overview" | "schedule" | "squad" | "tactics" | "training" |
   { key: "career", label: "名人堂" },
   { key: "library", label: "资料库" },
   { key: "replays", label: "回放" },
+  { key: "challenge", label: "挑战" },
   { key: "system", label: "系统" },
 ];
 
@@ -181,6 +183,7 @@ export function App() {
           {page === "finance" && <FinancePage state={state} />}
           {page === "library" && <LibraryPage state={state} />}
           {page === "replays" && <ReplaysPage state={state} records={records} />}
+          {page === "challenge" && <ChallengePage state={state} />}
           {page === "transfer" && <TransferPage state={state} />}
           {page === "business" && <BusinessPage state={state} />}
           {page === "manager" && <ManagerPage state={state} />}

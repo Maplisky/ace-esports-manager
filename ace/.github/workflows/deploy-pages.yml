@@ -1,0 +1,42 @@
+# GitHub Pages 部署（v1.0-13 就绪件）：push 到 main 即构建部署。
+# 启用步骤（一次性，仓库管理员操作）：Settings → Pages → Source 选「GitHub Actions」。
+# 本文件只做构建与部署，不含任何密钥；base './' 已在 vite.config.ts 就绪（子路径可部署）。
+name: deploy-pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm ci
+        working-directory: ace
+      - run: npm run build
+        working-directory: ace
+      - run: node gen-map-preview.mjs
+        working-directory: ace
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ace/dist
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
