@@ -6,7 +6,7 @@
  * 一切随机走显式 Rng；确定性约定不变。
  */
 import { clamp, hashString, Rng } from "../rng.ts";
-import type { CoachFreeAgent, GameState, PendingEventCard, Player, RetireLogItem, Team, TransferFeedItem } from "../types.ts";
+import type { CoachFreeAgent, GameState, PendingEventCard, Player, RetireLogItem, TransferFeedItem } from "../types.ts";
 
 /** 名望折算（GDD §8.3：MVP/冠军/实力） */
 export function fameOf(p: Player): number {
@@ -17,10 +17,6 @@ export function fameOf(p: Player): number {
 export function coachValueOf(p: Player): number {
   const fame = fameOf(p);
   return clamp(Math.round(p.attrs.communication * 0.5 + fame * 0.2 + p.career.titles * 3 + p.career.mvps * 1.2 + (p.isIgl ? 6 : 0)), 25, 95);
-}
-
-export function coachValueText(c: CoachFreeAgent): string {
-  return `${c.name}（沟通 ${c.comm} · 名望 ${c.fame} · 冠军 ${c.titles}）`;
 }
 
 /** 退役检定概率（GDD §6.5）：clamp(0.08+(age−29)×0.06+下滑×0.04−冠军×0.03−(野心−50)×0.002, 0.02, 0.85) */
