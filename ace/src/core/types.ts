@@ -509,6 +509,20 @@ export interface GameState {
     skills: Record<string, number>;
     /** 个人生活（v0.5-5 教练个人经济）：钱包/饱腹/心情，只影响经理自身效率 */
     life: { wallet: number; hunger: number; mood: number };
+    /** 生涯账本（v1.0-6，GDD §9.5）：下课/名人堂/五年之约的数据源 */
+    career?: {
+      startYear: number;
+      seasons: number;
+      titles: number; // 经理冠军数（联赛+国际赛）
+      wins: number;
+      losses: number;
+      loseStreak: number; // 当前连败（下课触发器）
+      warned: boolean; // 董事会已警告（信任 ≤20 后置位）
+      /** 出身（开档 3 选 1）：legend=前豪门名宿 / grassroots=次级草根 / analyst=数据分析师 */
+      origin?: "legend" | "grassroots" | "analyst";
+      /** 终局（下课/收官/强制退休）：写入后 App 停止推进并显示结局卡 */
+      ending?: { kind: "fired" | "retired" | "hall" | "contract"; year: number; day: number };
+    };
   };
   /** 转会动态（最近 300 条） */
   transferFeed: TransferFeedItem[];

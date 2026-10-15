@@ -5,7 +5,7 @@ import { loadGame, saveGame, type SavedGame } from "./save.ts";
 import type { PreMatchResult } from "./components/PreMatch.tsx";
 
 type Screen = "start" | "main";
-type Page = "overview" | "schedule" | "squad" | "tactics" | "training" | "transfer" | "business" | "manager";
+type Page = "overview" | "schedule" | "squad" | "tactics" | "training" | "transfer" | "business" | "manager" | "career";
 
 export interface NegotiationState {
   offer: TransferOffer;
@@ -44,7 +44,7 @@ interface AppStore {
   negotiation: NegotiationState | null;
 
   boot: () => Promise<void>;
-  newGame: (seed: number, teamId: string) => Promise<void>;
+  newGame: (seed: number, teamId: string, origin?: "legend" | "grassroots" | "analyst") => Promise<void>;
   continueGame: () => Promise<void>;
   advance: () => Promise<void>;
   advanceToNextMatch: () => Promise<void>;
@@ -81,6 +81,8 @@ interface AppStore {
   managerLife: (kind: "meal" | "feast" | "fun") => Promise<void>;
   upgradeFacility: () => Promise<void>;
   signCoach: (coachId: string, slot: "training" | "mapTactics" | "match") => Promise<string | null>;
+  /** 跳槽申请（v1.0-6，GDD §9.5）：休赛期教练市场 */
+  applyJob: (teamId: string) => Promise<void>;
   promoteFromAcademy: (pid: string, outId: string | null) => Promise<void>;
 }
 
@@ -159,10 +161,10 @@ export const useStore = create<AppStore>((set, get) => ({
     set({ hasSave: saved !== null, ready: true });
   },
 
-  newGame: async (seed, teamId) => {
+  newGame: async (seed, teamId, origin) => {
     set({ busy: true });
     records = {};
-    await call({ type: "new", seed, teamId });
+    await call({ type: "new", seed, teamId, origin });
     const snap = await call<{ state: GameState; records: Record<string, MatchRecord> }>({ type: "getSnapshot" });
     records = snap.records;
     await persist(snap.state);
@@ -401,6 +403,14 @@ export const useStore = create<AppStore>((set, get) => ({
     const res = await call<{ state: GameState; error?: string }>({ type: "signCoach", coachId, slot });
     set({ state: res.state });
     return res.error ?? null;
+  },
+
+  applyJob: async (teamId) => {
+    set({ busy: true });
+    const res = await call<{ state: GameState; records: Record<string, MatchRecord>; notes: string[] }>({ type: "applyJob", teamId });
+    records = res.records;
+    await persist(res.state);
+    set({ state: res.state, records, notes: res.notes, busy: false });
   },
 
   upgradeFacility: async () => {

@@ -13,6 +13,7 @@ import { rollPatch } from "./patch.ts";
 import { decayIntel } from "./intel.ts";
 import { seasonRetirements } from "./retirement.ts";
 import { runDraft } from "./draft.ts";
+import { noteMatchResult, careerWeeklyTick, noteManagerTitle, checkCareerMilestone } from "./career.ts";
 import { refreshCommercialWeek, weeklySponsorIncome } from "./business.ts";
 import type { PlayerAttrs } from "../types.ts";
 import { simMatch } from "./match.ts";
@@ -597,12 +598,15 @@ function settleFinal(state: GameState, f: { comp: string; label: string; teamA: 
   }
   const compName = f.comp === "masters" ? "Masters 国际赛" : f.comp === "champions" ? "Champions 世界冠军赛" : "揭幕杯";
   notes.push({ day: state.day, kind: "league", important: true, text: `🏆 ${champTeam.name} 夺得${compName}冠军！` });
+  noteManagerTitle(state, champ); // 经理生涯冠军计数（v1.0-6）
   if (f.comp !== "champions") awardCupCircuitPoints(state, f.comp as "cup" | "masters", notes, champ);
 }
 
-function awardLeagueTitle(state: GameState, compKey: string, notes: NewsItem[]): void {  const table = sortedTable(state, compKey);
+function awardLeagueTitle(state: GameState, compKey: string, notes: NewsItem[]): void {
+  const table = sortedTable(state, compKey);
   const champ = table[0]?.teamId;
   if (!champ) return;
+  noteManagerTitle(state, champ); // 经理生涯冠军计数（v1.0-6）
   // 冠军积分（v1.0 国际赛资格）：仅 t1 合作联赛计入（挑战者不计）
   if (/t1$/.test(compKey)) awardLeagueCircuitPoints(state, compKey);
   for (const pid of (state.teams[champ] as GameState["teams"][string]).roster) {
@@ -701,6 +705,7 @@ export function advanceDay(
     const line = `${f.label}（补赛）｜${tagA} ${rec.score[0]}-${rec.score[1]} ${tagB}`;
     notes.push({ day: state.day, kind: "match", text: line, important: mine });
     if (mine) playedMine.push(f.id); // 逾期补赛同样计入我的比赛
+    if (mine) noteMatchResult(state, (rec.winner === "A" ? f.teamA : f.teamB) === state.myTeamId, notes);
     settleFinal(state, f, rec, notes);
   }
 
@@ -731,6 +736,7 @@ export function advanceDay(
     const line = `${f.label}｜${tagA} ${rec.score[0]}-${rec.score[1]} ${tagB}`;
     notes.push({ day: state.day, kind: "match", text: line, important: mine });
     if (mine) playedMine.push(f.id);
+    if (mine) noteMatchResult(state, (rec.winner === "A" ? f.teamA : f.teamB) === state.myTeamId, notes);
     settleFinal(state, f, rec, notes);
   }
 
@@ -748,6 +754,7 @@ export function advanceDay(
   // 周结算
   if (state.day % 7 === 0) {
     weeklyTick(state, rng);
+    careerWeeklyTick(state, notes); // 下课检查（v1.0-6：信任谷底/警告）
     refreshCommercialWeek(state, rng);
     decayIntel(state); // 情报过时衰减（GDD §7.2）
     // 轮换沟通周重置（GDD §6.4②：每周 2 次，跨周清空豁免名单）
@@ -847,6 +854,8 @@ export function advanceDay(
     initSeasonFixtures(state);
     // 冠军积分年度清零（v1.0-3b）：Champions 落幕即赛季积分周期结束，新年从零竞逐
     state.circuitPoints = {};
+    // 生涯里程碑（v1.0-6，GDD §9.5）：五年之约 / 第 10 年强制退休
+    checkCareerMilestone(state, notes);
     // 退役检定与劝留（v1.0-1，GDD §6.5/§8.3）：本队出劝留对话卡，AI 自动决策+补位+签教练
     // 休赛期自由市场补强（GDD §6.5）：按队伍规模等比（18 队 8-12 名，36 队 16-24 名）
     const faRng = new Rng((state.seed ^ Math.imul(state.year, 0x5f5f)) >>> 0);
@@ -914,6 +923,7 @@ export function playHeldMatch(
   const tagB = (state.teams[f.teamB] as GameState["teams"][string]).tag;
   notes.push({ day: state.day, kind: "match", text: `${f.label}｜${tagA} ${rec.score[0]}-${rec.score[1]} ${tagB}`, important: true });
   onMatch?.(rec, f.id, true);
+  noteMatchResult(state, rec.winner === "A" ? f.teamA === state.myTeamId : f.teamB === state.myTeamId, notes); // 赛前准备路径同样入账（v1.0-6）
   settleFinal(state, f, rec, notes); // 赛前准备路径同样结算冠军/积分（v1.0-3b 检错：此前漏发冠军积分）
   for (const n of notes) {
     state.news.push(n);

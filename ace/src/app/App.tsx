@@ -8,6 +8,7 @@ import { TacticsPage } from "./components/Tactics.tsx";
 import { TrainingPage } from "./components/Training.tsx";
 import { BusinessPage } from "./components/Business.tsx";
 import { ManagerPage } from "./components/Manager.tsx";
+import { CareerPage } from "./components/Career.tsx";
 import { TransferPage } from "./components/Transfer.tsx";
 import { MatchPlayer } from "./components/MatchPlayer.tsx";
 import { PreMatch } from "./components/PreMatch.tsx";
@@ -15,7 +16,7 @@ import { REGIONS } from "../core/sim/day.ts";
 import { ErrorBoundary } from "./components/ErrorBoundary.tsx";
 import { EventCardModal } from "./components/EventCards.tsx";
 
-const PAGES: { key: "overview" | "schedule" | "squad" | "tactics" | "training" | "business" | "transfer" | "manager"; label: string }[] = [
+const PAGES: { key: "overview" | "schedule" | "squad" | "tactics" | "training" | "business" | "transfer" | "manager" | "career"; label: string }[] = [
   { key: "overview", label: "总览" },
   { key: "schedule", label: "赛程" },
   { key: "squad", label: "阵容" },
@@ -24,6 +25,7 @@ const PAGES: { key: "overview" | "schedule" | "squad" | "tactics" | "training" |
   { key: "business", label: "商务" },
   { key: "transfer", label: "转会" },
   { key: "manager", label: "经理" },
+  { key: "career", label: "名人堂" },
 ];
 
 export function App() {
@@ -41,6 +43,34 @@ export function App() {
     (f) => !f.played && f.teamA !== "" && f.teamB !== "" && (f.teamA === state.myTeamId || f.teamB === state.myTeamId),
   );
   const viewerRecord = viewerFixtureId ? records[viewerFixtureId] : null;
+  const ending = state.manager.career?.ending;
+
+  // 生涯终局（v1.0-6，GDD §9.5）：下课/退休/名人堂收官 → 结局卡覆盖主界面，推进停止
+  if (ending) {
+    const c = state.manager.career!;
+    const total = c.wins + c.losses;
+    const wr = total > 0 ? ((c.wins / total) * 100).toFixed(1) : "—";
+    const kindText = ending.kind === "fired" ? "🔻 光荣不再：你被解除了主帅职务" : ending.kind === "retired" ? "🎖 十年执教期满，光荣退休" : "📜 五年之约，传奇谢幕";
+    return (
+      <div style={{ maxWidth: 720, margin: "0 auto", padding: "48px 20px" }}>
+        <div className="card" style={{ textAlign: "center" }}>
+          <h2>{kindText}</h2>
+          <div className="muted" style={{ margin: "10px 0" }}>
+            {state.manager.name} · {c.startYear}–{ending.year} · {c.seasons} 个赛季
+          </div>
+          <div className="row" style={{ justifyContent: "center", gap: 22, fontSize: 18, margin: "18px 0" }}>
+            <span>🏆 冠军 <b>{c.titles}</b></span>
+            <span>⚔️ 战绩 <b>{c.wins}胜{c.losses}负</b>（{wr}%）</span>
+            <span>💼 个人存款 <b>${((state.manager.life.wallet ?? 0) / 1000).toFixed(0)}K</b></span>
+          </div>
+          <div className="muted small" style={{ margin: "12px 0 20px" }}>
+            {c.titles >= 3 ? "名人堂评价：王朝缔造者。" : c.titles >= 1 ? "名人堂评价：冠军教头。" : total > 0 && c.wins / total >= 0.55 ? "名人堂评价：稳定器与 rebuilding 大师。" : "名人堂评价：路还长，江湖再见。"}
+          </div>
+          <button className="primary" onClick={() => location.reload()}>开始新的职业生涯</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -83,6 +113,7 @@ export function App() {
           {page === "transfer" && <TransferPage state={state} />}
           {page === "business" && <BusinessPage state={state} />}
           {page === "manager" && <ManagerPage state={state} />}
+          {page === "career" && <CareerPage state={state} />}
         </main>
       </div>
 

@@ -7,6 +7,7 @@ import { Rng, clamp } from "../rng.ts";
 import { TRANSFER_WINDOWS } from "./transfer.ts";
 import { RETIRE_CARD_ID, resolveRetireCard } from "./retirement.ts";
 import { DRAFT_CARD_ID, resolveDraftCard } from "./draft.ts";
+import { MILESTONE_CARD_ID, resolveMilestoneCard } from "./career.ts";
 import { EVENT_POOL } from "../data/events.ts";
 import type { GameState, PendingEventCard, Player, Team } from "../types.ts";
 
@@ -114,6 +115,11 @@ export function resolveEvent(state: GameState, uid: string, optionIndex: number,
   if (card.cardId === DRAFT_CARD_ID) {
     state.pendingEvents.splice(idx, 1);
     return resolveDraftCard(state, card, optionIndex);
+  }
+  // 生涯里程碑卡（五年之约）：先出队再结算
+  if (card.cardId === MILESTONE_CARD_ID) {
+    state.pendingEvents.splice(idx, 1);
+    return resolveMilestoneCard(state, card, optionIndex);
   }
   const opt = card.options[optionIndex];
   if (!opt) return null;

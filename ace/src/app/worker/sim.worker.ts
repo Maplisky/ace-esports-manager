@@ -3,6 +3,7 @@ import { generateWorld, resetPlayerSeq, salaryFor, spawnFreeAgents, migrateMapsT
 import { initSeasonFixtures, advanceDay, playHeldMatch, migrateLegacyComps } from "../../core/sim/day.ts";
 import { resolveEvent } from "../../core/sim/events.ts";
 import { signCoach } from "../../core/sim/retirement.ts";
+import { initCareer, applyJob } from "../../core/sim/career.ts";
 import { startNegotiation, reNegotiate, finalizeOffer, completeTransfer, releasePlayer, inTransferWindow, graceRemain, askInquiry } from "../../core/sim/transfer.ts";
 import { signSponsorOffer, cancelSponsorById, acceptGig, declineGig, signStream, cancelStream } from "../../core/sim/business.ts";
 import { Rng, hashString } from "../../core/rng.ts";
@@ -28,6 +29,7 @@ function snapshot() {
 
 function doAdvance(maxDays = 1): void {
   if (!state) return;
+  if (state.manager.career?.ending) return; // 生涯终局（v1.0-6）：下课/退休后世界冻结
   const notes: string[] = [];
   const playedMine: string[] = [];
   let seasonEnded = false;
@@ -77,6 +79,8 @@ function migrate(state: GameState): GameState {
     life: { wallet: 2000, hunger: 80, mood: 70 },
   };
   state.manager.life ??= { wallet: 2000, hunger: 80, mood: 70 };
+  // v1.0-6 旧档补生涯账本：从当前赛季起算（不出身加成、不追溯历史战绩）
+  state.manager.career ??= { startYear: state.year, seasons: 1, titles: 0, wins: 0, losses: 0, loseStreak: 0, warned: false, origin: "grassroots" };
   state.trainingMaps ??= ["ascent"];
   state.schedules ??= {};
   for (const p of Object.values(state.players)) {
@@ -147,7 +151,22 @@ function handleWorkerMessage(e: MessageEvent) {
     state.myTeamId = msg.teamId as string;
     records = {};
     initSeasonFixtures(state);
+    // 出身 3 选 1（v1.0-6，GDD §9.5）：声望/技能/资源差异
+    const origin = msg.origin as "legend" | "grassroots" | "analyst" | undefined;
+    initCareer(state, origin ?? "grassroots");
     reply({ type: "ready", ...snapshot() });
+  } else if (type === "applyJob") {
+    // 跳槽申请（v1.0-6，GDD §9.5）：声望+荣誉+门下弟子加成，成功即切换俱乐部
+    if (!state) return;
+    const notes: { day: number; kind: string; text: string; important?: boolean }[] = [];
+    const r = applyJob(state, msg.teamId as string, new Rng((state.seed ^ Math.imul(state.day, 0x1f2e3d)) >>> 0), notes as never);
+    for (const n of notes) state.news.push({ day: n.day, kind: n.kind as never, text: n.text, important: n.important });
+    while (state.news.length > 400) {
+      const idx = state.news.findIndex((x) => !x.important);
+      if (idx < 0) break;
+      state.news.splice(idx, 1);
+    }
+    reply({ type: "snapshot", ...snapshot(), notes: [r.text] });
   } else if (type === "load") {
     const saved = msg.save as SavedPayload;
     state = migrate(saved.state);

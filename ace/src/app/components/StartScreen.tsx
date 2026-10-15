@@ -2,12 +2,14 @@ import { useMemo, useState } from "react";
 import { useStore } from "../store.ts";
 import { generateWorld } from "../../core/worldgen.ts";
 import { REGIONS } from "../../core/sim/day.ts";
+import { ORIGINS } from "../../core/sim/career.ts";
 import { TeamLogo } from "./Avatar.tsx";
 
 export function StartScreen() {
   const { hasSave, newGame, continueGame, busy } = useStore();
   const [seed, setSeed] = useState(() => Math.floor(Math.random() * 900000) + 1000);
   const [selected, setSelected] = useState<string | null>(null);
+  const [origin, setOrigin] = useState<"legend" | "grassroots" | "analyst" | null>(null);
 
   // 预览世界：同步生成一次性只读世界（~550 人，毫秒级），换种子即刷新
   const world = useMemo(() => generateWorld(seed), [seed]);
@@ -88,15 +90,27 @@ export function StartScreen() {
         ))}
       </div>
 
+      <div className="card">
+        <h3>3 · 教练出身（随机 3 选 1）</h3>
+        <div className="startgrid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))" }}>
+          {ORIGINS.map((o) => (
+            <div key={o.key} className={`teamcard${origin === o.key ? " sel" : ""}`} onClick={() => setOrigin(o.key)}>
+              <b>{o.label}</b>
+              <div className="muted small" style={{ marginTop: 6 }}>{o.desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <div className="row" style={{ marginTop: 14 }}>
         <button
           className="primary"
-          disabled={!selected || busy}
-          onClick={() => selected && void newGame(seed, selected)}
+          disabled={!selected || !origin || busy}
+          onClick={() => selected && origin && void newGame(seed, selected, origin)}
         >
           {busy ? "生成世界中…" : "开始职业生涯 →"}
         </button>
-        <span className="muted small">全部俱乐部开放选择（声望门槛与出身系统在后续版本加入）</span>
+        <span className="muted small">出身决定起步资源与声望；下课、跳槽与名人堂在生涯中等着你。</span>
       </div>
     </div>
   );
