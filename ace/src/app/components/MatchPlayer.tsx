@@ -60,6 +60,39 @@ export function MatchPlayer(props: {
   const [shareOpen, setShareOpen] = useState(false); // v1.0-12 分享面板
   const [shareAnon, setShareAnon] = useState(true); // 匿名化默认开（版权暴露面可控，§14）
   const [shareUrl, setShareUrl] = useState("");
+  // 分享面板（v1.0-12，GDD §9.4）：回放中与终局结算页共用——赛后从赛程重开回放也要能分享
+  const shareSection = shareOpen && (
+    <div className="card" style={{ margin: "10px 0", padding: "10px 14px", textAlign: "left" }}>
+      <b>🔗 分享这场回放</b>
+      <div className="muted small" style={{ margin: "6px 0" }}>
+        链接包含完整比赛记录（压缩编码，无需存档即可观看）。匿名化导出会把真实选手与队名替换为虚构名，建议公开分享时保持开启。
+      </div>
+      <label className="row small" style={{ gap: 6, margin: "6px 0" }}>
+        <input type="checkbox" checked={shareAnon} onChange={(e) => { setShareAnon(e.target.checked); setShareUrl(""); }} />
+        匿名化（隐藏真实选手/战队名）
+      </label>
+      <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
+        <button
+          className="primary small"
+          onClick={() => {
+            void (async () => {
+              const payload = buildReplayPayload(state, record);
+              const final = shareAnon ? anonymizeReplay(payload) : payload;
+              const url = await shareLinkOf(final);
+              setShareUrl(url);
+              try {
+                await navigator.clipboard.writeText(url);
+              } catch { /* 无剪贴板权限时仅展示 */ }
+            })();
+          }}
+        >
+          生成链接（自动复制）
+        </button>
+        {shareUrl && <span className="muted small">✅ 链接已复制（{(shareUrl.length / 1024).toFixed(1)}KB）</span>}
+      </div>
+      {shareUrl && <div className="muted small" style={{ marginTop: 6, wordBreak: "break-all", maxHeight: 60, overflowY: "auto" }}>{shareUrl}</div>}
+    </div>
+  );
   const iglHandled = useRef<Set<string>>(new Set());
   const finishedNotified = useRef(false);
   const awaitingRecord = useRef(false); // 干预后暂停，新 Record 到位再续播
@@ -367,7 +400,12 @@ export function MatchPlayer(props: {
                 <button className="primary" style={{ marginTop: 12 }} onClick={onClose}>
                   关闭回放
                 </button>
+                <div style={{ marginTop: 8 }}>
+                  <button className="small" onClick={() => { setShareOpen((o) => !o); setShareUrl(""); }}>🔗 分享回放</button>
+                </div>
               </div>
+
+              {shareSection}
 
               {/* 页签：系列赛汇总 / 单图数据（单图页含特工头像） */}
               {hasSeries && (
@@ -499,39 +537,8 @@ export function MatchPlayer(props: {
               <button className="ghost" onClick={onClose}>关闭 ✕</button>
             </div>
 
-            {/* 分享面板（v1.0-12，GDD §9.4）：回放链接 + 匿名化开关（默认开，§14 版权暴露面） */}
-            {shareOpen && (
-              <div className="card" style={{ margin: "10px 0", padding: "10px 14px", textAlign: "left" }}>
-                <b>🔗 分享这场回放</b>
-                <div className="muted small" style={{ margin: "6px 0" }}>
-                  链接包含完整比赛记录（压缩编码，无需存档即可观看）。匿名化导出会把真实选手与队名替换为虚构名，建议公开分享时保持开启。
-                </div>
-                <label className="row small" style={{ gap: 6, margin: "6px 0" }}>
-                  <input type="checkbox" checked={shareAnon} onChange={(e) => { setShareAnon(e.target.checked); setShareUrl(""); }} />
-                  匿名化（隐藏真实选手/战队名）
-                </label>
-                <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
-                  <button
-                    className="primary small"
-                    onClick={() => {
-                      void (async () => {
-                        const payload = buildReplayPayload(state, record);
-                        const final = shareAnon ? anonymizeReplay(payload) : payload;
-                        const url = await shareLinkOf(final);
-                        setShareUrl(url);
-                        try {
-                          await navigator.clipboard.writeText(url);
-                        } catch { /* 无剪贴板权限时仅展示 */ }
-                      })();
-                    }}
-                  >
-                    生成链接（自动复制）
-                  </button>
-                  {shareUrl && <span className="muted small">✅ 链接已复制（{(shareUrl.length / 1024).toFixed(1)}KB）</span>}
-                </div>
-                {shareUrl && <div className="muted small" style={{ marginTop: 6, wordBreak: "break-all", maxHeight: 60, overflowY: "auto" }}>{shareUrl}</div>}
-              </div>
-            )}
+            {/* 分享面板（v1.0-12，GDD §9.4）：见 shareSection 定义处 */}
+            {shareSection}
 
             {/* 情境化暂停战术菜单（v1.0-8，GDD §5.4）：按攻防方×经济×大招状态过滤 */}
             {menuOpen && (

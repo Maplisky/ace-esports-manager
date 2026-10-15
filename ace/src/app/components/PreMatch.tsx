@@ -262,6 +262,21 @@ export function PreMatch(props: {
           ))}
         </div>
 
+        {/* 教学脚本局（v1.0-11，§3 首战必看）：生涯首场带 +8 优势，不计生涯与成就。
+            标志在 playHeldMatch 才置位（开赛后），进场时用同一纯谓词兜底——否则横幅永远赶不上 */}
+        {(state.fixtures.find((f) => f.id === props.fixtureId)?.tutorial ||
+          (() => {
+            const c = state.manager.career;
+            return !!c && !c.tutorialDone && c.seasons <= 1 && c.wins + c.losses === 0;
+          })()) && (
+          <div className="card" style={{ padding: "8px 14px", marginBottom: 10, borderColor: "var(--accent)" }}>
+            <b>🎓 教学局</b>
+            <span className="muted small" style={{ marginLeft: 8 }}>
+              你的执教首秀——球队斗志昂扬（场上 +8 优势），结果不计入生涯统计与成就。观战前三回合不可跳过，试着喊一次战术。
+            </span>
+          </div>
+        )}
+
         {step === 0 && (
           <div>
             <table>
@@ -406,15 +421,7 @@ export function PreMatch(props: {
   const oppStarters = opp.starters.map((id) => state.players[id]).filter((x): x is Player => !!x);
   return (
     <div>
-      {/* 教学脚本局（v1.0-11，§3 首战必看）：生涯首场带 +8 优势，不计生涯与成就 */}
-      {state.fixtures.find((f) => f.id === props.fixtureId)?.tutorial && (
-        <div className="card" style={{ padding: "8px 14px", marginBottom: 10, borderColor: "var(--accent)" }}>
-          <b>🎓 教学局</b>
-          <span className="muted small" style={{ marginLeft: 8 }}>
-            你的执教首秀——球队斗志昂扬（场上 +8 优势），结果不计入生涯统计与成就。观战前三回合不可跳过，试着喊一次战术。
-          </span>
-        </div>
-      )}
+      {/* 对方常用阵容（该图情报 >0 时展示：对手首发的常用英雄）*/}
       {/* 顶端：地图信息条 */}
       <div className="card" style={{ padding: "10px 16px", marginBottom: 10 }}>
         <div className="row" style={{ justifyContent: "space-between", alignItems: "center" }}>

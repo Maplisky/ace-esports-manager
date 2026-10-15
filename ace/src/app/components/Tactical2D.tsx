@@ -71,10 +71,18 @@ export function Tactical2D(props: {
     const zid = zoneOf.get(pc.pid)!;
     const slot = slotCount.get(zid) ?? 0;
     slotCount.set(zid, slot + 1);
-    posOf.set(pc.pid, positionFor(mapRec.map, {
+    const p = positionFor(mapRec.map, {
       duty: dutyOf(pc.pid), isAttacking: atkSide === pc.side, roundN, pid: pc.pid,
       side: pc.canvas, tactic: atkSide === pc.side ? tacticAtk : tacticDef, slot,
-    }));
+    });
+    // 渲染层钳制：positionFor 的 22px 最小网格单元会越出窄框缘落到图外虚空——
+    // 钳进区域框（内缩 9px≈棋子半径）；事件移动与碰撞松弛随后接管（核心公式与间距契约不动）
+    const zr = plan?.zones.find((z) => z.id === zid);
+    if (zr) {
+      p.x = Math.max(zr.x + 9, Math.min(zr.x + zr.w - 9, p.x));
+      p.y = Math.max(zr.y + 9, Math.min(zr.y + zr.h - 9, p.y));
+    }
+    posOf.set(pc.pid, p);
   }
   // 事件序列位姿模拟（逐事件推进）：击杀者扑向受害者位置（交火发生在受害者处），
   // 击杀者存活队友小步靠拢交火点（小规模接触的观感），
