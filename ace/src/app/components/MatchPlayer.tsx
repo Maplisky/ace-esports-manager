@@ -10,7 +10,8 @@ import { MAP_BY_ID } from "../../core/data/maps.ts";
 import { tacticLabel } from "../../core/data/mapplans.ts";
 import { Tactical2D } from "./Tactical2D.tsx";
 import { liveLines, liveMeta, summarizeMatch, pickMvps, type StatRow } from "../../core/sim/matchstats.ts";
-import type { GameState, MatchRecord, RoundEvent } from "../../core/types.ts";
+import { PLAYER_CALLS, callLabel, callDesc, type TacticCallDef } from "../../core/sim/tactics.ts";
+import type { GameState, IglReading, MatchRecord, RoundEvent } from "../../core/types.ts";
 
 const SLOW_MS = 850;
 const FAST_MS = 280;
@@ -19,7 +20,25 @@ const RESULT_MS = 750;
 
 interface Pos { mi: number; ri: number; ei: number } // ei: -1=回合头, 0..n-1=事件, n=回合结果
 
-export function MatchPlayer(props: { record: MatchRecord; state: GameState; onClose: () => void; startFinished?: boolean }) {
+/** 与引擎 attackSideOf 同式（12 回合换边/加时交替），用于判断「下回合我方攻/守」 */
+function atkSideOfRound(round: number, aAttacksFirst: boolean): "A" | "B" {
+  const first = aAttacksFirst ? "A" : "B";
+  const second = aAttacksFirst ? "B" : "A";
+  if (round <= 12) return first;
+  if (round <= 24) return second;
+  return (round - 25) % 2 === 0 ? first : second;
+}
+
+export function MatchPlayer(props: {
+  record: MatchRecord;
+  state: GameState;
+  onClose: () => void;
+  startFinished?: boolean;
+  /** v1.0-8：我的队伍 id——无则纯回放（旧档/他人比赛），无喊话与 IGL 交互 */
+  myTeamId?: string | null;
+  onIntervene?: (mapIdx: number, round: number, tactic: string, igl: boolean) => void;
+  onFinished?: () => void;
+}) {
   const { record, state, onClose } = props;
   const startAtEnd = props.startFinished === true;
   const [pos, setPos] = useState<Pos>(() =>
@@ -33,6 +52,11 @@ export function MatchPlayer(props: { record: MatchRecord; state: GameState; onCl
   const [view, setView] = useState<"text" | "2d">("2d");
   const [sumTab, setSumTab] = useState(0); // 结算页：0=系列赛汇总，1..n=单图
   const [stinger, setStinger] = useState<{ main: string; sub: string } | null>(null); // 高光横幅（ACE/残局/零封）
+  const [menuOpen, setMenuOpen] = useState(false); // v1.0-8 情境化暂停菜单
+  const [iglCard, setIglCard] = useState<{ mi: number; reading: IglReading } | null>(null); // v1.0-8 IGL 场上阅读
+  const iglHandled = useRef<Set<string>>(new Set());
+  const finishedNotified = useRef(false);
+  const awaitingRecord = useRef(false); // 干预后暂停，新 Record 到位再续播
   const timer = useRef<number | null>(null);
   const stingerTimer = useRef<number | null>(null);
 
@@ -45,6 +69,101 @@ export function MatchPlayer(props: { record: MatchRecord; state: GameState; onCl
     const agentId = map?.agents?.[pid];
     return agentId ? (AGENT_BY_ID.get(agentId)?.name ?? "") : "";
   };
+
+  // ---- v1.0-8 交互上下文：我的队伍/暂停余量/下回合攻守/经济与大招门控 ----
+  const myTeamId = props.myTeamId ?? null;
+  const mySide: "A" | "B" | null = myTeamId
+    ? myTeamId === record.teamA
+      ? "A"
+      : myTeamId === record.teamB
+        ? "B"
+        : null
+    : null;
+  const interactive = !!mySide && !!props.onIntervene;
+  const timeoutsLeft = useMemo(() => {
+    if (!mySide) return 0;
+    // 只看「已完整揭示」的回合（当前回合进行中的 end 属于未来信息）
+    const idx = pos.ei === -1 ? pos.ri - 1 : pos.ri;
+    const cur = idx >= 0 ? map?.rounds[idx]?.end.timeouts : undefined;
+    if (cur) return cur[mySide];
+    const base = 2 + ((state.teams[myTeamId ?? ""]?.staff?.match?.value ?? 0) >= 85 ? 1 : 0);
+    return Math.max(0, base - (record.interventions?.filter((iv) => !iv.igl).length ?? 0));
+  }, [map, pos.ri, pos.ei, mySide, myTeamId, state.teams, record.interventions]);
+  const nextRound = round ? (pos.ei === -1 ? round.n : round.n + 1) : 1;
+  const callLocked = useMemo(() => {
+    if (!map || !mySide) return true;
+    // 只扫已揭示回合（未来的 timeout 事件是未揭示信息，不得用于 UI 判定）
+    const upto = pos.ei === -1 ? pos.ri - 1 : pos.ri;
+    for (let i = upto; i >= 0; i--) {
+      const r = map.rounds[i];
+      if (!r) break;
+      const ev = r.events.find((e) => e.t === "timeout" && e.side === mySide);
+      if (ev) return nextRound <= r.n + (ev.igl ? 2 : 3) - 1;
+    }
+    return false;
+  }, [map, mySide, nextRound, pos.ri, pos.ei]);
+  const aAttacksFirst = map?.rounds[0]?.atk === "A";
+  const atkSideNext = atkSideOfRound(nextRound, aAttacksFirst);
+  const myAtkNext = mySide === atkSideNext;
+  // 最近已揭示回合末快照（当前回合进行中则取上一回合；第 1 回合开局无快照）
+  const lastEnd = (() => {
+    const idx = pos.ei === -1 ? pos.ri - 1 : pos.ri;
+    return idx >= 0 ? map?.rounds[idx]?.end : undefined;
+  })();
+  const myMoney = lastEnd?.money && mySide ? lastEnd.money[mySide] : undefined;
+  const estBuy: "full" | "force" | "eco" | null =
+    myMoney === undefined ? null : nextRound === 1 || nextRound === 13 || nextRound === 25
+      ? "eco"
+      : myMoney >= 3900 ? "full" : myMoney >= 2200 ? "force" : "eco";
+  const coreReady = useMemo(() => {
+    if (!map || !mySide || !lastEnd?.ults) return 0;
+    let n = 0;
+    for (const [pid, pts] of Object.entries(lastEnd.ults)) {
+      const aid = map.agents?.[pid];
+      if (!aid || pts < ultCostOf(aid)) continue;
+      if (AGENT_BY_ID.get(aid)?.ultTiers?.[0] === "core") n++;
+    }
+    return n;
+  }, [map, mySide, lastEnd]);
+  const oppTeamId = mySide === "A" ? record.teamB : record.teamA;
+  const intelPts = state.scouting[oppTeamId]?.points ?? 0;
+  const matchCoach = myTeamId ? state.teams[myTeamId]?.staff?.match?.value ?? 0 : 0;
+  const hintPrecise = intelPts >= 1 && matchCoach >= 50; // 预期提示精度 = 情报 × 比赛型教练（GDD §5.4）
+
+  const doIntervene = (mapIdx: number, roundNo: number, tactic: string, igl: boolean) => {
+    awaitingRecord.current = true;
+    setPlaying(false);
+    setMenuOpen(false);
+    setIglCard(null);
+    props.onIntervene?.(mapIdx, roundNo, tactic, igl);
+  };
+  useEffect(() => {
+    if (awaitingRecord.current) {
+      awaitingRecord.current = false;
+      setPlaying(true);
+    }
+  }, [record]);
+
+  // 播放自然结束 / 快进 → 通知结算（v1.0-8 交互式比赛此时才入账）
+  useEffect(() => {
+    if (finished && !finishedNotified.current) {
+      finishedNotified.current = true;
+      props.onFinished?.();
+    }
+  }, [finished, props]);
+
+  // IGL 场上阅读（v1.0-8）：第 7/14 回合结果揭示时自动停靠，给建议卡（GDD §5.4）
+  useEffect(() => {
+    if (finished || !map || !mySide || !interactive) return;
+    const r = map.rounds[pos.ri];
+    if (!r || pos.ei < r.events.length) return; // 等回合结果揭示
+    if (r.n !== 7 && r.n !== 14) return;
+    const rd = map.readings?.find((x) => x.round === r.n);
+    if (!rd || iglHandled.current.has(`${pos.mi}:${r.n}`)) return;
+    iglHandled.current.add(`${pos.mi}:${r.n}`);
+    setPlaying(false);
+    setIglCard({ mi: pos.mi, reading: rd });
+  }, [pos, map, finished, mySide, interactive]);
 
   const isKeyRound = useMemo(() => {
     if (!round) return false;
@@ -256,6 +375,7 @@ export function MatchPlayer(props: { record: MatchRecord; state: GameState; onCl
                   : `第 ${mapIdx + 1} 图数据 · ${MAP_BY_ID.get(viewMap?.map ?? "")?.name ?? ""} · ${tagA2} ${viewMap?.score[0] ?? 0} - ${viewMap?.score[1] ?? 0} ${tagB2}（本图胜负口径）`}
               />
               {isSeriesView && <AttributionTable record={record} state={state} />}
+              {isSeriesView && <IglReviewTable record={record} state={state} />}
             </div>
           );
         })() : (
@@ -342,12 +462,60 @@ export function MatchPlayer(props: { record: MatchRecord; state: GameState; onCl
                 {speed}x
               </button>
               <button onClick={jumpToEnd}>⏭ 跳到结果</button>
+              {interactive && (
+                <button
+                  disabled={timeoutsLeft <= 0 || callLocked}
+                  title={callLocked ? "上一条喊话仍在生效期" : timeoutsLeft <= 0 ? "暂停次数已用完" : "回合间喊话，效果持续 3 回合"}
+                  onClick={() => { setPlaying(false); setMenuOpen(true); }}
+                >
+                  ⏱ 喊战术（剩 {timeoutsLeft}）
+                </button>
+              )}
               <button onClick={() => setView((v) => (v === "2d" ? "text" : "2d"))}>
                 {view === "2d" ? "📄 文字" : "🗺 2D 战术"}
               </button>
               <div className="grow" />
               <button className="ghost" onClick={onClose}>关闭 ✕</button>
             </div>
+
+            {/* 情境化暂停战术菜单（v1.0-8，GDD §5.4）：按攻防方×经济×大招状态过滤 */}
+            {menuOpen && (
+              <PauseMenu
+                myAtkNext={myAtkNext}
+                estBuy={estBuy}
+                coreReady={coreReady}
+                hintPrecise={hintPrecise}
+                intelPts={intelPts}
+                matchCoach={matchCoach}
+                onPick={(t) => doIntervene(pos.mi, nextRound, t, false)}
+                onClose={() => { setMenuOpen(false); setPlaying(true); }}
+              />
+            )}
+
+            {/* IGL 场上阅读（v1.0-8）：同样自信的呈现——低配误判不弱化样式，赛后复盘才揭示 */}
+            {iglCard && !finished && (() => {
+              const rd = iglCard.reading;
+              return (
+                <div className="card" style={{ margin: "12px auto", maxWidth: 460, border: "1px solid var(--accent)", boxShadow: "0 0 24px rgba(120,140,255,0.15)" }}>
+                  <div className="muted small">🧠 场上阅读 · 第 {rd.round} 回合结束</div>
+                  <div style={{ margin: "8px 0", fontSize: 14 }}>
+                    <b>{ign(rd.iglId)}</b> 盯着回合回放，抬起头：
+                  </div>
+                  <div style={{ fontSize: 17, fontWeight: 800, margin: "6px 0 10px" }}>
+                    “{callLabel(rd.suggested)}，下回合就打这个。”
+                  </div>
+                  <div className="muted small" style={{ marginBottom: 10 }}>
+                    IGL 建议不消耗暂停次数，效果 2 回合 · 建议质量取决于 IGL 意识、情报等级与比赛型教练
+                  </div>
+                  <div className="row" style={{ justifyContent: "center", gap: 8 }}>
+                    <button className="primary" disabled={callLocked} title={callLocked ? "上一条喊话仍在生效期" : ""} onClick={() => doIntervene(iglCard.mi, rd.round + 1, rd.suggested, true)}>
+                      采纳
+                    </button>
+                    <button onClick={() => { setIglCard(null); setPlaying(true); }}>无视</button>
+                  </div>
+                </div>
+              );
+            })()}
           </>
         )}
       </div>
@@ -625,8 +793,108 @@ function FeedRow(props: {
   if (e.t === "ace") return <div className="fevent big">🏆 ACE！{ign(e.s ?? "")} 团灭对手！</div>;
   if (e.t === "clutch") return <div className="fevent big">🎯 {ign(e.s ?? "")} 1v{e.vs ?? 1} 残局得手！</div>;
   if (e.t === "flawless") return <div className="fevent big">✨ 零封！满编无伤拿下</div>;
-  if (e.t === "timeout") return <div className="fevent">⏸ 战术暂停（效果 3 回合）</div>;
+  if (e.t === "timeout") {
+    if (e.player) {
+      return e.igl
+        ? <div className="fevent big">🧠 IGL 建议被采纳：{callLabel(e.tactic ?? "")}（效果 2 回合）</div>
+        : <div className="fevent big">📋 战术喊话：{callLabel(e.tactic ?? "")}（效果 3 回合）</div>;
+    }
+    return <div className="fevent">⏸ 战术暂停（效果 3 回合）</div>;
+  }
   return null;
+}
+
+/** 情境化暂停战术菜单（v1.0-8，GDD §5.4）：选项按攻防方/经济/大招状态过滤；预期提示精度 = 情报 × 比赛型教练 */
+function PauseMenu(props: {
+  myAtkNext: boolean;
+  estBuy: "full" | "force" | "eco" | null;
+  coreReady: number;
+  hintPrecise: boolean;
+  intelPts: number;
+  matchCoach: number;
+  onPick: (tactic: string) => void;
+  onClose: () => void;
+}) {
+  const [picked, setPicked] = useState<TacticCallDef | null>(null);
+  const [site, setSite] = useState<"A" | "B">("A");
+  const side = props.myAtkNext ? "atk" : "def";
+  const options = PLAYER_CALLS.filter(
+    (c) => c.side === side && (!c.needsFullBuy || props.estBuy === "full") && (!c.needsCoreUlts || props.coreReady >= 2),
+  );
+  const fmt = (n: number) => (n > 0 ? `+${n.toFixed(1)}` : n.toFixed(1));
+  return (
+    <div className="card" style={{ margin: "12px auto", maxWidth: 520, textAlign: "left", border: "1px solid var(--accent)" }}>
+      <div className="row" style={{ justifyContent: "space-between", marginBottom: 4 }}>
+        <b>⏱ 战术喊话</b>
+        <button className="ghost small" onClick={props.onClose}>取消</button>
+      </div>
+      <div className="muted small" style={{ marginBottom: 8 }}>
+        下回合我方{props.myAtkNext ? "进攻" : "防守"}
+        {props.estBuy && <> · 预估经济 <b>{props.estBuy === "full" ? "长枪" : props.estBuy === "force" ? "强起" : "eco"}</b></>}
+        {" · 核心大招就绪 "}<b>{props.coreReady}</b>
+        {" · 持续 3 回合"}
+      </div>
+      {!picked ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          {options.map((c) => (
+            <button key={c.id} style={{ textAlign: "left", padding: "8px 12px" }} onClick={() => (c.pickSite ? setPicked(c) : props.onPick(c.id))}>
+              <b>{c.label}</b>
+              <span className="muted small" style={{ display: "block", marginTop: 2 }}>{c.desc}</span>
+              <span className="small" style={{ display: "block", marginTop: 2, color: props.hintPrecise ? "var(--green)" : "var(--muted)" }}>
+                {props.hintPrecise
+                  ? `预期 ${side === "atk" ? `进攻 ${fmt(c.atkMod)}` : `防守 ${fmt(c.defMod)}`} · 后手 ${(side === "atk" ? c.defMod : c.atkMod).toFixed(1)}`
+                  : "效果难以预估（情报不足或比赛教练偏弱）"}
+              </span>
+            </button>
+          ))}
+          {options.length === 0 && <div className="muted small">当前局势没有可用的喊话选项。</div>}
+        </div>
+      ) : (
+        <div style={{ textAlign: "center" }}>
+          <div style={{ marginBottom: 8 }}><b>{picked.label}</b> —— 选择目标点位：</div>
+          <div className="row" style={{ justifyContent: "center", gap: 10 }}>
+            {(["A", "B"] as const).map((s) => (
+              <button key={s} className={site === s ? "primary" : ""} onClick={() => setSite(s)}>{s} 点</button>
+            ))}
+          </div>
+          <button className="primary" style={{ marginTop: 10 }} onClick={() => props.onPick(`${picked.id}:${site}`)}>
+            确认喊话 {picked.label} {site} 点
+          </button>
+        </div>
+      )}
+      {!props.hintPrecise && (
+        <div className="muted small" style={{ marginTop: 8 }}>
+          提示精度：情报 {props.intelPts} 点 · 比赛型教练 {props.matchCoach}——达标后显示量化预期
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** IGL 场上阅读复盘（v1.0-8，GDD §5.4 v2.5）：赛后回看「当时 IGL 读了什么」与对错 */
+function IglReviewTable({ record, state }: { record: MatchRecord; state: GameState }) {
+  const ign = (pid: string) => state.players[pid]?.ign ?? pid;
+  const rows = record.maps.flatMap((m, i) => (m.readings ?? []).map((r) => ({ mi: i, r })));
+  if (rows.length === 0) return null;
+  return (
+    <div className="card" style={{ textAlign: "left", marginTop: 12, padding: "10px 16px" }}>
+      <div className="muted small" style={{ marginBottom: 6 }}>🧠 IGL 场上阅读复盘（当时他读了什么）</div>
+      {rows.map(({ mi, r }) => {
+        const adopted = record.interventions?.some((iv) => iv.igl && iv.map === mi && iv.round === r.round + 1 && iv.tactic === r.suggested);
+        return (
+          <div key={`${mi}:${r.round}`} style={{ fontSize: 12.5, padding: "3px 0", borderBottom: "1px solid var(--line)" }}>
+            第 {mi + 1} 图 · 第 {r.round} 回合 · <b>{ign(r.iglId)}</b>：“{callLabel(r.suggested)}”
+            <span style={{ marginLeft: 8 }}>{adopted ? <span className="tag green">已采纳</span> : <span className="tag">未采纳</span>}</span>
+            <span style={{ marginLeft: 8 }}>
+              {r.correct
+                ? <span style={{ color: "var(--green)" }}>复盘：读图正确</span>
+                : <span style={{ color: "#f87171" }}>复盘：自信误判（对手根本不在这套路子上）</span>}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 function totalProgress(record: MatchRecord, pos: Pos): number {

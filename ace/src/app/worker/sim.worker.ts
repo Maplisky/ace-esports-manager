@@ -1,13 +1,15 @@
 /** 模拟 Worker（GDD §11.1）：权威 state 常驻此处，主线程只拿快照渲染。 */
 import { generateWorld, resetPlayerSeq, salaryFor, spawnFreeAgents, migrateMapsToRealPool } from "../../core/worldgen.ts";
-import { initSeasonFixtures, advanceDay, playHeldMatch, migrateLegacyComps } from "../../core/sim/day.ts";
+import { initSeasonFixtures, advanceDay, playHeldMatch, interveneHeldMatch, settleMatch, migrateLegacyComps } from "../../core/sim/day.ts";
+import { simMatch } from "../../core/sim/match.ts";
 import { resolveEvent } from "../../core/sim/events.ts";
 import { signCoach } from "../../core/sim/retirement.ts";
 import { initCareer, applyJob } from "../../core/sim/career.ts";
+import { draftPickTrade } from "../../core/sim/draft.ts";
 import { startNegotiation, reNegotiate, finalizeOffer, completeTransfer, releasePlayer, inTransferWindow, graceRemain, askInquiry } from "../../core/sim/transfer.ts";
 import { signSponsorOffer, cancelSponsorById, acceptGig, declineGig, signStream, cancelStream } from "../../core/sim/business.ts";
 import { Rng, hashString } from "../../core/rng.ts";
-import type { GameState, MatchRecord, Preset, TransferOffer } from "../../core/types.ts";
+import type { GameState, MatchIntervention, MatchRecord, Preset, TransferOffer } from "../../core/types.ts";
 
 export interface SavedPayload {
   state: GameState;
@@ -30,6 +32,7 @@ function snapshot() {
 function doAdvance(maxDays = 1): void {
   if (!state) return;
   if (state.manager.career?.ending) return; // 生涯终局（v1.0-6）：下课/退休后世界冻结
+  settlePendingInteractive(); // v1.0-8 兜底：播放中断直接推进 → 交互式比赛先结算再走日历
   const notes: string[] = [];
   const playedMine: string[] = [];
   let seasonEnded = false;
@@ -67,6 +70,31 @@ function doAdvance(maxDays = 1): void {
 
 /** 被拦截等待赛前准备的我的比赛 */
 let replyHeld: { fixtureId: string; teamA: string; teamB: string; bo: 1 | 3 | 5; label: string } | null = null;
+
+/** 新闻入池（含 400 条裁剪，与各处口径一致） */
+function pushNews(notes: { day: number; kind: string; text: string; important?: boolean }[]): void {
+  if (!state) return;
+  for (const n of notes) {
+    state.news.push({ day: n.day, kind: n.kind as never, text: n.text, important: n.important });
+    while (state.news.length > 400) {
+      const idx = state.news.findIndex((x) => !x.important);
+      if (idx < 0) break;
+      state.news.splice(idx, 1);
+    }
+  }
+}
+
+/** 交互式比赛兜底结算（v1.0-8）：played 未 settled 的我的比赛——推进/读档时先入账，防积分榜/对阵树卡死 */
+function settlePendingInteractive(): void {
+  if (!state) return;
+  for (const f of state.fixtures) {
+    if (!f.played || f.settled) continue;
+    if (!records[f.id]) {
+      records[f.id] = simMatch(state, f.teamA, f.teamB, f.bo, hashString(`${state.seed}:${f.id}`), f.id, f.mapLock, f.agentLock, f.interventions);
+    }
+    settleMatch(state, f.id, records[f.id] as MatchRecord, pushNews);
+  }
+}
 
 /** 存档迁移（GDD §11.4）：旧档缺失字段补默认值——新版本字段在此统一兜底 */
 function migrate(state: GameState): GameState {
@@ -122,6 +150,12 @@ function migrate(state: GameState): GameState {
   state.coachPool ??= [];
   state.retireLog ??= [];
   state.circuitPoints ??= {};
+  state.draftPickMoves ??= []; // v1.0-8 选秀权交易账本
+  // v1.0-8 交互式结算迁移：旧档 played 场次都是打完即结算（settled 字段缺省）→ 回填 true；
+  // 交互式场次由 playHeldMatch 显式写 settled=false，读档兜底结算依赖此语义，不可回填
+  for (const f of state.fixtures) {
+    if (f.played && f.settled === undefined) f.settled = true;
+  }
   // v0.6-1：旧单赛区 comp key → 霞赛区新命名（过渡年结算/Masters 依赖）
   migrateLegacyComps(state);
   // v0.7 真实数据包：旧档虚构地图 id 全量映射到真实图池（逻辑在 core，可测）
@@ -173,6 +207,8 @@ function handleWorkerMessage(e: MessageEvent) {
     const saved = msg.save as SavedPayload;
     state = migrate(saved.state);
     records = saved.records;
+    // v1.0-8 兜底：播放中断刷新存档 → 交互式比赛先结算，再恢复赛前停车判定
+    settlePendingInteractive();
     // 存档停在赛前准备（比赛日 = 当天、我的未打比赛）：恢复 held 让 PreMatch 立即重入。
     // 否则下一次推进 day++ 后该场落入"逾期清扫"被自动补打，玩家丢失赛前操作权。
     let held: typeof replyHeld = null;
@@ -300,6 +336,37 @@ function handleWorkerMessage(e: MessageEvent) {
       reply({ type: "played", ...snapshot(), record: rec ? structuredClone(rec) : null });
     } else {
       reply({ type: "played", state: null, records: {}, record: null });
+    }
+  } else if (type === "matchIntervene") {
+    // v1.0-8 情境化暂停/IGL 采纳：追加干预 → 同 seed 重模拟 → 播放器拿新 Record 无缝续播
+    if (state) {
+      const rec = interveneHeldMatch(state, msg.fixtureId as string, msg.iv as MatchIntervention, (rec2, fid) => {
+        records[fid] = rec2;
+      });
+      reply({ type: "snapshot", ...snapshot(), record: rec ? structuredClone(rec) : null });
+    } else {
+      reply({ type: "snapshot", state: null, records: {}, record: null });
+    }
+  } else if (type === "matchFinish") {
+    // v1.0-8 播放结束/关闭：结算交互式比赛（幂等；推进/读档另有兜底）。新闻已由 settleMatch 入池。
+    if (state) {
+      const texts: string[] = [];
+      settleMatch(state, msg.fixtureId as string, records[msg.fixtureId as string] ?? null, (ns) => {
+        for (const n of ns) texts.push(n.text);
+      });
+      reply({ type: "snapshot", ...snapshot(), notes: texts });
+    } else {
+      reply({ type: "snapshot", state: null, records: {} });
+    }
+  } else if (type === "draftPickTrade") {
+    // 选秀权交易（v1.0-8，GDD §13）：转会窗内卖出/买进下届选秀签
+    if (state) {
+      const notes: { day: number; kind: string; text: string; important?: boolean }[] = [];
+      const message = draftPickTrade(state, msg.action as "sell" | "buy", notes as never);
+      pushNews(notes);
+      reply({ type: "snapshot", ...snapshot(), notes: notes.map((n) => n.text), message });
+    } else {
+      reply({ type: "snapshot", state: null, records: {} });
     }
   } else if (type === "signCoach") {
     if (state?.myTeamId) {

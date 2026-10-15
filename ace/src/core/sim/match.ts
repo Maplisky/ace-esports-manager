@@ -14,8 +14,8 @@ import {
 } from "./strength.ts";
 import { intelOf } from "./intel.ts";
 import { runVeto } from "./veto.ts";
-import type { BuyType, GameState, MapRecord, MatchRecord, Player, PlayerLine, RoundEvent, RoundRecord, Team } from "../types.ts";
-
+import { callDefOf, callSideOf } from "./tactics.ts";
+import type { BuyType, GameState, IglReading, MapRecord, MatchIntervention, MatchRecord, Player, PlayerLine, RoundEvent, RoundRecord, Team } from "../types.ts";
 const ULT_BONUS_CAP = 2.5;
 const MAX_ROUNDS = 80;
 
@@ -56,8 +56,17 @@ interface SimTeam {
   score: number;
   ultReady: Set<string>;
   timeouts: number;
-  /** 连败中使用的战术 */
-  call: { kind: "rush" | "steady"; roundsLeft: number } | null;
+  /** 喊话中的战术（AI rush/steady 与玩家/IGL 干预共用结构，v1.0-8） */
+  call: {
+    atkMod: number;
+    defMod: number;
+    counterRush?: boolean;
+    roundsLeft: number;
+    /** 喊话战术 id（覆盖该侧开局战术展示） */
+    tacticId?: string;
+    player?: boolean;
+    igl?: boolean;
+  } | null;
 }
 
 interface UltState {
@@ -145,7 +154,17 @@ function addUlt(ult: Map<string, number>, pid: string, n: number, team: SimTeam,
   }
 }
 
-function simMap(state: GameState, mapId: string, A: SimTeam, B: SimTeam, rng: Rng, agentLock?: Record<string, Record<string, string>>, intlPlayoff = false): MapRecord {
+function simMap(
+  state: GameState,
+  mapId: string,
+  A: SimTeam,
+  B: SimTeam,
+  rng: Rng,
+  agentLock?: Record<string, Record<string, string>>,
+  intlPlayoff = false,
+  mapIdx = 0,
+  interventions?: MatchIntervention[],
+): MapRecord {
   const map = MAP_BY_ID.get(mapId) ?? MAPS[0]!;
   // 每图重算强度（图池熟练/meta/玩家预案英雄随图变化）
   // 针对准备（GDD §7.2）：我方对对手的情报点 → 针对加成（×0.22，最高 +2.2）；AI 侧默认不启用
@@ -199,10 +218,16 @@ function simMap(state: GameState, mapId: string, A: SimTeam, B: SimTeam, rng: Rn
   let halfA = 0;
   let halfB = 0;
   const rounds: RoundRecord[] = [];
+  const readings: IglReading[] = [];
   const swingA = rng.norm(0, SWING_SD);
   const swingB = rng.norm(0, SWING_SD);
   const aAttacksFirst = rng.chance(0.5); // 每图掷硬币定先攻（消除固定 A 先攻的系统性偏置）
   let comebackNoted = false;
+  // 我方在场上的 SimTeam（无我队则无干预/读图，v1.0-8）
+  const mySide: "A" | "B" | null = A.team.id === state.myTeamId ? "A" : B.team.id === state.myTeamId ? "B" : null;
+  const mySim = mySide ? sideOf({ A, B }, mySide) : null;
+  const oppSim = mySide ? sideOf({ A, B }, mySide === "A" ? "B" : "A") : null;
+  const myIntel = mySim === A ? intelA : intelB; // 我方对对手的情报点（读图质量用）
 
   for (let round = 1; round <= MAX_ROUNDS; round++) {
     if ((a >= 13 && a - b >= 2) || (b >= 13 && b - a >= 2)) break;
@@ -222,8 +247,8 @@ function simMap(state: GameState, mapId: string, A: SimTeam, B: SimTeam, rng: Rn
     // 开局战术（GDD §5.4 二期）：确定性 hash 选择——不消耗 RNG，模拟结果与此前逐位一致
     const atkIgl = iglInfo(atkSide === "A" ? A.team : B.team, state);
     const defIgl = iglInfo(atkSide === "A" ? B.team : A.team, state);
-    const tacticAtk = tacticForAtk(mapId, round, atkSide === "A" ? buyA : buyB, atkIgl.id, atkIgl.aware);
-    const tacticDef = tacticForDef(mapId, round, defIgl.id, defIgl.aware);
+    let tacticAtk = tacticForAtk(mapId, round, atkSide === "A" ? buyA : buyB, atkIgl.id, atkIgl.aware);
+    let tacticDef = tacticForDef(mapId, round, defIgl.id, defIgl.aware);
     if (!pistol) {
       A.money = Math.max(0, A.money - (buyA === "full" ? 3900 : buyA === "force" ? 2300 : 500));
       B.money = Math.max(0, B.money - (buyB === "full" ? 3900 : buyB === "force" ? 2300 : 500));
@@ -240,25 +265,63 @@ function simMap(state: GameState, mapId: string, A: SimTeam, B: SimTeam, rng: Rn
       return Math.min(ULT_BONUS_CAP, bonus);
     };
 
-    // AI 暂停：连败 ≥3 且有暂停 → 按性格 50% 喊战术，持续 3 回合
+    // 玩家喊话（v1.0-8，GDD §5.4 情境化暂停战术菜单）：干预列表命中本图本回合 → 我方喊话。
+    // 不消耗 RNG——干预是重模拟的显式输入，「不操作即逐位一致」红线由此保证。
+    if (mySim) {
+      const iv = interventions?.find((v) => v.map === mapIdx && v.round === round);
+      if (iv && !mySim.call) {
+        const def = callDefOf(iv.tactic);
+        const myBuy = mySim === A ? buyA : buyB;
+        const coreReady = [...mySim.ultReady].filter((pid) => {
+          const aid = mySim.str?.agents[pid];
+          return aid ? AGENT_BY_ID.get(aid)?.ultTiers?.[0] === "core" : false;
+        }).length;
+        // 引擎侧门控：大招速攻需 ≥2 核心档就绪 + 长枪局（UI 同步过滤，此处兜底）
+        const gateOk = (!def?.needsCoreUlts || coreReady >= 2) && (!def?.needsFullBuy || myBuy === "full");
+        if (def && gateOk && (iv.igl || mySim.timeouts > 0)) {
+          if (!iv.igl) mySim.timeouts--;
+          const scale = iv.igl ? 0.8 : 1;
+          mySim.call = {
+            atkMod: def.atkMod * scale,
+            defMod: def.defMod * scale,
+            counterRush: def.counterRush,
+            roundsLeft: iv.igl ? 2 : 3,
+            tacticId: iv.tactic,
+            player: true,
+            igl: iv.igl,
+          };
+        }
+      }
+    }
+
+    // AI 暂停：连败 ≥3 且有暂停 → 按性格 50% 喊战术，持续 3 回合（玩家喊话优先，同回合互斥）
     for (const t of [A, B]) {
       if (t.lossStreak >= 3 && t.timeouts > 0 && !t.call && rng.chance(0.5)) {
         t.timeouts--;
-        t.call = { kind: t.team.personality === "steady" ? "steady" : "rush", roundsLeft: 3 };
+        const kind = t.team.personality === "steady" ? "steady" : "rush";
+        const def = callDefOf(kind)!;
+        t.call = { atkMod: def.atkMod, defMod: def.defMod, roundsLeft: 3 };
       }
     }
+    // 喊话覆盖该侧开局战术展示（Tactical2D 站位随喊话展开，v1.0-8）
+    if (atkSim.call?.tacticId && callSideOf(atkSim.call.tacticId) === "atk") tacticAtk = atkSim.call.tacticId;
+    if (defSim.call?.tacticId && callSideOf(defSim.call.tacticId) === "def") tacticDef = defSim.call.tacticId;
     const callMod = (t: SimTeam, isAtk: boolean) => {
       if (!t.call) return 0;
-      return t.call.kind === "rush" ? (isAtk ? 2.4 : -1.6) : isAtk ? -1.2 : 2.0;
+      return isAtk ? t.call.atkMod : t.call.defMod;
     };
 
     // 回合胜负（GDD §5.2）：攻方强度 − 守方强度 + 经济/战术/每图摆动 + 落后方追分
     const atkStr = atkSim.str!.atk + ultBonus(atkSim);
     const defStr = defSim.str!.def + ultBonus(defSim);
+    // 双哨位蹲通道克制 rush（v1.0-8）：对手本回合 rush 系开局 → 防守额外 +1.2
+    const counterBonus = defSim.call?.counterRush && tacticAtk.startsWith("atk:rush") ? 1.2 : 0;
     const atkTerms =
       (atkSide === "A" ? atkStr + BUY_MOD[buyA] + callMod(A, true) + swingA : atkStr + BUY_MOD[buyB] + callMod(B, true) + swingB);
     const defTerms =
-      (atkSide === "A" ? defStr + BUY_MOD[buyB] + callMod(B, false) + swingB : defStr + BUY_MOD[buyA] + callMod(A, false) + swingA);
+      (atkSide === "A"
+        ? defStr + BUY_MOD[buyB] + callMod(B, false) + counterBonus + swingB
+        : defStr + BUY_MOD[buyA] + callMod(A, false) + counterBonus + swingA);
     const trailing: "A" | "B" | null = a > b ? "B" : b > a ? "A" : null;
     const comeback = trailing ? 0.35 * sideOf({ A, B }, trailing).str!.mid : 0;
     const m = atkTerms - defTerms + (trailing === atkSide ? comeback : trailing ? -comeback : 0) + (atkSide === "A" ? leakToA : leakToB);
@@ -292,7 +355,12 @@ function simMap(state: GameState, mapId: string, A: SimTeam, B: SimTeam, rng: Rn
     const events: RoundEvent[] = [];
     if (A.call || B.call) {
       const caller = A.call ? "A" : "B";
-      events.push({ t: "timeout", side: caller });
+      const c = (A.call ?? B.call)!;
+      events.push({
+        t: "timeout",
+        side: caller,
+        ...(c.player ? { player: true, tactic: c.tacticId, igl: c.igl } : {}),
+      });
     }
 
     // 击杀分配
@@ -421,8 +489,15 @@ function simMap(state: GameState, mapId: string, A: SimTeam, B: SimTeam, rng: Rn
           return snap;
         })(),
         money: { A: A.money, B: B.money },
+        timeouts: { A: A.timeouts, B: B.timeouts },
       },
     });
+
+    // IGL 场上阅读（v1.0-8，GDD §5.4）：第 7/14 回合末我方 IGL 给出确定性建议（hash 决定命中率，零 RNG）
+    if (mySim && oppSim && (round === 7 || round === 14)) {
+      const reading = iglReading(state, mapId, mySim, oppSim, myIntel, round, aAttacksFirst, rounds);
+      if (reading) readings.push(reading);
+    }
 
     // 翻盘标记（半场 ≤3 分逆转，供播放器高亮）
     if (!comebackNoted && round > 20 && ((halfA <= 3 && a > b) || (halfB <= 3 && b > a))) {
@@ -454,7 +529,56 @@ function simMap(state: GameState, mapId: string, A: SimTeam, B: SimTeam, rng: Rn
     mvp,
     agents: { ...A.str!.agents, ...B.str!.agents },
     edges: { A: { ...A.str!.edge }, B: { ...B.str!.edge } },
+    ...(readings.length > 0 ? { readings } : {}),
   };
+}
+
+/**
+ * IGL 场上阅读（v1.0-8）：建议 = 对手近 3 回合开局战术趋势的正确对策；质量公式 =
+ * f(IGL 意识 + 情报等级 + 比赛型教练)（GDD §5.4 v1.1 口径）。未达质量线 → 自信误判
+ * （同侧另一条战术，同样自信展示——误判只在赛后复盘揭示）。全程确定性 hash，零 RNG。
+ */
+function iglReading(
+  state: GameState,
+  mapId: string,
+  mySim: SimTeam,
+  oppSim: SimTeam,
+  myIntel: number,
+  round: number,
+  aAttacksFirst: boolean,
+  rounds: RoundRecord[],
+): IglReading | null {
+  const igl = iglInfo(mySim.team, state);
+  const coachVal = mySim.team.staff?.match?.value ?? 0;
+  const quality = Math.round(clamp(20 + (igl.aware - 50) * 0.9 + myIntel * 4 + coachVal * 0.25, 5, 95));
+  const myAtkNext = attackSideOf(round + 1, aAttacksFirst) === mySim.side;
+  const trend = rounds.slice(-3).map((r) => (r.atk === oppSim.side ? r.tacticAtk ?? "atk:default" : r.tacticDef ?? "def:standard"));
+  const site = hashString(`${mapId}:${round}:${igl.id}:site`) % 2 === 0 ? "A" : "B";
+  let correctTactic: string;
+  if (myAtkNext) {
+    // 我方下回合进攻：对手堆防 → 假打转点；前顶 → 慢速默认；其余 → 集火 Rush
+    correctTactic = trend.some((t) => t.startsWith("def:stack"))
+      ? "atk:fakeRotate"
+      : trend.includes("def:aggro")
+        ? "atk:slowDefault"
+        : `atk:rush:${site}`;
+  } else {
+    // 我方下回合防守：对手 rush 倾向 → 双哨位蹲通道；中路夹击 → 131 回防；其余 → 抱团前压
+    const rushy = trend.filter((t) => t.startsWith("atk:rush") || t.startsWith("atk:ecoStack")).length;
+    correctTactic = rushy >= 2 ? "def:sentinelTunnel" : trend.includes("atk:midSplit") ? "def:rotate131" : `def:stackPush:${site}`;
+  }
+  const hit = hashString(`${mapId}:${round}:${igl.id}:read`) % 100 < quality;
+  let suggested = correctTactic;
+  if (!hit) {
+    // 自信误判：同侧另一条战术（IGL 不推荐大招速攻——他自己也不确定大招窗口）
+    const pool = ["atk:rush", "atk:fakeRotate", "atk:slowDefault", "def:stackPush", "def:rotate131", "def:giveSite", "def:sentinelTunnel"]
+      .filter((t) => callSideOf(t) === callSideOf(correctTactic) && t !== correctTactic.replace(/:[ABC]$/, ""));
+    if (pool.length > 0) {
+      suggested = pool[hashString(`${mapId}:${round}:${igl.id}:miss`) % pool.length]!;
+      if (callDefOf(suggested)?.pickSite) suggested += `:${site}`;
+    }
+  }
+  return { round, iglId: igl.id, suggested, quality, correct: hit };
 }
 
 /** 玩家为该图保存的首选预案英雄分配（GDD §7.1），无则 undefined（引擎自动分配） */
@@ -465,36 +589,85 @@ function presetAgents(state: GameState, team: Team, mapId: string): Record<strin
   return preferred?.agents;
 }
 
-/** 模拟一场比赛（含 BP；mapLock/agentLock 优先——玩家赛前手动指定）。会累计生涯与赛后状态。 */
-export function simMatch(state: GameState, teamAId: string, teamBId: string, bo: 1 | 3 | 5, seed: number, matchId: string, mapLock?: string[], agentLock?: Record<string, Record<string, string>>): MatchRecord {
+/** 当日可用首发（伤员剔除、缺员从替补顶替）——simMatch 与 applyMatchEffects 共用同一解析（v1.0-8 拆分） */
+export function resolveMatchRoster(state: GameState, team: Team): Player[] {
+  const roster = team.starters
+    .map((id) => state.players[id])
+    .filter((p): p is Player => !!p && p.injuredUntilDay <= state.day);
+  const bench = team.roster
+    .map((id) => state.players[id])
+    .filter((p): p is Player => !!p && !roster.includes(p) && p.injuredUntilDay <= state.day)
+    .sort((x, y) => effectiveOverall(y, state.day) - effectiveOverall(x, state.day));
+  while (roster.length < 5 && bench.length) roster.push(bench.shift() as Player);
+  return roster.slice(0, 5);
+}
+
+/**
+ * 赛后效果入账（v1.0-8 从 simMatch 拆出——模拟必须纯函数化，供交互式重模拟复用）：
+ * 生涯累计（逐图）+ 图 MVP + 疲劳/状态/士气。day.ts 各调用点在 simMatch 之后同步调用，
+ * 与拆分前逐场「模拟→入账→下一场」的顺序一致，无跨场污染。
+ */
+export function applyMatchEffects(state: GameState, rec: MatchRecord): void {
+  for (const mapRec of rec.maps) {
+    for (const [pid, line] of Object.entries(mapRec.lines)) {
+      const p = state.players[pid];
+      if (!p) continue;
+      p.career.maps++;
+      p.career.rounds += line.rounds;
+      p.career.kills += line.kills;
+      p.career.deaths += line.deaths;
+      p.career.assists += line.assists;
+      p.career.firstKills += line.firstKills;
+      p.career.firstDeaths += line.firstDeaths;
+      p.career.clutches += line.clutches;
+    }
+    if (mapRec.mvp) {
+      const p = state.players[mapRec.mvp];
+      if (p) p.career.mvps++;
+    }
+  }
+  for (const teamId of [rec.teamA, rec.teamB]) {
+    const team = state.teams[teamId];
+    if (!team) continue;
+    const won = (rec.winner === "A" && teamId === rec.teamA) || (rec.winner === "B" && teamId === rec.teamB);
+    for (const p of resolveMatchRoster(state, team)) {
+      p.fatigue = clamp(p.fatigue + rec.maps.length * 5, 0, 100);
+      p.form = clamp(p.form + (won ? 1 : -1), 30, 99);
+      p.morale = clamp(p.morale + (won ? 2 : -2), 10, 100);
+    }
+  }
+}
+
+/** 模拟一场比赛（含 BP；mapLock/agentLock 优先——玩家赛前手动指定）。纯模拟：生涯/状态入账走 applyMatchEffects。 */
+export function simMatch(
+  state: GameState,
+  teamAId: string,
+  teamBId: string,
+  bo: 1 | 3 | 5,
+  seed: number,
+  matchId: string,
+  mapLock?: string[],
+  agentLock?: Record<string, Record<string, string>>,
+  interventions?: MatchIntervention[],
+): MatchRecord {
   const rng = new Rng(seed);
   const teamA = state.teams[teamAId] as Team;
   const teamB = state.teams[teamBId] as Team;
   // 难度（v1.0-7，GDD §9.5）：职业难度 AI BP 读图更准（噪声 ±3）；调用次数不变，普通难度逐位一致
   const veto = mapLock && mapLock.length > 0 ? { maps: mapLock.slice(), log: ["手动 BP"] } : runVeto(teamA, teamB, bo, rng, state.difficulty === "pro" ? 3 : 6);
 
-  const makeSim = (side: "A" | "B", team: Team): SimTeam => {
-    const roster = team.starters
-      .map((id) => state.players[id])
-      .filter((p): p is Player => !!p && p.injuredUntilDay <= day(state));
-    const bench = team.roster
-      .map((id) => state.players[id])
-      .filter((p): p is Player => !!p && !roster.includes(p) && p.injuredUntilDay <= day(state))
-      .sort((x, y) => effectiveOverall(y, day(state)) - effectiveOverall(x, day(state)));
-    while (roster.length < 5 && bench.length) roster.push(bench.shift() as Player);
-    return {
-      side,
-      team,
-      str: null,
-      players: roster.slice(0, 5),
-      money: 800,
-      lossStreak: 0,
-      score: 0,
-      ultReady: new Set(),
-      timeouts: 2 + ((team.staff?.match?.value ?? 0) >= 85 ? 1 : 0),
-      call: null,
-    };
-  };
+  const makeSim = (side: "A" | "B", team: Team): SimTeam => ({
+    side,
+    team,
+    str: null,
+    players: resolveMatchRoster(state, team),
+    money: 800,
+    lossStreak: 0,
+    score: 0,
+    ultReady: new Set(),
+    timeouts: 2 + ((team.staff?.match?.value ?? 0) >= 85 ? 1 : 0),
+    call: null,
+  });
 
   const A = makeSim("A", teamA);
   const B = makeSim("B", teamB);
@@ -505,36 +678,22 @@ export function simMatch(state: GameState, teamAId: string, teamBId: string, bo:
 
   const wins = { A: 0, B: 0 };
   const maps: MapRecord[] = [];
-  const mvpAggregate: Record<string, number> = {};
 
-  for (const mapId of veto.maps) {
+  for (let mi = 0; mi < veto.maps.length; mi++) {
     if (wins.A >= Math.ceil(bo / 2) || wins.B >= Math.ceil(bo / 2)) break;
-    const mapRec = simMap(state, mapId, A, B, rng, agentLock, intlPlayoff);
+    const mapId = veto.maps[mi] as string;
+    const mapRec = simMap(state, mapId, A, B, rng, agentLock, intlPlayoff, mi, interventions);
     if (mapRec.score[0] > mapRec.score[1]) wins.A++;
     else if (mapRec.score[1] > mapRec.score[0]) wins.B++;
     maps.push(mapRec);
-    for (const [pid, line] of Object.entries(mapRec.lines)) {
-      mvpAggregate[pid] = (mvpAggregate[pid] ?? 0) + line.acs;
-      const p = state.players[pid];
-      if (p) {
-        p.career.maps++;
-        p.career.rounds += line.rounds;
-        p.career.kills += line.kills;
-        p.career.deaths += line.deaths;
-        p.career.assists += line.assists;
-        p.career.firstKills += line.firstKills;
-        p.career.firstDeaths += line.firstDeaths;
-        p.career.clutches += line.clutches;
-      }
-    }
-    if (mapRec.mvp) {
-      const p = state.players[mapRec.mvp];
-      if (p) p.career.mvps++;
-    }
   }
 
   let matchMvp: string | null = null;
   let matchMvpScore = -1;
+  const mvpAggregate: Record<string, number> = {};
+  for (const m of maps) {
+    for (const [pid, line] of Object.entries(m.lines)) mvpAggregate[pid] = (mvpAggregate[pid] ?? 0) + line.acs;
+  }
   // 总 MVP 只从获胜方产生（GDD §5.4 v2.3：败方最佳另标 SMVP，UI 层推导）
   const winnerPlayers = wins.A > wins.B ? A.players : B.players;
   for (const [pid, acs] of Object.entries(mvpAggregate)) {
@@ -542,16 +701,6 @@ export function simMatch(state: GameState, teamAId: string, teamBId: string, bo:
     if (acs > matchMvpScore) {
       matchMvpScore = acs;
       matchMvp = pid;
-    }
-  }
-
-  // 赛后状态：疲劳按图数，状态/士气按胜负
-  for (const t of [A, B]) {
-    const won = wins[t.side] > wins[t.side === "A" ? "B" : "A"];
-    for (const p of t.players) {
-      p.fatigue = clamp(p.fatigue + maps.length * 5, 0, 100);
-      p.form = clamp(p.form + (won ? 1 : -1), 30, 99);
-      p.morale = clamp(p.morale + (won ? 2 : -2), 10, 100);
     }
   }
 
@@ -567,9 +716,6 @@ export function simMatch(state: GameState, teamAId: string, teamBId: string, bo:
     score: [wins.A, wins.B],
     winner: wins.A > wins.B ? "A" : "B",
     mvp: matchMvp,
+    ...(interventions && interventions.length > 0 ? { interventions: interventions.slice() } : {}),
   };
-}
-
-function day(state: GameState): number {
-  return state.day;
 }

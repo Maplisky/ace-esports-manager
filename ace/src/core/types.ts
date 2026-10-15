@@ -254,6 +254,12 @@ export interface RoundEvent {
   side?: "A" | "B";
   /** 击杀伤害（实时 ACS 用；旧档缺省按 150） */
   dmg?: number;
+  /** 玩家喊的战术暂停（v1.0-8；AI 自动暂停无此标记） */
+  player?: boolean;
+  /** 喊话的战术 id（v1.0-8，播放器展示用） */
+  tactic?: string;
+  /** IGL 场上阅读采纳的喊话（v1.0-8，不消耗暂停次数） */
+  igl?: boolean;
 }
 
 export interface RoundRecord {
@@ -278,6 +284,8 @@ export interface RoundRecord {
     ults?: Record<string, number>;
     /** 回合末经济池（team money，旧档缺省 null） */
     money?: { A: number; B: number } | null;
+    /** 回合末剩余暂停次数（v1.0-8 引擎真值；旧档缺省 undefined 由 UI 估算） */
+    timeouts?: { A: number; B: number };
   };
 }
 
@@ -320,6 +328,34 @@ export interface MapRecord {
   agents: Record<string, string>;
   /** 双方强度归因分解（赛后归因条） */
   edges: { A: EdgeBreakdown; B: EdgeBreakdown };
+  /** IGL 场上阅读（v1.0-8，GDD §5.4）：第 7/14 回合的确定性建议；旧档缺省无 */
+  readings?: IglReading[];
+}
+
+/** IGL 场上阅读记录（v1.0-8）：建议与是否命中由模拟确定性生成，采纳与否看 MatchRecord.interventions */
+export interface IglReading {
+  /** 触发回合（7/14），建议作用于下一回合 */
+  round: number;
+  /** 读图的 IGL 选手 id */
+  iglId: string;
+  /** 建议的战术 id（tactics.ts CALL 表） */
+  suggested: string;
+  /** 建议质量 0-100（决定命中率；对错只在赛后复盘揭示） */
+  quality: number;
+  /** 本次读图是否命中（正确对策）；false=自信误判 */
+  correct: boolean;
+}
+
+/** 玩家比赛中干预（v1.0-8，GDD §5.4 情境化暂停战术菜单）：同 seed 重模拟的唯一输入 */
+export interface MatchIntervention {
+  /** 图序号（MatchRecord.maps 下标） */
+  map: number;
+  /** 生效回合（该回合起持续 3 回合；IGL 采纳 2 回合） */
+  round: number;
+  /** 战术 id（tactics.ts CALL 表） */
+  tactic: string;
+  /** IGL 场上阅读采纳（效果 80%、不耗暂停次数） */
+  igl?: boolean;
 }
 
 export interface MatchRecord {
@@ -335,6 +371,8 @@ export interface MatchRecord {
   score: [number, number];
   winner: "A" | "B";
   mvp: string | null;
+  /** 玩家干预审计（v1.0-8）：随比赛落档，复盘与回放共用 */
+  interventions?: MatchIntervention[];
 }
 
 export interface Fixture {
@@ -357,6 +395,10 @@ export interface Fixture {
   nextFixtureId?: string;
   /** 双败树败者去向（败者组下一轮 fixtureId） */
   nextLoserFixtureId?: string;
+  /** 已结算（v1.0-8）：我的比赛先模拟成 Record 供播放器消费，播放结束/关闭/推进兜底时才结算生涯与积分；AI 场次打完即结算 */
+  settled?: boolean;
+  /** 玩家比赛中干预列表（v1.0-8）：随存档走，重模拟的唯一输入 */
+  interventions?: MatchIntervention[];
 }
 
 export interface StandingsEntry {
@@ -534,6 +576,8 @@ export interface GameState {
   circuitPoints?: Record<string, number>;
   /** 最近一届选秀留档（v1.0-4；名人堂/生涯页数据源） */
   lastDraft?: { year: number; picks: { pickNo: number; teamId: string; playerId: string }[] };
+  /** 选秀权转移账本（v1.0-8，GDD §13「选秀权可交易」）：{from→to} 每条=一个签位；选秀日应用后清空 */
+  draftPickMoves?: { from: string; to: string }[];
   /** 赛区风格 META（v1.0-5，GDD §18-3）：每赛区 t1 队伍聚合的风格倾向（展示+国际赛叙事） */
   regionMeta?: Record<string, { style: string; aggr: number }>;
   /** 难度（v1.0-7，GDD §9.5）：normal=普通 / hard=困难（AI 侦察+预算微调）/ pro=职业（AI 读图更准+侦察更深）；开档后不可下调 */

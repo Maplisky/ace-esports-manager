@@ -29,7 +29,7 @@ const PAGES: { key: "overview" | "schedule" | "squad" | "tactics" | "training" |
 ];
 
 export function App() {
-  const { ready, screen, page, state, records, viewerFixtureId, viewerStartFinished, held, busy, toast, boot, setPage, closeViewer, advance, advanceToNextMatch, playHeld, scoutTeam, managerLife } = useStore();
+  const { ready, screen, page, state, records, viewerFixtureId, viewerStartFinished, held, busy, toast, boot, setPage, closeViewer, advance, advanceToNextMatch, playHeld, scoutTeam, managerLife, matchIntervene, matchFinish } = useStore();
 
   useEffect(() => {
     void boot();
@@ -129,14 +129,26 @@ export function App() {
         />
       )}
 
-      {viewerRecord && (
-        <MatchPlayer
-          record={viewerRecord}
-          state={state}
-          startFinished={viewerStartFinished}
-          onClose={closeViewer}
-        />
-      )}
+      {viewerRecord && (() => {
+        // v1.0-8：只有「已模拟未结算」的交互式比赛可喊话（历史回放只读）
+        const fx = state.fixtures.find((f) => f.id === viewerFixtureId);
+        const live = !!fx && fx.played && !fx.settled;
+        return (
+          <MatchPlayer
+            record={viewerRecord}
+            state={state}
+            startFinished={viewerStartFinished}
+            myTeamId={live ? state.myTeamId : null}
+            onIntervene={(mapIdx, round, tactic, igl) => {
+              if (viewerFixtureId) void matchIntervene(viewerFixtureId, mapIdx, round, tactic, igl);
+            }}
+            onFinished={() => {
+              if (viewerFixtureId) void matchFinish(viewerFixtureId); // v1.0-8：播放结束才结算
+            }}
+            onClose={closeViewer}
+          />
+        );
+      })()}
 
       {/* 事件卡最优先（GDD §9.3）：待决策队列逐张处理，盖在其他弹窗之上 */}
       {state.pendingEvents.length > 0 && <EventCardModal />}

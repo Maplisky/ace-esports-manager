@@ -1,8 +1,10 @@
-/** 赛前准备回归（GDD §5.5/§7.1）：mineHold 拦截、playHeldMatch 回放、mapLock/首发生效、逾期补赛 */
+/** 赛前准备回归（GDD §5.5/§7.1）：mineHold 拦截、playHeldMatch 回放、mapLock/首发生效、逾期补赛。
+ *  v1.0-8 交互式改版：playHeldMatch 只模拟不结算（播放器可喊话/采纳 IGL），
+ *  生涯与赛后状态入账延迟到 settleMatch——本测试同步锁新契约。 */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { generateWorld } from "../src/core/worldgen.ts";
-import { initSeasonFixtures, advanceDay, playHeldMatch } from "../src/core/sim/day.ts";
+import { initSeasonFixtures, advanceDay, playHeldMatch, settleMatch } from "../src/core/sim/day.ts";
 
 test("赛前准备：mineHold 拦截我的比赛，AI 比赛照常；playHeldMatch 回放且选择生效", () => {
   const state = generateWorld(2026);
@@ -53,8 +55,11 @@ test("赛前准备：mineHold 拦截我的比赛，AI 比赛照常；playHeldMat
   // 首发生效：替补出现在回放 lines 里，被换下的首发不在
   const bench = state.players[benchId]!;
   assert.ok(rec!.maps.some((m) => m.lines[benchId] !== undefined), `替补 ${bench.ign} 应上场`);
-  // 赛后：疲劳/生涯已累计
-  assert.ok(bench.career.maps > 0);
+  // v1.0-8 交互式契约：播放前已模拟未结算——生涯不入账；结算后一次性入账
+  assert.notEqual(myFixture.settled, true, "播放前不得结算");
+  assert.equal(bench.career.maps, 0, "播放前生涯不入账");
+  assert.equal(settleMatch(state, myFixture.id, rec, () => {}), true, "播放结束结算");
+  assert.ok(bench.career.maps > 0, "结算后生涯入账");
   // agentLock 不污染预案库（v1.9 检错：__prematch__ 曾被永久写入用户预案列表）
   for (const mapId of manualMaps) {
     const list = team.presets[mapId] ?? [];

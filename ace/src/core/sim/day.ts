@@ -16,10 +16,10 @@ import { runDraft } from "./draft.ts";
 import { noteMatchResult, careerWeeklyTick, noteManagerTitle, checkCareerMilestone } from "./career.ts";
 import { refreshCommercialWeek, weeklySponsorIncome } from "./business.ts";
 import type { PlayerAttrs } from "../types.ts";
-import { simMatch } from "./match.ts";
+import { simMatch, applyMatchEffects } from "./match.ts";
 import { aggrOfLineup, styleOf, STYLE_LABEL } from "./strength.ts";
 import { buildCup, buildLeague, buildSwissRound, buildDoubleElim, createFixture, fillNextSlot, pairSwissRound } from "./fixtures.ts";
-import type { GameState, Fixture, MatchRecord, NewsItem } from "../types.ts";
+import type { GameState, Fixture, MatchIntervention, MatchRecord, NewsItem } from "../types.ts";
 
 /**
  * 赛历（GDD §4.2，按自然年排布，考虑闰年）：
@@ -702,7 +702,9 @@ export function advanceDay(
     const mine = f.teamA === state.myTeamId || f.teamB === state.myTeamId;
   const seed = hashString(`${state.seed}:${f.id}`);
     const rec = simMatch(state, f.teamA, f.teamB, f.bo, seed, f.id, f.mapLock, f.agentLock);
+    applyMatchEffects(state, rec); // v1.0-8：生涯/状态入账从 simMatch 拆出，逐场同步
     f.played = true;
+    f.settled = true;
     f.winnerTeamId = rec.winner === "A" ? f.teamA : f.teamB;
     onMatch?.(rec, f.id, mine);
     applyStandings(state, f.comp, f.teamA, f.teamB, rec.score, rec.maps);
@@ -728,7 +730,9 @@ export function advanceDay(
     }
     const seed = hashString(`${state.seed}:${f.id}`);
     const rec = simMatch(state, f.teamA, f.teamB, f.bo, seed, f.id, f.mapLock, f.agentLock);
+    applyMatchEffects(state, rec); // v1.0-8：生涯/状态入账从 simMatch 拆出，逐场同步
     f.played = true;
+    f.settled = true;
     f.winnerTeamId = rec.winner === "A" ? f.teamA : f.teamB;
     onMatch?.(rec, f.id, mine);
     applyStandings(state, f.comp, f.teamA, f.teamB, rec.score, rec.maps);
@@ -892,6 +896,11 @@ export function advanceDay(
 }
 
 /** 赛前准备完成后重放"被拦截的我的比赛"（玩家 BP/英雄/首发生效；写入 fixture 不污染预案库） */
+/**
+ * 赛前准备完成 → 模拟我的比赛（v1.0-8 交互式改版）：
+ * 只产出 Record 供播放器消费，**不结算**——玩家可经 interveneHeldMatch 干预重模拟，
+ * 播放结束/关闭/推进兜底时调 settleMatch 入账（生涯/积分/新闻）。AI 场次不经此路径。
+ */
 export function playHeldMatch(
   state: GameState,
   fixtureId: string,
@@ -913,23 +922,64 @@ export function playHeldMatch(
   if (opts.agentPicks && Object.keys(opts.agentPicks).length > 0) {
     f.agentLock = opts.agentPicks;
   }
+  const rec = simMatchHeld(state, f);
+  f.played = true; // 已模拟未结算：App 的下一场查找跳过、advanceDay 不再补打
+  f.settled = false; // 显式 false：与旧档（字段缺省=打完即结算）区分，读档兜底依赖此语义
+  onMatch?.(rec, f.id, true);
+  return rec;
+}
+
+/** 同 seed 重模拟我的比赛（v1.0-8 情境化暂停/IGL 采纳）：追加干预后整场重跑——干预前的回合逐位一致 */
+export function interveneHeldMatch(
+  state: GameState,
+  fixtureId: string,
+  iv: MatchIntervention,
+  onMatch?: (rec: MatchRecord, fixtureId: string, mine: boolean) => void,
+): MatchRecord | null {
+  const f = state.fixtures.find((x) => x.id === fixtureId);
+  if (!f || !f.played || f.settled) return null;
+  f.interventions ??= [];
+  // 同图同回合的旧喊话被新喊话替换（喊话未生效前反悔）；IGL 采纳不与手动喊话互斥去重
+  if (!iv.igl) f.interventions = f.interventions.filter((x) => !(x.map === iv.map && x.round === iv.round && !x.igl));
+  f.interventions.push(iv);
+  const rec = simMatchHeld(state, f);
+  onMatch?.(rec, f.id, true);
+  return rec;
+}
+
+function simMatchHeld(state: GameState, f: GameState["fixtures"][number]): MatchRecord {
   const seed = hashString(`${state.seed}:${f.id}`);
-  const rec = simMatch(state, f.teamA, f.teamB, f.bo, seed, f.id, f.mapLock, f.agentLock);
-  f.played = true;
+  return simMatch(state, f.teamA, f.teamB, f.bo, seed, f.id, f.mapLock, f.agentLock, f.interventions);
+}
+
+/**
+ * 结算我的交互式比赛（v1.0-8）：播放结束/关闭/推进/读档兜底时调用一次（幂等守卫 settled）。
+ * 结算内容与 v1.0-7 的 playHeldMatch 尾部完全一致：胜者落档、泄露累计、生涯入账、
+ * 积分榜/对阵树推进、新闻、教练心态与决赛积分。
+ */
+export function settleMatch(
+  state: GameState,
+  fixtureId: string,
+  rec: MatchRecord | null,
+  onNews?: (notes: NewsItem[]) => void,
+): boolean {
+  const f = state.fixtures.find((x) => x.id === fixtureId);
+  if (!f || !f.played || f.settled) return false;
+  if (!rec) return false;
+  f.settled = true;
   f.winnerTeamId = rec.winner === "A" ? f.teamA : f.teamB;
+  applyMatchEffects(state, rec);
   // 招牌战术反向泄露的源头累计（GDD §6.4）：我的赛前准备场次同样逐图 +1
   if (state.myTeamId) {
     const mt = state.teams[state.myTeamId] as GameState["teams"][string] | undefined;
     if (mt) for (const m of rec.maps) mt.patternUsage[m.map] = (mt.patternUsage[m.map] ?? 0) + 1;
   }
-  // 与 advanceDay 同样的赛后处理
   const notes: NewsItem[] = [];
   applyStandings(state, f.comp, f.teamA, f.teamB, rec.score, rec.maps);
   fillNextSlot(state.fixtures, f, rec.winner === "A" ? f.teamA : f.teamB);
   const tagA = (state.teams[f.teamA] as GameState["teams"][string]).tag;
   const tagB = (state.teams[f.teamB] as GameState["teams"][string]).tag;
   notes.push({ day: state.day, kind: "match", text: `${f.label}｜${tagA} ${rec.score[0]}-${rec.score[1]} ${tagB}`, important: true });
-  onMatch?.(rec, f.id, true);
   noteMatchResult(state, rec.winner === "A" ? f.teamA === state.myTeamId : f.teamB === state.myTeamId, notes); // 赛前准备路径同样入账（v1.0-6）
   settleFinal(state, f, rec, notes); // 赛前准备路径同样结算冠军/积分（v1.0-3b 检错：此前漏发冠军积分）
   for (const n of notes) {
@@ -940,5 +990,6 @@ export function playHeldMatch(
       state.news.splice(idx, 1);
     }
   }
-  return rec;
+  onNews?.(notes);
+  return true;
 }

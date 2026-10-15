@@ -92,7 +92,8 @@ function atkSetupZone(plan: MapPlan, tactic: string, duty: AnchorDuty): PlanZone
   const target = tactic.split(":")[2] ?? "";
   const rushSite = target ? (site(target) ?? fallback) : fallback;
   switch (kind) {
-    case "rush": { // 快攻 4-1：4 人压目标通道口，1 人（哨卫）中路策应
+    case "rush": // 快攻 4-1：4 人压目标通道口，1 人（哨卫）中路策应
+    case "ultRush": { // 大招速攻（v1.0-8）：大招开路同样压通道，站位同快攻
       const mainLane = (target ? lane(target) : undefined) ?? lane("A") ?? plan.zones.find((z) => z.kind === "lane");
       if (duty === "sentinel") return midZ ?? mainLane ?? plan.spawnAtk;
       return mainLane ?? rushSite;
@@ -101,9 +102,12 @@ function atkSetupZone(plan: MapPlan, tactic: string, duty: AnchorDuty): PlanZone
       if (duty === "controller" || duty === "initiator") return midZ ?? fallback;
       if (duty === "duelist" || duty === "sentinel") return lane("A") ?? rushSite;
       return lane("B") ?? fallback;
+    case "fakeRotate": // 假打转点（v1.0-8）：默认分推起步，佯攻组压次通道拉扯
+      if (duty === "duelist" || duty === "sentinel") return lane("A") ?? rushSite;
+      return plan.zones.find((z) => z.kind === "lane" && z.id !== (lane("A")?.id ?? "")) ?? midZ ?? plan.spawnAtk;
     case "ecoStack": // eco 抱团：全员缩在进攻出生压后（避免分散送头）
       return plan.spawnAtk;
-    default: { // 默认分推 2-1-2：决斗+哨卫包点通道、先锋+机动位次通道、控场中路
+    default: { // 默认分推 2-1-2（含慢速默认+中局变奏，v1.0-8）：决斗+哨卫包点通道、先锋+机动位次通道、控场中路
       const mainLane = lane("A") ?? midZ ?? plan.spawnAtk;
       const secondLane = plan.zones.find((z) => z.kind === "lane" && z.id !== mainLane.id) ?? midZ ?? plan.spawnAtk;
       if (duty === "duelist" || duty === "sentinel") return mainLane;
@@ -122,19 +126,34 @@ function defSetupZone(plan: MapPlan, tactic: string, duty: AnchorDuty): PlanZone
   const midZ = plan.mid;
   const lane = (L: string) => plan.zones.find((z) => z.id === "lane" + L);
   switch (kind) {
-    case "stack": { // 重心 3-1-1：3 人囤目标点，先锋看另一侧，机动位中路
+    case "stack":
+    case "stackPush": { // 重心 3-1-1（抱团前压共用，v1.0-8）：3 人囤目标点，先锋看另一侧，机动位中路
       const t = site(target) ?? s1!;
       const others = [s1, s2, s3].filter((s) => s && s.id !== t.id);
       if (duty === "sentinel" || duty === "controller" || duty === "duelist") return t;
       if (duty === "initiator") return others[0] ?? midZ ?? t;
       return midZ ?? others[1] ?? t;
     }
+    case "giveSite": { // 放点打回防（v1.0-8）：让出目标点，兵力堆另一侧+回防通道
+      const t = site(target) ?? s1!;
+      const others = [s1, s2, s3].filter((s) => s && s.id !== t.id);
+      const anchor = others[0] ?? s2 ?? t;
+      if (duty === "sentinel") return lane(anchor.id.replace("site", "")) ?? anchor;
+      if (duty === "controller" || duty === "duelist") return anchor;
+      return midZ ?? others[1] ?? anchor;
+    }
+    case "sentinelTunnel": { // 双哨位蹲通道（v1.0-8）：双哨位锁侧翼通道，其余常规布防
+      if (duty === "sentinel") return lane("B") ?? s2 ?? s1!;
+      if (duty === "controller") return midZ ?? s2 ?? s1!;
+      if (duty === "initiator") return lane("A") ?? s1!;
+      return s2 ?? midZ ?? s1!;
+    }
     case "aggro": // 前顶压制：1 人守点，其余顶到通道口（哨卫留守最稳）
       if (duty === "sentinel") return s1!;
       if (duty === "controller") return midZ ?? lane("B") ?? s2!;
       if (duty === "initiator") return lane("B") ?? s2!;
       return lane("C") ?? lane("A") ?? midZ ?? s2!;
-    default: { // 常规布防：两点图 2-2-1（A 哨卫+B 控场决斗+中先锋机动），三点图 1-1-1-2
+    default: { // 常规布防（含 131 快速回防，v1.0-8）：两点图 2-2-1（A 哨卫+B 控场决斗+中先锋机动），三点图 1-1-1-2
       if (plan.sites.length >= 3) {
         if (duty === "sentinel") return s1!;
         if (duty === "controller") return s2!;
@@ -178,12 +197,22 @@ export const TACTIC_LABEL: Record<string, string> = {
   "atk:default": "默认分推",
   "atk:midSplit": "中路夹击",
   "atk:ecoStack": "抢攻抱团",
+  "atk:fakeRotate": "假打转点",
+  "atk:slowDefault": "慢速默认",
+  "atk:rush": "集火快攻",
+  "atk:ultRush": "大招速攻",
   "def:standard": "常规布防",
   "def:aggro": "前顶压制",
-  "def:stack:A": "重心 A",
-  "def:stack:B": "重心 B",
-  "def:stack:C": "重心 C",
+  "def:stack": "重心布防",
+  "def:stackPush": "抱团前压",
+  "def:rotate131": "131 回防",
+  "def:giveSite": "放点回防",
+  "def:sentinelTunnel": "双哨位蹲通道",
 };
 export function tacticLabel(tactic: string): string {
-  return TACTIC_LABEL[tactic] ?? tactic.split(":")[1] ?? tactic;
+  // 点位后缀（:A/:B/:C）剥掉查表再拼回——v1.0-8 喊话战术带目标点
+  const site = tactic.match(/:([ABC])$/)?.[1] ?? "";
+  const base = tactic.replace(/:[ABC]$/, "");
+  const label = TACTIC_LABEL[tactic] ?? TACTIC_LABEL[base] ?? tactic.split(":")[1] ?? tactic;
+  return site ? `${label} ${site}` : label;
 }

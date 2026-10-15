@@ -61,6 +61,10 @@ interface AppStore {
   askInquiry: (playerId: string) => Promise<void>;
   openViewer: (fixtureId: string) => void;
   closeViewer: () => void;
+  /** 比赛中喊话（v1.0-8）：玩家暂停菜单/IGL 采纳 → 重模拟 → 返回新 Record 无缝续播 */
+  matchIntervene: (fixtureId: string, mapIdx: number, round: number, tactic: string, igl: boolean) => Promise<MatchRecord | null>;
+  /** 比赛播放结束/关闭（v1.0-8）：结算交互式比赛（幂等） */
+  matchFinish: (fixtureId: string) => Promise<void>;
   showToast: (t: string | null) => void;
   /** 转会：开谈（花 1 行动力）/ 再谈 / 终局检定 / 挂牌 / 解约 / 答复挖角 */
   startNegotiation: (playerId: string, terms: { fee: number; salary: number; years: number; signingBonus: number; promisedRole: "core" | "starter" | "rotation" | "bench" }) => Promise<void>;
@@ -83,6 +87,8 @@ interface AppStore {
   signCoach: (coachId: string, slot: "training" | "mapTactics" | "match") => Promise<string | null>;
   /** 跳槽申请（v1.0-6，GDD §9.5）：休赛期教练市场 */
   applyJob: (teamId: string) => Promise<void>;
+  /** 选秀权交易（v1.0-8，GDD §13）：转会窗内卖出/买进下届选秀签 */
+  draftPickTrade: (action: "sell" | "buy") => Promise<void>;
   promoteFromAcademy: (pid: string, outId: string | null) => Promise<void>;
 }
 
@@ -279,7 +285,28 @@ export const useStore = create<AppStore>((set, get) => ({
   },
 
   openViewer: (viewerFixtureId) => set({ viewerFixtureId, viewerStartFinished: false }),
-  closeViewer: () => set({ viewerFixtureId: null }),
+  closeViewer: () => {
+    const fid = get().viewerFixtureId;
+    if (fid) void get().matchFinish(fid); // v1.0-8：中途关闭也要结算（幂等；worker 另有推进/读档兜底）
+    set({ viewerFixtureId: null });
+  },
+  matchIntervene: async (fixtureId, mapIdx, round, tactic, igl) => {
+    const res = await call<{ state: GameState; records: Record<string, MatchRecord>; record: MatchRecord | null }>({
+      type: "matchIntervene",
+      fixtureId,
+      iv: { map: mapIdx, round, tactic, igl },
+    });
+    records = res.records;
+    await persist(res.state);
+    set({ state: res.state, records });
+    return res.record;
+  },
+  matchFinish: async (fixtureId) => {
+    const res = await call<{ state: GameState; records: Record<string, MatchRecord>; notes: string[] }>({ type: "matchFinish", fixtureId });
+    records = res.records;
+    await persist(res.state);
+    set({ state: res.state, records, notes: res.notes.length > 0 ? [...get().notes, ...res.notes] : get().notes });
+  },
   showToast: (t) => {
     set({ toast: t });
     if (t) window.setTimeout(() => set({ toast: null }), 2200);
@@ -411,6 +438,14 @@ export const useStore = create<AppStore>((set, get) => ({
     records = res.records;
     await persist(res.state);
     set({ state: res.state, records, notes: res.notes, busy: false });
+  },
+
+  draftPickTrade: async (action) => {
+    const res = await call<{ state: GameState; records: Record<string, MatchRecord>; notes: string[]; message: string }>({ type: "draftPickTrade", action });
+    records = res.records;
+    await persist(res.state);
+    set({ state: res.state, records, notes: res.notes.length > 0 ? [...get().notes, ...res.notes] : get().notes });
+    get().showToast(res.message);
   },
 
   upgradeFacility: async () => {

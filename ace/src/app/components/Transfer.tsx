@@ -4,6 +4,7 @@
 import { useState } from "react";
 import type { GameState, Player } from "../../core/types.ts";
 import { marketValue, salaryExpectation, inTransferWindow } from "../../core/sim/transfer.ts";
+import { draftPickInfo } from "../../core/sim/draft.ts";
 import { useStore } from "../store.ts";
 import { PlayerFace, SyntheticBadge } from "./Avatar.tsx";
 import { DutyTendency } from "./AgentSelect.tsx";
@@ -19,7 +20,7 @@ const fmt = (v: number) => (v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(1)}M` :
 
 export function TransferPage(props: { state: GameState }) {
   const { state } = props;
-  const { respondBid, listToggle, releasePlayer, startNegotiation, askInquiry } = useStore();
+  const { respondBid, listToggle, releasePlayer, startNegotiation, askInquiry, draftPickTrade } = useStore();
   const [dossier, setDossier] = useState<string | null>(null);
   const myId = state.myTeamId ?? "";
   const team = state.teams[myId];
@@ -86,6 +87,39 @@ export function TransferPage(props: { state: GameState }) {
           })}
         </CollapsibleCard>
       )}
+
+      {/* 选秀权交易（v1.0-8，GDD §13）：转会窗内买卖下届选秀签——豪门「未来换现在」 */}
+      {team.tier === 1 && (() => {
+        const info = draftPickInfo(state);
+        const seller = info.buyOffer ? state.teams[info.buyOffer.teamId] : null;
+        return (
+          <CollapsibleCard title={`🗳 选秀权交易（下届选秀：我队 ${info.mySlots} 个签${info.myProjected ? ` · 预计第 ${info.myProjected} 顺位` : ""}）`}>
+            <div className="muted small" style={{ marginBottom: 6 }}>
+              转会窗内可买卖下届选秀签：1 号签约 $500K，顺位每降一位 −$25K；单队最多持 3 签。{!info.windowOpen && " 当前不在转会窗内。"}
+            </div>
+            <div className="row" style={{ gap: 10, flexWrap: "wrap" }}>
+              <button
+                className="small"
+                disabled={!info.windowOpen || info.sellPrice === null}
+                title={info.sellPrice === null ? "我队已无可卖的选秀权" : ""}
+                onClick={() => void draftPickTrade("sell")}
+              >
+                卖出我队选秀权（{info.sellPrice !== null ? `约 ${fmt(info.sellPrice)}` : "无签可卖"}）
+              </button>
+              <button
+                className="small primary"
+                disabled={!info.windowOpen || !info.buyOffer || team.budget < (info.buyOffer?.price ?? 0)}
+                title={info.buyOffer ? `${seller?.name} 愿意出售第 ${info.buyOffer.slotNo} 顺位签` : "市场上没有可买的签位"}
+                onClick={() => void draftPickTrade("buy")}
+              >
+                {info.buyOffer
+                  ? `买进 ${seller?.tag} 的签（第 ${info.buyOffer.slotNo} 顺位 · ${fmt(info.buyOffer.price)}）`
+                  : "无可买签位"}
+              </button>
+            </div>
+          </CollapsibleCard>
+        );
+      })()}
 
       {/* 待答复挖角 */}
       {state.incomingBids.length > 0 && (
