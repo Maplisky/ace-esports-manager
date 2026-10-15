@@ -2,9 +2,10 @@
  * 系统页（v1.0-9，GDD §11.4/§10.1）：存档信任面板——
  * 3 手动槽 + 自动档 + 每日轮换备份（留 3 份）+ 导出/导入 JSON（永远可用，信任玩家）。
  */
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useStore } from "../store.ts";
 import { MANUAL_SLOTS } from "../save.ts";
+import { audioEnabled, setAudioEnabled, sfx } from "../audio.ts";
 
 function fmtDate(iso: string): string {
   const d = new Date(iso);
@@ -12,8 +13,9 @@ function fmtDate(iso: string): string {
 }
 
 export function SystemPage() {
-  const { state, saves, refreshSaves, saveToSlot, loadFromKey, removeSave, exportSave, importSaveText } = useStore();
+  const { state, saves, refreshSaves, saveToSlot, loadFromKey, removeSave, exportSave, importSaveText, setStopDensity } = useStore();
   const fileRef = useRef<HTMLInputElement>(null);
+  const [audioOn, setAudioOn] = useState(audioEnabled());
 
   useEffect(() => {
     void refreshSaves();
@@ -52,6 +54,23 @@ export function SystemPage() {
 
   return (
     <div>
+      <div className="card" style={{ padding: "14px 18px" }}>
+        <h3 style={{ marginBottom: 4 }}>⚙️ 体验设置</h3>
+        <div className="row" style={{ flexWrap: "wrap", gap: 8, alignItems: "center", marginBottom: 8 }}>
+          <span className="small">推进停靠密度</span>
+          {([["light", "稀疏", "只在比赛日停靠，杂项提示只入新闻"], ["normal", "标准", "现状：比赛停靠 + 推进提示"], ["full", "密集", "每周一停靠并附训练周报"]] as const).map(([k, label, tip]) => (
+            <button key={k} className={state?.stopDensity === k || (!state?.stopDensity && k === "normal") ? "small primary" : "small"} title={tip} onClick={() => void setStopDensity(k)}>{label}</button>
+          ))}
+        </div>
+        <div className="row" style={{ flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+          <span className="small">音效</span>
+          <button className={audioOn ? "small primary" : "small"} onClick={() => { const v = !audioOn; setAudioEnabled(v); setAudioOn(v); if (v) sfx("ui" as never); }}>
+            {audioOn ? "开（WebAudio 合成音）" : "关（默认）"}
+          </button>
+          <span className="muted small">回合提示 / 击杀 / 下包 / 赛点——振荡器自产合成，零外部素材</span>
+        </div>
+      </div>
+
       <div className="card" style={{ padding: "14px 18px" }}>
         <h3 style={{ marginBottom: 4 }}>💾 存档管理</h3>
         <div className="muted small" style={{ marginBottom: 10 }}>

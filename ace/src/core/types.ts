@@ -641,6 +641,8 @@ export interface GameState {
   onboarding?: { lineup?: boolean; agents?: boolean; schedule?: boolean };
   /** 赞助业绩倍率（GDD §8.4 v1.4）：我的联赛四强 1.2 / 夺冠 1.5——联赛结算时刷新，作用于带业绩条款的赞助周收入 */
   sponsorMult?: number;
+  /** 推进停靠密度（GDD v1.4-2）：light 只停比赛 / normal 现状 / full 每周一训练周报停车 */
+  stopDensity?: "light" | "normal" | "full";
 }
 
 /** 训练赛目标三选一（GDD §5.6 v1.1）：磨合 / 风格特训 / 图池特训 */

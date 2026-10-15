@@ -9,6 +9,8 @@ import { SquadPage } from "./components/Squad.tsx";
 import { TacticsPage } from "./components/Tactics.tsx";
 import { TrainingPage } from "./components/Training.tsx";
 import { FinancePage } from "./components/FinancePage.tsx";
+import { LibraryPage } from "./components/LibraryPage.tsx";
+import { ReplaysPage } from "./components/ReplaysPage.tsx";
 import { BusinessPage } from "./components/Business.tsx";
 import { ManagerPage } from "./components/Manager.tsx";
 import { CareerPage } from "./components/Career.tsx";
@@ -23,7 +25,7 @@ import { cashFlowForecast } from "../core/sim/finance.ts";
 import { ErrorBoundary } from "./components/ErrorBoundary.tsx";
 import { EventCardModal } from "./components/EventCards.tsx";
 
-const PAGES: { key: "overview" | "schedule" | "squad" | "tactics" | "training" | "finance" | "business" | "transfer" | "manager" | "achievements" | "career" | "system"; label: string }[] = [
+const PAGES: { key: "overview" | "schedule" | "squad" | "tactics" | "training" | "finance" | "business" | "transfer" | "manager" | "achievements" | "career" | "library" | "replays" | "system"; label: string }[] = [
   { key: "overview", label: "总览" },
   { key: "schedule", label: "赛程" },
   { key: "squad", label: "阵容" },
@@ -35,6 +37,8 @@ const PAGES: { key: "overview" | "schedule" | "squad" | "tactics" | "training" |
   { key: "manager", label: "经理" },
   { key: "achievements", label: "成就" },
   { key: "career", label: "名人堂" },
+  { key: "library", label: "资料库" },
+  { key: "replays", label: "回放" },
   { key: "system", label: "系统" },
 ];
 
@@ -175,6 +179,8 @@ export function App() {
           {page === "tactics" && <TacticsPage state={state} />}
           {page === "training" && <TrainingPage state={state} />}
           {page === "finance" && <FinancePage state={state} />}
+          {page === "library" && <LibraryPage state={state} />}
+          {page === "replays" && <ReplaysPage state={state} records={records} />}
           {page === "transfer" && <TransferPage state={state} />}
           {page === "business" && <BusinessPage state={state} />}
           {page === "manager" && <ManagerPage state={state} />}

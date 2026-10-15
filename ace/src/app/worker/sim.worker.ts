@@ -14,6 +14,7 @@ import type { ScrimGoal } from "../../core/types.ts";
 import type { StyleKey } from "../../core/sim/strength.ts";
 import { signSponsorOffer, cancelSponsorById, acceptGig, declineGig, signStream, cancelStream } from "../../core/sim/business.ts";
 import { Rng, hashString } from "../../core/rng.ts";
+import { MAP_BY_ID } from "../../core/data/maps.ts";
 import type { GameState, MatchIntervention, MatchRecord, Preset, TransferOffer } from "../../core/types.ts";
 
 export interface SavedPayload {
@@ -34,6 +35,23 @@ function snapshot() {
   return { state: structuredClone(state), records: structuredClone(records) };
 }
 
+/** 训练周报（v1.4-2 密集档周一停车）：课表摘要 + 疲劳/士气均值 + 图池变化——纯派生零 RNG */
+function trainingWeeklyReport(state: GameState): string[] {
+  const t = state.myTeamId ? state.teams[state.myTeamId] : null;
+  if (!t) return [];
+  const roster = t.roster.map((id) => state.players[id]).filter((p): p is NonNullable<typeof p> => !!p);
+  if (roster.length === 0) return [];
+  const avg = (f: (p: typeof roster[number]) => number) => Math.round(roster.reduce((s, p) => s + f(p), 0) / roster.length);
+  const slots = state.teamSchedule;
+  const counts: Record<string, number> = {};
+  for (const s of slots) counts[s] = (counts[s] ?? 0) + 1;
+  const parts = Object.entries(counts).map(([k, v]) => `${{ map: "跑图", review: "复盘", scrim: "对抗", individual: "个人", rest: "休息" }[k] ?? k}×${v}`).join(" · ");
+  const maps = state.trainingMaps.map((m) => MAP_BY_ID.get(m)?.name ?? m).join("/");
+  return [
+    `📋 训练周报（D${state.day}）：本周 ${parts}，跑图目标 ${maps}；全队疲劳均值 ${avg((p) => p.fatigue)}、士气均值 ${avg((p) => p.morale)}、羁绊 ${Math.round(t.bond)}。`,
+  ];
+}
+
 function doAdvance(maxDays = 1): void {
   if (!state) return;
   if (state.manager.career?.ending) return; // 生涯终局（v1.0-6）：下课/退休后世界冻结
@@ -41,6 +59,7 @@ function doAdvance(maxDays = 1): void {
   const notes: string[] = [];
   const playedMine: string[] = [];
   let seasonEnded = false;
+  let weeklyReport: string[] | null = null;
   for (let i = 0; i < maxDays && !seasonEnded; i++) {
     const r = advanceDay(
       state,
@@ -60,6 +79,11 @@ function doAdvance(maxDays = 1): void {
     notes.push(...r.notes);
     seasonEnded = r.seasonEnded;
     if (replyHeld) break; // 停车等待赛前准备
+    // 密集档周报停车（v1.4-2）：每周一停靠一次，附带训练周报
+    if (state.stopDensity === "full" && state.day % 7 === 1) {
+      weeklyReport = trainingWeeklyReport(state);
+      break;
+    }
   }
   // v1.0-10：日推进后评估成就（新解锁进新闻流；教学局不走 noteMatchResult，天然不计）
   const achNotes: { day: number; kind: string; text: string; important?: boolean }[] = [];
@@ -72,7 +96,18 @@ function doAdvance(maxDays = 1): void {
       if (state.day === u.day) notes.push(u.text);
     }
   }
-  if (seasonEnded) records = {}; // 翻年清回放：旧赛季 fixture 已重建，链接不再可达；防无限增长拖慢每帧快照克隆
+  if (seasonEnded) {
+    // 翻年回放滚动保留（v1.4-2：不再全清——跨赛季回放库可看；上限 30 场防快照克隆变慢）
+    const keys = Object.keys(records);
+    if (keys.length > 30) for (const k of keys.slice(0, keys.length - 30)) delete records[k];
+  }
+  // 轻量档（v1.4-2）：非关键提示（解锁/成就）不进推进 toast——仍入新闻流
+  if (state.stopDensity === "light") {
+    const critical = notes.filter((n) => /🏆|❌|下课|夺冠|加冕|教学局|预警/.test(n));
+    notes.length = 0;
+    notes.push(...critical);
+  }
+  if (weeklyReport) notes.push(...weeklyReport);
   reply({
     type: "advanced",
     ...snapshot(),
@@ -477,6 +512,10 @@ function handleWorkerMessage(e: MessageEvent) {
     reply({ type: "snapshot", state: null, records: {} });
   } else if (type === "cancelStream") {
     if (state) cancelStream(state, msg.playerId as string);
+    reply({ type: "snapshot", ...snapshot() });
+  } else if (type === "setStopDensity") {
+    // 停靠密度三档（v1.4-2）：light 只停比赛 / normal 现状 / full 每周一训练周报停车
+    if (state) state.stopDensity = (msg.density as "light" | "normal" | "full") ?? "normal";
     reply({ type: "snapshot", ...snapshot() });
   } else if (type === "selfStudy") {
     // 自我进修（GDD §9.5 v1.4）：个人钱包 $5K → 一项技能 +1（上限 75）

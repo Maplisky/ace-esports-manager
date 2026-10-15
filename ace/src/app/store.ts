@@ -9,7 +9,7 @@ import {
 import type { PreMatchResult } from "./components/PreMatch.tsx";
 
 type Screen = "start" | "main";
-type Page = "overview" | "schedule" | "squad" | "tactics" | "training" | "finance" | "transfer" | "business" | "manager" | "achievements" | "career" | "system";
+type Page = "overview" | "schedule" | "squad" | "tactics" | "training" | "finance" | "business" | "transfer" | "manager" | "achievements" | "career" | "library" | "replays" | "system";
 
 export interface NegotiationState {
   offer: TransferOffer;
@@ -91,6 +91,7 @@ interface AppStore {
   requestRotationTalk: (playerId: string) => Promise<void>;
   managerLife: (kind: "meal" | "feast" | "fun") => Promise<void>;
   selfStudy: (skill: string) => Promise<void>;
+  setStopDensity: (density: "light" | "normal" | "full") => Promise<void>;
   upgradeFacility: () => Promise<void>;
   signCoach: (coachId: string, slot: "training" | "mapTactics" | "match") => Promise<string | null>;
   /** 跳槽申请（v1.0-6，GDD §9.5）：休赛期教练市场 */
@@ -567,6 +568,14 @@ export const useStore = create<AppStore>((set, get) => ({
       records = res.records ?? get().records;
       set({ state: res.state, records });
       if (res.message) get().showToast(res.message);
+    }
+  },
+
+  setStopDensity: async (density) => {
+    const res = await call<{ state?: GameState; records?: Record<string, MatchRecord> }>({ type: "setStopDensity", density });
+    if (res.state) {
+      records = res.records ?? get().records;
+      set({ state: res.state, records });
     }
   },
 }));

@@ -12,7 +12,8 @@ import { Tactical2D } from "./Tactical2D.tsx";
 import { liveLines, liveMeta, summarizeMatch, pickMvps, type StatRow } from "../../core/sim/matchstats.ts";
 import { PLAYER_CALLS, callLabel, callDesc, type TacticCallDef } from "../../core/sim/tactics.ts";
 import { buildReplayPayload, anonymizeReplay, shareLinkOf } from "../../core/sim/share.ts";
-import type { GameState, IglReading, MatchRecord, RoundEvent } from "../../core/types.ts";
+import { sfx } from "../audio.ts";
+import type { GameState, IglReading, MapRecord, MatchRecord, RoundEvent } from "../../core/types.ts";
 
 const SLOW_MS = 850;
 const FAST_MS = 280;
@@ -244,6 +245,19 @@ export function MatchPlayer(props: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pos.mi, pos.ri, pos.ei]);
 
+  // 音效（v1.4-2，§10.4：WebAudio 自产合成，默认关）：回合起/击杀/下包/赛点
+  useEffect(() => {
+    if (!round || !playing) return;
+    if (pos.ei === 0) sfx("round");
+    if (pos.ei >= 0 && pos.ei < round.events.length) {
+      const e = round.events[pos.ei]!;
+      if (e.t === "kill") sfx("kill");
+      else if (e.t === "plant") sfx("plant");
+    }
+    if (pos.ei >= round.events.length && isKeyRound) sfx("matchpoint");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pos.mi, pos.ri, pos.ei, playing]);
+
   // 回合内双方存活数（从已揭示击杀反推）
   const aliveCounts = useMemo(() => {
     let da = 0;
@@ -418,6 +432,9 @@ export function MatchPlayer(props: {
                   ))}
                 </div>
               )}
+
+              {/* 每图经济曲线 + 击杀时间轴（v1.4-2 外围包；end.money 旧档缺省时隐藏） */}
+              {viewMap && <MapTrendCard map={viewMap} tagA={teamA?.tag ?? "A"} tagB={teamB?.tag ?? "B"} />}
 
               <StatsTable
                 state={state}
@@ -1036,4 +1053,57 @@ function avgOf(record: MatchRecord, side: "A" | "B", key: keyof import("../../co
     .filter((v): v is number => typeof v === "number");
   if (vals.length === 0) return 0;
   return vals.reduce((s, v) => s + v, 0) / vals.length;
+}
+
+/** 每图经济曲线 + 击杀时间轴（v1.4-2 外围包）：纯 SVG；end.money 缺省（旧档）整卡隐藏。
+ *  击杀口径：回合末存活差分（上场 5 人 − alive）即本回合阵亡数，按方分列。 */
+function MapTrendCard({ map, tagA, tagB }: { map: MapRecord; tagA: string; tagB: string }) {
+  const rounds = map.rounds;
+  if (!rounds.some((r) => r.end.money != null)) return null; // 旧档无经济快照
+  const money = rounds.map((r) => r.end.money);
+  const kA: number[] = [], kB: number[] = [];
+  let prevA = 5, prevB = 5;
+  for (const r of rounds) {
+    kA.push(Math.max(0, prevA - r.end.alive.A));
+    kB.push(Math.max(0, prevB - r.end.alive.B));
+    prevA = r.end.alive.A; prevB = r.end.alive.B;
+  }
+  const W = 680, H = 150, pad = { l: 46, r: 10, t: 10, b: 18 };
+  const n = rounds.length;
+  const mvals = money.filter((m): m is { A: number; B: number } => m != null);
+  const mHi = Math.max(...mvals.flatMap((m) => [m.A, m.B]), 1);
+  const xOf = (i: number) => pad.l + (i / Math.max(1, n - 1)) * (W - pad.l - pad.r);
+  const yOf = (v: number) => pad.t + (1 - v / mHi) * (H - pad.t - pad.b);
+  const line = (side: "A" | "B") =>
+    money.map((m, i) => (m == null ? null : `${xOf(i)},${yOf(m[side])}`)).filter(Boolean).join(" ");
+  const kMax = Math.max(...kA, ...kB, 1);
+  const barW = Math.max(2, (W - pad.l - pad.r) / n - 1.5);
+  const midY = H - pad.b;
+  return (
+    <div className="card" style={{ margin: "10px 0", textAlign: "left", padding: "10px 14px" }}>
+      <b>📈 经济与击杀曲线 · {MAP_BY_ID.get(map.map)?.name ?? map.map}</b>
+      <svg viewBox={`0 0 ${W} ${H + 44}`} style={{ width: "100%", maxWidth: W }}>
+        <line x1={pad.l} y1={yOf(0)} x2={W - pad.r} y2={yOf(0)} stroke="rgba(255,255,255,0.15)" />
+        <text x={pad.l - 5} y={yOf(mHi) + 8} fontSize={9} textAnchor="end" fill="rgba(255,255,255,0.4)">${Math.round(mHi / 1000)}K</text>
+        <polyline points={line("A")} fill="none" stroke="#4ade80" strokeWidth={1.6} />
+        <polyline points={line("B")} fill="none" stroke="#60a5fa" strokeWidth={1.6} />
+        {rounds.map((r, i) => {
+          const hA = (kA[i]! / kMax) * 26;
+          const hB = (kB[i]! / kMax) * 26;
+          return (
+            <g key={i}>
+              <rect x={xOf(i) - barW / 2} y={midY - hA} width={barW} height={hA} fill="#4ade80" opacity={0.55}>
+                <title>{`R${r.n}：${tagA} 拿 ${kA[i]} 杀 / ${tagB} 拿 ${kB[i]} 杀`}</title>
+              </rect>
+              <rect x={xOf(i) - barW / 2} y={midY} width={barW} height={hB} fill="#60a5fa" opacity={0.55} />
+            </g>
+          );
+        })}
+        <line x1={pad.l} y1={midY} x2={W - pad.r} y2={midY} stroke="rgba(255,255,255,0.2)" />
+        <text x={W / 2} y={H + 38} fontSize={9.5} textAnchor="middle" fill="rgba(255,255,255,0.45)">
+          上条 = {tagA} 每回合击杀 · 下条 = {tagB} · 线 = 回合末经济池
+        </text>
+      </svg>
+    </div>
+  );
 }
