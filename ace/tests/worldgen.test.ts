@@ -135,7 +135,7 @@ test("赛历与翻年：自然年日历（含四赛区 Stage2/休赛期），年
   assert.ok(aPlayer.contractYears >= 0, "合同年递减不越界");
 });
 
-test("Masters 国际赛：Stage1 四赛区各前二晋级，单败淘汰 7 场，冠军记荣誉", () => {
+test("Masters 国际赛（真实赛制）：赛区第1直通 + 2/3名瑞士轮 + 8队双败，全程打完并记冠军荣誉", () => {
   const state = generateWorld(99);
   initSeasonFixtures(state);
   state.myTeamId = Object.values(state.teams).find((t) => t.tier === 1)!.id;
@@ -145,30 +145,35 @@ test("Masters 国际赛：Stage1 四赛区各前二晋级，单败淘汰 7 场�
   }
   const masters = state.comps["masters"]!;
   assert.ok(masters, "夏季窗口首日应完成 Masters 抽签");
-  assert.equal(masters.teamIds.length, 8);
-  // 四赛区各 2 队，且都是一级队
+  assert.equal(masters.teamIds.length, 12, "直通 4 + 瑞士轮 8");
+  // 四赛区各 3 队（第 1 直通 + 第 2/3 瑞士轮），且都是一级队，与 Stage1 前三一致
+  const tableOf = (rid: string) => Object.values(state.comps[`stage1-${rid}-t1`]!.standings).sort(
+    (a, b) => b.pts - a.pts || (b.mapW - b.mapL) - (a.mapW - a.mapL) || (b.roundW - b.roundL) - (a.roundW - a.roundL),
+  );
   for (const rid of ["americas", "emea", "pacific", "china"]) {
     const fromRegion = masters.teamIds.filter((id) => state.teams[id]?.regionId === rid);
-    assert.equal(fromRegion.length, 2, `${rid} 应 2 队晋级`);
+    assert.equal(fromRegion.length, 3, `${rid} 应 3 队（1 直通 + 2 瑞士轮）`);
     assert.ok(fromRegion.every((id) => state.teams[id]?.tier === 1));
-    // 晋级队 = 该赛区 Stage1 积分前二（与 buildMasters 同一套同分裁决：积分→图差→回合差）
-    const table = Object.values(state.comps[`stage1-${rid}-t1`]!.standings).sort(
-      (a, b) => b.pts - a.pts || (b.mapW - b.mapL) - (a.mapW - a.mapL) || (b.roundW - b.roundL) - (a.roundW - a.roundL),
-    );
-    assert.deepEqual(new Set(fromRegion), new Set(table.slice(0, 2).map((s) => s.teamId)));
+    assert.deepEqual(new Set(fromRegion), new Set(tableOf(rid).slice(0, 3).map((s) => s.teamId)));
   }
-  const mastersFixtures = state.fixtures.filter((f) => f.comp === "masters");
-  assert.equal(mastersFixtures.length, 7, "8 队单败 = QF4 + SF2 + 决赛 1");
-  assert.ok(mastersFixtures.every((f) => f.stage === "masters"));
+  // 瑞士轮第 1 轮：4 场，首轮不撞同赛区
+  const r1 = state.fixtures.filter((f) => f.comp === "masters" && f.label.includes("瑞士轮第1轮"));
+  assert.equal(r1.length, 4);
+  assert.ok(r1.every((f) => state.teams[f.teamA]!.regionId !== state.teams[f.teamB]!.regionId), "首轮跨赛区");
   assert.ok(state.news.some((n) => n.text.includes("Masters")));
-  // 打完 Masters（3 轮至 140 天）
-  for (let d = 0; d < 60 && state.fixtures.some((f) => f.comp === "masters" && !f.played && f.teamA !== ""); d++) {
+  // 打完整个 Masters（瑞士轮 3 轮 + 双败树，至 ~151 天；推进为次日检测制，固定推进到 160 天）
+  for (let d = 0; d < 60; d++) {
     advanceDay(state);
   }
-  const played = state.fixtures.filter((f) => f.comp === "masters" && f.played);
-  assert.equal(played.length, 7, "Masters 应全部打完");
-  const finalF = played.find((f) => f.label.includes("总决赛"))!;
-  const champId = Object.values(masters.standings).sort((a, b) => b.w - a.w)[0]!.teamId;
+  const all = state.fixtures.filter((f) => f.comp === "masters");
+  assert.ok(all.every((f) => f.played), "Masters 应全部打完");
+  assert.equal(all.filter((f) => f.label.includes("瑞士轮")).length, 10, "瑞士轮 4+4+2 共 10 场");
+  assert.equal(all.filter((f) => f.label.endsWith("胜者组第1轮")).length, 4, "淘汰赛 8 队");
+  assert.equal(all.length, 24, "瑞士轮 10 + 双败树 14");
+  const finalF = all.find((f) => f.label.includes("总决赛"))!;
+  assert.equal(finalF.bo, 5, "总决赛 BO5");
+  const champId = finalF.winnerTeamId!;
+  assert.ok(champId, "赛果已记录在 fixture");
   const champTeam = state.teams[champId]!;
   assert.ok(champTeam.roster.every((pid) => state.players[pid]!.career.titles > 0), "冠军全队荣誉 +1");
   assert.ok(state.news.some((n) => n.text.includes("Masters 国际赛冠军")), "冠军新闻");

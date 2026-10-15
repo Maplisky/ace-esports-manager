@@ -15,8 +15,8 @@ import { seasonRetirements } from "./retirement.ts";
 import { refreshCommercialWeek, weeklySponsorIncome } from "./business.ts";
 import type { PlayerAttrs } from "../types.ts";
 import { simMatch } from "./match.ts";
-import { buildCup, buildLeague, fillNextSlot } from "./fixtures.ts";
-import type { GameState, MatchRecord, NewsItem } from "../types.ts";
+import { buildCup, buildLeague, buildSwissRound, buildDoubleElim, createFixture, fillNextSlot, pairSwissRound } from "./fixtures.ts";
+import type { GameState, Fixture, MatchRecord, NewsItem } from "../types.ts";
 
 /**
  * 赛历（GDD §4.2，按自然年排布，考虑闰年）：
@@ -41,6 +41,8 @@ const CALENDAR = {
   summerEnd: 152,
   stage2Start: 153,
   stage2End: 232,
+  championsDraw: 236,
+  championsGroupStart: 240,
   offseasonStart: 233,
 } as const;
 
@@ -51,8 +53,6 @@ export const REGIONS: { id: string; label: string; logo: string }[] = [
   { id: "pacific", label: "Pacific", logo: "assets/regions/pacific.svg" },
   { id: "china", label: "China", logo: "assets/regions/china.svg" },
 ];
-/** Masters 每赛区晋级名额（×4 赛区 = 8 队单败） */
-const MASTERS_SLOTS_PER_REGION = 2;
 const LEGACY_REGION_LABEL: Record<string, string> = { xia: "霞赛区", yao: "曜赛区" };
 const regionLabel = (id: string): string => REGIONS.find((r) => r.id === id)?.label ?? LEGACY_REGION_LABEL[id] ?? "联赛";
 
@@ -122,23 +122,210 @@ export function initSeasonFixtures(state: GameState): void {
   }
 }
 
-/** Masters 国际赛（GDD §7.3）：Stage1 四赛区 VCT 各前 2 晋级，夏季窗口单败淘汰 */
+/**
+ * Masters 国际赛（GDD §7.3 v1.0-3b，对齐 Masters 2025 真实赛制）：
+ * 四赛区 Stage1 第 1 名直通淘汰赛；第 2/3 名共 8 队打瑞士轮（两胜出线、两败淘汰）出 4 队；
+ * 淘汰赛 8 队双败（胜者组 3 轮 + 败者组 4 轮 + BO5 总决赛）。全程 BO3。
+ */
 function buildMasters(state: GameState, notes: NewsItem[]): void {
-  const rng = new Rng(hashString(`${state.seed}:masters:${state.year}`));
-  const qualified: string[] = [];
+  const direct: string[] = []; // 赛区第 1 直通
+  const pot2: string[] = []; // 各赛区第 2 名
+  const pot3: string[] = []; // 各赛区第 3 名
   for (const r of REGIONS) {
-    const table = Object.values(state.comps[`stage1-${r.id}-t1`]?.standings ?? {}).sort(
-      (x, y) => y.pts - x.pts || (y.mapW - y.mapL) - (x.mapW - x.mapL) || (y.roundW - y.roundL) - (x.roundW - x.roundL),
-    );
-    for (const s of table.slice(0, MASTERS_SLOTS_PER_REGION)) qualified.push(s.teamId);
+    const table = sortedTable(state, `stage1-${r.id}-t1`);
+    if (table.length < 3) return; // 赛区数据不足不开赛（防御）
+    direct.push(table[0]!.teamId);
+    pot2.push(table[1]!.teamId);
+    pot3.push(table[2]!.teamId);
   }
-  if (qualified.length !== MASTERS_SLOTS_PER_REGION * REGIONS.length) return;
-  state.comps["masters"] = { key: "masters", name: "Masters 国际赛", stage: "masters", teamIds: qualified, standings: {} };
-  for (const id of qualified) {
+  const all = [...direct, ...pot2, ...pot3];
+  state.comps["masters"] = { key: "masters", name: "Masters 国际赛", stage: "masters", teamIds: all, standings: {} };
+  for (const id of all) {
     state.comps["masters"]!.standings[id] = { teamId: id, w: 0, l: 0, mapW: 0, mapL: 0, roundW: 0, roundL: 0, pts: 0 };
   }
-  buildCup(state.fixtures, { comp: "masters", name: "Masters", stage: "masters", teamIds: qualified, startDay: CALENDAR.mastersStart, gapDays: 7, bo: 3, rng });
-  notes.push({ day: state.day, kind: "league", important: true, text: "🌍 Masters 国际赛抽签完成：双赛区 Stage 1 前四晋级，单败淘汰。" });
+  // 瑞士轮第 1 轮：第 2 名档 × 第 3 名档循环错位，保证首轮不撞同赛区
+  const pairs = pot2.map((t, i): [string, string] => [t, pot3[(i + 1) % pot3.length]!]);
+  buildSwissRound(state.fixtures, { comp: "masters", name: "Masters", stage: "masters", pairs, day: CALENDAR.mastersStart, roundNo: 1, bo: 3 });
+  notes.push({
+    day: state.day, kind: "league", important: true,
+    text: `🌍 Masters 国际赛开抽：${direct.map((id) => state.teams[id]?.tag ?? "?").join("/")} 以赛区头名直通淘汰赛，8 队瑞士轮（两胜出线、两败淘汰）决出另外 4 席，淘汰赛双败。`,
+  });
+}
+
+/** masters comp 内某队当前战绩（淘汰赛未建阶段 = 瑞士轮战绩） */
+function masterRecord(state: GameState, teamId: string): { w: number; l: number } {
+  const s = state.comps["masters"]?.standings[teamId];
+  return { w: s?.w ?? 0, l: s?.l ?? 0 };
+}
+
+/** Masters 瑞士轮推进：一轮全部打完（且非当日）→ 按战绩配对下一轮；4 队出线 → 建双败淘汰赛 */
+function progressMasters(state: GameState, notes: NewsItem[]): void {
+  if (!state.comps["masters"]) return;
+  const swiss = state.fixtures.filter((f) => f.comp === "masters" && f.label.includes("瑞士轮"));
+  if (swiss.length === 0) return;
+  if (state.fixtures.some((f) => f.comp === "masters" && f.label.includes("胜者组第1轮"))) return; // 淘汰赛已建
+  if (swiss.some((f) => !f.played)) return;
+  const lastDay = Math.max(...swiss.map((f) => f.day));
+  if (lastDay >= state.day) return; // 当天刚打完，次日检测再排（下一轮日 = 上轮日 + 3，日程不漂移）
+  const swissTeams = swiss.flatMap((f) => [f.teamA, f.teamB]);
+  const qualified = [...new Set(swissTeams)].filter((id) => masterRecord(state, id).w >= 2);
+  if (qualified.length === 4) {
+    buildMastersPlayoffs(state, notes, qualified);
+    return;
+  }
+  // 未出线且未淘汰的队继续配对（两胜制 8 队：R2 后剩 1-1 组 4 队，R3 后恰好 4 队出线）
+  const active = [...new Set(swissTeams)].filter((id) => masterRecord(state, id).w < 2 && masterRecord(state, id).l < 2);
+  const playedPairs = new Set(swiss.map((f): string => (f.teamA < f.teamB ? `${f.teamA}|${f.teamB}` : `${f.teamB}|${f.teamA}`)));
+  const regionOf = (id: string): string => state.teams[id]?.regionId ?? "";
+  const pairs = pairSwissRound(
+    active.map((id) => ({ teamId: id, wins: masterRecord(state, id).w, losses: masterRecord(state, id).l })),
+    regionOf,
+    playedPairs,
+  );
+  if (pairs.length === 0) {
+    // 防御：战绩异常导致无法配对（正常两胜制不会发生），用当前积分榜前 4 补位出线
+    const fallback = [...new Set(swissTeams)].sort((a, b) => masterRecord(state, b).w - masterRecord(state, a).w).slice(0, 4);
+    buildMastersPlayoffs(state, notes, fallback);
+    return;
+  }
+  const roundNo = 1 + swiss.reduce((m, f) => Math.max(m, Number(/瑞士轮第(\d+)轮/.exec(f.label)?.[1] ?? 0)), 0);
+  buildSwissRound(state.fixtures, { comp: "masters", name: "Masters", stage: "masters", pairs, day: lastDay + 3, roundNo, bo: 3 });
+}
+
+/** Masters 淘汰赛：4 直通种子 × 4 瑞士轮出线，错位回避同赛区，双败树 */
+function buildMastersPlayoffs(state: GameState, notes: NewsItem[], qualified: string[]): void {
+  const direct: string[] = [];
+  for (const r of REGIONS) {
+    const top = sortedTable(state, `stage1-${r.id}-t1`)[0]?.teamId; // Stage1 已收官，直通种子可从榜上重推导
+    if (top) direct.push(top);
+  }
+  if (direct.length !== 4 || qualified.length !== 4) return;
+  const swissSeeds = qualified.slice().sort(
+    (a, b) => (masterRecord(state, b).w - masterRecord(state, b).l) - (masterRecord(state, a).w - masterRecord(state, a).l) || (a < b ? -1 : 1),
+  );
+  const regionOf = (id: string): string => state.teams[id]?.regionId ?? "";
+  const pool = swissSeeds.slice();
+  const pairs: [string, string][] = [];
+  for (const d of direct) {
+    let idx = pool.findIndex((s) => regionOf(s) !== regionOf(d));
+    if (idx < 0) idx = 0;
+    pairs.push([d, pool.splice(idx, 1)[0]!]);
+  }
+  const swiss = state.fixtures.filter((f) => f.comp === "masters" && f.label.includes("瑞士轮"));
+  const lastDay = Math.max(...swiss.map((f) => f.day));
+  buildDoubleElim(state.fixtures, { comp: "masters", name: "Masters", stage: "masters", pairs, startDay: lastDay + 4, gapDays: 3, bo: 3 });
+  notes.push({
+    day: state.day, kind: "league", important: true,
+    text: `🌍 Masters 淘汰赛对阵出炉：${pairs.map(([a, b]) => `${state.teams[a]?.tag ?? "?"} vs ${state.teams[b]?.tag ?? "?"}`).join("、")}，双败淘汰。`,
+  });
+}
+
+/**
+ * Champions 年末冠军赛（GDD §7.3 v1.0-3b，对齐 Champions 2025 真实赛制）：
+ * 每赛区冠军积分前 4 共 16 队 → 4 组 GSL 双败小组（揭幕战/胜者组决赛/败者组决赛/出线决定赛，前二出线）
+ * → 8 队双败淘汰，全 BO3、总决赛 BO5。资格按全年冠军积分（揭幕杯/两段联赛/Masters）排定。
+ */
+function buildChampions(state: GameState, notes: NewsItem[]): void {
+  if (state.comps["champions"]) return;
+  const regionTop: string[][] = [];
+  for (const r of REGIONS) {
+    const t1 = (state.comps[`stage2-${r.id}-t1`]?.teamIds ?? []).filter((id) => state.teams[id]);
+    const pos = new Map(sortedTable(state, `stage2-${r.id}-t1`).map((s, i) => [s.teamId, i] as const));
+    const ranked = t1.slice().sort(
+      (a, b) =>
+        (state.circuitPoints?.[b] ?? 0) - (state.circuitPoints?.[a] ?? 0) ||
+        (pos.get(a) ?? 99) - (pos.get(b) ?? 99) ||
+        (a < b ? -1 : 1),
+    );
+    if (ranked.length < 4) return; // 赛区队伍不足不开赛（防御）
+    regionTop.push(ranked.slice(0, 4));
+  }
+  // 分组：每组每赛区恰 1 队（循环错位），头名种子分散到不同组
+  const GROUPS = ["A", "B", "C", "D"] as const;
+  const groups = GROUPS.map((_, gi) => regionTop.map((top, ri) => top[(gi + ri) % 4]!));
+  const all = groups.flat();
+  state.comps["champions"] = { key: "champions", name: "Champions 冠军赛", stage: "champions", teamIds: all, standings: {} };
+  for (const id of all) {
+    state.comps["champions"]!.standings[id] = { teamId: id, w: 0, l: 0, mapW: 0, mapL: 0, roundW: 0, roundL: 0, pts: 0 };
+  }
+  groups.forEach((g, gi) => {
+    for (const [a, b] of [[g[0]!, g[1]!], [g[2]!, g[3]!]] as [string, string][]) {
+      state.fixtures.push(createFixture({
+        day: CALENDAR.championsGroupStart, stage: "champions", comp: "champions",
+        teamA: a, teamB: b, bo: 3, label: `Champions ${GROUPS[gi]}组 揭幕战`,
+      }));
+    }
+  });
+  notes.push({
+    day: state.day, kind: "league", important: true,
+    text: `🏆 Champions 冠军赛抽签：16 队按冠军积分入席，4 组 GSL 双败小组（前二出线）→ 8 队双败淘汰，全年最高荣誉开战。`,
+  });
+}
+
+/** 已打比赛的胜者：winnerTeamId 为唯一事实源（旧档缺失时按积分兜底，仅影响迁移场次） */
+function fixtureWinner(state: GameState, f: { comp: string; teamA: string; teamB: string; winnerTeamId?: string }): string {
+  if (f.winnerTeamId) return f.winnerTeamId;
+  const pa = state.comps[f.comp]?.standings[f.teamA]?.pts ?? 0;
+  const pb = state.comps[f.comp]?.standings[f.teamB]?.pts ?? 0;
+  return pa >= pb ? f.teamA : f.teamB;
+}
+
+/** Champions 推进：各组揭幕战打完 → 胜者组/败者组决赛；打完 → 出线决定赛；4 组齐 → 8 队双败淘汰 */
+function progressChampions(state: GameState, notes: NewsItem[]): void {
+  const comp = state.comps["champions"];
+  if (!comp) return;
+  const fx = state.fixtures.filter((f) => f.comp === "champions");
+  if (fx.some((f) => f.label.includes("胜者组第1轮"))) return; // 淘汰赛已建（GSL 小组「胜者组决赛」不含此标记）
+  const GROUPS = ["A", "B", "C", "D"] as const;
+  const deciders: { group: string; day: number; winner: string; runnerUp: string }[] = [];
+  for (const g of GROUPS) {
+    const of = (tag: string): typeof fx => fx.filter((f) => f.label === `Champions ${g}组 ${tag}`);
+    const openers = of("揭幕战");
+    if (openers.length !== 2 || openers.some((f) => !f.played)) continue;
+    const wl = [...of("胜者组决赛"), ...of("败者组决赛")];
+    if (wl.length === 0) {
+      const o1 = openers[0]!;
+      const o2 = openers[1]!;
+      const w1 = fixtureWinner(state,o1), l1 = o1.teamA === w1 ? o1.teamB : o1.teamA;
+      const w2 = fixtureWinner(state,o2), l2 = o2.teamA === w2 ? o2.teamB : o2.teamA;
+      const day = o1.day + 3;
+      state.fixtures.push(
+        createFixture({ day, stage: "champions", comp: "champions", teamA: w1, teamB: w2, bo: 3, label: `Champions ${g}组 胜者组决赛` }),
+        createFixture({ day, stage: "champions", comp: "champions", teamA: l1, teamB: l2, bo: 3, label: `Champions ${g}组 败者组决赛` }),
+      );
+      continue;
+    }
+    if (wl.some((f) => !f.played)) continue;
+    const wF = of("胜者组决赛")[0];
+    const lF = of("败者组决赛")[0];
+    if (!wF || !lF) continue;
+    const decider = of("出线决定赛")[0];
+    if (!decider) {
+      const wFLoser = wF.teamA === fixtureWinner(state,wF) ? wF.teamB : wF.teamA;
+      const lFWinner = fixtureWinner(state,lF);
+      state.fixtures.push(createFixture({
+        day: wF.day + 3, stage: "champions", comp: "champions",
+        teamA: wFLoser, teamB: lFWinner, bo: 3, label: `Champions ${g}组 出线决定赛`,
+      }));
+      continue;
+    }
+    if (!decider.played) continue;
+    deciders.push({ group: g, day: decider.day, winner: fixtureWinner(state,wF), runnerUp: fixtureWinner(state,decider) });
+  }
+  if (deciders.length !== 4) return;
+  // 淘汰赛对阵：小组第一 × 邻组第二（W_A-R_B / W_B-R_C / W_C-R_D / W_D-R_A）
+  const byGroup = new Map(deciders.map((d) => [d.group, d]));
+  const order = GROUPS.map((g, i) => {
+    const w = byGroup.get(g)!;
+    const r = byGroup.get(GROUPS[(i + 1) % 4]!)!;
+    return [w.winner, r.runnerUp] as [string, string];
+  });
+  const lastDay = Math.max(...deciders.map((d) => d.day));
+  buildDoubleElim(state.fixtures, { comp: "champions", name: "Champions", stage: "champions", pairs: order, startDay: lastDay + 4, gapDays: 3, bo: 3 });
+  notes.push({
+    day: state.day, kind: "league", important: true,
+    text: `🏆 Champions 淘汰赛八强出炉：${order.map(([a, b]) => `${state.teams[a]?.tag ?? "?"} vs ${state.teams[b]?.tag ?? "?"}`).join("、")}，双败淘汰，胜者加冕世界冠军。`,
+  });
 }
 
 function applyStandings(state: GameState, compKey: string, teamA: string, teamB: string, mapScore: [number, number], maps: { score: [number, number] }[]): void {
@@ -278,7 +465,10 @@ function setStage(state: GameState): void {
     : d <= CALENDAR.stage1End ? "stage1"
     : d <= CALENDAR.summerEnd ? "summer"
     : d <= CALENDAR.stage2End ? "stage2"
-    : "offseason";
+    // Champions 窗口（v1.0-3b）：抽签到总决赛打完显示为冠军赛阶段，随赛程自然漂移
+    : state.comps["champions"] && !state.fixtures.some((f) => f.comp === "champions" && f.label.includes("总决赛") && f.played)
+      ? "champions"
+      : "offseason";
 }
 
 /** 阶段收官结算：按最终名次结算董事会目标（GDD §9.5） */
@@ -309,10 +499,10 @@ function myLeagueCompKey(state: GameState, stage: "stage1" | "stage2"): string |
 }
 
 /** 联赛冠军荣誉（career.titles 是退役转教练与名人堂的输入，GDD §8.3） */
-/** 冠军积分表（GDD §7.3 v1.0：揭幕杯 [6,4,3,2] / 联赛 [9,7,5,4,3,3,2,2] / Masters 12,9,7,5,4,4） */
+/** 冠军积分表（GDD §7.3 v1.0：揭幕杯 [6,4,3,2] / 联赛 [9,7,5,4,3,3,2,2] / Masters 双败口径 冠-亚 12/9、3-4 名 7、5-6 名 5、7-8 名 4） */
 const CUP_CIRCUIT = [6, 4, 3, 2];
 const LEAGUE_CIRCUIT = [9, 7, 5, 4, 3, 3, 2, 2];
-const MASTERS_CIRCUIT = [12, 9, 7, 5, 4, 4, 4, 4]; // 当前 8 队单败口径；瑞士轮改制后用 [12,9,7,5,4,4]
+const MASTERS_CIRCUIT = [12, 9, 7, 7, 5, 5, 4, 4];
 
 function addCircuit(state: GameState, teamId: string, pts: number): void {
   state.circuitPoints ??= {};
@@ -332,23 +522,69 @@ export function awardLeagueCircuitPoints(state: GameState, compKey: string): voi
   table.slice(0, LEAGUE_CIRCUIT.length).forEach((s, i) => addCircuit(state, s.teamId, LEAGUE_CIRCUIT[i]!));
 }
 
-/** 杯赛/Masters 总决赛落幕发积分：冠军/亚军/半决赛败者按名次入账 */
+/**
+ * 杯赛/Masters 总决赛落幕发积分。
+ * 揭幕杯（单败）：冠军/亚军/半决赛败者按名次入账。
+ * Masters（双败）：冠/亚 + 败者组决赛败者(3) + 败者组第3轮败者(4) + 败者组第2轮败者×2(5-6) + 败者组第1轮败者×2(7-8)。
+ */
 export function awardCupCircuitPoints(state: GameState, comp: "cup" | "masters", notes: NewsItem[], champTeamId: string): void {
-  const table = comp === "masters" ? MASTERS_CIRCUIT : CUP_CIRCUIT;
   const final = state.fixtures.find((f) => f.comp === comp && f.label.includes("总决赛") && f.played);
   if (!final) return;
   const runnerUp = final.teamA === champTeamId ? final.teamB : final.teamA;
-  const sfLosers = state.fixtures
-    .filter((f) => f.comp === comp && f.label.includes("半决赛") && f.played)
-    .map((f) => (f.teamA === final.teamA || f.teamA === final.teamB ? f.teamB : f.teamA));
-  [champTeamId, runnerUp, ...sfLosers].forEach((tid, i) => {
+  let order: string[];
+  if (comp === "masters") {
+    const loserOf = (f: Fixture): string => {
+      const w = fixtureWinner(state, f);
+      return f.teamA === w ? f.teamB : f.teamA;
+    };
+    const find = (tag: string): Fixture[] =>
+      state.fixtures.filter((f) => f.comp === "masters" && f.label.endsWith(tag) && f.played);
+    const lbF = find("败者组决赛")[0];
+    const lbR3 = find("败者组第3轮")[0];
+    const lbR2 = find("败者组第2轮");
+    const lbR1 = find("败者组第1轮");
+    if (lbF && lbR3 && lbR2.length >= 2 && lbR1.length >= 2) {
+      order = [
+        champTeamId, runnerUp, loserOf(lbF), loserOf(lbR3),
+        ...lbR2.map(loserOf), ...lbR1.map(loserOf),
+      ];
+    } else {
+      // 旧档回退：升级前生成的单败树（四分之一/半决赛）按名次入账，取双败表前几位
+      const sfLosers = state.fixtures
+        .filter((f) => f.comp === "masters" && f.label.includes("半决赛") && f.played)
+        .map((f) => (f.teamA === final.teamA || f.teamA === final.teamB ? f.teamB : f.teamA));
+      order = [champTeamId, runnerUp, ...sfLosers];
+    }
+  } else {
+    const sfLosers = state.fixtures
+      .filter((f) => f.comp === comp && f.label.includes("半决赛") && f.played)
+      .map((f) => (f.teamA === final.teamA || f.teamA === final.teamB ? f.teamB : f.teamA));
+    order = [champTeamId, runnerUp, ...sfLosers];
+  }
+  const table = comp === "masters" ? MASTERS_CIRCUIT : CUP_CIRCUIT;
+  order.forEach((tid, i) => {
     if (tid) addCircuit(state, tid, table[i] ?? table[table.length - 1]!);
   });
   notes.push({ day: state.day, kind: "league", text: `📈 ${state.teams[champTeamId]?.name} 收获 ${table[0]} 冠军积分（Champions 资格竞逐）。` });
 }
 
-function awardLeagueTitle(state: GameState, compKey: string, notes: NewsItem[]): void {
-  const table = sortedTable(state, compKey);
+/** 国际赛总决赛落幕统一结算（advanceDay 两处 + playHeldMatch 共用）：冠军荣誉 + 新闻 + 冠军积分（Champions 为赛季终点，不计积分） */
+function settleFinal(state: GameState, f: { comp: string; label: string; teamA: string; teamB: string }, rec: { winner: "A" | "B" }, notes: NewsItem[]): void {
+  if (!f.label.includes("总决赛")) return;
+  if (f.comp !== "cup" && f.comp !== "masters" && f.comp !== "champions") return;
+  const champ = rec.winner === "A" ? f.teamA : f.teamB;
+  const champTeam = state.teams[champ];
+  if (!champTeam) return;
+  for (const pid of champTeam.roster) {
+    const p = state.players[pid];
+    if (p) p.career.titles++; // 冠军荣誉：退役转教练公式与名人堂的输入（GDD §8.3）
+  }
+  const compName = f.comp === "masters" ? "Masters 国际赛" : f.comp === "champions" ? "Champions 世界冠军赛" : "揭幕杯";
+  notes.push({ day: state.day, kind: "league", important: true, text: `🏆 ${champTeam.name} 夺得${compName}冠军！` });
+  if (f.comp !== "champions") awardCupCircuitPoints(state, f.comp as "cup" | "masters", notes, champ);
+}
+
+function awardLeagueTitle(state: GameState, compKey: string, notes: NewsItem[]): void {  const table = sortedTable(state, compKey);
   const champ = table[0]?.teamId;
   if (!champ) return;
   // 冠军积分（v1.0 国际赛资格）：仅 t1 合作联赛计入（挑战者不计）
@@ -424,6 +660,9 @@ export function advanceDay(
       if (/^stage2-[a-z]+-t[12]$/.test(comp.key)) awardLeagueTitle(state, comp.key, notes);
     }
     notes.push({ day: state.day, kind: "league", text: "—— 进入休赛期 ——" });
+  } else if (state.day === CALENDAR.championsDraw) {
+    // Champions 年末冠军赛（v1.0-3b 真实赛制）：全年冠军积分前 16 入围
+    buildChampions(state, notes);
   }
 
   // 逾期清扫（v1.9 检错修复：PreMatch 停车期间刷新存档 → 我的比赛 day 已过、永不匹配）
@@ -432,8 +671,9 @@ export function advanceDay(
   for (const f of overdue) {
     const mine = f.teamA === state.myTeamId || f.teamB === state.myTeamId;
   const seed = hashString(`${state.seed}:${f.id}`);
-  const rec = simMatch(state, f.teamA, f.teamB, f.bo, seed, f.id, f.mapLock, f.agentLock);
+    const rec = simMatch(state, f.teamA, f.teamB, f.bo, seed, f.id, f.mapLock, f.agentLock);
     f.played = true;
+    f.winnerTeamId = rec.winner === "A" ? f.teamA : f.teamB;
     onMatch?.(rec, f.id, mine);
     applyStandings(state, f.comp, f.teamA, f.teamB, rec.score, rec.maps);
     fillNextSlot(state.fixtures, f, rec.winner === "A" ? f.teamA : f.teamB);
@@ -441,17 +681,8 @@ export function advanceDay(
     const tagB = (state.teams[f.teamB] as GameState["teams"][string]).tag;
     const line = `${f.label}（补赛）｜${tagA} ${rec.score[0]}-${rec.score[1]} ${tagB}`;
     notes.push({ day: state.day, kind: "match", text: line, important: mine });
-    if (mine) playedMine.push(f.id);
-    if (f.label.includes("总决赛") && (f.comp === "cup" || f.comp === "masters")) {
-      const champ = rec.winner === "A" ? f.teamA : f.teamB;
-      const champTeam = state.teams[champ] as GameState["teams"][string];
-      for (const pid of champTeam.roster) {
-        const p = state.players[pid];
-        if (p) p.career.titles++;
-      }
-      notes.push({ day: state.day, kind: "league", important: true, text: `🏆 ${champTeam.name} 夺得${f.comp === "masters" ? "Masters 国际赛" : "揭幕杯"}冠军！` });
-      awardCupCircuitPoints(state, f.comp as "cup" | "masters", notes, champ);
-    }
+    if (mine) playedMine.push(f.id); // 逾期补赛同样计入我的比赛
+    settleFinal(state, f, rec, notes);
   }
 
   // 当日比赛
@@ -467,6 +698,7 @@ export function advanceDay(
     const seed = hashString(`${state.seed}:${f.id}`);
     const rec = simMatch(state, f.teamA, f.teamB, f.bo, seed, f.id, f.mapLock, f.agentLock);
     f.played = true;
+    f.winnerTeamId = rec.winner === "A" ? f.teamA : f.teamB;
     onMatch?.(rec, f.id, mine);
     applyStandings(state, f.comp, f.teamA, f.teamB, rec.score, rec.maps);
     fillNextSlot(state.fixtures, f, rec.winner === "A" ? f.teamA : f.teamB);
@@ -480,18 +712,12 @@ export function advanceDay(
     const line = `${f.label}｜${tagA} ${rec.score[0]}-${rec.score[1]} ${tagB}`;
     notes.push({ day: state.day, kind: "match", text: line, important: mine });
     if (mine) playedMine.push(f.id);
-    // 杯赛冠军
-    if (f.label.includes("总决赛") && (f.comp === "cup" || f.comp === "masters")) {
-      const champ = rec.winner === "A" ? f.teamA : f.teamB;
-      const champTeam = state.teams[champ] as GameState["teams"][string];
-      for (const pid of champTeam.roster) {
-        const p = state.players[pid];
-        if (p) p.career.titles++; // 冠军荣誉：退役转教练公式与名人堂的输入（GDD §8.3）
-      }
-      notes.push({ day: state.day, kind: "league", important: true, text: `🏆 ${champTeam.name} 夺得${f.comp === "masters" ? "Masters 国际赛" : "揭幕杯"}冠军！` });
-      awardCupCircuitPoints(state, f.comp as "cup" | "masters", notes, champ);
-    }
+    settleFinal(state, f, rec, notes);
   }
+
+  // 国际赛推进（v1.0-3b 真实赛制）：瑞士轮逐轮配对/出线接双败淘汰、GSL 小组逐轮接淘汰赛
+  progressMasters(state, notes);
+  progressChampions(state, notes);
 
   // 问价结算（GDD §8.2 原作式异步）：到反馈日出要价+意向
   resolveInquiries(state);
@@ -600,6 +826,8 @@ export function advanceDay(
     state.objective = null;
     state.boardConfidence = clamp(state.boardConfidence, 20, 90);
     initSeasonFixtures(state);
+    // 冠军积分年度清零（v1.0-3b）：Champions 落幕即赛季积分周期结束，新年从零竞逐
+    state.circuitPoints = {};
     // 退役检定与劝留（v1.0-1，GDD §6.5/§8.3）：本队出劝留对话卡，AI 自动决策+补位+签教练
     // 休赛期自由市场补强（GDD §6.5）：按队伍规模等比（18 队 8-12 名，36 队 16-24 名）
     const faRng = new Rng((state.seed ^ Math.imul(state.year, 0x5f5f)) >>> 0);
@@ -653,6 +881,7 @@ export function playHeldMatch(
   const seed = hashString(`${state.seed}:${f.id}`);
   const rec = simMatch(state, f.teamA, f.teamB, f.bo, seed, f.id, f.mapLock, f.agentLock);
   f.played = true;
+  f.winnerTeamId = rec.winner === "A" ? f.teamA : f.teamB;
   // 招牌战术反向泄露的源头累计（GDD §6.4）：我的赛前准备场次同样逐图 +1
   if (state.myTeamId) {
     const mt = state.teams[state.myTeamId] as GameState["teams"][string] | undefined;
@@ -666,15 +895,7 @@ export function playHeldMatch(
   const tagB = (state.teams[f.teamB] as GameState["teams"][string]).tag;
   notes.push({ day: state.day, kind: "match", text: `${f.label}｜${tagA} ${rec.score[0]}-${rec.score[1]} ${tagB}`, important: true });
   onMatch?.(rec, f.id, true);
-  if (f.label.includes("总决赛") && (f.comp === "cup" || f.comp === "masters")) {
-    const champ = rec.winner === "A" ? f.teamA : f.teamB;
-    const champTeam = state.teams[champ] as GameState["teams"][string];
-    for (const pid of champTeam.roster) {
-      const p = state.players[pid];
-      if (p) p.career.titles++;
-    }
-    notes.push({ day: state.day, kind: "league", important: true, text: `🏆 ${champTeam.name} 夺得${f.comp === "masters" ? "Masters 国际赛" : "揭幕杯"}冠军！` });
-  }
+  settleFinal(state, f, rec, notes); // 赛前准备路径同样结算冠军/积分（v1.0-3b 检错：此前漏发冠军积分）
   for (const n of notes) {
     state.news.push(n);
     while (state.news.length > 400) {

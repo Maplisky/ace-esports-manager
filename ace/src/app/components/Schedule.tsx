@@ -64,6 +64,7 @@ function stageName(stage: string): string {
     case "stage1": return "Stage 1";
     case "summer": return "夏季窗口";
     case "stage2": return "Stage 2";
+    case "champions": return "Champions";
     default: return "休赛期";
   }
 }

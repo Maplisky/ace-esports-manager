@@ -48,14 +48,30 @@ test("杯赛积分：冠军/亚军/半决赛败者按名次入账", () => {
   assert.ok(notes.length === 0 || notes.length >= 0); // 联赛收官才带 notes，杯赛静默入账
 });
 
-test("Masters 积分：8 队单败口径冠军 12 分", () => {
+test("Masters 积分（双败口径）：冠12/亚9/3-4名7/5-6名5/7-8名4", () => {
   const s = build();
-  s.fixtures.push(
-    { id: "msf", comp: "masters", label: "Masters 半决赛", day: 130, stage: "masters", teamA: "champ", teamB: "sfl", played: true, bo: 3 },
-    { id: "mfin", comp: "masters", label: "Masters 总决赛", day: 138, stage: "masters", teamA: "champ", teamB: "run", played: true, bo: 3 },
-  );
+  s.comps["masters"] = { key: "masters", name: "Masters", stage: "masters", teamIds: [], standings: {} };
+  const mkTeam = (id: string): void => {
+    s.comps["masters"]!.standings[id] = { teamId: id, w: 0, l: 0, mapW: 0, mapL: 0, roundW: 0, roundL: 0, pts: 0 };
+  };
+  for (const id of ["champ", "run", "third", "fourth", "p5a", "p5b", "p7a", "p7b"]) mkTeam(id);
+  const fx = (id: string, label: string, a: string, b: string, winner: string): void => {
+    s.fixtures.push({ id, comp: "masters", label: `Masters ${label}`, day: 140, stage: "masters", teamA: a, teamB: b, played: true, bo: 3, winnerTeamId: winner });
+  };
+  fx("gf", "总决赛", "champ", "run", "champ");
+  fx("lbf", "败者组决赛", "third", "lbw", "lbw"); // 败者 = 第 3 名
+  fx("lbr3", "败者组第3轮", "fourth", "x1", "x1"); // 败者 = 第 4 名
+  fx("lbr2a", "败者组第2轮", "p5a", "x2", "x2"); // 败者 = 5-6 名
+  fx("lbr2b", "败者组第2轮", "p5b", "x3", "x3");
+  fx("lbr1a", "败者组第1轮", "p7a", "x4", "x4"); // 败者 = 7-8 名
+  fx("lbr1b", "败者组第1轮", "p7b", "x5", "x5");
   awardCupCircuitPoints(s, "masters", [], "champ");
   assert.equal(s.circuitPoints!.champ, 12);
   assert.equal(s.circuitPoints!.run, 9);
-  assert.equal(s.circuitPoints!.sfl, 7);
+  assert.equal(s.circuitPoints!.third, 7);
+  assert.equal(s.circuitPoints!.fourth, 7);
+  assert.equal(s.circuitPoints!.p5a, 5);
+  assert.equal(s.circuitPoints!.p5b, 5);
+  assert.equal(s.circuitPoints!.p7a, 4);
+  assert.equal(s.circuitPoints!.p7b, 4);
 });

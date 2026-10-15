@@ -3,7 +3,7 @@
 export type Duty = "duelist" | "initiator" | "controller" | "sentinel";
 
 /** 赛历阶段（GDD §4.2）：自然年内六段 + 休赛期 */
-export type Stage = "preseason" | "cup" | "stage1" | "summer" | "stage2" | "offseason" | "masters";
+export type Stage = "preseason" | "cup" | "stage1" | "summer" | "stage2" | "offseason" | "masters" | "champions";
 
 
 /** 职责向量：四项之和 = 1（GDD §6.1） */
@@ -347,14 +347,16 @@ export interface Fixture {
   bo: 1 | 3 | 5;
   label: string;
   played: boolean;
+  /** 赛果（打完即写）：胜者队 id——双败树回填/GSL 推进/积分名次的唯一事实源 */
+  winnerTeamId?: string;
   /** 玩家手动 BP 锁定的图序列（赛前准备写入，引擎优先于自动 BP） */
   mapLock?: string[];
   /** 赛前准备的每图英雄分配（mapId → 选手 id → 英雄 id）；随比赛走，不污染预案库 */
   agentLock?: Record<string, Record<string, string>>;
-  /** 淘汰赛胜者去向（下一轮 fixtureId），杯赛用 */
+  /** 淘汰赛胜者去向（下一轮 fixtureId），杯赛/双败树用 */
   nextFixtureId?: string;
-  /** 淘汰赛 slot 标记（teamA/teamB 待定时的占位） */
-  slotFor?: "winner" | "loser";
+  /** 双败树败者去向（败者组下一轮 fixtureId） */
+  nextLoserFixtureId?: string;
 }
 
 export interface StandingsEntry {

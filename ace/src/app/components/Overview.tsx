@@ -191,7 +191,7 @@ export function OverviewPage(props: {
               </tbody>
             </table>
             <div className="muted small" style={{ marginTop: 4 }}>
-              积分构成：揭幕杯 6/4/3/2 · 联赛 9/7/5/4/3/3/2/2 · Masters 12/9/7/5/4/4。Champions 年末按积分与赛果定席位。
+              积分构成：揭幕杯 6/4/3/2 · 联赛 9/7/5/4/3/3/2/2 · Masters（双败）12/9/7/7/5/5/4/4。年末每赛区积分前 4 进 Champions，夺冠即世界冠军。
             </div>
           </div>
         );
@@ -200,9 +200,9 @@ export function OverviewPage(props: {
       {Object.values(state.comps)
         .filter((c) => {
           if (Object.keys(c.standings).length === 0) return false;
-          if (c.key === "masters") return true;
-          // 休整期（夏季窗口/Masters）看 Stage1 收官表；Stage2/休赛期看 Stage2；季前看即将开打的 Stage1
-          const activeStage = state.stage === "stage2" || state.stage === "offseason" ? "stage2" : "stage1";
+          if (c.key === "masters" || c.key === "champions") return true;
+          // 休整期（夏季窗口/Masters）看 Stage1 收官表；Stage2/休赛期/Champions 看 Stage2；季前看即将开打的 Stage1
+          const activeStage = state.stage === "stage2" || state.stage === "offseason" || state.stage === "champions" ? "stage2" : "stage1";
           if (c.stage !== activeStage) return false; // 当前/即将阶段的表（16 张表洪水治理）
           const myRegion = myTeam?.regionId;
           if (c.key.includes(`-${myRegion}-`)) return true; // 我的赛区全量
