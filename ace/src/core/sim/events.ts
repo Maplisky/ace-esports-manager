@@ -5,6 +5,7 @@
  */
 import { Rng, clamp } from "../rng.ts";
 import { TRANSFER_WINDOWS } from "./transfer.ts";
+import { logFinance } from "./finance.ts";
 import { RETIRE_CARD_ID, resolveRetireCard } from "./retirement.ts";
 import { DRAFT_CARD_ID, resolveDraftCard } from "./draft.ts";
 import { MILESTONE_CARD_ID, resolveMilestoneCard } from "./career.ts";
@@ -136,7 +137,10 @@ export function resolveEvent(state: GameState, uid: string, optionIndex: number,
       if (p) p.morale = clamp(p.morale + opt.teamMorale, 10, 100);
     }
   }
-  if (opt.budget && myTeam) myTeam.budget += opt.budget;
+  if (opt.budget && myTeam) {
+    myTeam.budget += opt.budget;
+    logFinance(state, `事件 · ${card.title}`, opt.budget);
+  }
   if (opt.reputation && myTeam) myTeam.reputation = clamp(myTeam.reputation + opt.reputation, 20, 99);
   if (opt.bond && myTeam) myTeam.bond = clamp(myTeam.bond + opt.bond, 0, 100);
   if (opt.fatigue && target && targetOnMyTeam) target.fatigue = clamp(target.fatigue + opt.fatigue, 0, 100);

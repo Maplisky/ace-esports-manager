@@ -8,6 +8,7 @@ import { AGENT_BY_ID } from "../../core/data/agents.ts";
 import { marketValue, salaryExpectation } from "../../core/sim/transfer.ts";
 import { PlayerFace, SyntheticBadge } from "./Avatar.tsx";
 import { TRAIT_BY_KEY } from "../../core/data/traits.ts";
+import { AttrRadar } from "./Radar.tsx";
 import { buildAgentGroups, DUTY_ORDER } from "./AgentSelect.tsx";
 
 const ATTR_CN: Record<string, string> = {
@@ -81,25 +82,28 @@ export function PlayerDossier(props: { state: GameState; player: Player; onClose
         </div>
 
         <div style={{ padding: "12px 20px 16px" }} onClick={(e) => e.stopPropagation()}>
-          {/* 八维：六档色阶 + 刻度背景 */}
+          {/* 八维：雷达（v1.3）+ 六档色阶条并列——雷达看形状，色阶条看数值 */}
           <h3 style={{ margin: "4px 0 8px" }}>📊 八维能力</h3>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px 26px" }}>
-            {attrRows.map((a) => (
-              <span key={a.label} className="row" style={{ gap: 8, alignItems: "center" }}>
-                <span className="muted small" style={{ width: 34 }}>{a.label}</span>
-                <span
-                  className="bar-track"
-                  style={{
-                    flex: 1,
-                    background:
-                      "linear-gradient(90deg, rgba(248,113,113,0.12) 0 50%, rgba(251,191,36,0.10) 50% 70%, rgba(74,222,128,0.10) 70% 100%)",
-                  }}
-                >
-                  <span className="bar-fill" style={{ width: `${a.v}%`, background: attrColor(a.v), borderRadius: 4 }} />
+          <div style={{ display: "flex", gap: 18, alignItems: "flex-start", flexWrap: "wrap" }}>
+            <AttrRadar a={p.attrs} nameA={p.ign} size={210} />
+            <div style={{ flex: 1, minWidth: 260, display: "grid", gridTemplateColumns: "1fr", gap: 6 }}>
+              {attrRows.map((a) => (
+                <span key={a.label} className="row" style={{ gap: 8, alignItems: "center" }}>
+                  <span className="muted small" style={{ width: 34 }}>{a.label}</span>
+                  <span
+                    className="bar-track"
+                    style={{
+                      flex: 1,
+                      background:
+                        "linear-gradient(90deg, rgba(248,113,113,0.12) 0 50%, rgba(251,191,36,0.10) 50% 70%, rgba(74,222,128,0.10) 70% 100%)",
+                    }}
+                  >
+                    <span className="bar-fill" style={{ width: `${a.v}%`, background: attrColor(a.v), borderRadius: 4 }} />
+                  </span>
+                  <b style={{ width: 26, textAlign: "right", color: attrColor(a.v) }}>{Math.round(a.v)}</b>
                 </span>
-                <b style={{ width: 26, textAlign: "right", color: attrColor(a.v) }}>{Math.round(a.v)}</b>
-              </span>
-            ))}
+              ))}
+            </div>
           </div>
           <div className="muted small" style={{ marginTop: 8 }}>
             状态：竞技 {Math.round(p.form)} · 士气 {Math.round(p.morale)} · 体能 {Math.round(p.fatigue)}

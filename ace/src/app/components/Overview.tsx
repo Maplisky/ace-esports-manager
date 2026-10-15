@@ -9,6 +9,8 @@ export function TopBar(props: {
   teamTag: string; teamName: string; year: number; day: number; stage: string;
   teamLogo?: string; regionLabel?: string; regionLogo?: string;
   budget: number; ap: number; confidence: number; nextLabel: string;
+  /** 现金流预测（v1.3）：近 7 日净流——正绿负红，null 无数据不显示 */
+  forecast?: { perDay: number; week: number } | null;
 }) {
   const date = formatDate(props.year, props.day);
   return (
@@ -32,7 +34,18 @@ export function TopBar(props: {
       </div>
       <div className="stat">
         <span className="k">资金</span>
-        <span className="v">${fmtK(props.budget)}</span>
+        <span className="v">
+          ${fmtK(props.budget)}
+          {props.forecast && (
+            <span
+              className="small"
+              style={{ marginLeft: 6, color: props.forecast.week >= 0 ? "#4ade80" : "#f87171" }}
+              title={`近 7 日净流 ${fmtK(props.forecast.week)}，外推下周约 ${fmtK(props.forecast.perDay * 7)}`}
+            >
+              {props.forecast.week >= 0 ? "▲" : "▼"}{fmtK(props.forecast.week)}/周
+            </span>
+          )}
+        </span>
       </div>
       <div className="stat">
         <span className="k">行动力</span>

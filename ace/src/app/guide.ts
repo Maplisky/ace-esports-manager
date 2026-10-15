@@ -6,7 +6,7 @@
 import type { GameState } from "../core/types.ts";
 
 export type GuidePage =
-  | "overview" | "schedule" | "squad" | "tactics" | "training" | "business"
+  | "overview" | "schedule" | "squad" | "tactics" | "training" | "finance" | "business"
   | "transfer" | "manager" | "achievements" | "career" | "system";
 
 /** 解锁日（当年第 N 天；GDD §9.1：D8 转会 → D12 商务 → D20 情报全开。
@@ -18,6 +18,7 @@ export const UNLOCK_DAYS: Record<GuidePage, number> = {
   tactics: 1,
   system: 1,
   training: 1,
+  finance: 1,
   transfer: 8,
   business: 12,
   manager: 12,

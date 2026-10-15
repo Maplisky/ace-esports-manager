@@ -8,6 +8,7 @@ import { SchedulePage } from "./components/Schedule.tsx";
 import { SquadPage } from "./components/Squad.tsx";
 import { TacticsPage } from "./components/Tactics.tsx";
 import { TrainingPage } from "./components/Training.tsx";
+import { FinancePage } from "./components/FinancePage.tsx";
 import { BusinessPage } from "./components/Business.tsx";
 import { ManagerPage } from "./components/Manager.tsx";
 import { CareerPage } from "./components/Career.tsx";
@@ -18,15 +19,17 @@ import { PreMatch } from "./components/PreMatch.tsx";
 import { SystemPage } from "./components/SystemPage.tsx";
 import { REGIONS } from "../core/sim/day.ts";
 import { pageUnlocked, pageUnlockDay, type GuidePage } from "./guide.ts";
+import { cashFlowForecast } from "../core/sim/finance.ts";
 import { ErrorBoundary } from "./components/ErrorBoundary.tsx";
 import { EventCardModal } from "./components/EventCards.tsx";
 
-const PAGES: { key: "overview" | "schedule" | "squad" | "tactics" | "training" | "business" | "transfer" | "manager" | "achievements" | "career" | "system"; label: string }[] = [
+const PAGES: { key: "overview" | "schedule" | "squad" | "tactics" | "training" | "finance" | "business" | "transfer" | "manager" | "achievements" | "career" | "system"; label: string }[] = [
   { key: "overview", label: "总览" },
   { key: "schedule", label: "赛程" },
   { key: "squad", label: "阵容" },
   { key: "tactics", label: "战术" },
   { key: "training", label: "训练" },
+  { key: "finance", label: "财务" },
   { key: "business", label: "商务" },
   { key: "transfer", label: "转会" },
   { key: "manager", label: "经理" },
@@ -123,6 +126,7 @@ export function App() {
         day={state.day}
         stage={stageName(state.stage)}
         budget={myTeam?.budget ?? 0}
+        forecast={cashFlowForecast(state)}
         ap={state.actionPoints}
         confidence={Math.round(state.boardConfidence)}
         nextLabel={nextFixture ? nextFixtureLabel(state, nextFixture.teamA, nextFixture.teamB, nextFixture.day) : "赛季已收官"}
@@ -170,6 +174,7 @@ export function App() {
           {page === "squad" && <SquadPage state={state} />}
           {page === "tactics" && <TacticsPage state={state} />}
           {page === "training" && <TrainingPage state={state} />}
+          {page === "finance" && <FinancePage state={state} />}
           {page === "transfer" && <TransferPage state={state} />}
           {page === "business" && <BusinessPage state={state} />}
           {page === "manager" && <ManagerPage state={state} />}

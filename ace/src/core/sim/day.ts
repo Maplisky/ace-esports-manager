@@ -11,6 +11,7 @@ import { spawnDailyEvents, spawnBirthdays } from "./events.ts";
 import { aiWeeklyTransfers, resolveInquiries } from "./transfer.ts";
 import { rollPatch } from "./patch.ts";
 import { decayIntel } from "./intel.ts";
+import { logFinance } from "./finance.ts";
 import { seasonRetirements } from "./retirement.ts";
 import { runDraft } from "./draft.ts";
 import { noteMatchResult, careerWeeklyTick, noteManagerTitle, checkCareerMilestone } from "./career.ts";
@@ -795,8 +796,7 @@ export function advanceDay(
     if (bizIncome > 0 && state.myTeamId) {
       const myTeam = state.teams[state.myTeamId] as GameState["teams"][string];
       myTeam.budget += bizIncome;
-      state.finances.log.push({ day: state.day, label: "商务周收入（赞助/直播）", amount: bizIncome });
-      if (state.finances.log.length > 100) state.finances.log.splice(0, state.finances.log.length - 100);
+      logFinance(state, "商务周收入（赞助/直播）", bizIncome);
     }
     // AI 转会动态 + 挖角（GDD §8.2）
     const aiNotes = aiWeeklyTransfers(state, rng, (offer) => {

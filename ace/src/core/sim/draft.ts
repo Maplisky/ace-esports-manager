@@ -9,6 +9,7 @@ import { Rng, hashString } from "../rng.ts";
 import { spawnRookieClass, salaryFor } from "../worldgen.ts";
 import { AGENTS, primaryDuty } from "../data/agents.ts";
 import { inTransferWindow } from "./transfer.ts";
+import { logFinance } from "./finance.ts";
 import type { Duty, GameState, NewsItem, PendingEventCard, Player, Team } from "../types.ts";
 
 export const DRAFT_CARD_ID = "draft";
@@ -126,6 +127,7 @@ export function draftPickTrade(state: GameState, action: "sell" | "buy", notes: 
     moves.push({ from: my.id, to: buyer.id });
     my.budget += price;
     buyer.budget -= price;
+    logFinance(state, `选秀权出售（预计第 ${myIdx + 1} 顺位）`, price);
     notes.push({ day: state.day, kind: "transfer", text: `🗳 ${my.name} 将下届选秀权出售给 ${buyer.name}，入账 ${fmt(price)}（未来换现在）。` });
     return `已将下届选秀权（预计第 ${myIdx + 1} 顺位）出售给 ${buyer.name}，入账 ${fmt(price)}。`;
   }
@@ -139,6 +141,7 @@ export function draftPickTrade(state: GameState, action: "sell" | "buy", notes: 
   moves.push({ from: seller.id, to: my.id });
   my.budget -= info.buyOffer.price;
   seller.budget += info.buyOffer.price;
+  logFinance(state, `选秀权买进（预计第 ${info.buyOffer.slotNo} 顺位）`, -info.buyOffer.price);
     notes.push({ day: state.day, kind: "transfer", text: `🗳 ${my.name} 从 ${seller.name} 买入选秀权（预计第 ${info.buyOffer.slotNo} 顺位），支付 ${fmt(info.buyOffer.price)}。` });
   return `从 ${seller.name} 买入选秀权（预计第 ${info.buyOffer.slotNo} 顺位），支付 ${fmt(info.buyOffer.price)}。`;
 }

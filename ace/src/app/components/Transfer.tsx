@@ -7,6 +7,7 @@ import { marketValue, salaryExpectation, inTransferWindow } from "../../core/sim
 import { draftPickInfo } from "../../core/sim/draft.ts";
 import { useStore } from "../store.ts";
 import { PlayerFace, SyntheticBadge } from "./Avatar.tsx";
+import { AttrRadar, radarAxes } from "./Radar.tsx";
 import { DutyTendency } from "./AgentSelect.tsx";
 import { SortableTh } from "./MarketFilter.tsx";
 import { useMarketFilters, MarketFilterPanel } from "./MarketFilter.tsx";
@@ -53,6 +54,7 @@ export function TransferPage(props: { state: GameState }) {
 
   return (
     <div>
+      <PlayerCompareCard state={state} />
       {/* 问价结果（原作式：置顶显示，从结果报价） */}
       {(state.inquiries.length > 0 || pendingInquiryCount > 0) && (
         <CollapsibleCard
@@ -504,5 +506,65 @@ function NegotiationModal(props: { state: GameState; player: Player; onClose: ()
         </div>
       </div>
     </div>
+  );
+}
+
+/** 选手对比（v1.3 可视化核心，GDD 转会决策工具）：两人雷达叠层 + 逐维差值。
+ *  候选池 = 我队名单 ∪ 自由市场 ∪ 他队挂牌（转会语境下可达的球员） */
+function PlayerCompareCard(props: { state: GameState }) {
+  const { state } = props;
+  const myId = state.myTeamId ?? "";
+  const team = state.teams[myId];
+  const pool = Object.values(state.players).filter(
+    (p) => (p.teamId === myId || (!p.teamId && p.injuredUntilDay <= state.day) || (p.teamId && p.teamId !== myId && p.listed)),
+  ).sort((a, b) => b.overall - a.overall);
+  const [aId, setAId] = useState(team?.starters[0] ?? pool[0]?.id ?? "");
+  const [bId, setBId] = useState(pool.find((p) => p.id !== (team?.starters[0] ?? pool[0]?.id))?.id ?? "");
+  const a = state.players[aId];
+  const b = state.players[bId];
+  if (!team || pool.length < 2) return null;
+
+  const label = (p: Player) =>
+    `${p.ign}（${p.teamId === myId ? "我队" : !p.teamId ? "自由" : state.teams[p.teamId]?.tag ?? "??"} · ${p.overall} · ${p.age} 岁）`;
+
+  return (
+    <CollapsibleCard title="📊 选手对比（雷达叠层 · 转会决策）" defaultOpen={false}>
+      <div className="row" style={{ gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
+        <select value={aId} onChange={(e) => setAId(e.target.value)}>
+          {pool.map((p) => <option key={p.id} value={p.id}>{label(p)}</option>)}
+        </select>
+        <span className="muted">vs</span>
+        <select value={bId} onChange={(e) => setBId(e.target.value)}>
+          {pool.map((p) => <option key={p.id} value={p.id}>{label(p)}</option>)}
+        </select>
+      </div>
+      {a && b && a.id !== b.id ? (
+        <div style={{ display: "flex", gap: 18, flexWrap: "wrap", alignItems: "flex-start" }}>
+          <AttrRadar a={a.attrs} b={b.attrs} nameA={a.ign} nameB={b.ign} size={230} />
+          <table style={{ flex: 1, minWidth: 240 }}>
+            <thead>
+              <tr><th>维度</th><th>{a.ign}</th><th>{b.ign}</th><th>差值</th></tr>
+            </thead>
+            <tbody>
+              <tr><td className="muted">整体/年龄</td><td><b>{a.overall}</b> / {a.age}</td><td><b>{b.overall}</b> / {b.age}</td><td className="muted">{a.overall - b.overall >= 0 ? "+" : ""}{a.overall - b.overall}</td></tr>
+              {radarAxes().map((ax) => {
+                const d = a.attrs[ax.key] - b.attrs[ax.key];
+                return (
+                  <tr key={ax.key}>
+                    <td className="muted">{ax.label}</td>
+                    <td>{Math.round(a.attrs[ax.key])}</td>
+                    <td>{Math.round(b.attrs[ax.key])}</td>
+                    <td style={{ color: d > 0 ? "#4ade80" : d < 0 ? "#f87171" : undefined }}>{d > 0 ? "+" : ""}{Math.round(d)}</td>
+                  </tr>
+                );
+              })}
+              <tr><td className="muted">身价</td><td>{`$${Math.round(marketValue(a, team.tier) / 1000)}K`}</td><td>{`$${Math.round(marketValue(b, team.tier) / 1000)}K`}</td><td className="muted">—</td></tr>
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="muted small">选择两名不同选手开始对比。</div>
+      )}
+    </CollapsibleCard>
   );
 }

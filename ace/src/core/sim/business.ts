@@ -5,6 +5,7 @@
  */
 import { Rng, clamp } from "../rng.ts";
 import type { GameState, GigOffer, Player, Sponsor, SponsorOffer } from "../types.ts";
+import { logFinance } from "./finance.ts";
 
 const TIER_DEF = [
   { tier: 1 as const, name: "地方品牌", min: 80_000, max: 150_000, repNeed: 20 },
@@ -115,7 +116,7 @@ export function acceptGig(state: GameState, gigId: string): { ok: boolean; text:
   state.gigOffers.splice(idx, 1);
   const myTeam = state.myTeamId ? state.teams[state.myTeamId] : null;
   if (myTeam) myTeam.budget += gig.pay;
-  state.finances.log.push({ day: state.day, label: `商务活动 · ${gig.brand}（${p.ign}）`, amount: gig.pay });
+  logFinance(state, `商务活动 · ${gig.brand}（${p.ign}）`, gig.pay);
   p.commercialDays = (p.commercialDays ?? 0) + 1;
   return { ok: true, text: `${p.ign} 出席 ${gig.brand} 活动：+${fmtMoney(gig.pay)}（本周训练日 -1）。` };
 }

@@ -9,7 +9,7 @@ import {
 import type { PreMatchResult } from "./components/PreMatch.tsx";
 
 type Screen = "start" | "main";
-type Page = "overview" | "schedule" | "squad" | "tactics" | "training" | "transfer" | "business" | "manager" | "achievements" | "career" | "system";
+type Page = "overview" | "schedule" | "squad" | "tactics" | "training" | "finance" | "transfer" | "business" | "manager" | "achievements" | "career" | "system";
 
 export interface NegotiationState {
   offer: TransferOffer;

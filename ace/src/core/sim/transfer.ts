@@ -6,6 +6,7 @@
 import { Rng, clamp, hashString } from "../rng.ts";
 import type { GameState, Player, Team, TransferOffer } from "../types.ts";
 import { noteTacticsChanged } from "./scrim.ts";
+import { logFinance } from "./finance.ts";
 
 /** 转会窗（自然年内）：季前 · 夏季窗口 · 休赛期 */
 export const TRANSFER_WINDOWS: [number, number][] = [[1, 24], [123, 152], [233, 366]];
@@ -178,6 +179,11 @@ export function completeTransfer(state: GameState, offer: TransferOffer, rng: Rn
     }
   }
   toTeam.budget -= offer.fee + offer.signingBonus;
+  if (toTeam.id === state.myTeamId) {
+    logFinance(state, `转会支出 · ${p.ign}（含签字费）`, -(offer.fee + offer.signingBonus));
+  } else if (fromTeam?.id === state.myTeamId) {
+    logFinance(state, `转会收入 · ${p.ign}`, offer.fee);
+  }
   toTeam.roster.push(p.id);
   if (toTeam.starters.length < 5) toTeam.starters.push(p.id);
   p.teamId = toTeam.id;
@@ -205,6 +211,7 @@ export function releasePlayer(state: GameState, playerId: string): string {
   if (team.roster.length <= 5) return "阵容只剩五人，再放走就凑不齐首发了——先补人。";
   const cost = Math.round(p.salary * Math.max(0, p.contractYears) * 0.4);
   team.budget -= cost;
+  if (team.id === state.myTeamId) logFinance(state, `解约赔付 · ${p.ign}`, -cost);
   team.roster = team.roster.filter((id) => id !== playerId);
   team.starters = team.starters.filter((id) => id !== playerId);
   p.teamId = null;
