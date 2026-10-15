@@ -193,6 +193,12 @@ export function resolveRetireCard(
   const mgr = state.manager?.skills ?? {};
   const note = (s: string) => `${p.ign}：${s}`;
   const successText = (what: string) => ({ result: `${p.ign} 接受${what}，留队！`, note: note(`${what}成功`) });
+  // 挽留失败 → 退役：收集告别巡演等叙事新闻并入卡片 note（此前传 {} 会把 v1.5 告别文案静默丢弃）
+  const retireNow = (resultTail: string, noteKey: string) => {
+    const extra: string[] = [];
+    executeRetirement(state, p, rng, {}, extra as never);
+    return { result: `${p.ign} ${resultTail}`, note: [note(noteKey), ...extra].join(" ") };
+  };
 
   switch (optionIndex) {
     case 0: { // 加薪 30%
@@ -203,8 +209,7 @@ export function resolveRetireCard(
         p.morale = clamp(p.morale + 6, 10, 100);
         return { ...successText("加薪续约"), result: successText("加薪续约").result + "（薪水上浮 30%。）" };
       }
-      executeRetirement(state, p, rng, {});
-      return { result: `${p.ign} 婉拒了加薪：「钱不是全部。」他还是决定挂靴。`, note: note("加薪挽留失败") };
+      return retireNow("他婉拒了加薪：「钱不是全部。」还是挂靴了。", "加薪挽留失败");
     }
     case 1: { // 转导师型替补
       const chance = clamp(0.55 + (p.traits?.includes("enabler") ? 0.12 : 0), 0.3, 0.85);
@@ -215,8 +220,7 @@ export function resolveRetireCard(
         p.morale = clamp(p.morale + 4, 10, 100);
         return successText("转任导师型替补");
       }
-      executeRetirement(state, p, rng, {});
-      return { result: `${p.ign} 摇头：「我还想打主力。」谈判破裂，他将退役。`, note: note("导师转型失败") };
+      return retireNow("他摇头：「我还想打主力。」谈判破裂，就此挂靴。", "导师转型失败");
     }
     case 2: // 挂牌
       p.listed = true;
@@ -241,8 +245,7 @@ export function resolveRetireCard(
         p.morale = clamp(p.morale + 8, 10, 100);
         return successText("深夜长谈");
       }
-      executeRetirement(state, p, rng, {});
-      return { result: `长谈到凌晨也没有结果——${p.ign} 去意已决。`, note: note("深谈失败") };
+      return retireNow("去意已决（长谈到凌晨也没有结果）。", "深谈失败");
     }
   }
 }

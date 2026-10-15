@@ -141,6 +141,36 @@ test("集成：settleMatch 败局路径触发叙事（我输给含旧部的队�
   }
 });
 
+test("检错回归：国际赛总决赛夺冠同样触发王朝里程碑（settleFinal 路径，此前只挂联赛）", () => {
+  const s = build(104);
+  initCareer(s, "grassroots");
+  s.manager.career!.titles = 1; // 下一冠 = 第 2 冠，触发 2 档里程碑
+  const myId = s.myTeamId!;
+  const opp = Object.values(s.teams).find((t) => t.id !== myId)!;
+  const rec = simMatch(s, myId, opp.id, 5, 4242, "ms-final");
+  // 构造国际赛总决赛 fixture 并结算；若我方恰为败方则换 seed 重试（确定性：固定几个 seed 总有一个我赢）
+  let triggered = false;
+  for (const seed of [4242, 919, 2727, 5150, 8801]) {
+    const st = build(104);
+    initCareer(st, "grassroots");
+    st.manager.career!.titles = 1;
+    const my = st.myTeamId!;
+    const o = Object.values(st.teams).find((t) => t.id !== my)!;
+    const r = simMatch(st, my, o.id, 5, seed, "ms-final-x");
+    const iWon = r.winner === "A";
+    if (!iWon) continue;
+    st.fixtures.push({
+      id: "msFx", comp: "masters", label: "Masters 总决赛", day: st.day, teamA: my, teamB: o.id,
+      bo: 5, played: true, settled: false,
+    } as never);
+    const ok = settleMatch(st, "msFx", r);
+    if (!ok) continue;
+    triggered = st.news.some((x) => x.text.includes("王朝里程碑"));
+    if (triggered) break;
+  }
+  assert.ok(triggered, "Masters 夺冠第 2 冠应触发王朝里程碑");
+});
+
 test("模板快照：四池非空且文案稳定（不随风变）", () => {
   assert.equal(REUNION_QUOTES.length, 3);
   assert.equal(TURNCOAT_QUOTES.length, 2);

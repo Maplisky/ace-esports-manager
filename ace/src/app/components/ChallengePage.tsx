@@ -5,13 +5,11 @@
 import { useEffect, useState } from "react";
 import type { GameState } from "../../core/types.ts";
 import { loadChallengePack, validateChallengeStart, challengeScore, challengeReport, type Challenge } from "../../core/sim/challenge.ts";
-import { useStore } from "../store.ts";
 
 const PACK_URLS = ["challenges/c-2026-01.json"];
 
 export function ChallengePage(props: { state: GameState }) {
   const { state } = props;
-  const { newGame } = useStore();
   const [packs, setPacks] = useState<Challenge[]>([]);
   const [busy, setBusy] = useState(false);
   const my = state.myTeamId ? state.teams[state.myTeamId] : null;
@@ -31,16 +29,13 @@ export function ChallengePage(props: { state: GameState }) {
   }, []);
 
   const startChallenge = (ch: Challenge) => {
-    // 挑战开档：同 newGame 流程但 seed/出身/难度锁死；队伍由用户在开档界面选（档位/年龄约束在选队后由 validateChallengeStart 提示）
+    // 挑战开档：seed/出身/难度经 localStorage 带到开档界面锁定；队伍由用户选（档位/年龄约束由队卡 ✓/✗ 标记与开局校验兜底）
     setBusy(true);
-    // 先切到开局界面：通过 location reload 走 StartScreen 并把挑战参数带过去（localStorage 暂存）
     try {
       localStorage.setItem("ace-challenge", JSON.stringify({ id: ch.id, seed: ch.seed, origin: ch.constraints.origin, difficulty: ch.constraints.difficulty, tier: ch.constraints.tier, maxAge: ch.constraints.maxAge, name: ch.name }));
     } catch { /* 隐私模式无暂存则退化为普通开档 */ }
     location.href = location.pathname + "#challenge=" + ch.id;
     location.reload();
-    void newGame; // 引用避免未用告警（实际开档由 StartScreen 完成后校验）
-    setBusy(false);
   };
 
   return (

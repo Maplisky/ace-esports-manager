@@ -608,6 +608,7 @@ function settleFinal(state: GameState, f: { comp: string; label: string; teamA: 
   const compName = f.comp === "masters" ? "Masters 国际赛" : f.comp === "champions" ? "Champions 世界冠军赛" : "揭幕杯";
   notes.push({ day: state.day, kind: "league", important: true, text: `🏆 ${champTeam.name} 夺得${compName}冠军！` });
   noteManagerTitle(state, champ, f.comp as "cup" | "masters" | "champions"); // 经理生涯冠军计数（v1.0-6；分类入账 v1.0-10）
+  narrativeOnTitle(state, notes); // 王朝里程碑（v1.5 检错：国际赛夺冠同样计入 titles——此前只挂联赛路径，若第 2/3/5 冠恰为 Masters/Champions 所得则里程碑永久错过）
   if (f.comp !== "champions") awardCupCircuitPoints(state, f.comp as "cup" | "masters", notes, champ);
 }
 

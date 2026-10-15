@@ -47,12 +47,13 @@ export function StartScreen() {
         );
         const payroll = t.roster.reduce((s, pid) => s + (world.players[pid]?.salary ?? 0), 0);
         const payPct = Math.round((payroll / Math.max(1, t.budget)) * 100);
+        const maxAgeOk = challenge?.maxAge == null || t.roster.every((pid) => (world.players[pid]?.age ?? 99) <= challenge.maxAge!);
         return {
           id: t.id, name: t.name, tag: t.tag, tier: t.tier, regionId: t.regionId, logo: t.logo, rating, budget: t.budget, coach: t.coach.name,
-          reputation: t.reputation, payroll, payPct, personality: t.personality,
+          reputation: t.reputation, payroll, payPct, personality: t.personality, maxAgeOk,
         };
       }),
-    [world],
+    [world, challenge?.maxAge],
   );
 
   const talentUsed = (Object.keys(SKILL_CN) as ManagerSkillKey[]).reduce((s, k) => s + (talents[k] ?? 0), 0);
@@ -86,6 +87,9 @@ export function StartScreen() {
           <span className={`tag ${health}`}>薪资 {t.payPct}%</span>
           <span className="tag">声望 {t.reputation}</span>
           <span className="tag">{PERSONALITY_CN[t.personality] ?? "董事会期望：常规"}</span>
+          {challenge?.maxAge != null && (
+            <span className={`tag ${t.maxAgeOk ? "green" : ""}`}>{t.maxAgeOk ? `✓ U${challenge.maxAge} 合规` : `✗ 超 U${challenge.maxAge}`}</span>
+          )}
         </div>
       </div>
     );
@@ -112,9 +116,16 @@ export function StartScreen() {
 
       {challenge && (
         <div className="card" style={{ borderColor: "var(--accent)" }}>
-          <b>🏁 挑战模式：{challenge.name}</b>
-          <div className="muted small" style={{ marginTop: 4 }}>
-            种子 {challenge.seed}、出身/难度已按挑战锁定{challenge.tier ? `、只能选择${challenge.tier === 2 ? "挑战者" : "VCT 合作队"}俱乐部` : ""}{challenge.maxAge ? `、名单需全员 ≤${challenge.maxAge} 岁（超龄队伍会被判不计分）` : ""}。成绩在「挑战」页查看并提交。
+          <div className="row" style={{ justifyContent: "space-between", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+            <span>
+              <b>🏁 挑战模式：{challenge.name}</b>
+              <div className="muted small" style={{ marginTop: 4 }}>
+                种子 {challenge.seed}、出身/难度已按挑战锁定{challenge.tier ? `、只能选择${challenge.tier === 2 ? "挑战者" : "VCT 合作队"}俱乐部` : ""}{challenge.maxAge ? `、名单需全员 ≤${challenge.maxAge} 岁（队卡带 ✓/✗ 标记）` : ""}。成绩在「挑战」页查看并提交。
+              </div>
+            </span>
+            <button className="small" onClick={() => { try { localStorage.removeItem("ace-challenge"); } catch { /* 忽略 */ } location.reload(); }}>
+              退出挑战模式
+            </button>
           </div>
         </div>
       )}
@@ -168,7 +179,12 @@ export function StartScreen() {
         <h3>3 · 教练出身（随机 3 选 1）</h3>
         <div className="startgrid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))" }}>
           {ORIGINS.map((o) => (
-            <div key={o.key} className={`teamcard${origin === o.key ? " sel" : ""}`} onClick={() => setOrigin(o.key)}>
+            <div
+              key={o.key}
+              className={`teamcard${origin === o.key ? " sel" : ""}${challenge?.origin && challenge.origin !== o.key ? " muted" : ""}`}
+              onClick={() => { if (!challenge?.origin) setOrigin(o.key); }}
+              style={challenge?.origin && challenge.origin !== o.key ? { opacity: 0.4, pointerEvents: "none" } : undefined}
+            >
               <b>{o.label}</b>
               <div className="muted small" style={{ marginTop: 6 }}>{o.desc}</div>
             </div>

@@ -64,7 +64,7 @@ export function SystemPage() {
         </div>
         <div className="row" style={{ flexWrap: "wrap", gap: 8, alignItems: "center" }}>
           <span className="small">音效</span>
-          <button className={audioOn ? "small primary" : "small"} onClick={() => { const v = !audioOn; setAudioEnabled(v); setAudioOn(v); if (v) sfx("ui" as never); }}>
+          <button className={audioOn ? "small primary" : "small"} onClick={() => { const v = !audioOn; setAudioEnabled(v); setAudioOn(v); if (v) sfx("round"); }}>
             {audioOn ? "开（WebAudio 合成音）" : "关（默认）"}
           </button>
           <span className="muted small">回合提示 / 击杀 / 下包 / 赛点——振荡器自产合成，零外部素材</span>
