@@ -36,6 +36,20 @@ export function applyTalents(state: GameState, points: Partial<Record<ManagerSki
   }
 }
 
+/** 自我进修（GDD §9.5 v1.4）：花个人钱包 $5K 给一项技能 +1（上限 75）——零 RNG */
+export const SELF_STUDY_COST = 5_000;
+export const SELF_STUDY_CAP = 75;
+export function selfStudy(state: GameState, skill: ManagerSkillKey): string {
+  const life = state.manager?.life;
+  if (!life) return "生涯未初始化。";
+  if (life.wallet < SELF_STUDY_COST) return `个人积蓄不足（需 $${SELF_STUDY_COST / 1000}K）。`;
+  const cur = state.manager.skills[skill] ?? 50;
+  if (cur >= SELF_STUDY_CAP) return `${SKILL_CN[skill]}已达进修上限（${SELF_STUDY_CAP}）。`;
+  life.wallet -= SELF_STUDY_COST;
+  state.manager.skills[skill] = cur + 1;
+  return `完成一门${SKILL_CN[skill]}进修课：${SKILL_CN[skill]} ${cur} → ${cur + 1}（$${SELF_STUDY_COST / 1000}K）。`;
+}
+
 /** 出身定义（开档 3 选 1：2 强 1 弱 + 起始资源差异，GDD §9.5） */
 export const ORIGINS: { key: "legend" | "grassroots" | "analyst"; label: string; desc: string }[] = [
   { key: "legend", label: "前豪门名宿", desc: "声望 +15、谈判 +5、个人钱包 +$60K——名头好借，期望也高" },

@@ -128,6 +128,10 @@ export interface Player {
   commercialDays: number;
   /** 直播合同（null = 无；GDD §8.4） */
   stream: { weekly: number; untilDay: number } | null;
+  /** 个人积蓄（GDD §8.4 v1.4：直播 60% 分成入个人钱包，不进俱乐部） */
+  wallet?: number;
+  /** 人气值 0-100（GDD §8.4 v1.4：直播涨人气；加成商务邀约报酬） */
+  popularity?: number;
   /** 生日（赛季内第 N 天，seeded 生成；当日开 7 天祝福窗口） */
   birthdayDay: number;
   /** 上次成为负面事件主角的天（14 天抑制器） */
@@ -202,6 +206,8 @@ export interface Sponsor {
   perSeason: number;
   years: number;
   signedYear: number;
+  /** 业绩条款（GDD §8.4 v1.4）：联赛四强 ×1.2 / 夺冠 ×1.5 收入——默认签约即带 */
+  bonus?: boolean;
 }
 
 export interface SponsorOffer extends Sponsor {
@@ -633,6 +639,8 @@ export interface GameState {
   scrimLog?: { day: number; oppId: string; mapId: string; goal: ScrimGoal; score: [number, number]; won: boolean }[];
   /** 开局引导清单（GDD §3 v1.2）：定首发/选英雄/排第一周训练——完成动作时打勾，第二赛季起不再展示 */
   onboarding?: { lineup?: boolean; agents?: boolean; schedule?: boolean };
+  /** 赞助业绩倍率（GDD §8.4 v1.4）：我的联赛四强 1.2 / 夺冠 1.5——联赛结算时刷新，作用于带业绩条款的赞助周收入 */
+  sponsorMult?: number;
 }
 
 /** 训练赛目标三选一（GDD §5.6 v1.1）：磨合 / 风格特训 / 图池特训 */

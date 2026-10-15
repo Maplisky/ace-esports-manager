@@ -648,6 +648,10 @@ export function applyMatchEffects(state: GameState, rec: MatchRecord): void {
       p.form = clamp(p.form + (won ? 1 : -1), 30, 99);
       p.morale = clamp(p.morale + (won ? 2 : -2), 10, 100);
     }
+    // 教练心态（§9.5 v1.4）：我的正式赛胜负 ±10——赢球心情好，连败要照顾自己
+    if (teamId === state.myTeamId && state.manager?.life) {
+      state.manager.life.mood = clamp(state.manager.life.mood + (won ? 10 : -10), 0, 100);
+    }
   }
 }
 

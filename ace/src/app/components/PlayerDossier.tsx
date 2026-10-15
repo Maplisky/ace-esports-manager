@@ -72,6 +72,8 @@ export function PlayerDossier(props: { state: GameState; player: Player; onClose
                 <span className="tag">年薪 {fmtK(p.salary)}</span>
                 <span className="tag">身价 {fmtK(marketValue(p, team?.tier ?? 1))}</span>
                 <span className="tag green">潜力 {p.potential}</span>
+                {(p.popularity ?? 0) > 0 && <span className="tag" title="直播涨人气：加成商务邀约报酬">🔥 人气 {Math.round(p.popularity!)}</span>}
+                {(p.wallet ?? 0) > 0 && <span className="tag" title="直播 60% 分成等个人收入（不进俱乐部）">💼 积蓄 {fmtK(p.wallet!)}</span>}
               </div>
             </span>
             <span style={{ textAlign: "center" }}>

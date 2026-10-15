@@ -4,7 +4,7 @@ import { initSeasonFixtures, advanceDay, playHeldMatch, interveneHeldMatch, sett
 import { simMatch } from "../../core/sim/match.ts";
 import { resolveEvent } from "../../core/sim/events.ts";
 import { signCoach } from "../../core/sim/retirement.ts";
-import { initCareer, applyJob, applyTalents, type ManagerSkillKey } from "../../core/sim/career.ts";
+import { initCareer, applyJob, applyTalents, selfStudy, SELF_STUDY_COST, SELF_STUDY_CAP, type ManagerSkillKey } from "../../core/sim/career.ts";
 import { draftPickTrade } from "../../core/sim/draft.ts";
 import { evaluateAchievements } from "../../core/sim/achievements.ts";
 import { UNLOCK_NOTES } from "../guide.ts";
@@ -478,6 +478,10 @@ function handleWorkerMessage(e: MessageEvent) {
   } else if (type === "cancelStream") {
     if (state) cancelStream(state, msg.playerId as string);
     reply({ type: "snapshot", ...snapshot() });
+  } else if (type === "selfStudy") {
+    // 自我进修（GDD §9.5 v1.4）：个人钱包 $5K → 一项技能 +1（上限 75）
+    const message = state ? selfStudy(state, msg.skill as ManagerSkillKey) : "无存档。";
+    reply({ type: "snapshot", ...snapshot(), message });
   } else if (type === "managerLife") {
     let message = "";
     if (state?.manager?.life) {

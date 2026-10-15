@@ -2,14 +2,18 @@
 import type { GameState } from "../../core/types.ts";
 import { useState } from "react";
 import { useStore } from "../store.ts";
+import { SKILL_CN, SELF_STUDY_COST, SELF_STUDY_CAP, type ManagerSkillKey } from "../../core/sim/career.ts";
 
 const fmt = (v: number) => `$${Math.round(v)}`;
 
 export function ManagerPage(props: { state: GameState }) {
   const { state } = props;
   const managerLife = useStore((s) => s.managerLife);
+  const selfStudyAction = useStore((s) => s.selfStudy);
   const upgradeFacility = useStore((s) => s.upgradeFacility);
   const [upgradeBusy, setUpgradeBusy] = useState(false);
+  const [studySkill, setStudySkill] = useState<ManagerSkillKey>("tactics");
+  const selfStudy = (skill: ManagerSkillKey) => selfStudyAction(skill);
   const mgr = state.manager;
   if (!mgr) return null;
   const life = mgr.life;
@@ -76,6 +80,18 @@ export function ManagerPage(props: { state: GameState }) {
           </button>
           <button className="small" disabled={life.wallet < 300} onClick={() => void managerLife("fun")}>
             娱乐活动 $300（心情 +20）
+          </button>
+        </div>
+        {/* 自我进修（GDD §9.5 v1.4）：个人钱包换技能成长 */}
+        <div className="row" style={{ flexWrap: "wrap", gap: 8, marginTop: 10, alignItems: "center" }}>
+          <span className="muted small">🎓 自我进修</span>
+          <select className="small" value={studySkill} onChange={(e) => setStudySkill(e.target.value as never)}>
+            {(Object.keys(SKILL_CN) as ManagerSkillKey[]).map((k) => (
+              <option key={k} value={k}>{SKILL_CN[k]}（{state.manager.skills[k] ?? 50}）</option>
+            ))}
+          </select>
+          <button className="small" disabled={life.wallet < SELF_STUDY_COST || (state.manager.skills[studySkill] ?? 50) >= SELF_STUDY_CAP} onClick={() => void selfStudy(studySkill)}>
+            进修一门 $5K（+1，上限 {SELF_STUDY_CAP}）
           </button>
         </div>
       </div>

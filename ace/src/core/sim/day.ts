@@ -617,6 +617,19 @@ function awardLeagueTitle(state: GameState, compKey: string, notes: NewsItem[]):
   noteManagerTitle(state, champ, "league"); // 经理生涯冠军计数（v1.0-6；分类入账 v1.0-10）
   // 冠军积分（v1.0 国际赛资格）：仅 t1 合作联赛计入（挑战者不计）
   if (/t1$/.test(compKey)) awardLeagueCircuitPoints(state, compKey);
+  // 赞助业绩条款倍率（§8.4 v1.4）：我的联赛夺冠 ×1.5 / 四强 ×1.2——结算后作用于本周起的赞助周收入
+  if (state.myTeamId && /t1$/.test(compKey)) {
+    const myIdx = table.findIndex((r) => r.teamId === state.myTeamId);
+    if (myIdx === 0) {
+      state.sponsorMult = 1.5;
+      notes.push({ day: state.day, kind: "league", important: true, text: `💰 夺冠触发赞助业绩条款：带条款赞助收入 ×1.5（本赛段余下周期）。` });
+    } else if (myIdx >= 0 && myIdx < 4) {
+      state.sponsorMult = 1.2;
+      notes.push({ day: state.day, kind: "league", text: `💰 联赛四强触发赞助业绩条款：带条款赞助收入 ×1.2（本赛段余下周期）。` });
+    } else {
+      state.sponsorMult = 1;
+    }
+  }
   for (const pid of (state.teams[champ] as GameState["teams"][string]).roster) {
     const p = state.players[pid];
     if (p) p.career.titles++;

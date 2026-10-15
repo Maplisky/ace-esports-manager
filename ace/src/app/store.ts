@@ -90,6 +90,7 @@ interface AppStore {
   cancelStream: (playerId: string) => Promise<void>;
   requestRotationTalk: (playerId: string) => Promise<void>;
   managerLife: (kind: "meal" | "feast" | "fun") => Promise<void>;
+  selfStudy: (skill: string) => Promise<void>;
   upgradeFacility: () => Promise<void>;
   signCoach: (coachId: string, slot: "training" | "mapTactics" | "match") => Promise<string | null>;
   /** 跳槽申请（v1.0-6，GDD §9.5）：休赛期教练市场 */
@@ -553,6 +554,15 @@ export const useStore = create<AppStore>((set, get) => ({
 
   managerLife: async (kind) => {
     const res = await call<{ state?: GameState; records?: Record<string, MatchRecord>; message?: string }>({ type: "managerLife", kind });
+    if (res.state) {
+      records = res.records ?? get().records;
+      set({ state: res.state, records });
+      if (res.message) get().showToast(res.message);
+    }
+  },
+
+  selfStudy: async (skill) => {
+    const res = await call<{ state?: GameState; records?: Record<string, MatchRecord>; message?: string }>({ type: "selfStudy", skill });
     if (res.state) {
       records = res.records ?? get().records;
       set({ state: res.state, records });

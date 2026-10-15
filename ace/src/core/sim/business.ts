@@ -7,10 +7,10 @@ import { Rng, clamp } from "../rng.ts";
 import type { GameState, GigOffer, Player, Sponsor, SponsorOffer } from "../types.ts";
 import { logFinance } from "./finance.ts";
 
-const TIER_DEF = [
-  { tier: 1 as const, name: "地方品牌", min: 80_000, max: 150_000, repNeed: 20 },
-  { tier: 2 as const, name: "国民品牌", min: 200_000, max: 300_000, repNeed: 45 },
-  { tier: 3 as const, name: "国际品牌", min: 350_000, max: 450_000, repNeed: 60 },
+export const TIER_DEF = [
+  { tier: 1 as const, name: "地方品牌", min: 80_000, max: 150_000, repNeed: 45 },
+  { tier: 2 as const, name: "国民品牌", min: 200_000, max: 300_000, repNeed: 60 },
+  { tier: 3 as const, name: "国际品牌", min: 350_000, max: 450_000, repNeed: 75 },
 ];
 
 const BRANDS_T1 = ["晨光乳业", "飞毛腿快递", "街角咖啡", "雷霆文具", "滨江健身房"];
@@ -70,12 +70,12 @@ export function signSponsorOffer(state: GameState, offer: SponsorOffer, rng: Rng
   if (myTeam.sponsors.length >= sponsorSlotsFor(myTeam.reputation)) return { ok: false, text: "赞助栏位已满。" };
   const chance = sponsorSignChance(state, offer.tier);
   if (!rng.chance(chance)) return { ok: false, text: `${offer.name} 婉拒了合作（态度 + 档位门槛）。` };
-  const sponsor: Sponsor = { ...offer, signedYear: state.year };
+  const sponsor: Sponsor = { ...offer, signedYear: state.year, bonus: true }; // 标准业绩条款（§8.4 v1.4）
   myTeam.sponsors.push(sponsor);
   // 意向消费：签成即从意向列表移除（否则残留 21 天至过期——用户反馈）
   state.sponsorOffers = state.sponsorOffers.filter((o) => o.id !== offer.id);
   // 收入走周结算细水长流（首期+周薪双重发放曾致首年超发 25%——检错移除）
-  return { ok: true, text: `与 ${offer.name} 签下 ${offer.years} 年赞助（${fmtMoney(sponsor.perSeason)}/赛季），周收入即刻生效。` };
+  return { ok: true, text: `与 ${offer.name} 签下 ${offer.years} 年赞助（${fmtMoney(sponsor.perSeason)}/赛季，含业绩条款：联赛四强 +20% / 夺冠 +50%），周收入即刻生效。` };
 }
 
 export function cancelSponsorById(state: GameState, sponsorId: string): string {
@@ -89,14 +89,19 @@ export function cancelSponsorById(state: GameState, sponsorId: string): string {
   return `与 ${s.name} 解约（声望 -2）。`;
 }
 
-/** 周收入：全部赞助 perSeason/48 + 直播合同俱乐部分成 40% */
+/** 周收入：赞助 perSeason/48（带业绩条款者 ×联赛倍率）+ 直播俱乐部 40%（另 60% 入选手个人钱包，§8.4 v1.4） */
 export function weeklySponsorIncome(state: GameState): number {
   const myTeam = state.myTeamId ? state.teams[state.myTeamId] : null;
   if (!myTeam) return 0;
   let income = 0;
-  for (const s of myTeam.sponsors) income += Math.round(s.perSeason / 48);
+  const mult = state.sponsorMult ?? 1;
+  for (const s of myTeam.sponsors) income += Math.round((s.perSeason / 48) * (s.bonus === false ? 1 : mult));
   for (const p of myTeam.roster.map((id) => state.players[id])) {
-    if (p?.stream && p.stream.untilDay > state.day) income += Math.round(p.stream.weekly * 0.4);
+    if (p?.stream && p.stream.untilDay > state.day) {
+      income += Math.round(p.stream.weekly * 0.4);
+      p.wallet = (p.wallet ?? 0) + Math.round(p.stream.weekly * 0.6); // 选手 60% 分成入个人钱包
+      p.popularity = clamp((p.popularity ?? 0) + 2, 0, 100); // 人气值随直播上涨
+    }
   }
   return income;
 }
@@ -115,10 +120,11 @@ export function acceptGig(state: GameState, gigId: string): { ok: boolean; text:
   if (!p || p.teamId !== state.myTeamId) return { ok: false, text: "选手已不在阵中。" };
   state.gigOffers.splice(idx, 1);
   const myTeam = state.myTeamId ? state.teams[state.myTeamId] : null;
-  if (myTeam) myTeam.budget += gig.pay;
-  logFinance(state, `商务活动 · ${gig.brand}（${p.ign}）`, gig.pay);
+  const pay = Math.round(gig.pay * (1 + ((p.popularity ?? 0) * 0.002))); // 人气值加成邀约报酬（§8.4 v1.4）
+  if (myTeam) myTeam.budget += pay;
+  logFinance(state, `商务活动 · ${gig.brand}（${p.ign}）`, pay);
   p.commercialDays = (p.commercialDays ?? 0) + 1;
-  return { ok: true, text: `${p.ign} 出席 ${gig.brand} 活动：+${fmtMoney(gig.pay)}（本周训练日 -1）。` };
+  return { ok: true, text: `${p.ign} 出席 ${gig.brand} 活动：+${fmtMoney(pay)}（本周训练日 -1${(p.popularity ?? 0) >= 30 ? " · 人气加成" : ""}）。` };
 }
 
 export function declineGig(state: GameState, gigId: string): void {
@@ -132,7 +138,8 @@ export function signStream(state: GameState, playerId: string, months: number, r
   if (p.stream && p.stream.untilDay > state.day) return { ok: false, text: `${p.ign} 已有直播合同在身。` };
   const weekly = Math.round((1200 + p.overall * 60) * rng.range(0.8, 1.3) / 100) * 100;
   p.stream = { weekly, untilDay: state.day + months * 30 };
-  return { ok: true, text: `${p.ign} 签下直播合同：周收入 ${fmtMoney(weekly)}（选手 60% / 俱乐部 40%），每周占 1 个训练日。` };
+  p.popularity = clamp((p.popularity ?? 0) + 5, 0, 100); // 签约即获人气（§8.4 v1.4）
+  return { ok: true, text: `${p.ign} 签下直播合同：周收入 ${fmtMoney(weekly)}（选手 60% 入个人钱包 / 俱乐部 40%），每周占 1 个训练日，人气 +5。` };
 }
 
 export function cancelStream(state: GameState, playerId: string): string {
