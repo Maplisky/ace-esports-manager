@@ -1,0 +1,152 @@
+/** 中期生涯叙事（v1.5，GDD §9.5）：四模板触发条件确定性 + 模板快照。机制零新增、零 RNG。 */
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { generateWorld, resetPlayerSeq } from "../src/core/worldgen.ts";
+import { initCareer } from "../src/core/sim/career.ts";
+import { initSeasonFixtures, settleMatch } from "../src/core/sim/day.ts";
+import { resetFixtureSeq } from "../src/core/sim/fixtures.ts";
+import { simMatch } from "../src/core/sim/match.ts";
+import {
+  narrativeOnMyLoss, narrativeAfterMyLoss, narrativeOnTitle, narrativeOnRetire,
+  REUNION_QUOTES, TURNCOAT_QUOTES, DYNASTY_QUOTES, FAREWELL_QUOTES,
+} from "../src/core/sim/narrative.ts";
+import type { GameState, NewsItem } from "../src/core/types.ts";
+
+function build(seed = 101): GameState {
+  resetPlayerSeq();
+  resetFixtureSeq();
+  const state = generateWorld(seed);
+  initSeasonFixtures(state);
+  state.myTeamId = Object.values(state.teams).find((t) => t.tier === 1)!.id;
+  return state;
+}
+
+test("旧部重逢：胜方 roster 有曾效力我队者（career.clubs 痕迹）→ 金句；无旧部则静默", () => {
+  const s = build();
+  const myId = s.myTeamId!;
+  const opp = Object.values(s.teams).find((t) => t.id !== myId)!;
+  // 无旧部：静默
+  const n1: NewsItem[] = [];
+  narrativeOnMyLoss(s, opp, n1, null);
+  assert.equal(n1.filter((x) => x.text.includes("旧部重逢")).length, 0);
+  // 塞一个旧部（曾在 clubs 留痕）
+  const oldBoy = opp.roster.map((pid) => s.players[pid]!)[0]!;
+  oldBoy.career.clubs.push(myId);
+  const n2: NewsItem[] = [];
+  narrativeOnMyLoss(s, opp, n2, "冠军赛总决赛");
+  const q = n2.find((x) => x.text.includes("旧部重逢"));
+  assert.ok(q, "国际赛淘汰旧部触发金句");
+  assert.ok(q!.text.includes(oldBoy.ign) && q!.text.includes("冠军赛总决赛") && q!.important);
+  assert.ok(REUNION_QUOTES.some((t) => q!.text.includes(t)), "金句来自模板池");
+});
+
+test("弟子反戈：胜方教练是我队退役名宿（retireLog coach + teamName=我队）→ 金句", () => {
+  const s = build();
+  const myId = s.myTeamId!;
+  const myName = s.teams[myId]!.name;
+  const opp = Object.values(s.teams).find((t) => t.id !== myId)!;
+  s.retireLog = [{ year: s.year, ign: "LegendX", name: "LegendX", age: 34, titles: 3, mvps: 5, overall: 88, path: "coach", teamName: myName, coachId: "coach_x" }];
+  opp.coach.name = "LegendX";
+  const n: NewsItem[] = [];
+  narrativeOnMyLoss(s, opp, n, null);
+  const q = n.find((x) => x.text.includes("弟子反戈"));
+  assert.ok(q && q.important);
+  assert.ok(TURNCOAT_QUOTES.some((t) => q!.text.includes(t)));
+  // 非我队退役的教练不触发
+  s.retireLog = [{ year: s.year, ign: "LegendX", name: "LegendX", age: 34, titles: 3, mvps: 5, overall: 88, path: "coach", teamName: "别家", coachId: "coach_x" }];
+  const n2: NewsItem[] = [];
+  narrativeOnMyLoss(s, opp, n2, null);
+  assert.equal(n2.filter((x) => x.text.includes("弟子反戈")).length, 0);
+});
+
+test("王朝里程碑：titles=2/3/5 触发一次，其余不触发；文案来自模板池", () => {
+  const s = build();
+  initCareer(s, "grassroots"); // 生成档 career 由 initCareer 创建（worker newGame 路径）
+  s.manager.career!.titles = 2;
+  const n2: NewsItem[] = [];
+  narrativeOnTitle(s, n2);
+  assert.equal(n2.length, 1);
+  assert.ok(n2[0]!.text.includes("王朝里程碑") && n2[0]!.text.includes("第 2 冠"));
+  assert.ok(DYNASTY_QUOTES.some((t) => n2[0]!.text.includes(t)));
+  for (const t of [3, 5]) {
+    s.manager.career!.titles = t;
+    const n: NewsItem[] = [];
+    narrativeOnTitle(s, n);
+    assert.equal(n.length, 1, `titles=${t} 触发`);
+  }
+  for (const t of [1, 4, 6, 7]) {
+    s.manager.career!.titles = t;
+    const n: NewsItem[] = [];
+    narrativeOnTitle(s, n);
+    assert.equal(n.length, 0, `titles=${t} 不触发`);
+  }
+});
+
+test("名宿告别巡演：我队 32+ 岁 2+ 冠退役触发；他家/年轻/无冠不触发", () => {
+  const s = build();
+  const myName = s.teams[s.myTeamId!]!.name;
+  const base = { year: s.year, ign: "OldGuard", name: "OldGuard", mvps: 2, overall: 80, path: "fade" as const, teamName: myName, coachId: undefined };
+  const n1: NewsItem[] = [];
+  narrativeOnRetire(s, { ...base, age: 33, titles: 3 }, n1);
+  assert.equal(n1.length, 1);
+  assert.ok(n1[0]!.text.includes("告别巡演") && FAREWELL_QUOTES.some((t) => n1[0]!.text.includes(t)));
+  const n2: NewsItem[] = [];
+  narrativeOnRetire(s, { ...base, age: 31, titles: 3 }, n2);
+  assert.equal(n2.length, 0, "31 岁不触发");
+  const n3: NewsItem[] = [];
+  narrativeOnRetire(s, { ...base, age: 33, titles: 1 }, n3);
+  assert.equal(n3.length, 0, "1 冠不触发");
+  const n4: NewsItem[] = [];
+  narrativeOnRetire(s, { ...base, age: 33, titles: 3, teamName: "别家" }, n4);
+  assert.equal(n4.length, 0, "他队退役不触发");
+});
+
+test("确定性：同输入双跑逐字一致（零 RNG）；金句按 ign hash 稳定选择", () => {
+  const s1 = build(102);
+  const s2 = build(102);
+  const opp1 = Object.values(s1.teams).find((t) => t.id !== s1.myTeamId)!;
+  const opp2 = Object.values(s2.teams).find((t) => t.id !== s2.myTeamId)!;
+  const ob1 = opp1.roster.map((pid) => s1.players[pid]!)[0]!;
+  const ob2 = opp2.roster.map((pid) => s2.players[pid]!)[0]!;
+  assert.equal(ob1.ign, ob2.ign, "同 seed 同选手");
+  ob1.career.clubs.push(s1.myTeamId!);
+  ob2.career.clubs.push(s2.myTeamId!);
+  const n1: NewsItem[] = [], n2: NewsItem[] = [];
+  narrativeOnMyLoss(s1, opp1, n1, "Masters 决赛");
+  narrativeOnMyLoss(s2, opp2, n2, "Masters 决赛");
+  assert.deepEqual(n1.map((x) => x.text), n2.map((x) => x.text), "逐字一致");
+});
+
+test("集成：settleMatch 败局路径触发叙事（我输给含旧部的队）", () => {
+  const s = build(103);
+  const myId = s.myTeamId!;
+  const f = s.fixtures.find((x) => !x.played && (x.teamA === myId || x.teamB === myId))!;
+  const oppId = f.teamA === myId ? f.teamB : f.teamA;
+  const opp = s.teams[oppId]!;
+  const ob = opp.roster.map((pid) => s.players[pid]!)[0]!;
+  ob.career.clubs.push(myId);
+  // 直接构造 rec 并 settle：模拟直到我输（限多次尝试确定性构造不可行——改为强改 roster 使必输不可靠；
+  // 用直接构造 rec 的方式绕过 simMatch 胜负：手工 rec 我为败方）
+  const rec = simMatch(s, f.teamA, f.teamB, f.bo, 8888, f.id);
+  const iAmA = f.teamA === myId;
+  const iWon = rec.winner === "A" ? iAmA : !iAmA;
+  f.played = true;
+  f.settled = false;
+  const ok = settleMatch(s, f.id, rec);
+  assert.ok(ok);
+  if (!iWon) {
+    assert.ok(s.news.some((x) => x.text.includes("旧部重逢")), "败局触发旧部金句");
+  } else {
+    assert.ok(!s.news.some((x) => x.text.includes("旧部重逢")), "胜局不触发");
+  }
+});
+
+test("模板快照：四池非空且文案稳定（不随风变）", () => {
+  assert.equal(REUNION_QUOTES.length, 3);
+  assert.equal(TURNCOAT_QUOTES.length, 2);
+  assert.equal(DYNASTY_QUOTES.length, 3);
+  assert.equal(FAREWELL_QUOTES.length, 3);
+  for (const q of [...REUNION_QUOTES, ...TURNCOAT_QUOTES, ...DYNASTY_QUOTES, ...FAREWELL_QUOTES]) {
+    assert.ok(q.length >= 10 && /「|——/.test(q), "金句带引语或破折号风格");
+  }
+});

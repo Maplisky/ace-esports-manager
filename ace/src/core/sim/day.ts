@@ -11,6 +11,7 @@ import { spawnDailyEvents, spawnBirthdays } from "./events.ts";
 import { aiWeeklyTransfers, resolveInquiries } from "./transfer.ts";
 import { rollPatch } from "./patch.ts";
 import { decayIntel } from "./intel.ts";
+import { narrativeAfterMyLoss, narrativeOnTitle } from "./narrative.ts";
 import { logFinance } from "./finance.ts";
 import { seasonRetirements } from "./retirement.ts";
 import { runDraft } from "./draft.ts";
@@ -639,6 +640,7 @@ function awardLeagueTitle(state: GameState, compKey: string, notes: NewsItem[]):
     ? `${regionLabel(m[2]!)}${m[3] === "2" ? "挑战者联赛" : "联赛"} Stage ${m[1]}`
     : compKey;
   notes.push({ day: state.day, kind: "league", important: true, text: `🏆 ${state.teams[champ]?.name} 加冕 ${label} 冠军` });
+  narrativeOnTitle(state, notes); // 王朝里程碑（v1.5）：我夺冠后按生涯冠军数触发全联盟反应文案
 }
 
 /** 推进一天。onMatch：每场结束回调。mineHold：我的比赛开打前暂停（返回 true 表示拦截，由调用方带参重放）。 */
@@ -1003,6 +1005,7 @@ export function settleMatch(
   const tagB = (state.teams[f.teamB] as GameState["teams"][string]).tag;
   notes.push({ day: state.day, kind: "match", text: `${f.label}${f.tutorial ? "（教学局）" : ""}｜${tagA} ${rec.score[0]}-${rec.score[1]} ${tagB}`, important: true });
   if (!f.tutorial) noteMatchResult(state, rec.winner === "A" ? f.teamA === state.myTeamId : f.teamB === state.myTeamId, notes); // 赛前准备路径同样入账（v1.0-6）；教学局不计（v1.0-11）
+  if (!f.tutorial) narrativeAfterMyLoss(state, f, rec, notes); // 中期叙事（v1.5）：我输掉的正式赛——旧部重逢/弟子反戈（教学局不计）
   settleFinal(state, f, rec, notes); // 赛前准备路径同样结算冠军/积分（v1.0-3b 检错：此前漏发冠军积分）
   for (const n of notes) {
     state.news.push(n);

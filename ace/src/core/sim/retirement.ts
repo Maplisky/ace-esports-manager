@@ -7,6 +7,7 @@
  */
 import { clamp, hashString, Rng } from "../rng.ts";
 import type { CoachFreeAgent, GameState, PendingEventCard, Player, RetireLogItem, TransferFeedItem } from "../types.ts";
+import { narrativeOnRetire } from "./narrative.ts";
 
 /** 名望折算（GDD §8.3：MVP/冠军/实力） */
 export function fameOf(p: Player): number {
@@ -102,7 +103,7 @@ function executeRetirement(
   feed(state, { kind: "retire", important: path === "coach" && !!team, text: newsText });
   notes?.push({ day: 1, kind: "transfer", important: path === "coach" && !!team, text: newsText });
 
-  state.retireLog!.push({
+  const entry: RetireLogItem = {
     year: state.year,
     ign: p.ign,
     name: p.ign,
@@ -113,7 +114,9 @@ function executeRetirement(
     path,
     teamName,
     coachId: path === "coach" ? "coach_" + p.id : undefined,
-  });
+  };
+  state.retireLog!.push(entry);
+  narrativeOnRetire(state, entry, (notes ?? []) as never); // 名宿告别巡演（v1.5）：我队功勋末季文案
   if (p.teamId) {
     const owner = state.teams[p.teamId];
     owner.roster = owner.roster.filter((id) => id !== p.id);
