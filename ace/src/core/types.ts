@@ -627,7 +627,14 @@ export interface GameState {
   teamSchedule: string[];
   /** 跑图计划针对的地图（≤2 张） */
   trainingMaps: string[];
+  /** 风格特训应对熟练度（GDD §5.6 v1.1）：style key → 0-10；正式赛风格克制最多向有利偏移 +0.9 */
+  styleCounter?: Record<string, number>;
+  /** 训练赛记录（GDD §5.6 v1.1）：不产生 MatchRecord、不计个人数据，仅面板展示（留最近 20 场） */
+  scrimLog?: { day: number; oppId: string; mapId: string; goal: ScrimGoal; score: [number, number]; won: boolean }[];
 }
+
+/** 训练赛目标三选一（GDD §5.6 v1.1）：磨合 / 风格特训 / 图池特训 */
+export type ScrimGoal = "blend" | "style" | "mappool";
 
 export interface InboxItem {
   id: string;

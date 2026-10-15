@@ -1,6 +1,6 @@
 /** Zustand store + Worker 桥：主线程渲染快照，模拟全在 Worker（GDD §11.1）。 */
 import { create } from "zustand";
-import type { GameState, MatchRecord, Preset, TransferOffer } from "../core/types.ts";
+import type { GameState, MatchRecord, Preset, ScrimGoal, TransferOffer } from "../core/types.ts";
 import {
   loadGame, saveGame, saveSlot, saveBackup, loadKey, deleteSave as deleteSaveKey,
   listSaves, migrateLegacyAutosave, exportJson, importJson,
@@ -81,6 +81,7 @@ interface AppStore {
   respondBid: (offerId: string, accept: boolean) => Promise<void>;
   resolveEvent: (uid: string, optionIndex: number) => Promise<void>;
   scoutTeam: (teamId: string) => Promise<void>;
+  scrim: (oppId: string, mapId: string, goal: ScrimGoal, goalStyle?: string) => Promise<void>;
   signSponsor: (offerId: string) => Promise<void>;
   cancelSponsor: (sponsorId: string) => Promise<void>;
   acceptGig: (gigId: string) => Promise<void>;
@@ -394,6 +395,20 @@ export const useStore = create<AppStore>((set, get) => ({
     records = res.records ?? get().records;
     set({ state: res.state, records });
     get().showToast(`侦察完成：情报等级 ${res.intel ?? 0}/10`);
+  },
+
+  scrim: async (oppId, mapId, goal, goalStyle) => {
+    const res = await call<{ state?: GameState; records?: Record<string, MatchRecord>; scrim?: { accepted: boolean; reason: string; won: boolean; score: [number, number] }; error?: string }>({ type: "scrim", oppId, mapId, goal, goalStyle });
+    if (res.error || !res.state) {
+      get().showToast(res.error ?? "约战失败");
+      return;
+    }
+    records = res.records ?? get().records;
+    set({ state: res.state, records });
+    const s = res.scrim;
+    if (!s) return;
+    if (!s.accepted) get().showToast(s.reason);
+    else get().showToast(`训练赛${s.won ? "胜" : "负"} ${Math.max(s.score[0], s.score[1])}-${Math.min(s.score[0], s.score[1])}`);
   },
 
   requestRotationTalk: async (playerId) => {

@@ -16,6 +16,7 @@ import { intelOf } from "./intel.ts";
 import { runVeto } from "./veto.ts";
 import { callDefOf, callSideOf } from "./tactics.ts";
 import type { BuyType, GameState, IglReading, MapRecord, MatchIntervention, MatchRecord, Player, PlayerLine, RoundEvent, RoundRecord, Team } from "../types.ts";
+import type { StyleKey } from "./strength.ts";
 const ULT_BONUS_CAP = 2.5;
 const MAX_ROUNDS = 80;
 
@@ -190,6 +191,14 @@ function simMap(
   const styleB = styleOf(aggrOfLineup(B.players));
   const counterA = styleCounterOf(styleA, styleB) * (crossRegion ? 0.5 : 1);
   const counterB = styleCounterOf(styleB, styleA) * (crossRegion ? 0.5 : 1);
+  // 风格特训应对熟练度（GDD §5.6 v1.1，§12：每点 +0.09，最多向有利偏移 +0.9）——只对我队生效
+  const styleTrainingShift = (side: "A" | "B", theirStyle: StyleKey): number => {
+    const tid = side === "A" ? A.team.id : B.team.id;
+    if (tid !== state.myTeamId) return 0;
+    return Math.min(0.9, (state.styleCounter?.[theirStyle] ?? 0) * 0.09);
+  };
+  const counterA2 = counterA + styleTrainingShift("A", styleB);
+  const counterB2 = counterB + styleTrainingShift("B", styleA);
   // 怯场（GDD §18-3，v1.0-5）：国际赛淘汰赛，≤19 岁新兵/大赛软脚虾特质 → 心态 debuff（mid）；
   // 老将 IGL（≥28 岁）或高激励教练（motivation ≥70）压阵 → 减半
   const chokeOf = (t: SimTeam): number => {
@@ -203,8 +212,8 @@ function simMap(
     const anchored = t.players.some((p) => p.isIgl && p.age >= 28) || t.team.coach.motivation >= 70;
     return -Math.min(1.2, sources) * (anchored ? 0.5 : 1);
   };
-  A.str = computeSide({ team: A.team, players: state.players, map, day: state.day, agentAssign: assignFor(A.team), intel: intelA, patchMeta: patchMetaMap, styleCounter: counterA, chokeMod: chokeOf(A) });
-  B.str = computeSide({ team: B.team, players: state.players, map, day: state.day, agentAssign: assignFor(B.team), intel: intelB, patchMeta: patchMetaMap, styleCounter: counterB, chokeMod: chokeOf(B) });
+  A.str = computeSide({ team: A.team, players: state.players, map, day: state.day, agentAssign: assignFor(A.team), intel: intelA, patchMeta: patchMetaMap, styleCounter: counterA2, chokeMod: chokeOf(A) });
+  B.str = computeSide({ team: B.team, players: state.players, map, day: state.day, agentAssign: assignFor(B.team), intel: intelB, patchMeta: patchMetaMap, styleCounter: counterB2, chokeMod: chokeOf(B) });
 
   const lines: Record<string, PlayerLine> = {};
   const allPlayers = [...A.players, ...B.players];

@@ -5,6 +5,7 @@
  */
 import { Rng, clamp, hashString } from "../rng.ts";
 import type { GameState, Player, Team, TransferOffer } from "../types.ts";
+import { noteTacticsChanged } from "./scrim.ts";
 
 /** 转会窗（自然年内）：季前 · 夏季窗口 · 休赛期 */
 export const TRANSFER_WINDOWS: [number, number][] = [[1, 24], [123, 152], [233, 366]];
@@ -154,6 +155,14 @@ export function completeTransfer(state: GameState, offer: TransferOffer, rng: Rn
   const p = state.players[offer.playerId] as Player;
   const fromTeam = p.teamId ? state.teams[p.teamId] : null;
   const toTeam = state.teams[offer.toTeam] as Team;
+  // 情报随对手战术变化衰减（GDD §7.2 v1.1）：涉及队伍阵容变化 → 我对其情报减半
+  if (state.myTeamId) {
+    for (const tid of [p.teamId ?? "", offer.toTeam]) {
+      if (!tid || tid === state.myTeamId) continue;
+      const n = noteTacticsChanged(state, tid);
+      if (n) notes.push(n);
+    }
+  }
   if (fromTeam) {
     fromTeam.budget += offer.fee;
     fromTeam.roster = fromTeam.roster.filter((id) => id !== p.id);

@@ -10,7 +10,7 @@ import { computeFit } from "../../core/sim/fit.ts";
 import { PlayerFace, AgentIcon } from "./Avatar.tsx";
 import { AgentSelect } from "./AgentSelect.tsx";
 import { MAPS } from "../../core/data/maps.ts";
-import { intelOf, estimateMapStrength, starsOf } from "../../core/sim/intel.ts";
+import { intelOf, intelLevel, estimateMapStrength, starsOf, mapStrengthBand } from "../../core/sim/intel.ts";
 import { hashString } from "../../core/rng.ts";
 
 export interface PreMatchResult {
@@ -431,7 +431,15 @@ export function PreMatch(props: {
             <span className="muted small">{m.sites} 点位 · 开阔 {Math.round(m.openness * 100)} / 垂直 {Math.round(m.vertical * 100)} / 走廊 {Math.round(m.corridor * 100)}</span>
           </span>
           <span className="row" style={{ gap: 10, alignItems: "center" }}>
-            <span className="muted small">对方图池评估 {starsOf(estimateMapStrength(state, opp, m))}★</span>
+            {/* 图池档案门控（GDD §7.2 v1.1）：情报 ≥1 解锁星级；未侦察只显散布区间（眼光缩误差） */}
+            {intelLevel(intelOf(state, opp.id)) >= 1 ? (
+              <span className="muted small">对方图池评估 {starsOf(estimateMapStrength(state, opp, m))}★</span>
+            ) : (
+              (() => {
+                const b = mapStrengthBand(state, opp, m, state.manager.skills.scouting ?? 50);
+                return <span className="muted small">对方图池预估 {b.lo}~{b.hi}（未侦察）</span>;
+              })()
+            )}
             <span className="row" style={{ gap: 6, alignItems: "center" }}>
               <span className="muted small">阵容预案</span>
               <select

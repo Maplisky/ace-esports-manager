@@ -8,7 +8,7 @@ import { AGENT_BY_ID } from "../data/agents.ts";
 import type { GameState, MapDef, Team } from "../types.ts";
 
 const INTEL_PER_SCOUT = 2;
-const INTEL_CAP = 10;
+export const INTEL_CAP = 10;
 const INTEL_WEEKLY_DECAY = 0.5;
 
 export function intelOf(state: GameState, oppTeamId: string): number {
@@ -68,4 +68,16 @@ export function estimateMapStrength(state: GameState, team: Team, map: MapDef): 
 /** ★ 级映射（★3 强图 / ★2 均势 / ★1 弱图） */
 export function starsOf(score: number): 1 | 2 | 3 {
   return score >= 62 ? 3 : score >= 42 ? 2 : 1;
+}
+
+/**
+ * 未侦察散布区间（GDD §7.2 v1.1）：情报等级 0 时对手单图强度只能看区间估计——
+ * 「眼光」技能缩误差（50 → 宽 40；90 → 宽 24；封顶 16/40）。
+ */
+export function mapStrengthBand(state: GameState, team: Team, map: MapDef, scoutingSkill: number): { lo: number; hi: number } {
+  const center = estimateMapStrength(state, team, map);
+  const width = clamp(40 - (scoutingSkill - 50) * 0.4, 16, 40);
+  const lo = clamp(center - width / 2, 1, 100);
+  const hi = clamp(center + width / 2, 1, 100);
+  return { lo: Math.round(lo), hi: Math.round(hi) };
 }

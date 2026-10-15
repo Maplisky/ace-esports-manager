@@ -1,8 +1,11 @@
 import { useState } from "react";
-import type { GameState } from "../../core/types.ts";
-import { MAPS } from "../../core/data/maps.ts";
+import type { GameState, ScrimGoal } from "../../core/types.ts";
+import { MAPS, MAP_BY_ID } from "../../core/data/maps.ts";
 import { AGENT_BY_ID } from "../../core/data/agents.ts";
 import { INDIVIDUAL_OPTIONS, OPTION_BY_KEY, recommendFocus, XP_PER_DAY, XP_PER_ATTR_POINT } from "../../core/data/training.ts";
+import { teamAvgOverall, scrimSparringCoef, scrimAcceptChance } from "../../core/sim/scrim.ts";
+import { intelOf, intelLevel, estimateMapStrength, starsOf, mapStrengthBand } from "../../core/sim/intel.ts";
+import { STYLE_LABEL, type StyleKey } from "../../core/sim/strength.ts";
 import { useStore } from "../store.ts";
 import { AgentIcon, PlayerFace } from "./Avatar.tsx";
 import { AgentSelect } from "./AgentSelect.tsx";
@@ -178,6 +181,8 @@ export function TrainingPage(props: { state: GameState }) {
 
       <AcademyCard />
 
+      <ScrimPanel state={state} />
+
             <div className="card" style={{ padding: "12px 16px", marginTop: 14 }}>
         <h3>🎭 练英雄（GDD §6.3：最多 5 人/周，熟练 +4.2×效率/周；效率 = 0.7 +（意识+道具）/400）</h3>
         <div className="muted small" style={{ margin: "6px 0" }}>
@@ -293,6 +298,100 @@ function AcademyCard() {
       <div className="muted small" style={{ marginTop: 6 }}>
         晋升后学员进入一线名单（名单满 7/7 时需指名换下一人）；一线轮换出场同样吃经验，青训经验倍率只对 ≤18 岁学员生效。
       </div>
+    </div>
+  );
+}
+
+/** 训练赛约战面板（GDD §5.6 v1.1）：对手/地图/目标三选一 + 双方每图预估 + 陪练系数预览 */
+function ScrimPanel(props: { state: GameState }) {
+  const { state } = props;
+  const scrim = useStore((s) => s.scrim);
+  const myId = state.myTeamId ?? "";
+  const team = state.teams[myId];
+  const [oppId, setOppId] = useState("");
+  const [mapId, setMapId] = useState(state.trainingMaps[0] ?? MAPS[0]!.id);
+  const [goal, setGoal] = useState<ScrimGoal>("blend");
+  const [goalStyle, setGoalStyle] = useState<StyleKey>("rush");
+  if (!team) return null;
+
+  const myStr = teamAvgOverall(state, myId);
+  const opponents = Object.values(state.teams)
+    .filter((t) => t.id !== myId)
+    .sort((a, b) => teamAvgOverall(state, b.id) - teamAvgOverall(state, a.id));
+  const opp = state.teams[oppId] ?? opponents[0];
+  const mapDef = MAP_BY_ID.get(mapId) ?? MAPS[0]!;
+  const intel = intelOf(state, opp.id);
+  const lvl = intelLevel(intel);
+  const oppMapStr = estimateMapStrength(state, opp, mapDef);
+  const myMapStr = estimateMapStrength(state, team, mapDef);
+  const band = mapStrengthBand(state, opp, mapDef, state.manager.skills.scouting ?? 50);
+  const coef = scrimSparringCoef(myStr, teamAvgOverall(state, opp.id)) + (goal === "mappool" && starsOf(oppMapStr) === 3 ? 0.15 : 0);
+  const accept = Math.round(scrimAcceptChance(state, myId, opp.id) * 100);
+  const goals: { key: ScrimGoal; name: string; desc: string }[] = [
+    { key: "blend", name: "磨合训练", desc: "羁绊 +2×系数、图池熟练 +0.5×系数、协同/沟通经验" },
+    { key: "style", name: "风格特训", desc: "对手实际风格匹配时：应对熟练度 +0.5（上限 10，正式赛克制最多偏移 +0.9）" },
+    { key: "mappool", name: "图池特训", desc: "目标图熟练 +0.6×系数；对手该图 ★3 强图 → 陪练系数额外 +0.15" },
+  ];
+
+  return (
+    <div className="card" style={{ padding: "12px 16px", marginTop: 14 }}>
+      <h3>🤝 训练赛约战（1 行动力 · 单图先到 13 · 不计个人数据）</h3>
+      <div className="row" style={{ flexWrap: "wrap", gap: 10, alignItems: "flex-end" }}>
+        <label className="small">
+          对手<br />
+          <select value={opp?.id ?? ""} onChange={(e) => setOppId(e.target.value)}>
+            {opponents.map((t) => (
+              <option key={t.id} value={t.id}>{t.name}（强度 {Math.round(teamAvgOverall(state, t.id))} · 情报 {Math.round(intelOf(state, t.id))}/10）</option>
+            ))}
+          </select>
+        </label>
+        <label className="small">
+          地图<br />
+          <select value={mapId} onChange={(e) => setMapId(e.target.value)}>
+            {MAPS.map((m) => (
+              <option key={m.id} value={m.id}>{m.name}（我方熟练 {Math.round(team.mapPref[m.id] ?? 50)}）</option>
+            ))}
+          </select>
+        </label>
+        <div className="small">
+          对方 {mapDef.name} 评估<br />
+          {lvl >= 1 ? <b>{"★".repeat(starsOf(oppMapStr))}（{Math.round(oppMapStr)}）</b> : <span className="muted">预估 {band.lo}~{band.hi}（未侦察）</span>}
+          <span className="muted"> · 我方 {"★".repeat(starsOf(myMapStr))}</span>
+        </div>
+      </div>
+      <div className="row" style={{ gap: 10, margin: "10px 0", flexWrap: "wrap" }}>
+        {goals.map((g) => (
+          <button key={g.key} className={goal === g.key ? "small primary" : "small"} onClick={() => setGoal(g.key)} title={g.desc}>{g.name}</button>
+        ))}
+        {goal === "style" && (
+          <select className="small" value={goalStyle} onChange={(e) => setGoalStyle(e.target.value as StyleKey)}>
+            {(Object.keys(STYLE_LABEL) as StyleKey[]).map((k) => (
+              <option key={k} value={k}>{STYLE_LABEL[k]}</option>
+            ))}
+          </select>
+        )}
+      </div>
+      <div className="muted small" style={{ marginBottom: 8 }}>{goals.find((g) => g.key === goal)?.desc}</div>
+      <div className="row" style={{ justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+        <span className="small">
+          陪练系数 <b>×{coef.toFixed(2)}</b>（约{coef >= 1 ? "强" : "弱"}队收益{coef >= 1 ? "加成" : "折减"}；胜 = 基础×系数，负 = 基础×0.45×系数 + 情报全量）
+          <span className="muted"> · 对方接受率约 {accept}%（强队婉拒弱队 / 临近正赛拒约 / 宿敌更愿约）</span>
+        </span>
+        <button className="primary small" disabled={state.actionPoints < 1} onClick={() => void scrim(opp.id, mapId, goal, goal === "style" ? goalStyle : undefined)}>
+          发起约战（行动力 {state.actionPoints}/3）
+        </button>
+      </div>
+      {(state.scrimLog?.length ?? 0) > 0 && (
+        <div style={{ marginTop: 10 }}>
+          <div className="muted small">近期训练赛：</div>
+          {state.scrimLog!.slice(-5).reverse().map((s, i) => (
+            <div key={i} className="small" style={{ padding: "2px 0" }}>
+              D{s.day} vs {state.teams[s.oppId]?.name ?? "?"}（{MAP_BY_ID.get(s.mapId)?.name ?? s.mapId} · {s.goal === "blend" ? "磨合" : s.goal === "style" ? "风格" : "图池"}）：
+              <b style={{ color: s.won ? "var(--accent)" : undefined }}>{s.won ? "胜" : "负"}</b> {Math.max(s.score[0], s.score[1])}-{Math.min(s.score[0], s.score[1])}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

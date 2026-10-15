@@ -9,6 +9,9 @@ import { draftPickTrade } from "../../core/sim/draft.ts";
 import { evaluateAchievements } from "../../core/sim/achievements.ts";
 import { UNLOCK_NOTES } from "../guide.ts";
 import { startNegotiation, reNegotiate, finalizeOffer, completeTransfer, releasePlayer, inTransferWindow, graceRemain, askInquiry } from "../../core/sim/transfer.ts";
+import { requestScrim } from "../../core/sim/scrim.ts";
+import type { ScrimGoal } from "../../core/types.ts";
+import type { StyleKey } from "../../core/sim/strength.ts";
 import { signSponsorOffer, cancelSponsorById, acceptGig, declineGig, signStream, cancelStream } from "../../core/sim/business.ts";
 import { Rng, hashString } from "../../core/rng.ts";
 import type { GameState, MatchIntervention, MatchRecord, Preset, TransferOffer } from "../../core/types.ts";
@@ -158,6 +161,8 @@ function migrate(state: GameState): GameState {
   state.pendingEvents ??= [];
   state.lastEventDay ??= 0;
   state.scouting ??= {};
+  state.styleCounter ??= {}; // 风格特训应对熟练度（GDD §5.6 v1.1）
+  state.scrimLog ??= []; // 训练赛记录（GDD §5.6 v1.1）
   state.agentTraining ??= {};
   state.inquiries ??= [];
   state.coachPool ??= [];
@@ -408,6 +413,24 @@ function handleWorkerMessage(e: MessageEvent) {
         const cur = state.scouting[oppId] ?? { points: 0, last: 0 };
         state.scouting[oppId] = { points: Math.min(10, cur.points + 2), last: state.day };
         reply({ type: "snapshot", ...snapshot(), intel: state.scouting[oppId]!.points });
+      }
+    } else {
+      reply({ type: "snapshot", state: null, records: {} });
+    }
+  } else if (type === "scrim") {
+    // 训练赛约战（GDD §5.6 v1.1）：接受判定显式 Rng（同 seed 双跑一致），对局 seed 在 core 内派生
+    if (state) {
+      if (state.actionPoints < 1) {
+        reply({ type: "snapshot", ...snapshot(), error: "行动力不足：约战花 1 点。" });
+      } else {
+        const notes: { day: number; kind: string; text: string; important?: boolean }[] = [];
+        const oppId = msg.oppId as string;
+        const rng = new Rng(hashString(`${state.seed}:scrimreq:${state.day}:${oppId}`));
+        const res = requestScrim(state, {
+          oppId, mapId: msg.mapId as string, goal: msg.goal as ScrimGoal, goalStyle: msg.goalStyle as StyleKey | undefined,
+        }, rng, notes as never);
+        pushNews(notes);
+        reply({ type: "snapshot", ...snapshot(), scrim: res });
       }
     } else {
       reply({ type: "snapshot", state: null, records: {} });
