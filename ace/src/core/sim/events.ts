@@ -104,8 +104,11 @@ export function resolveEvent(state: GameState, uid: string, optionIndex: number,
   const idx = state.pendingEvents.findIndex((e) => e.uid === uid);
   if (idx < 0) return null;
   const card = state.pendingEvents[idx] as PendingEventCard;
-  // 退役劝留卡：专属结算逻辑（数值效果系统无法表达退役/转型/挂牌）
-  if (card.cardId === RETIRE_CARD_ID) return resolveRetireCard(state, card, optionIndex, rng);
+  // 退役劝留卡：专属结算逻辑（数值效果系统无法表达退役/转型/挂牌）；先出队再结算
+  if (card.cardId === RETIRE_CARD_ID) {
+    state.pendingEvents.splice(idx, 1);
+    return resolveRetireCard(state, card, optionIndex, rng);
+  }
   const opt = card.options[optionIndex];
   if (!opt) return null;
   const myTeam = state.myTeamId ? state.teams[state.myTeamId] : null;

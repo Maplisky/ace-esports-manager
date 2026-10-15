@@ -5,6 +5,7 @@ import { generateWorld, resetPlayerSeq } from "../src/core/worldgen.ts";
 import {
   RETIRE_CARD_ID, coachValueOf, fameOf, resolveRetireCard, retireProb, seasonRetirements, signCoach,
 } from "../src/core/sim/retirement.ts";
+import { resolveEvent } from "../src/core/sim/events.ts";
 import type { CoachFreeAgent, GameState, Player } from "../src/core/types.ts";
 
 function build(seed = 7): GameState {
@@ -105,6 +106,33 @@ test("劝留对话：加薪成功留队 / 仪式退役进留档 / 挂牌暂缓",
   assert.ok(!s.players[vet.id], "仪式退役应移出 players");
   assert.equal(s.retireLog!.length, 1);
   assert.ok(s.retireLog![0]!.teamName, "留档应带母队名");
+});
+
+test("退役卡经 resolveEvent 结算后必须出队（防重复阻塞）", () => {
+  const s = build();
+  const vet = makeVeteran(s, s.myTeamId!, { age: 31 });
+  s.pendingEvents.push({
+    uid: "retire_t", cardId: RETIRE_CARD_ID, title: "t", text: "t", negative: false,
+    targetPlayerId: vet.id, day: 1,
+    options: [{ label: "a", result: "" }, { label: "b", result: "" }, { label: "c", result: "" }, { label: "d", result: "" }, { label: "e", result: "" }],
+  });
+  // 挂牌分支（确定性）
+  const r = resolveEvent(s, "retire_t", 2, new Rng(3));
+  assert.ok(r?.result.includes("挂牌"));
+  assert.equal(s.pendingEvents.length, 0, "退役卡结算后必须出队，否则事件卡模态被永久阻塞");
+  // 目标已离队的兜底：卡同样必须出队
+  vet.listed = false;
+  s.players["gone"] = s.players["gone"] ?? vet; // 复用任意选手做离队模拟
+  const gone = s.players["gone"];
+  gone.teamId = null;
+  s.pendingEvents.push({
+    uid: "retire_t2", cardId: RETIRE_CARD_ID, title: "t", text: "t", negative: false,
+    targetPlayerId: gone.id, day: 1,
+    options: [{ label: "a", result: "" }, { label: "b", result: "" }, { label: "c", result: "" }, { label: "d", result: "" }, { label: "e", result: "" }],
+  });
+  const r2 = resolveEvent(s, "retire_t2", 0, new Rng(1));
+  assert.ok(r2?.result.includes("已离队"));
+  assert.equal(s.pendingEvents.length, 0);
 });
 
 test("教练签约：自由池签入槽位、重复签约报错", () => {
