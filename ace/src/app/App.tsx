@@ -15,6 +15,7 @@ import { MatchPlayer } from "./components/MatchPlayer.tsx";
 import { PreMatch } from "./components/PreMatch.tsx";
 import { SystemPage } from "./components/SystemPage.tsx";
 import { REGIONS } from "../core/sim/day.ts";
+import { pageUnlocked, pageUnlockDay, type GuidePage } from "./guide.ts";
 import { ErrorBoundary } from "./components/ErrorBoundary.tsx";
 import { EventCardModal } from "./components/EventCards.tsx";
 
@@ -94,13 +95,34 @@ export function App() {
       />
       <div className="layout">
         <nav className="sidenav">
-          {PAGES.map((p) => (
-            <button key={p.key} className={page === p.key ? "on" : ""} onClick={() => setPage(p.key)}>
-              {p.label}
-            </button>
-          ))}
+          {PAGES.map((p) => {
+            const open = pageUnlocked(p.key as GuidePage, state);
+            return (
+              <button
+                key={p.key}
+                className={page === p.key ? "on" : ""}
+                title={open ? undefined : `第 ${pageUnlockDay(p.key as GuidePage)} 天解锁`}
+                onClick={() => setPage(p.key)}
+              >
+                {p.label}{!open && " 🔒"}
+              </button>
+            );
+          })}
         </nav>
         <main className="content">
+          {(() => {
+            const cur = PAGES.find((p) => p.key === page)!;
+            if (!pageUnlocked(cur.key as GuidePage, state)) {
+              return (
+                <div className="card" style={{ padding: "40px 20px", textAlign: "center" }}>
+                  <div style={{ fontSize: 32 }}>🔒</div>
+                  <h3 style={{ margin: "10px 0 6px" }}>{cur.label}页尚未开放</h3>
+                  <div className="muted">系统将随执教进度逐日解锁（第 {pageUnlockDay(cur.key as GuidePage)} 天）——第二赛季起全部常开。</div>
+                </div>
+              );
+            }
+            return (
+              <>
           {page === "overview" && (
             <OverviewPage
               state={state}
@@ -120,6 +142,9 @@ export function App() {
           {page === "achievements" && <AchievementsPage state={state} />}
           {page === "career" && <CareerPage state={state} />}
           {page === "system" && <SystemPage />}
+              </>
+            );
+          })()}
         </main>
       </div>
 
@@ -145,6 +170,7 @@ export function App() {
             state={state}
             startFinished={viewerStartFinished}
             myTeamId={live ? state.myTeamId : null}
+            tutorial={fx?.tutorial === true}
             onIntervene={(mapIdx, round, tactic, igl) => {
               if (viewerFixtureId) void matchIntervene(viewerFixtureId, mapIdx, round, tactic, igl);
             }}

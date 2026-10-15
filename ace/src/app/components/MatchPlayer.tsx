@@ -38,6 +38,8 @@ export function MatchPlayer(props: {
   myTeamId?: string | null;
   onIntervene?: (mapIdx: number, round: number, tactic: string, igl: boolean) => void;
   onFinished?: () => void;
+  /** 教学局（v1.0-11，§3）：前三回合强制观战，第 3 回合结束自动开喊话菜单 */
+  tutorial?: boolean;
 }) {
   const { record, state, onClose } = props;
   const startAtEnd = props.startFinished === true;
@@ -151,6 +153,19 @@ export function MatchPlayer(props: {
       props.onFinished?.();
     }
   }, [finished, props]);
+
+  // 教学局（v1.0-11，§3）：第 3 回合结果揭示时自动停靠并打开喊话菜单——「暂停喊一次战术」
+  const menuShownRef = useRef(false);
+  useEffect(() => {
+    if (!props.tutorial || finished || menuShownRef.current) return;
+    const r = map?.rounds[pos.ri];
+    if (!r || pos.mi !== 0 || r.n !== 3 || pos.ei < r.events.length) return;
+    menuShownRef.current = true;
+    setPlaying(false);
+    setMenuOpen(true);
+  }, [pos, map, finished, props.tutorial]);
+  const tutorialWatchLock = () =>
+    props.tutorial === true && pos.mi === 0 && (pos.ri < 3 || (pos.ri === 3 && !showResult));
 
   // IGL 场上阅读（v1.0-8）：第 7/14 回合结果揭示时自动停靠，给建议卡（GDD §5.4）
   useEffect(() => {
@@ -461,7 +476,7 @@ export function MatchPlayer(props: {
               <button onClick={() => setSpeed((s) => (s === 1 ? 2 : s === 2 ? 4 : 1))}>
                 {speed}x
               </button>
-              <button onClick={jumpToEnd}>⏭ 跳到结果</button>
+              <button onClick={jumpToEnd} disabled={tutorialWatchLock()} title={tutorialWatchLock() ? "教学局：前三回合请完整观战" : undefined}>⏭ 跳到结果</button>
               {interactive && map && (
                 <button
                   disabled={timeoutsLeft <= 0 || callLocked}

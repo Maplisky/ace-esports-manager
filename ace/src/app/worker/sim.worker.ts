@@ -7,6 +7,7 @@ import { signCoach } from "../../core/sim/retirement.ts";
 import { initCareer, applyJob } from "../../core/sim/career.ts";
 import { draftPickTrade } from "../../core/sim/draft.ts";
 import { evaluateAchievements } from "../../core/sim/achievements.ts";
+import { UNLOCK_NOTES } from "../guide.ts";
 import { startNegotiation, reNegotiate, finalizeOffer, completeTransfer, releasePlayer, inTransferWindow, graceRemain, askInquiry } from "../../core/sim/transfer.ts";
 import { signSponsorOffer, cancelSponsorById, acceptGig, declineGig, signStream, cancelStream } from "../../core/sim/business.ts";
 import { Rng, hashString } from "../../core/rng.ts";
@@ -62,6 +63,12 @@ function doAdvance(maxDays = 1): void {
   evaluateAchievements(state, achNotes as never);
   pushNews(achNotes);
   notes.push(...achNotes.map((a) => a.text));
+  // v1.0-11 系统解锁表（§9.1）：首赛季 D4/D8/D12/D20 解锁提示（第二赛季起不再打扰）
+  if ((state.manager.career?.seasons ?? 1) <= 1) {
+    for (const u of UNLOCK_NOTES) {
+      if (state.day === u.day) notes.push(u.text);
+    }
+  }
   if (seasonEnded) records = {}; // 翻年清回放：旧赛季 fixture 已重建，链接不再可达；防无限增长拖慢每帧快照克隆
   reply({
     type: "advanced",

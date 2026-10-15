@@ -399,6 +399,8 @@ export interface Fixture {
   settled?: boolean;
   /** 玩家比赛中干预列表（v1.0-8）：随存档走，重模拟的唯一输入 */
   interventions?: MatchIntervention[];
+  /** 教学脚本局（v1.0-11，§3）：生涯首场——模拟带 +8 优势、结算不计生涯与成就 */
+  tutorial?: boolean;
 }
 
 export interface StandingsEntry {
@@ -568,6 +570,8 @@ export interface GameState {
       titleKinds?: Record<string, number>;
       /** 跳槽次数（v1.0-10 雇佣兵线） */
       jobHops?: number;
+      /** 教学局已打（v1.0-11）：生涯首场脚本局标记，防第二场误判 */
+      tutorialDone?: boolean;
     };
   };
   /** 已解锁成就（v1.0-10，GDD §10.4 剧本路径）：id → 解锁时间 */
