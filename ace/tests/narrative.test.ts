@@ -8,7 +8,9 @@ import { resetFixtureSeq } from "../src/core/sim/fixtures.ts";
 import { simMatch } from "../src/core/sim/match.ts";
 import {
   narrativeOnMyLoss, narrativeAfterMyLoss, narrativeOnTitle, narrativeOnRetire,
+  narrativeOnMyMatch, captureDebuts,
   REUNION_QUOTES, TURNCOAT_QUOTES, DYNASTY_QUOTES, FAREWELL_QUOTES,
+  MVP_QUOTES, ROOKIE_DEBUT_QUOTES, LOCKER_WIN_QUOTES, LOCKER_LOSS_QUOTES, LOCKER_GRIM_QUOTES,
 } from "../src/core/sim/narrative.ts";
 import type { GameState, NewsItem } from "../src/core/types.ts";
 
@@ -179,4 +181,106 @@ test("模板快照：四池非空且文案稳定（不随风变）", () => {
   for (const q of [...REUNION_QUOTES, ...TURNCOAT_QUOTES, ...DYNASTY_QUOTES, ...FAREWELL_QUOTES]) {
     assert.ok(q.length >= 10 && /「|——/.test(q), "金句带引语或破折号风格");
   }
+});
+
+// —— 资讯活水（v1.x 用户反馈④）：MVP 高光 / 小将首战 / 更衣室舆论 ——
+
+function fakeRec(state: GameState, mvpId: string | null) {
+  const myId = state.myTeamId!;
+  const opp = Object.values(state.teams).find((t) => t.id !== myId)!;
+  const star = state.players[mvpId ?? state.teams[myId]!.starters[0]!]!;
+  return {
+    id: "fx1", seed: 1, format: 1 as const, teamA: myId, teamB: opp.id, stage: "stage1", day: state.day,
+    score: [1, 0] as [number, number], winner: "A" as const, mvp: mvpId,
+    maps: [{
+      map: "ascent", score: [13, 5] as [number, number], rounds: [], mvp: star.id, agents: {},
+      lines: { [star.id]: { kills: 20, deaths: 10, assists: 5, firstKills: 2, firstDeaths: 1, clutches: 1, damage: 3000, rounds: 18, acs: 285 } },
+      edges: null,
+    }],
+  } as never;
+}
+
+test("资讯活水①MVP 高光：我队选手为系列赛 MVP → 带场均 ACS 的软新闻；MVP 是对手则不出", () => {
+  const s = build(106);
+  const myId = s.myTeamId!;
+  const star = s.teams[myId]!.starters.map((pid) => s.players[pid]!)[0]!;
+  const n1: NewsItem[] = [];
+  narrativeOnMyMatch(s, "fx-win", fakeRec(s, star.id), n1);
+  const mvpNote = n1.find((x) => x.text.includes("MVP 高光"));
+  assert.ok(mvpNote && mvpNote.text.includes(star.ign) && mvpNote.text.includes("285 ACS"), "MVP 高光带成绩单");
+  // 胜负按 winner 相对我队解析：A=我队 → 胜
+  assert.ok(mvpNote!.text.includes("率队取胜"));
+  // MVP 是对手选手 → 不出高光
+  const oppId = Object.values(s.teams).find((t) => t.id !== myId)!.roster[0]!;
+  const n2: NewsItem[] = [];
+  narrativeOnMyMatch(s, "fx-loss", fakeRec(s, oppId), n2);
+  assert.equal(n2.filter((x) => x.text.includes("MVP 高光")).length, 0);
+});
+
+test("资讯活水②小将首战：入账前快照 maps=0 且 ≤19 岁 → 首战文案（新档全队齐首秀只讲最年轻）；无适龄不出", () => {
+  const s = build(107);
+  const myId = s.myTeamId!;
+  const starters = s.teams[myId]!.starters.map((pid) => s.players[pid]!);
+  // 新档全员 maps=0（真实世界状态）——把其他首发压到大龄，保证 kid 是唯一适龄
+  const kid = starters[1]!;
+  kid.age = 18;
+  for (const p of starters) if (p !== kid) p.age = 30;
+  assert.ok(captureDebuts(s).includes(kid.id), "首秀快照包含该选手");
+  const n1: NewsItem[] = [];
+  narrativeOnMyMatch(s, "fx1", fakeRec(s, null), n1, new Set(captureDebuts(s)));
+  const rookieNotes = n1.filter((x) => x.text.includes("小将首战"));
+  assert.equal(rookieNotes.length, 1, "只讲一个");
+  assert.ok(rookieNotes[0]!.text.includes(kid.ign) && rookieNotes[0]!.text.includes("18 岁"));
+  // 无适龄（全员 25 岁）→ 不出
+  kid.age = 25;
+  const n2: NewsItem[] = [];
+  narrativeOnMyMatch(s, "fx1", fakeRec(s, null), n2, new Set(captureDebuts(s)));
+  assert.equal(n2.filter((x) => x.text.includes("小将首战")).length, 0);
+});
+
+test("资讯活水③更衣室：我队场次必出一条；败局+发言人士气<40 → 士气低落尖锐版", () => {
+  const s = build(108);
+  const myId = s.myTeamId!;
+  // 胜局路径（A=我队）
+  const n1: NewsItem[] = [];
+  narrativeOnMyMatch(s, "fx-w", fakeRec(s, null), n1);
+  assert.ok(n1.some((x) => x.text.includes("更衣室")), "胜局也出更衣室舆论");
+  // 败局：B 胜（我队为 A）；发言人由 hashString 选，把全部首发士气压到 39 即必命中尖锐版
+  for (const pid of s.teams[myId]!.starters) s.players[pid]!.morale = 39;
+  const rec = fakeRec(s, null) as { winner: "A" | "B" };
+  rec.winner = "B";
+  const n2: NewsItem[] = [];
+  narrativeOnMyMatch(s, "fx-l", rec as never, n2);
+  const locker = n2.find((x) => x.text.includes("更衣室"));
+  assert.ok(locker, "败局出更衣室舆论");
+  assert.ok(locker!.text.includes("士气低落"), "全员低谷 → 尖锐版必命中");
+});
+
+test("资讯活水确定性：同输入双跑逐字一致", () => {
+  const s1 = build(109);
+  const s2 = build(109);
+  const n1: NewsItem[] = [];
+  const n2: NewsItem[] = [];
+  narrativeOnMyMatch(s1, "fx-x", fakeRec(s1, null), n1);
+  narrativeOnMyMatch(s2, "fx-x", fakeRec(s2, null), n2);
+  assert.deepEqual(n1.map((x) => x.text), n2.map((x) => x.text));
+});
+
+test("资讯活水快照：五池数量稳定", () => {
+  assert.equal(MVP_QUOTES.length, 3);
+  assert.equal(ROOKIE_DEBUT_QUOTES.length, 3);
+  assert.equal(LOCKER_WIN_QUOTES.length, 3);
+  assert.equal(LOCKER_LOSS_QUOTES.length, 3);
+  assert.equal(LOCKER_GRIM_QUOTES.length, 2);
+});
+
+test("资讯活水集成：settleMatch 正式赛 → 更衣室舆论入档；教学局不计", () => {
+  const s = build(110);
+  const myId = s.myTeamId!;
+  const f = s.fixtures.find((x) => !x.played && (x.teamA === myId || x.teamB === myId) && !x.tutorial)!;
+  const rec = simMatch(s, f.teamA, f.teamB, f.bo, 4321, f.id);
+  f.played = true;
+  f.settled = false;
+  assert.ok(settleMatch(s, f.id, rec));
+  assert.ok(s.news.some((x) => x.text.includes("更衣室")), "正式赛结算后更衣室舆论入档");
 });

@@ -174,15 +174,31 @@ function simMap(
   const aiIntelOf = state.difficulty === "pro" ? 4 : state.difficulty === "hard" ? 2 : 0;
   const intelA = A.team.id === state.myTeamId ? intelOf(state, B.team.id) : B.team.id === state.myTeamId ? aiIntelOf : 0;
   const intelB = B.team.id === state.myTeamId ? intelOf(state, A.team.id) : A.team.id === state.myTeamId ? aiIntelOf : 0;
-  // 招牌战术反向泄露（GDD §6.4）：我方重复使用同一图预案 → 对手针对性准备提升
-  const leakToB = A.team.id === state.myTeamId ? Math.min(1.2, (A.team.patternUsage[mapId] ?? 0) * 0.12) : 0;
-  const leakToA = B.team.id === state.myTeamId ? Math.min(1.2, (B.team.patternUsage[mapId] ?? 0) * 0.12) : 0;
   // 英雄分配：首选预案打底，赛前准备的手动选择（agentLock[mapId]）最高优先；都没有则引擎自动分配
   const assignFor = (team: Team) => {
     const preset = presetAgents(state, team, mapId);
     const lock = agentLock?.[mapId];
     return lock ? { ...(preset ?? {}), ...lock } : preset;
   };
+  // 招牌战术反向泄露（GDD §6.4）：我方重复使用同一图预案 → 对手针对性准备提升。
+  // 变阵降摸透（v1.x 用户反馈）：本图阵容与上一场不同 → 对手准备大半落空（泄露 ×0.25）并记录新指纹
+  // （依赖 assignFor，必须在其后定义并在调用时已初始化）
+  const patternKeyOf = (team: Team): string => {
+    const assign = assignFor(team) ?? {};
+    return Object.keys(assign).sort().map((pid) => assign[pid]).join("|");
+  };
+  const leakOf = (side: "A" | "B", team: Team): number => {
+    if (team.id !== state.myTeamId) return 0;
+    const usage = team.patternUsage[mapId] ?? 0;
+    if (usage === 0) return 0;
+    const key = patternKeyOf(team);
+    const prev = team.lastPattern?.[mapId];
+    team.lastPattern ??= {};
+    team.lastPattern[mapId] = key;
+    return patternLeakOf(prev, key, usage);
+  };
+  const leakToB = leakOf("A", A.team);
+  const leakToA = leakOf("B", B.team);
   // 当前版本 meta（GDD §4.3）传入阵容强度（fit × meta 联合）
   const patchMetaMap = Object.fromEntries((state.patchNotes?.slice(-1)[0]?.changes ?? []).map((c) => [c.agentId, c.meta]));
   // 风格克制（GDD §7.1/§18-3，v1.0-5）：双方首发风格相性；跨赛区遭遇战对海外风格不熟 → 相性折半
@@ -600,6 +616,14 @@ function presetAgents(state: GameState, team: Team, mapId: string): Record<strin
   if (!presets || presets.length === 0) return undefined;
   const preferred = presets.find((p) => p.preferred) ?? presets[0];
   return preferred?.agents;
+}
+
+/** 招牌战术泄露幅度（v1.x 变阵降摸透）：base = min(1.2, 使用次数×0.12)；
+ *  指纹与上一场相同（或首次记录）→ 满额；变阵 → 对手准备大半落空 ×0.25。纯函数供测试。 */
+export function patternLeakOf(prev: string | undefined, key: string, usage: number): number {
+  if (usage <= 0) return 0;
+  const base = Math.min(1.2, usage * 0.12);
+  return prev === undefined || prev === key ? base : base * 0.25;
 }
 
 /** 当日可用首发（伤员剔除、缺员从替补顶替）——simMatch 与 applyMatchEffects 共用同一解析（v1.0-8 拆分） */

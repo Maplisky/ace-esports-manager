@@ -548,7 +548,13 @@ export function PreMatch(props: {
                 />
                 <span className="small" style={{ display: "inline-flex", flexDirection: "column", lineHeight: 1.3, minWidth: 90 }}>
                   <span>熟练 <b>{pro}</b>%</span>
-                  <span className={fit >= 1.06 ? "tag green" : fit <= 0.94 ? "tag orange" : "muted"} style={{ fontSize: 10 }}>图适 {Math.round(fit * 100)}%</span>
+                  <span
+                    className={fit >= 1.06 ? "tag green" : fit <= 0.94 ? "tag orange" : "muted"}
+                    style={{ fontSize: 10 }}
+                    title="图适为倍率：100% 为持平，高于 100% 占优、低于则吃亏；范围 70%–130%，并非上限 100"
+                  >
+                    图适 {Math.round(fit * 100)}%{fit > 1 ? " ↑" : fit < 1 ? " ↓" : ""}
+                  </span>
                 </span>
                 {isDup && <span className="tag red">重复</span>}
               </div>

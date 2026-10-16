@@ -11,7 +11,7 @@ import { spawnDailyEvents, spawnBirthdays } from "./events.ts";
 import { aiWeeklyTransfers, resolveInquiries } from "./transfer.ts";
 import { rollPatch } from "./patch.ts";
 import { decayIntel } from "./intel.ts";
-import { narrativeAfterMyLoss, narrativeOnTitle } from "./narrative.ts";
+import { narrativeAfterMyLoss, narrativeOnMyMatch, narrativeOnTitle, captureDebuts } from "./narrative.ts";
 import { weeklyRumors } from "./rumors.ts";
 import { logFinance } from "./finance.ts";
 import { runDraft } from "./draft.ts";
@@ -40,11 +40,13 @@ const CALENDAR = {
   cupStart: 25,
   cupEnd: 52,
   stage1Start: 53,
+  stage1Mid: 87,
   stage1End: 122,
   summerStart: 123,
   mastersStart: 126,
   summerEnd: 152,
   stage2Start: 153,
+  stage2Mid: 192,
   stage2End: 232,
   championsDraw: 236,
   championsGroupStart: 240,
@@ -524,6 +526,26 @@ function myLeagueCompKey(state: GameState, stage: "stage1" | "stage2"): string |
   return `${stage}-${t.regionId ?? "xia"}-t${t.tier}`;
 }
 
+/** 中段里程碑（v1.x 用户反馈①）：Stage1/Stage2 赛程中点检查即时名次 → 进度新闻 + 董事会信心 ±2（GDD §9.5）。
+ *  与收官结算（settleObjective）不同：这是过程反馈，让长赛段中途也有一次奖惩回响。 */
+function midSeasonCheckpoint(state: GameState, stage: "stage1" | "stage2", stageName: string, notes: NewsItem[]): void {
+  if (!state.myTeamId) return;
+  const compKey = myLeagueCompKey(state, stage);
+  const table = compKey ? sortedTable(state, compKey) : [];
+  if (table.length < 2) return;
+  const place = table.findIndex((s) => s.teamId === state.myTeamId) + 1;
+  if (place <= 0) return;
+  const onPace = place <= Math.ceil(table.length / 2);
+  state.boardConfidence = clamp(state.boardConfidence + (onPace ? 2 : -2), 0, 100);
+  const obj = state.objective?.stage === stage ? `（目标前 ${state.objective.placeAtLeast}）` : "";
+  notes.push({
+    day: state.day, kind: "club",
+    text: onPace
+      ? `📊 ${stageName}中期检查：目前第 ${place} 名 / 共 ${table.length} 队${obj}，管理层认可进度（信心 +2）。`
+      : `📊 ${stageName}中期检查：目前第 ${place} 名 / 共 ${table.length} 队${obj}，成绩低于预期，董事会开始关注（信心 -2）。`,
+  });
+}
+
 /** 联赛冠军荣誉（career.titles 是退役转教练与名人堂的输入，GDD §8.3） */
 /** 冠军积分表（GDD §7.3 v1.0：揭幕杯 [6,4,3,2] / 联赛 [9,7,5,4,3,3,2,2] / Masters 双败口径 冠-亚 12/9、3-4 名 7、5-6 名 5、7-8 名 4） */
 const CUP_CIRCUIT = [6, 4, 3, 2];
@@ -681,6 +703,9 @@ export function advanceDay(
       state.objective = { stage: "stage1", placeAtLeast: 4, text: chal ? "董事会要求：Stage 1 挑战者联赛进入前四。" : "董事会要求：Stage 1 联赛进入前四。" };
       notes.push({ day: state.day, kind: "club", important: true, text: state.objective.text });
     }
+  } else if (state.day === CALENDAR.stage1Mid) {
+    // 中段里程碑（v1.x 反馈①）：Stage1 过程反馈
+    midSeasonCheckpoint(state, "stage1", "Stage 1", notes);
   } else if (state.day === CALENDAR.summerStart) {
     // Stage1 收官：结算目标 + 冠军荣誉 + Masters 抽签
     settleObjective(state, myLeagueCompKey(state, "stage1") ?? "stage1-xia-t1", "Stage 1", notes);
@@ -697,6 +722,9 @@ export function advanceDay(
       state.objective = { stage: "stage2", placeAtLeast: 4, text: (state.myTeamId ? state.teams[state.myTeamId]?.tier : 1) === 2 ? "董事会要求：Stage 2 挑战者联赛进入前四。" : "董事会要求：Stage 2 联赛进入前四。" };
       notes.push({ day: state.day, kind: "club", important: true, text: state.objective.text });
     }
+  } else if (state.day === CALENDAR.stage2Mid) {
+    // 中段里程碑（v1.x 反馈①）：Stage2 过程反馈
+    midSeasonCheckpoint(state, "stage2", "Stage 2", notes);
   } else if (state.day === CALENDAR.offseasonStart) {
     // Stage2 收官
     settleObjective(state, myLeagueCompKey(state, "stage2") ?? "stage2-xia-t1", "Stage 2", notes);
@@ -719,6 +747,7 @@ export function advanceDay(
     const mine = f.teamA === state.myTeamId || f.teamB === state.myTeamId;
   const seed = hashString(`${state.seed}:${f.id}`);
     const rec = simMatch(state, f.teamA, f.teamB, f.bo, seed, f.id, f.mapLock, f.agentLock);
+    const debuts = mine ? captureDebuts(state) : undefined; // 首秀快照：入账前捕获（v1.x 反馈④）
     applyMatchEffects(state, rec); // v1.0-8：生涯/状态入账从 simMatch 拆出，逐场同步
     f.played = true;
     f.settled = true;
@@ -732,6 +761,7 @@ export function advanceDay(
     notes.push({ day: state.day, kind: "match", text: line, important: mine });
     if (mine) playedMine.push(f.id); // 逾期补赛同样计入我的比赛
     if (mine) noteMatchResult(state, (rec.winner === "A" ? f.teamA : f.teamB) === state.myTeamId, notes);
+    if (mine) narrativeOnMyMatch(state, f.id, rec, notes, new Set(debuts ?? [])); // 资讯活水（v1.x 反馈④）：补赛同样出软新闻
     settleFinal(state, f, rec, notes);
   }
 
@@ -747,6 +777,7 @@ export function advanceDay(
     }
     const seed = hashString(`${state.seed}:${f.id}`);
     const rec = simMatch(state, f.teamA, f.teamB, f.bo, seed, f.id, f.mapLock, f.agentLock);
+    const debuts = mine ? captureDebuts(state) : undefined; // 首秀快照：入账前捕获（v1.x 反馈④）
     applyMatchEffects(state, rec); // v1.0-8：生涯/状态入账从 simMatch 拆出，逐场同步
     f.played = true;
     f.settled = true;
@@ -765,6 +796,7 @@ export function advanceDay(
     notes.push({ day: state.day, kind: "match", text: line, important: mine });
     if (mine) playedMine.push(f.id);
     if (mine) noteMatchResult(state, (rec.winner === "A" ? f.teamA : f.teamB) === state.myTeamId, notes);
+    if (mine) narrativeOnMyMatch(state, f.id, rec, notes, new Set(debuts ?? [])); // 资讯活水（v1.x 反馈④）：未拦截的我的比赛同样出软新闻
     settleFinal(state, f, rec, notes);
   }
 
@@ -988,6 +1020,8 @@ export function settleMatch(
   if (!rec) return false;
   f.settled = true;
   f.winnerTeamId = rec.winner === "A" ? f.teamA : f.teamB;
+  // 首秀名单快照（v1.x 反馈④）：必须在 applyMatchEffects 入账前捕获
+  const debuts = !f.tutorial && (f.teamA === state.myTeamId || f.teamB === state.myTeamId) ? captureDebuts(state) : undefined;
   if (f.tutorial) {
     // 教学局（v1.0-11，§3/§5.1 口径）：scripted 不计生涯统计与成就——只记账本标记与联赛结果
     const c = state.manager.career;
@@ -1008,6 +1042,7 @@ export function settleMatch(
   notes.push({ day: state.day, kind: "match", text: `${f.label}${f.tutorial ? "（教学局）" : ""}｜${tagA} ${rec.score[0]}-${rec.score[1]} ${tagB}`, important: true });
   if (!f.tutorial) noteMatchResult(state, rec.winner === "A" ? f.teamA === state.myTeamId : f.teamB === state.myTeamId, notes); // 赛前准备路径同样入账（v1.0-6）；教学局不计（v1.0-11）
   if (!f.tutorial) narrativeAfterMyLoss(state, f, rec, notes); // 中期叙事（v1.5）：我输掉的正式赛——旧部重逢/弟子反戈（教学局不计）
+  if (!f.tutorial && (f.teamA === state.myTeamId || f.teamB === state.myTeamId)) narrativeOnMyMatch(state, f.id, rec, notes, new Set(debuts ?? [])); // 资讯活水（v1.x 反馈④）：MVP 高光/小将首战/更衣室舆论（教学局不计）
   settleFinal(state, f, rec, notes); // 赛前准备路径同样结算冠军/积分（v1.0-3b 检错：此前漏发冠军积分）
   for (const n of notes) {
     state.news.push(n);

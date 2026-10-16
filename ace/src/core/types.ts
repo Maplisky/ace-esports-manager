@@ -195,6 +195,8 @@ export interface Team {
   academy: string[];
   /** 招牌战术使用计数（key = mapId；对手针对性准备的泄露来源，GDD §6.4） */
   patternUsage: Record<string, number>;
+  /** 本图上一场所用阵容指纹（v1.x 用户反馈：变阵后对手准备落空——指纹变则摸透度大降） */
+  lastPattern?: Record<string, string>;
   /** 玩家可用预案：每图多套（key = mapId）；v0.1 core 仅存储，由战术层消费 */
   presets: Record<string, Preset[]>;
 }

@@ -586,12 +586,17 @@ export function MatchPlayer(props: {
                   <div className="muted small" style={{ marginBottom: 10 }}>
                     IGL 建议不消耗暂停次数，效果 2 回合 · 建议质量取决于 IGL 意识、情报等级与比赛型教练
                   </div>
-                  <div className="row" style={{ justifyContent: "center", gap: 8 }}>
+                  <div className="row" style={{ justifyContent: "center", gap: 8, alignItems: "center" }}>
                     <button className="primary" disabled={callLocked} title={callLocked ? "上一条喊话仍在生效期" : ""} onClick={() => doIntervene(iglCard.mi, rd.round + 1, rd.suggested, true)}>
                       采纳
                     </button>
                     <button onClick={() => { setIglCard(null); setPlaying(true); }}>无视</button>
                   </div>
+                  {callLocked && (
+                    <div className="tag orange" style={{ marginTop: 8, display: "inline-block" }}>
+                      上一条喊话仍在生效期，本建议无法立即采纳——生效结束后 IGL 会在下次暂停重新建议
+                    </div>
+                  )}
                 </div>
               );
             })()}
