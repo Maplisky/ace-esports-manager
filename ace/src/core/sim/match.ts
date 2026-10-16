@@ -165,7 +165,6 @@ function simMap(
   intlPlayoff = false,
   mapIdx = 0,
   interventions?: MatchIntervention[],
-  scriptSide?: "A" | "B",
 ): MapRecord {
   const map = MAP_BY_ID.get(mapId) ?? MAPS[0]!;
   // 每图重算强度（图池熟练/meta/玩家预案英雄随图变化）
@@ -339,15 +338,11 @@ function simMap(
     const defStr = defSim.str!.def + ultBonus(defSim);
     // 双哨位蹲通道克制 rush（v1.0-8）：对手本回合 rush 系开局 → 防守额外 +1.2
     const counterBonus = defSim.call?.counterRush && tacticAtk.startsWith("atk:rush") ? 1.2 : 0;
-    // 教学脚本局优势（v1.0-11，§3）：指定侧 +8——固定常量，零 RNG，缺省逐位一致
-    const scriptBonus = (s: SimTeam) => (scriptSide === s.side ? 8 : 0);
     const atkTerms =
-      (atkSide === "A" ? atkStr + BUY_MOD[buyA] + callMod(A, true) + swingA : atkStr + BUY_MOD[buyB] + callMod(B, true) + swingB) +
-      scriptBonus(atkSim);
-    const defTerms =
-      (atkSide === "A"
-        ? defStr + BUY_MOD[buyB] + callMod(B, false) + counterBonus + swingB
-        : defStr + BUY_MOD[buyA] + callMod(A, false) + counterBonus + swingA) + scriptBonus(defSim);
+      atkSide === "A" ? atkStr + BUY_MOD[buyA] + callMod(A, true) + swingA : atkStr + BUY_MOD[buyB] + callMod(B, true) + swingB;
+    const defTerms = atkSide === "A"
+      ? defStr + BUY_MOD[buyB] + callMod(B, false) + counterBonus + swingB
+      : defStr + BUY_MOD[buyA] + callMod(A, false) + counterBonus + swingA;
     const trailing: "A" | "B" | null = a > b ? "B" : b > a ? "A" : null;
     const comeback = trailing ? 0.35 * sideOf({ A, B }, trailing).str!.mid : 0;
     const m = atkTerms - defTerms + (trailing === atkSide ? comeback : trailing ? -comeback : 0) + (atkSide === "A" ? leakToA : leakToB);
@@ -740,8 +735,6 @@ export function simMatch(
   // 国际赛淘汰赛标记（怯场机制，GDD §18-3）：Masters/Champions 的胜者组/败者组/总决赛
   const fx = state.fixtures.find((f) => f.id === matchId);
   const intlPlayoff = !!fx && (fx.comp === "masters" || fx.comp === "champions") && /胜者组|败者组|总决赛/.test(fx.label);
-  // 教学脚本局（v1.0-11，§3）：我的首场 +8 优势（固定常量，零 RNG）
-  const scriptSide = fx?.tutorial ? (teamAId === state.myTeamId ? "A" : "B") : undefined;
 
   const wins = { A: 0, B: 0 };
   const maps: MapRecord[] = [];
@@ -749,7 +742,7 @@ export function simMatch(
   for (let mi = 0; mi < veto.maps.length; mi++) {
     if (wins.A >= Math.ceil(bo / 2) || wins.B >= Math.ceil(bo / 2)) break;
     const mapId = veto.maps[mi] as string;
-    const mapRec = simMap(state, mapId, A, B, rng, agentLock, intlPlayoff, mi, interventions, scriptSide);
+    const mapRec = simMap(state, mapId, A, B, rng, agentLock, intlPlayoff, mi, interventions);
     if (mapRec.score[0] > mapRec.score[1]) wins.A++;
     else if (mapRec.score[1] > mapRec.score[0]) wins.B++;
     maps.push(mapRec);

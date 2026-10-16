@@ -87,13 +87,13 @@ export function TacticsPage(props: { state: GameState }) {
 
   return (
     <div>
-      <div className="card">
+      <div className="card" data-tut="tut-tactics-presets">
         <h3>🗺 每图预案 · {map.name}
           <span className="muted small" style={{ marginLeft: 10 }}>
             图池熟练 {Math.round(team.mapPref[mapId] ?? 50)} / 95 · 每图最多 8 套预案
           </span>
         </h3>
-        <div className="row" style={{ marginBottom: 12, flexWrap: "wrap" }}>
+        <div className="row" style={{ marginBottom: 12, flexWrap: "wrap" }} data-tut="tut-tactics-leak">
           {MAPS.map((m) => {
             // 被摸透度（对齐原作）：同一预案连用越多，对手针对性越强（引擎 leak = min(1.2, usage×0.12)）
             const usage = team.patternUsage[m.id] ?? 0;
@@ -173,7 +173,7 @@ export function TacticsPage(props: { state: GameState }) {
           </tbody>
         </table>
 
-        <div className="card" style={{ padding: "10px 14px", marginTop: 12 }}>
+        <div className="card" style={{ padding: "10px 14px", marginTop: 12 }} data-tut="tut-tactics-igl">
           <h3 style={{ marginBottom: 8 }}>🎖 场上指挥（主指挥恰 1 名 · 副指挥至多 1 名，可空）</h3>
           <div className="row" style={{ gap: 18, flexWrap: "wrap" }}>
             <span className="row" style={{ gap: 8, alignItems: "center" }}>

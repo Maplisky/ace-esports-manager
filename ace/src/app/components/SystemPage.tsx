@@ -13,7 +13,7 @@ function fmtDate(iso: string): string {
 }
 
 export function SystemPage() {
-  const { state, saves, refreshSaves, saveToSlot, loadFromKey, removeSave, exportSave, importSaveText, setStopDensity, backToStart } = useStore();
+  const { state, saves, refreshSaves, saveToSlot, loadFromKey, removeSave, exportSave, importSaveText, setStopDensity, backToStart, setTutorial } = useStore();
   const fileRef = useRef<HTMLInputElement>(null);
   const [audioOn, setAudioOn] = useState(audioEnabled());
   const [backed, setBacked] = useState(false);
@@ -21,6 +21,9 @@ export function SystemPage() {
   useEffect(() => {
     void refreshSaves();
   }, [refreshSaves]);
+
+  const tutMode = state?.tutorial?.mode === true;
+  const tutDone = state?.tutorial?.done !== false; // 旧档/缺省视为已毕业
 
   const byKey = new Map(saves.map((s) => [s.key, s]));
   const backups = saves.filter((s) => s.key.startsWith("bak-"));
@@ -69,6 +72,16 @@ export function SystemPage() {
           {([["light", "稀疏", "只在比赛日停靠，杂项提示只入新闻"], ["normal", "标准", "现状：比赛停靠 + 推进提示"], ["full", "密集", "每周一停靠并附训练周报"]] as const).map(([k, label, tip]) => (
             <button key={k} className={state?.stopDensity === k || (!state?.stopDensity && k === "normal") ? "small primary" : "small"} title={tip} onClick={() => void setStopDensity(k)}>{label}</button>
           ))}
+        </div>
+        <div className="row" style={{ flexWrap: "wrap", gap: 8, alignItems: "center", marginBottom: 8 }} data-tut="tut-system-toggle">
+          <span className="small">新手引导</span>
+          <button className={tutMode ? "small primary" : "small"} onClick={() => void setTutorial(!tutMode, undefined)}>
+            {tutMode ? "开（未毕业时自动弹出）" : "关"}
+          </button>
+          {tutMode && tutDone && (
+            <button className="small" onClick={() => void setTutorial(undefined, false)}>📖 重看引导</button>
+          )}
+          <span className="muted small">文明6式带练：板块一圈 + 完整首场；每步可跳过，页面顶部有常驻导读</span>
         </div>
         <div className="row" style={{ flexWrap: "wrap", gap: 8, alignItems: "center" }}>
           <span className="small">音效</span>

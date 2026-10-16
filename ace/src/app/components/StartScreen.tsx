@@ -22,6 +22,7 @@ export function StartScreen() {
   const [selected, setSelected] = useState<string | null>(null);
   const [origin, setOrigin] = useState<"legend" | "grassroots" | "analyst" | null>(null);
   const [difficulty, setDifficulty] = useState<"normal" | "hard" | "pro">("normal");
+  const [tutorialMode, setTutorialMode] = useState(true);
   const [talents, setTalents] = useState<Record<ManagerSkillKey, number>>(() => ({ ...TALENT_PRESETS[0]!.points }));
   const [sortBy, setSortBy] = useState<"region" | "reputation" | "payroll">("region");
   /** 赛区折叠（v1.x 用户反馈）：64 支全展开太冗杂——默认只展开 Americas，其余折叠 */
@@ -355,6 +356,24 @@ export function StartScreen() {
         </div>
       </div>
 
+      <div className="card">
+        <h3>7 · 新手引导</h3>
+        <div className="startgrid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))" }}>
+          <div className={`teamcard${tutorialMode ? " sel" : ""}`} onClick={() => setTutorialMode(true)}>
+            <b>🎓 开启（推荐新手）</b>
+            <div className="muted small" style={{ marginTop: 6 }}>
+              文明6式带练：带你走一遍每个板块，讲清数值如何影响比赛，陪你打完第一场正式赛。每一步都能跳过。
+            </div>
+          </div>
+          <div className={`teamcard${!tutorialMode ? " sel" : ""}`} onClick={() => setTutorialMode(false)}>
+            <b>跳过引导</b>
+            <div className="muted small" style={{ marginTop: 6 }}>
+              直接开始。之后可在「系统」页重新开启或重看引导；每个页面顶部也有常驻的「本页导读」。
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="row" style={{ marginTop: 14 }}>
         <button
           className="primary"
@@ -363,7 +382,7 @@ export function StartScreen() {
             if (!selected || !origin) return;
             if (challenge?.tier && teams.find((t) => t.id === selected)?.tier !== challenge.tier) return;
             try { if (challenge) localStorage.removeItem("ace-challenge"); } catch { /* 忽略 */ }
-            void newGame(seed, selected, origin, difficulty, talents, managerName.trim() || undefined);
+            void newGame(seed, selected, origin, difficulty, talents, managerName.trim() || undefined, tutorialMode);
           }}
         >
           {busy ? "生成世界中…" : challenge ? "开始挑战 →" : "开始职业生涯 →"}

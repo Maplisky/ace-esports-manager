@@ -61,7 +61,7 @@ export function SquadPage(props: { state: GameState }) {
 
   return (
     <div>
-      <div className="card">
+      <div className="card" data-tut="tut-squad-starters">
         <h3>👥 首发五人（{team.name}）</h3>
         <table>
           <thead>
@@ -94,7 +94,7 @@ export function SquadPage(props: { state: GameState }) {
         </table>
       </div>
 
-      <div className="card">
+      <div className="card" data-tut="tut-squad-bench">
         <h3>🪑 替补席（轮换时用「轮换沟通」尽量提前打招呼）</h3>
         <table>
           <thead>

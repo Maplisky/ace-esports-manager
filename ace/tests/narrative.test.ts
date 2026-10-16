@@ -274,10 +274,10 @@ test("资讯活水快照：五池数量稳定", () => {
   assert.equal(LOCKER_GRIM_QUOTES.length, 2);
 });
 
-test("资讯活水集成：settleMatch 正式赛 → 更衣室舆论入档；教学局不计", () => {
+test("资讯活水集成：settleMatch 正式赛 → 更衣室舆论入档", () => {
   const s = build(110);
   const myId = s.myTeamId!;
-  const f = s.fixtures.find((x) => !x.played && (x.teamA === myId || x.teamB === myId) && !x.tutorial)!;
+  const f = s.fixtures.find((x) => !x.played && (x.teamA === myId || x.teamB === myId))!;
   const rec = simMatch(s, f.teamA, f.teamB, f.bo, 4321, f.id);
   f.played = true;
   f.settled = false;

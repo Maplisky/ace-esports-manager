@@ -85,7 +85,7 @@ function doAdvance(maxDays = 1): void {
       break;
     }
   }
-  // v1.0-10：日推进后评估成就（新解锁进新闻流；教学局不走 noteMatchResult，天然不计）
+  // v1.0-10：日推进后评估成就（新解锁进新闻流）
   const achNotes: { day: number; kind: string; text: string; important?: boolean }[] = [];
   evaluateAchievements(state, achNotes as never);
   pushNews(achNotes);
@@ -103,7 +103,7 @@ function doAdvance(maxDays = 1): void {
   }
   // 轻量档（v1.4-2）：非关键提示（解锁/成就）不进推进 toast——仍入新闻流
   if (state.stopDensity === "light") {
-    const critical = notes.filter((n) => /🏆|❌|下课|夺冠|加冕|教学局|预警/.test(n));
+    const critical = notes.filter((n) => /🏆|❌|下课|夺冠|加冕|预警/.test(n));
     notes.length = 0;
     notes.push(...critical);
   }
@@ -206,6 +206,7 @@ function migrate(state: GameState): GameState {
   state.circuitPoints ??= {};
   state.draftPickMoves ??= []; // v1.0-8 选秀权交易账本
   state.achievements ??= {}; // v1.0-10 成就解锁账本
+  state.tutorial ??= { mode: false, done: true }; // v1.0-16 新手教程：旧档默认静默（不打扰存量玩家）
   // v1.0-8 交互式结算迁移：旧档 played 场次都是打完即结算（settled 字段缺省）→ 回填 true；
   // 交互式场次由 playHeldMatch 显式写 settled=false，读档兜底结算依赖此语义，不可回填
   for (const f of state.fixtures) {
@@ -252,6 +253,8 @@ function handleWorkerMessage(e: MessageEvent) {
     state.onboarding = {}; // 开局引导清单（GDD §3 v1.2）
     // 难度三档（v1.0-7，GDD §9.5）：AI 侦察/BP 读图/预算补贴
     state.difficulty = (msg.difficulty as "normal" | "hard" | "pro" | undefined) ?? "normal";
+    // 新手教程模式（v1.0-16）：新档默认开启（开局第 7 步可关）
+    state.tutorial = { mode: msg.tutorialMode !== false, done: false };
     reply({ type: "ready", ...snapshot() });
   } else if (type === "applyJob") {
     // 跳槽申请（v1.0-6，GDD §9.5）：声望+荣誉+门下弟子加成，成功即切换俱乐部
@@ -534,6 +537,14 @@ function handleWorkerMessage(e: MessageEvent) {
   } else if (type === "setStopDensity") {
     // 停靠密度三档（v1.4-2）：light 只停比赛 / normal 现状 / full 每周一训练周报停车
     if (state) state.stopDensity = (msg.density as "light" | "normal" | "full") ?? "normal";
+    reply({ type: "snapshot", ...snapshot() });
+  } else if (type === "setTutorial") {
+    // 新手教程（v1.0-16）：mode 开关 + done 毕业/重看——系统页与引导浮层共用
+    if (state) {
+      state.tutorial ??= {};
+      if (typeof msg.mode === "boolean") state.tutorial.mode = msg.mode;
+      if (typeof msg.done === "boolean") state.tutorial.done = msg.done;
+    }
     reply({ type: "snapshot", ...snapshot() });
   } else if (type === "selfStudy") {
     // 自我进修（GDD §9.5 v1.4）：个人钱包 $5K → 一项技能 +1（上限 75）

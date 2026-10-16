@@ -407,8 +407,6 @@ export interface Fixture {
   settled?: boolean;
   /** 玩家比赛中干预列表（v1.0-8）：随存档走，重模拟的唯一输入 */
   interventions?: MatchIntervention[];
-  /** 教学脚本局（v1.0-11，§3）：生涯首场——模拟带 +8 优势、结算不计生涯与成就 */
-  tutorial?: boolean;
 }
 
 export interface StandingsEntry {
@@ -585,8 +583,6 @@ export interface GameState {
       titleKinds?: Record<string, number>;
       /** 跳槽次数（v1.0-10 雇佣兵线） */
       jobHops?: number;
-      /** 教学局已打（v1.0-11）：生涯首场脚本局标记，防第二场误判 */
-      tutorialDone?: boolean;
     };
   };
   /** 已解锁成就（v1.0-10，GDD §10.4 剧本路径）：id → 解锁时间 */
@@ -652,6 +648,9 @@ export interface GameState {
   sponsorMult?: number;
   /** 推进停靠密度（GDD v1.4-2）：light 只停比赛 / normal 现状 / full 每周一训练周报停车 */
   stopDensity?: "light" | "normal" | "full";
+  /** 新手教程模式（v1.0-16）：mode=引导开启（新档默认 true、旧档 migrate 默认 false）、done=已毕业；
+   *  引导进行位置是客户端态不入档——读档后从未毕业且开启则从头续走 */
+  tutorial?: { mode?: boolean; done?: boolean };
 }
 
 /** 训练赛目标三选一（GDD §5.6 v1.1）：磨合 / 风格特训 / 图池特训 */

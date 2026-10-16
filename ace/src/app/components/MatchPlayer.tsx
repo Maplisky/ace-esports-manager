@@ -40,8 +40,8 @@ export function MatchPlayer(props: {
   myTeamId?: string | null;
   onIntervene?: (mapIdx: number, round: number, tactic: string, igl: boolean) => void;
   onFinished?: () => void;
-  /** 教学局（v1.0-11，§3）：前三回合强制观战，第 3 回合结束自动开喊话菜单 */
-  tutorial?: boolean;
+  /** 新手引导（v1.0-16）：未毕业时显示随比赛状态变化的小贴士条 */
+  guide?: boolean;
 }) {
   const { record, state, onClose } = props;
   const startAtEnd = props.startFinished === true;
@@ -193,19 +193,6 @@ export function MatchPlayer(props: {
     }
   }, [finished, props]);
 
-  // 教学局（v1.0-11，§3）：第 3 回合结果揭示时自动停靠并打开喊话菜单——「暂停喊一次战术」
-  const menuShownRef = useRef(false);
-  useEffect(() => {
-    if (!props.tutorial || finished || menuShownRef.current) return;
-    const r = map?.rounds[pos.ri];
-    if (!r || pos.mi !== 0 || r.n !== 3 || pos.ei < r.events.length) return;
-    menuShownRef.current = true;
-    setPlaying(false);
-    setMenuOpen(true);
-  }, [pos, map, finished, props.tutorial]);
-  const tutorialWatchLock = () =>
-    props.tutorial === true && pos.mi === 0 && (pos.ri < 3 || (pos.ri === 3 && !showResult));
-
   // IGL 场上阅读（v1.0-8）：第 7/14 回合结果揭示时自动停靠，给建议卡（GDD §5.4）
   useEffect(() => {
     if (finished || !map || !mySide || !interactive) return;
@@ -337,6 +324,19 @@ export function MatchPlayer(props: {
   const buys = round?.buys;
   const atkSide = round?.atk ?? "A";
 
+  // 新手引导小贴士（v1.0-16）：由当前比赛状态推导，随阶段自动换文案
+  const guideTip = (() => {
+    if (!props.guide) return null;
+    if (finished) return "结算页怎么看：ACS＝伤害÷回合×1.45，MVP 从胜方产生（ACS 最高 +18 加成）、败方最佳标 SMVP；关掉后可在「战术」页看摸透度变化。";
+    if (iglCard) return "🎯 你的 IGL 正在读图：建议基于对手近几回合的开局趋势。「采纳」不耗暂停次数、效果 80%；忽略也完全没关系。";
+    const called = (record.interventions?.length ?? 0) > 0;
+    if (!called && round && round.n >= 3 && pos.ei >= 0) return "轮到你了：点下方「⏸ 暂停喊话」选一个战术（持续 3 回合）——喊出一次后这条提示消失。选「抱团前压」这类稳一点的开局即可。";
+    if (round && (buys?.A === "force" || buys?.B === "force")) return "经济局·force：钱不够全枪，起半装备（强度 −6.5）赌一波——赢了回血，输了更穷。";
+    if (round && (buys?.A === "eco" || buys?.B === "eco")) return "经济局·eco：起裸装省钱（强度 −15），把经济留给下一波满配长枪。手枪局（每图第 1/13 回合）双方都会重置到 $800。";
+    if (pos.mi === 0 && pos.ri === 0 && pos.ei === -1) return "对战比什么：每个回合＝攻方强度 − 守方强度 ＋ 经济修正 ＋ 战术喊话 ＋ 临场发挥。先到 13 回合且领先 2 拿下这张图。你的准备（训练/情报/预案）都在给这些项加码。";
+    return null;
+  })();
+
   return (
     <div className="viewer-backdrop" onClick={() => { /* 点背景不关闭，防误触 */ }}>
       <div className="viewer" onClick={(e) => e.stopPropagation()} style={{ maxHeight: "92vh", overflowY: "auto" }}>
@@ -360,6 +360,13 @@ export function MatchPlayer(props: {
           </div>
           <div className="team right" style={{ display: "flex", alignItems: "center", gap: 6 }}>{teamB?.tag}{teamB && <TeamLogo team={teamB} size={22} />}</div>
         </div>
+
+        {/* 新手引导小贴士（v1.0-16）：随比赛阶段自动切换 */}
+        {guideTip && (
+          <div className="card" style={{ padding: "7px 14px", margin: "8px 0 0", borderColor: "var(--gold)", fontSize: 12.5, lineHeight: 1.6 }}>
+            🎓 {guideTip}
+          </div>
+        )}
 
         {/* 回合历史条（转播式）：每回合一个小方块，绿/蓝=胜方，当前回合脉冲 */}
         {map && !finished && (
@@ -542,7 +549,7 @@ export function MatchPlayer(props: {
               <button onClick={() => setSpeed((s) => (s === 1 ? 2 : s === 2 ? 4 : 1))}>
                 {speed}x
               </button>
-              <button onClick={jumpToEnd} disabled={tutorialWatchLock()} title={tutorialWatchLock() ? "教学局：前三回合请完整观战" : undefined}>⏭ 跳到结果</button>
+              <button onClick={jumpToEnd}>⏭ 跳到结果</button>
               {interactive && map && (
                 <button
                   disabled={timeoutsLeft <= 0 || callLocked}

@@ -82,7 +82,7 @@ export function FinancePage(props: { state: GameState }) {
 
   return (
     <div>
-      <div className="card">
+      <div className="card" data-tut="tut-finance-flow">
         <div className="row" style={{ justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
           <h3>💰 财务</h3>
           <div className="row" style={{ gap: 6 }}>

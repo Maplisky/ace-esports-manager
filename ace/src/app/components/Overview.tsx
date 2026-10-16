@@ -16,7 +16,7 @@ export function TopBar(props: {
 }) {
   const date = formatDate(props.year, props.day);
   return (
-    <div className="topbar">
+    <div className="topbar" data-tut="tut-topbar">
       <span className="logo">ACE</span>
       <div className="stat" style={{ cursor: props.onInspectTeam ? "pointer" : undefined }} onClick={props.onInspectTeam} title="查看成员与交手记录（资料库）">
         <span className="k">俱乐部</span>
@@ -114,7 +114,7 @@ export function OverviewPage(props: {
         </div>
       )}
       {/* 助教建议（GDD §9.1 收件箱 v1） */}
-      <div className="card">
+      <div className="card" data-tut="tut-inbox">
         <h3>📋 收件箱</h3>
         {advice.length === 0 && <div className="muted small">一切正常，按计划推进。</div>}
         {advice.map((a, i) => (
@@ -124,7 +124,7 @@ export function OverviewPage(props: {
         ))}
       </div>
 
-      <div className="card">
+      <div className="card" data-tut="tut-advance">
         <h3>⏱ 推进</h3>
         <div className="row">
           <button className="primary" disabled={props.busy} onClick={props.onAdvance}>
@@ -144,7 +144,7 @@ export function OverviewPage(props: {
 
       {/* 侦察对手（GDD §7.2 情报系统） */}
       {nextOppId && (
-        <div className="card">
+        <div className="card" data-tut="tut-scout">
           <h3>🔍 情报 · {state.teams[nextOppId]?.name}
             <span className={`tag${intelLv >= 2 ? " green" : intelLv === 1 ? " orange" : ""}`} style={{ marginLeft: 10 }}>
               情报 {intel}/10
@@ -172,10 +172,10 @@ export function OverviewPage(props: {
             <span className="muted small">
               情报带来针对性准备加成（最高 +2.2 强度），长期不侦察会过时。
               {(() => {
-                // 梯度解锁提示（检错对齐原作：一次侦察只给方向，持续投入才全知）
+                // 梯度解锁提示（口径对齐引擎：阵容 ≥2/4/6、风格预测 ≥4——PreMatch 实际门控）
                 const lv = intel;
-                if (lv < 2) return " 再侦察 1 次：解锁对手风格预测。";
-                if (lv < 4) return ` 再侦察 ${Math.ceil((4 - lv) / 2)} 次：看对手常用阵容三人。`;
+                if (lv < 2) return " 再侦察 1 次：解锁对手常用阵容（看到第一人）。";
+                if (lv < 4) return ` 再侦察 ${Math.ceil((4 - lv) / 2)} 次：解锁对手风格预测 + 常用阵容前三人。`;
                 if (lv < 6) return ` 再侦察 ${Math.ceil((6 - lv) / 2)} 次：看全队五人 + 暂停提示精确化。`;
                 return " 情报充足：阵容/风格/精确提示全解锁。";
               })()}
@@ -287,7 +287,7 @@ export function OverviewPage(props: {
           (a, b) => b.pts - a.pts || (b.mapW - b.mapL) - (a.mapW - a.mapL) || (b.roundW - b.roundL) - (a.roundW - a.roundL),
         );
         return (
-          <div className="card" key={comp.key}>
+          <div className="card" key={comp.key} data-tut={/stage1/i.test(comp.key) ? "tut-standings" : undefined}>
             <h3>📊 {comp.name} · 积分榜</h3>
             <table>
               <thead>
@@ -311,7 +311,7 @@ export function OverviewPage(props: {
         );
       })}
 
-      <div className="card">
+      <div className="card" data-tut="tut-news">
         <h3>📰 新闻</h3>
         {recentNews.length === 0 && <div className="muted small">还没有新闻。推进时间看看世界发生了什么。</div>}
         {recentNews.map((n, i) => (

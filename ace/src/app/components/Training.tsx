@@ -74,7 +74,7 @@ export function TrainingPage(props: { state: GameState }) {
 
   return (
     <div>
-      <div className="card">
+      <div className="card" data-tut="tut-training-slots">
         <h3>🏋 团队课表（练 7 天 · 与个人训练并行）</h3>
         <table>
           <thead>
@@ -109,7 +109,7 @@ export function TrainingPage(props: { state: GameState }) {
         </div>
       </div>
 
-      <div className="card">
+      <div className="card" data-tut="tut-training-recommend">
         <div className="row" style={{ justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
           <h3 style={{ margin: 0 }}>🎯 个人训练（每名选手独立项目 · {XP_PER_ATTR_POINT} 经验 = +1 属性）</h3>
           <button
@@ -202,7 +202,7 @@ export function TrainingPage(props: { state: GameState }) {
 
       <ScrimPanel state={state} />
 
-            <div className="card" style={{ padding: "12px 16px", marginTop: 14 }}>
+            <div className="card" style={{ padding: "12px 16px", marginTop: 14 }} data-tut="tut-training-agents">
         <h3>🎭 练英雄（最多 5 人/周，熟练 +4.2×效率/周；效率 = 0.7 +（意识+道具）/400）</h3>
         <div className="muted small" style={{ margin: "6px 0" }}>
           已选 {Object.values(agentPicks).filter(Boolean).length}/5 人 · 练非池内英雄从 34 熟练起步，达标后自动入池 · 上限 100（本命）
@@ -353,7 +353,7 @@ function ScrimPanel(props: { state: GameState }) {
   ];
 
   return (
-    <div className="card" style={{ padding: "12px 16px", marginTop: 14 }}>
+    <div className="card" style={{ padding: "12px 16px", marginTop: 14 }} data-tut="tut-training-scrim">
       <h3>🤝 训练赛约战（1 行动力 · 单图先到 13 · 不计个人数据）</h3>
       <div className="row" style={{ flexWrap: "wrap", gap: 10, alignItems: "flex-end" }}>
         <label className="small">

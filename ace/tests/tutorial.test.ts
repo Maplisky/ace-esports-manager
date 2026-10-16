@@ -1,5 +1,4 @@
-/** 开局引导骨架回归（v1.0-11，GDD §3/§9.1）：教学脚本局 + D1-D20 解锁表。
- *  口径：教学局不计生涯统计与成就（§3/§5.1）；script 优势为固定常量零 RNG；
+/** 开局引导回归：D1-D20 解锁表 + 首场普通赛口径（v1.0-16：教学脚本局已删除，由新手教程模式接管）。
  *  解锁由当年天数+赛季数推导（旧档/第二赛季天然全开，零迁移）。 */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -9,6 +8,7 @@ import { resetFixtureSeq } from "../src/core/sim/fixtures.ts";
 import { initCareer } from "../src/core/sim/career.ts";
 import { evaluateAchievements } from "../src/core/sim/achievements.ts";
 import { pageUnlocked, pageUnlockDay } from "../src/app/guide.ts";
+import { TUTORIAL_STEPS, PAGE_HELP, TUT_ID, TUTORIAL_GRADUATION } from "../src/app/tutorial/content.ts";
 import { simMatch } from "../src/core/sim/match.ts";
 import type { GameState, NewsItem } from "../src/core/types.ts";
 
@@ -30,40 +30,34 @@ function myFixture(s: GameState) {
   return f;
 }
 
-test("教学脚本局：生涯首场自动标记 +8 优势；结算不计生涯统计与成就；第二场不再是教学局", () => {
+test("v1.0-16 回归：生涯首场即普通赛——全额入账（生涯/成就/胜负），无教学局特殊口径", () => {
   const s = build();
   const f = myFixture(s);
   const rec = playHeldMatch(s, f.id, {});
   assert.ok(rec);
-  assert.equal(f.tutorial, true, "生涯首场（0 胜 0 负、首赛季）标记教学局");
-  const p = s.players[s.teams[f.teamA === s.myTeamId ? f.teamA : f.teamB]!.starters[0]!]!;
-  const kills0 = p.career.kills;
-  const news0 = s.news.length;
-  assert.equal(settleMatch(s, f.id, rec, () => {}), true);
-  assert.equal(p.career.kills, kills0, "教学局不计选手生涯统计");
-  assert.equal(s.manager.career!.wins + s.manager.career!.losses, 0, "教学局不计教练胜负");
-  assert.ok(s.news.length > news0, "联赛赛果新闻照常（含「教学局」标注）");
-  assert.ok(s.news.some((n) => n.text.includes("教学局")));
-  assert.equal(s.manager.career!.tutorialDone, true, "教学局完成标记");
-  evaluateAchievements(s, dummy());
-  assert.ok(!s.achievements?.["g-firstwin"], "教学局胜利不解锁首胜成就");
-  // 第二场：不再标记
-  s.day = f.day + 2;
-  const f2 = myFixture(s);
-  const rec2 = playHeldMatch(s, f2.id, {});
-  assert.ok(rec2);
-  assert.notEqual(f2.tutorial, true, "第二场非教学局");
-  settleMatch(s, f2.id, rec2, () => {});
-  assert.equal(s.manager.career!.wins + s.manager.career!.losses, 1, "第二场正常计胜负");
+  const myId = f.teamA === s.myTeamId ? f.teamA : f.teamB;
+  const oppId = f.teamA === s.myTeamId ? f.teamB : f.teamA;
+  const myP = s.players[s.teams[myId]!.starters[0]!]!;
+  const kills0 = myP.career.kills;
+  const settled = settleMatch(s, f.id, rec, () => {});
+  assert.equal(settled, true);
+  assert.ok(myP.career.kills > kills0, "首场即计选手生涯统计");
+  const iWon = rec.winner === "A" ? f.teamA === s.myTeamId : f.teamB === s.myTeamId;
+  assert.equal(s.manager.career!.wins + s.manager.career!.losses, 1, "首场即计教练胜负");
+  if (iWon) {
+    evaluateAchievements(s, dummy());
+    assert.ok(s.achievements?.["g-firstwin"], "首场胜利即可解锁首胜成就");
+  }
+  void oppId;
 });
 
-test("script 优势红线：非教学局（tutorial 缺省）模拟逐位一致；教学局允许分叉", () => {
+test("模拟确定性：同 seed 双跑逐位一致（scriptSide 已随教学局删除）", () => {
   const sA = build(131);
   const sB = build(131);
   const [t1, t2] = Object.values(sA.teams).filter((t) => t.tier === 1);
   const rA = simMatch(sA, t1!.id, t2!.id, 3, 8888, "tut-none");
   const rB = simMatch(sB, t1!.id, t2!.id, 3, 8888, "tut-none");
-  assert.equal(JSON.stringify(rA), JSON.stringify(rB), "缺省 script 零影响");
+  assert.equal(JSON.stringify(rA), JSON.stringify(rB));
 });
 
 test("解锁表：D1 基础页与训练开（v1.2 §3 引导要求）/D8 转会/D12 商务/D20 成就；第二赛季全开（旧档兼容）", () => {
@@ -93,4 +87,38 @@ test("解锁表：D1 基础页与训练开（v1.2 §3 引导要求）/D8 转会/
     assert.equal(pageUnlocked(pg, s), true, `${pg} 第二赛季应全开`);
   }
   assert.ok(pageUnlockDay("training") === 1 && pageUnlockDay("transfer") === 8 && pageUnlockDay("business") === 12);
+});
+
+const ALL_PAGES = ["overview", "schedule", "squad", "tactics", "training", "finance", "business", "transfer", "manager", "achievements", "career", "library", "replays", "challenge", "system"] as const;
+
+test("新手教程内容完整性（v1.0-16）：步骤 id 唯一、页合法、锚点已注册、导读覆盖全部 15 页", () => {
+  const ids = new Set<string>();
+  const anchorSet = new Set<string>(Object.values(TUT_ID));
+  for (const s of TUTORIAL_STEPS) {
+    assert.ok(!ids.has(s.id), `步骤 id 重复：${s.id}`);
+    ids.add(s.id);
+    assert.ok((ALL_PAGES as readonly string[]).includes(s.page), `步骤 ${s.id} 页面非法：${s.page}`);
+    if (s.anchor) assert.ok(anchorSet.has(s.anchor), `步骤 ${s.id} 锚点未注册：${s.anchor}`);
+    assert.ok(s.title.length >= 4 && s.body.length >= 30, `步骤 ${s.id} 文案过短`);
+  }
+  assert.ok(TUTORIAL_STEPS.length >= 20, "步骤覆盖量不足");
+  assert.ok(TUTORIAL_STEPS.some((s) => s.pause === "awaitMatch"), "有待命步（等首场）");
+  // 每个注册锚点至少被一个步骤引用（防止死锚点漂移）
+  const used = new Set(TUTORIAL_STEPS.map((s) => s.anchor as string).filter(Boolean));
+  for (const a of anchorSet) {
+    assert.ok(used.has(a), `锚点 ${a} 已注册但无步骤引用`);
+  }
+  for (const pg of ALL_PAGES) {
+    assert.ok((PAGE_HELP[pg]?.length ?? 0) >= 1, `PAGE_HELP 缺页：${pg}`);
+  }
+  assert.ok(TUTORIAL_GRADUATION.body.length >= 50);
+});
+
+test("教学局已删除：引擎源码不再引用 tutorial 字段（导入层验证）", async () => {
+  const { readFileSync } = await import("node:fs");
+  for (const f of ["src/core/sim/match.ts", "src/core/sim/day.ts"]) {
+    const src = readFileSync(new URL(`../${f}`, import.meta.url), "utf8");
+    assert.ok(!src.includes("tutorial"), `${f} 仍引用 tutorial`);
+    assert.ok(!src.includes("scriptSide"), `${f} 仍引用 scriptSide`);
+  }
 });

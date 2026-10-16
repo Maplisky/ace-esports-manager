@@ -7,6 +7,7 @@ import {
   type SavedGame, type SaveEntry,
 } from "./save.ts";
 import type { PreMatchResult } from "./components/PreMatch.tsx";
+import { TUTORIAL_STEPS } from "./tutorial/content.ts";
 
 type Screen = "start" | "main";
 type Page = "overview" | "schedule" | "squad" | "tactics" | "training" | "finance" | "business" | "transfer" | "manager" | "achievements" | "career" | "library" | "replays" | "challenge" | "system";
@@ -53,7 +54,7 @@ interface AppStore {
   saves: SaveEntry[];
 
   boot: () => Promise<void>;
-  newGame: (seed: number, teamId: string, origin?: "legend" | "grassroots" | "analyst", difficulty?: "normal" | "hard" | "pro", talents?: Record<string, number>, managerName?: string) => Promise<void>;
+  newGame: (seed: number, teamId: string, origin?: "legend" | "grassroots" | "analyst", difficulty?: "normal" | "hard" | "pro", talents?: Record<string, number>, managerName?: string, tutorialMode?: boolean) => Promise<void>;
   continueGame: () => Promise<void>;
   advance: () => Promise<void>;
   advanceToNextMatch: () => Promise<void>;
@@ -95,6 +96,15 @@ interface AppStore {
   managerLife: (kind: "meal" | "feast" | "fun") => Promise<void>;
   selfStudy: (skill: string) => Promise<void>;
   setStopDensity: (density: "light" | "normal" | "full") => Promise<void>;
+  /** 新手教程（v1.0-16）：mode 开关 / done 毕业——系统页与浮层共用 */
+  setTutorial: (mode?: boolean, done?: boolean) => Promise<void>;
+  /** 引导浮层客户端态：active/idx/waiting(待命等首场)/graduate 不入档，读档后未毕业自动续走 */
+  tutorial: { active: boolean; idx: number; waiting?: boolean; graduate?: boolean };
+  tutorialStart: () => void;
+  tutorialNext: () => void;
+  tutorialSkip: () => void;
+  tutorialGoto: (idx: number) => void;
+  tutorialGraduate: () => void;
   upgradeFacility: () => Promise<void>;
   signCoach: (coachId: string, slot: "training" | "mapTactics" | "match") => Promise<string | null>;
   fireCoach: (slot: "training" | "mapTactics" | "match") => Promise<string | null>;
@@ -203,6 +213,7 @@ export const useStore = create<AppStore>((set, get) => ({
   held: null,
   negotiation: null,
   saves: [],
+  tutorial: { active: false, idx: 0 },
 
   boot: async () => {
     await migrateLegacyAutosave(); // v1.0-9：旧单键 'autosave' → 'auto'（写成功才删旧键）
@@ -210,10 +221,10 @@ export const useStore = create<AppStore>((set, get) => ({
     set({ hasSave: entries.length > 0, ready: true, saves: entries });
   },
 
-  newGame: async (seed, teamId, origin, difficulty, talents, managerName) => {
+  newGame: async (seed, teamId, origin, difficulty, talents, managerName, tutorialMode) => {
     set({ busy: true });
     records = {};
-    const res = await call<{ state?: GameState; __workerError?: string }>({ type: "new", seed, teamId, origin, difficulty, talents, managerName });
+    const res = await call<{ state?: GameState; __workerError?: string }>({ type: "new", seed, teamId, origin, difficulty, talents, managerName, tutorialMode });
     if (res.__workerError) {
       set({ busy: false }); // 生成失败：解除 busy 留在开局页，用户可重试
       get().showToast(`⚠ 生成失败：${res.__workerError.slice(0, 100)}`);
@@ -626,6 +637,41 @@ export const useStore = create<AppStore>((set, get) => ({
       set({ state: res.state, records });
     }
   },
+
+  setTutorial: async (mode, done) => {
+    const res = await call<{ state?: GameState; records?: Record<string, MatchRecord> }>({ type: "setTutorial", mode, done });
+    if (res.state) {
+      records = res.records ?? get().records;
+      await persist(res.state); // 毕业/开关立即落盘——否则毕业后重开页面会重启引导
+      set({ state: res.state, records });
+      if (done === false) set({ tutorial: { active: true, idx: 0 } }); // 重看引导：从头走
+      else if (done === true) set({ tutorial: { active: false, idx: 0, graduate: false } }); // 毕业/跳过：收起
+      else if (mode === false) set({ tutorial: { active: false, idx: 0, graduate: false } }); // 关闭开关
+    }
+  },
+
+  tutorialStart: () => set({ tutorial: { active: true, idx: 0, waiting: false, graduate: false } }),
+  tutorialGoto: (idx: number) => set({ tutorial: { active: true, idx, waiting: false, graduate: false } }),
+  tutorialNext: () => {
+    const { tutorial, held } = get();
+    if (!tutorial.active) return;
+    const cur = TUTORIAL_STEPS[tutorial.idx];
+    // 待命步：等首场（held 事件续走），点「知道了」即收起并进入待命
+    if (cur?.pause === "awaitMatch" && !held) {
+      set({ tutorial: { active: false, idx: tutorial.idx, waiting: true, graduate: false } });
+      return;
+    }
+    const idx = tutorial.idx + 1;
+    // 讲解走完：进入待命（等首场续走/毕业事件）——waiting 防止自动续走 effect 立即重启
+    if (idx >= TUTORIAL_STEPS.length) set({ tutorial: { active: false, idx: 0, waiting: true, graduate: false } });
+    else set({ tutorial: { active: true, idx, graduate: tutorial.graduate } });
+  },
+  tutorialSkip: () => {
+    set({ tutorial: { active: false, idx: 0, graduate: false } });
+    void get().setTutorial(undefined, true);
+    get().showToast("引导已跳过——每个页面顶部的「📖 本页导读」随时可查，系统页可重看。");
+  },
+  tutorialGraduate: () => set({ tutorial: { active: false, idx: 0, graduate: true } }),
 
   backToStart: async () => {
     const state = get().state;

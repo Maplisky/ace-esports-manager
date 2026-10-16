@@ -25,6 +25,9 @@ import { pageUnlocked, pageUnlockDay, type GuidePage } from "./guide.ts";
 import { cashFlowForecast } from "../core/sim/finance.ts";
 import { ErrorBoundary } from "./components/ErrorBoundary.tsx";
 import { EventCardModal } from "./components/EventCards.tsx";
+import { TutorialOverlay, TutorialGraduation } from "./components/TutorialOverlay.tsx";
+import { PageHelpCard } from "./components/PageHelpCard.tsx";
+import { TUTORIAL_STEPS } from "./tutorial/content.ts";
 
 const PAGES: { key: "overview" | "schedule" | "squad" | "tactics" | "training" | "finance" | "business" | "transfer" | "manager" | "achievements" | "career" | "library" | "replays" | "challenge" | "system"; label: string }[] = [
   { key: "overview", label: "总览" },
@@ -45,12 +48,29 @@ const PAGES: { key: "overview" | "schedule" | "squad" | "tactics" | "training" |
 ];
 
 export function App() {
-  const { ready, screen, page, state, records, viewerFixtureId, viewerStartFinished, held, busy, toast, boot, setPage, closeViewer, advance, advanceToNextMatch, playHeld, scoutTeam, managerLife, matchIntervene, matchFinish, inspectTeam } = useStore();
+  const { ready, screen, page, state, records, viewerFixtureId, viewerStartFinished, held, busy, toast, boot, setPage, closeViewer, advance, advanceToNextMatch, playHeld, scoutTeam, managerLife, matchIntervene, matchFinish, inspectTeam, tutorial, tutorialStart, tutorialGoto, tutorialGraduate } = useStore();
   const [replayShell, setReplayShell] = useState<{ state: GameState; record: MatchRecord } | null>(null);
 
   useEffect(() => {
     void boot();
   }, [boot]);
+
+  // 新手教程（v1.0-16）：未毕业且开启且非待命 → 进主界面自动续走（读档同样生效）
+  const tutOn = state?.tutorial?.mode === true && state?.tutorial?.done === false;
+  useEffect(() => {
+    if (screen === "main" && tutOn && !tutorial.active && !tutorial.waiting && !tutorial.graduate) tutorialStart();
+  }, [screen, tutOn, tutorial.active, tutorial.waiting, tutorial.graduate, tutorialStart]);
+  // 待命续走：比赛日停车（held 出现）→ 跳到实战章
+  useEffect(() => {
+    if (held && tutOn && !tutorial.active && !tutorial.graduate) {
+      const i = TUTORIAL_STEPS.findIndex((s) => s.id === "prematch-guide");
+      if (i >= 0) tutorialGoto(i);
+    }
+  }, [held, tutOn, tutorial.active, tutorial.graduate, tutorialGoto]);
+  const onMatchFinished = () => {
+    if (viewerFixtureId) void matchFinish(viewerFixtureId); // v1.0-8：播放结束才结算
+    if (tutOn && !tutorial.graduate) tutorialGraduate(); // 教程未毕业 → 首场结算即毕业卡
+  };
 
   // 分享回放链接（v1.0-12，GDD §9.4）：#replay=<code> → 解码 → 壳世界渲染播放器（无需存档）
   useEffect(() => {
@@ -168,6 +188,7 @@ export function App() {
             }
             return (
               <>
+          <PageHelpCard page={page} />
           {page === "overview" && (
             <OverviewPage
               state={state}
@@ -219,13 +240,11 @@ export function App() {
             state={state}
             startFinished={viewerStartFinished}
             myTeamId={live ? state.myTeamId : null}
-            tutorial={fx?.tutorial === true}
             onIntervene={(mapIdx, round, tactic, igl) => {
               if (viewerFixtureId) void matchIntervene(viewerFixtureId, mapIdx, round, tactic, igl);
             }}
-            onFinished={() => {
-              if (viewerFixtureId) void matchFinish(viewerFixtureId); // v1.0-8：播放结束才结算
-            }}
+            onFinished={onMatchFinished}
+            guide={state.tutorial?.mode === true && state.tutorial?.done === false}
             onClose={closeViewer}
           />
         );
@@ -233,6 +252,9 @@ export function App() {
 
       {/* 事件卡最优先（GDD §9.3）：待决策队列逐张处理，盖在其他弹窗之上 */}
       {state.pendingEvents.length > 0 && <EventCardModal />}
+      {/* 新手教程（v1.0-16）：引导浮层盖 PreMatch/MatchPlayer(100)、让位事件卡(130) */}
+      <TutorialOverlay />
+      <TutorialGraduation />
       {toast && (
         <div
           style={{

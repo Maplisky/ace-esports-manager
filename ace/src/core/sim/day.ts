@@ -974,9 +974,6 @@ export function playHeldMatch(
   if (opts.agentPicks && Object.keys(opts.agentPicks).length > 0) {
     f.agentLock = opts.agentPicks;
   }
-  // 教学脚本局（v1.0-11，§3）：新档生涯首场——模拟 +8 优势、结算不计生涯与成就
-  const c = state.manager.career;
-  if (c && !c.tutorialDone && c.seasons <= 1 && c.wins + c.losses === 0) f.tutorial = true;
   const rec = simMatchHeld(state, f);
   f.played = true; // 已模拟未结算：App 的下一场查找跳过、advanceDay 不再补打
   f.settled = false; // 显式 false：与旧档（字段缺省=打完即结算）区分，读档兜底依赖此语义
@@ -1024,17 +1021,11 @@ export function settleMatch(
   f.settled = true;
   f.winnerTeamId = rec.winner === "A" ? f.teamA : f.teamB;
   // 首秀名单快照（v1.x 反馈④）：必须在 applyMatchEffects 入账前捕获
-  const debuts = !f.tutorial && (f.teamA === state.myTeamId || f.teamB === state.myTeamId) ? captureDebuts(state) : undefined;
-  if (f.tutorial) {
-    // 教学局（v1.0-11，§3/§5.1 口径）：scripted 不计生涯统计与成就——只记账本标记与联赛结果
-    const c = state.manager.career;
-    if (c) c.tutorialDone = true;
-  } else {
-    applyMatchEffects(state, rec);
-  }
-  // 招牌战术反向泄露的源头累计（GDD §6.4）：我的赛前准备场次同样逐图 +1（教学局不计，§v1.0-11 口径）；
+  const debuts = f.teamA === state.myTeamId || f.teamB === state.myTeamId ? captureDebuts(state) : undefined;
+  applyMatchEffects(state, rec);
+  // 招牌战术反向泄露的源头累计（GDD §6.4）：我的赛前准备场次同样逐图 +1；
   // 指纹同点记录（v1.x 变阵降摸透）——模拟期只读、结算期写入
-  if (!f.tutorial && state.myTeamId) {
+  if (state.myTeamId) {
     const mt = state.teams[state.myTeamId] as GameState["teams"][string] | undefined;
     if (mt) for (const m of rec.maps) {
       mt.patternUsage[m.map] = (mt.patternUsage[m.map] ?? 0) + 1;
@@ -1046,10 +1037,10 @@ export function settleMatch(
   fillNextSlot(state.fixtures, f, rec.winner === "A" ? f.teamA : f.teamB);
   const tagA = (state.teams[f.teamA] as GameState["teams"][string]).tag;
   const tagB = (state.teams[f.teamB] as GameState["teams"][string]).tag;
-  notes.push({ day: state.day, kind: "match", text: `${f.label}${f.tutorial ? "（教学局）" : ""}｜${tagA} ${rec.score[0]}-${rec.score[1]} ${tagB}`, important: true });
-  if (!f.tutorial) noteMatchResult(state, rec.winner === "A" ? f.teamA === state.myTeamId : f.teamB === state.myTeamId, notes); // 赛前准备路径同样入账（v1.0-6）；教学局不计（v1.0-11）
-  if (!f.tutorial) narrativeAfterMyLoss(state, f, rec, notes); // 中期叙事（v1.5）：我输掉的正式赛——旧部重逢/弟子反戈（教学局不计）
-  if (!f.tutorial && (f.teamA === state.myTeamId || f.teamB === state.myTeamId)) narrativeOnMyMatch(state, f.id, rec, notes, new Set(debuts ?? [])); // 资讯活水（v1.x 反馈④）：MVP 高光/小将首战/更衣室舆论（教学局不计）
+  notes.push({ day: state.day, kind: "match", text: `${f.label}｜${tagA} ${rec.score[0]}-${rec.score[1]} ${tagB}`, important: true });
+  noteMatchResult(state, rec.winner === "A" ? f.teamA === state.myTeamId : f.teamB === state.myTeamId, notes); // 赛前准备路径同样入账（v1.0-6）
+  narrativeAfterMyLoss(state, f, rec, notes); // 中期叙事（v1.5）：我输掉的正式赛——旧部重逢/弟子反戈
+  if (f.teamA === state.myTeamId || f.teamB === state.myTeamId) narrativeOnMyMatch(state, f.id, rec, notes, new Set(debuts ?? [])); // 资讯活水（v1.x 反馈④）：MVP 高光/小将首战/更衣室舆论
   settleFinal(state, f, rec, notes); // 赛前准备路径同样结算冠军/积分（v1.0-3b 检错：此前漏发冠军积分）
   for (const n of notes) {
     state.news.push(n);

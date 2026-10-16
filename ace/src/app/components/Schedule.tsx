@@ -24,7 +24,7 @@ export function SchedulePage(props: { state: GameState; records: Record<string, 
           <BracketView state={state} compKey={bracketComp} myId={myId} />
         </div>
       )}
-      <div className="card">
+      <div className="card" data-tut="tut-schedule-mine">
       <h3>📅 赛程（我的比赛）</h3>
       <table>
         <thead>
