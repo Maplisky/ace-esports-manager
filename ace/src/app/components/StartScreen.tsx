@@ -4,6 +4,7 @@ import { generateWorld } from "../../core/worldgen.ts";
 import { REGIONS } from "../../core/sim/day.ts";
 import { ORIGINS, TALENT_POOL, TALENT_BASE, TALENT_CAP, TALENT_PRESETS, SKILL_CN, type ManagerSkillKey } from "../../core/sim/career.ts";
 import { TeamLogo } from "./Avatar.tsx";
+import { SaveManagerModal } from "./SaveManagerModal.tsx";
 const PERSONALITY_CN: Record<string, string> = {
   spender: "董事会期望：大牌与成绩",
   youth: "董事会期望：培养新人",
@@ -29,6 +30,8 @@ export function StartScreen() {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(() => new Set());
   /** 教练姓名（v1.x 用户反馈）：默认「经理」，空输入回退默认 */
   const [managerName, setManagerName] = useState("");
+  /** 存档管理弹窗（v1.x 用户反馈：窗口式存档管理） */
+  const [saveMgrOpen, setSaveMgrOpen] = useState(false);
   // 种子挑战赛模式（GDD §11.5 v1.x）：挑战页带参跳转 → 锁 seed/出身/难度，过滤不符档位；开始后清除
   const [challenge] = useState<{ id: string; name: string; seed: number; origin?: string; difficulty?: string; tier?: number; maxAge?: number } | null>(() => {
     try {
@@ -118,6 +121,7 @@ export function StartScreen() {
             <button className="primary" disabled={busy} onClick={() => void continueGame()}>
               继续上次存档
             </button>
+            <button className="small" disabled={busy} onClick={() => setSaveMgrOpen(true)}>💾 存档管理（读取/切换/备份）</button>
             <button className="small" disabled={busy} onClick={() => importRef.current?.click()}>📥 导入存档文件（JSON）</button>
             <input
               ref={importRef}
@@ -130,7 +134,7 @@ export function StartScreen() {
                 e.target.value = "";
               }}
             />
-            <span className="muted small">自动存档保存在本浏览器（IndexedDB）；其他槽位/备份在下方列表切换。</span>
+            <span className="muted small">自动存档保存在本浏览器（IndexedDB）。</span>
           </div>
           <SaveSlotList />
         </div>
@@ -368,6 +372,7 @@ export function StartScreen() {
           {challenge ? "挑战参数已锁定；开局后到「挑战」页查看成绩与提交。" : "出身决定起步资源与声望；下课、跳槽与名人堂在生涯中等着你。"}
         </span>
       </div>
+      {saveMgrOpen && <SaveManagerModal state={world as never} records={{}} onClose={() => { setSaveMgrOpen(false); }} />}
     </div>
   );
 }
