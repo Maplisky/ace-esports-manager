@@ -27,6 +27,8 @@ export function StartScreen() {
   const [expandedRegions, setExpandedRegions] = useState<Set<string>>(() => new Set([REGIONS[0]?.id ?? ""]));
   /** 声望/薪资分档折叠（v1.x 用户反馈）：默认全收起 */
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(() => new Set());
+  /** 教练姓名（v1.x 用户反馈）：默认「经理」，空输入回退默认 */
+  const [managerName, setManagerName] = useState("");
   // 种子挑战赛模式（GDD §11.5 v1.x）：挑战页带参跳转 → 锁 seed/出身/难度，过滤不符档位；开始后清除
   const [challenge] = useState<{ id: string; name: string; seed: number; origin?: string; difficulty?: string; tier?: number; maxAge?: number } | null>(() => {
     try {
@@ -282,7 +284,21 @@ export function StartScreen() {
       </div>
 
       <div className="card">
-        <h3>4 · 天赋分配（剩余 {talentLeft} 点）</h3>
+        <h3>4 · 教练姓名</h3>
+        <div className="row" style={{ flexWrap: "wrap", gap: 10, alignItems: "center" }}>
+          <input
+            value={managerName}
+            maxLength={16}
+            placeholder="经理"
+            onChange={(e) => setManagerName(e.target.value)}
+            style={{ width: 200 }}
+          />
+          <span className="muted small">留空则叫「经理」。名字会出现在生涯账本、下课/跳槽新闻与存档列表里。</span>
+        </div>
+      </div>
+
+      <div className="card">
+        <h3>5 · 天赋分配（剩余 {talentLeft} 点）</h3>
         <div className="row" style={{ gap: 6, marginBottom: 10, flexWrap: "wrap" }}>
           <span className="muted small">推荐配置：</span>
           {TALENT_PRESETS.map((p) => (
@@ -315,7 +331,7 @@ export function StartScreen() {
       </div>
 
       <div className="card">
-        <h3>5 · 难度（开档后不可下调）</h3>
+        <h3>6 · 难度（开档后不可下调）</h3>
         <div className="startgrid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))" }}>
           {([
             { key: "normal", label: "普通", desc: "标准体验：AI 不侦察你，预算对等" },
@@ -343,7 +359,7 @@ export function StartScreen() {
             if (!selected || !origin) return;
             if (challenge?.tier && teams.find((t) => t.id === selected)?.tier !== challenge.tier) return;
             try { if (challenge) localStorage.removeItem("ace-challenge"); } catch { /* 忽略 */ }
-            void newGame(seed, selected, origin, difficulty, talents);
+            void newGame(seed, selected, origin, difficulty, talents, managerName.trim() || undefined);
           }}
         >
           {busy ? "生成世界中…" : challenge ? "开始挑战 →" : "开始职业生涯 →"}

@@ -242,6 +242,10 @@ function handleWorkerMessage(e: MessageEvent) {
     initSeasonFixtures(state);
     // 出身 3 选 1（v1.0-6，GDD §9.5）：声望/技能/资源差异
     const origin = msg.origin as "legend" | "grassroots" | "analyst" | undefined;
+    // 教练姓名（v1.x 用户反馈）：自定义名字替换默认「经理」；空/非字符串回退默认
+    if (typeof msg.managerName === "string" && msg.managerName.trim()) {
+      state.manager.name = msg.managerName.trim().slice(0, 16);
+    }
     // 天赋分配（v1.2，GDD §3）：先于出身应用——出身加成叠加在天赋初值上；零 RNG，世界逐位不变
     if (msg.talents) applyTalents(state, msg.talents as Partial<Record<ManagerSkillKey, number>>);
     initCareer(state, origin ?? "grassroots");
