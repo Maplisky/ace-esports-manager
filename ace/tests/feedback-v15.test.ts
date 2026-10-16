@@ -3,8 +3,8 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { generateWorld, makeSyntheticTeam, resetPlayerSeq } from "../src/core/worldgen.ts";
 import { Rng } from "../src/core/rng.ts";
-import { simMatch, patternLeakOf } from "../src/core/sim/match.ts";
-import { initSeasonFixtures, advanceDay } from "../src/core/sim/day.ts";
+import { simMatch, patternLeakOf, recordPatternFingerprint } from "../src/core/sim/match.ts";
+import { initSeasonFixtures, advanceDay, playHeldMatch, interveneHeldMatch } from "../src/core/sim/day.ts";
 import { resetFixtureSeq } from "../src/core/sim/fixtures.ts";
 import { AGENTS } from "../src/core/data/agents.ts";
 import type { GameState, NewsItem } from "../src/core/types.ts";
@@ -35,13 +35,15 @@ test("patternLeakOf 纯函数：base=min(1.2,usage×0.12)；首战/同指纹满�
   assert.equal(patternLeakOf("a|b", "c|d", 5), 0.15);
 });
 
-test("变阵降摸透集成：赛后写入 lastPattern 指纹；换 agentLock → 指纹变化", () => {
+test("变阵降摸透集成：模拟期纯函数不落指纹；结算点 recordPatternFingerprint 记录；换 agentLock → 指纹变化", () => {
   const s1 = buildMine();
   s1.teams["TA"]!.patternUsage["ascent"] = 5;
   const r1 = simMatch(s1, "TA", "TB", 1, 4242, "L1", ["ascent"]);
   assert.equal(r1.maps.length, 1);
+  assert.equal(s1.teams["TA"]!.lastPattern?.["ascent"], undefined, "simMatch 纯函数：模拟期不写 lastPattern");
+  recordPatternFingerprint(s1, "TA", "ascent");
   const fp1 = s1.teams["TA"]!.lastPattern?.["ascent"];
-  assert.ok(fp1 !== undefined, "首战后记录本图阵容指纹");
+  assert.ok(fp1 !== undefined, "结算点记录本图阵容指纹");
   // 换一套手动英雄分配 → 指纹必须不同（泄露走 ×0.25 分支）
   const s2 = buildMine();
   s2.teams["TA"]!.patternUsage["ascent"] = 5;
@@ -49,10 +51,26 @@ test("变阵降摸透集成：赛后写入 lastPattern 指纹；换 agentLock �
   const lock: Record<string, Record<string, string>> = {
     ascent: Object.fromEntries(starters.map((pid, i) => [pid, AGENTS[i % AGENTS.length]!.id])),
   };
-  simMatch(s2, "TA", "TB", 1, 4242, "L2", ["ascent"], lock);
+  recordPatternFingerprint(s2, "TA", "ascent", lock);
   const fp2 = s2.teams["TA"]!.lastPattern?.["ascent"];
   assert.ok(fp2 !== undefined && fp2 !== "", "手动分配同样记录指纹");
   assert.notEqual(fp1, fp2, "变阵后指纹不同 → 下场对手准备大半落空");
+});
+
+test("回放红线回归：usage>0 且已变阵时，干预重模拟的干预前回合仍逐位一致（指纹写入不得污染模拟）", () => {
+  const s = buildMine();
+  s.teams["TA"]!.patternUsage["ascent"] = 5;
+  s.teams["TA"]!.lastPattern = { ascent: "old-lineup-fingerprint" }; // 上一场不同阵容（变阵分支）
+  s.fixtures.push({ id: "L1", comp: "test", label: "红线测试", day: s.day, teamA: "TA", teamB: "TB", bo: 1, played: false } as never);
+  const rec1 = playHeldMatch(s, "L1", { maps: ["ascent"] });
+  assert.ok(rec1);
+  const rec2 = interveneHeldMatch(s, "L1", { map: 0, round: 6, tactic: "atk:rush:A" });
+  assert.ok(rec2);
+  const before1 = JSON.stringify(rec1!.maps[0]!.rounds.slice(0, 5));
+  const before2 = JSON.stringify(rec2!.maps[0]!.rounds.slice(0, 5));
+  assert.equal(before2, before1, "干预前（回合 1-5）与首跑逐位一致");
+  // 双跑后指纹保持首跑语义（读旧指纹算泄露），不被中间重模拟覆盖
+  assert.equal(s.teams["TA"]!.lastPattern?.["ascent"], "old-lineup-fingerprint", "模拟不写指纹");
 });
 
 test("无使用记录（usage=0）不写指纹——赛前准备过一场才开始累计", () => {

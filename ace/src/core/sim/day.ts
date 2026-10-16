@@ -18,7 +18,7 @@ import { runDraft } from "./draft.ts";
 import { noteMatchResult, careerWeeklyTick, noteManagerTitle, checkCareerMilestone } from "./career.ts";
 import { refreshCommercialWeek, weeklySponsorIncome } from "./business.ts";
 import type { PlayerAttrs } from "../types.ts";
-import { simMatch, applyMatchEffects } from "./match.ts";
+import { simMatch, applyMatchEffects, recordPatternFingerprint } from "./match.ts";
 import { aggrOfLineup, styleOf, STYLE_LABEL } from "./strength.ts";
 import { buildCup, buildLeague, buildSwissRound, buildDoubleElim, createFixture, fillNextSlot, pairSwissRound } from "./fixtures.ts";
 import type { GameState, Fixture, MatchIntervention, MatchRecord, NewsItem } from "../types.ts";
@@ -785,10 +785,13 @@ export function advanceDay(
     onMatch?.(rec, f.id, mine);
     applyStandings(state, f.comp, f.teamA, f.teamB, rec.score, rec.maps);
     fillNextSlot(state.fixtures, f, rec.winner === "A" ? f.teamA : f.teamB);
-    // 招牌战术反向泄露的源头累计（GDD §6.4）：我方正式比赛逐图 +1
+    // 招牌战术反向泄露的源头累计（GDD §6.4）：我方正式比赛逐图 +1；指纹同点记录（结算期写入）
     if (mine && state.myTeamId) {
       const mt = state.teams[state.myTeamId] as GameState["teams"][string] | undefined;
-      if (mt) for (const m of rec.maps) mt.patternUsage[m.map] = (mt.patternUsage[m.map] ?? 0) + 1;
+      if (mt) for (const m of rec.maps) {
+        mt.patternUsage[m.map] = (mt.patternUsage[m.map] ?? 0) + 1;
+        recordPatternFingerprint(state, state.myTeamId, m.map, f.agentLock);
+      }
     }
     const tagA = (state.teams[f.teamA] as GameState["teams"][string]).tag;
     const tagB = (state.teams[f.teamB] as GameState["teams"][string]).tag;
@@ -1029,10 +1032,14 @@ export function settleMatch(
   } else {
     applyMatchEffects(state, rec);
   }
-  // 招牌战术反向泄露的源头累计（GDD §6.4）：我的赛前准备场次同样逐图 +1
-  if (state.myTeamId) {
+  // 招牌战术反向泄露的源头累计（GDD §6.4）：我的赛前准备场次同样逐图 +1（教学局不计，§v1.0-11 口径）；
+  // 指纹同点记录（v1.x 变阵降摸透）——模拟期只读、结算期写入
+  if (!f.tutorial && state.myTeamId) {
     const mt = state.teams[state.myTeamId] as GameState["teams"][string] | undefined;
-    if (mt) for (const m of rec.maps) mt.patternUsage[m.map] = (mt.patternUsage[m.map] ?? 0) + 1;
+    if (mt) for (const m of rec.maps) {
+      mt.patternUsage[m.map] = (mt.patternUsage[m.map] ?? 0) + 1;
+      recordPatternFingerprint(state, state.myTeamId, m.map, f.agentLock);
+    }
   }
   const notes: NewsItem[] = [];
   applyStandings(state, f.comp, f.teamA, f.teamB, rec.score, rec.maps);

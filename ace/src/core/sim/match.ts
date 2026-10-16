@@ -174,15 +174,16 @@ function simMap(
   const aiIntelOf = state.difficulty === "pro" ? 4 : state.difficulty === "hard" ? 2 : 0;
   const intelA = A.team.id === state.myTeamId ? intelOf(state, B.team.id) : B.team.id === state.myTeamId ? aiIntelOf : 0;
   const intelB = B.team.id === state.myTeamId ? intelOf(state, A.team.id) : A.team.id === state.myTeamId ? aiIntelOf : 0;
-  // 英雄分配：首选预案打底，赛前准备的手动选择（agentLock[mapId]）最高优先；都没有则引擎自动分配
+  // 招牌战术反向泄露（GDD §6.4）：我方重复使用同一图预案 → 对手针对性准备提升。
+  // 变阵降摸透（v1.x 用户反馈）：本图阵容与上一场不同 → 对手准备大半落空（泄露 ×0.25）并记录新指纹。
+  // 纯函数红线：simMap 只读 lastPattern（本图上一场指纹），写入统一在结算点
+  // recordPatternFingerprint——否则干预重模拟（同 seed 整场重跑）首跑已覆盖指纹，
+  // 第二跑 prev===key 走满额泄露，干预前的回合与首跑不一致。
   const assignFor = (team: Team) => {
     const preset = presetAgents(state, team, mapId);
     const lock = agentLock?.[mapId];
     return lock ? { ...(preset ?? {}), ...lock } : preset;
   };
-  // 招牌战术反向泄露（GDD §6.4）：我方重复使用同一图预案 → 对手针对性准备提升。
-  // 变阵降摸透（v1.x 用户反馈）：本图阵容与上一场不同 → 对手准备大半落空（泄露 ×0.25）并记录新指纹
-  // （依赖 assignFor，必须在其后定义并在调用时已初始化）
   const patternKeyOf = (team: Team): string => {
     const assign = assignFor(team) ?? {};
     return Object.keys(assign).sort().map((pid) => assign[pid]).join("|");
@@ -191,11 +192,7 @@ function simMap(
     if (team.id !== state.myTeamId) return 0;
     const usage = team.patternUsage[mapId] ?? 0;
     if (usage === 0) return 0;
-    const key = patternKeyOf(team);
-    const prev = team.lastPattern?.[mapId];
-    team.lastPattern ??= {};
-    team.lastPattern[mapId] = key;
-    return patternLeakOf(prev, key, usage);
+    return patternLeakOf(team.lastPattern?.[mapId], patternKeyOf(team), usage);
   };
   const leakToB = leakOf("A", A.team);
   const leakToA = leakOf("B", B.team);
@@ -624,6 +621,33 @@ export function patternLeakOf(prev: string | undefined, key: string, usage: numb
   if (usage <= 0) return 0;
   const base = Math.min(1.2, usage * 0.12);
   return prev === undefined || prev === key ? base : base * 0.25;
+}
+
+/** 本图阵容指纹（引擎与结算记录共用同一口径：预案打底 + agentLock 覆盖，与 assignFor 一致） */
+export function patternKeyOfTeam(
+  state: GameState,
+  team: Team,
+  mapId: string,
+  agentLock?: Record<string, Record<string, string>>,
+): string {
+  const preset = presetAgents(state, team, mapId);
+  const lock = agentLock?.[mapId];
+  const assign = (lock ? { ...(preset ?? {}), ...lock } : preset) ?? {};
+  return Object.keys(assign).sort().map((pid) => assign[pid]).join("|");
+}
+
+/** 结算点记录本图指纹（v1.x 变阵降摸透）：与 patternUsage++ 同点调用——
+ *  模拟期只读、结算期写入，保住 simMatch 纯函数红线（干预重模拟逐位一致）。 */
+export function recordPatternFingerprint(
+  state: GameState,
+  teamId: string,
+  mapId: string,
+  agentLock?: Record<string, Record<string, string>>,
+): void {
+  const team = state.teams[teamId];
+  if (!team) return;
+  team.lastPattern ??= {};
+  team.lastPattern[mapId] = patternKeyOfTeam(state, team, mapId, agentLock);
 }
 
 /** 当日可用首发（伤员剔除、缺员从替补顶替）——simMatch 与 applyMatchEffects 共用同一解析（v1.0-8 拆分） */
