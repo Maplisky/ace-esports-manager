@@ -82,7 +82,8 @@ function executeRetirement(
   const path = fameTierPath(fame, intentPass);
 
   if (path === "coach") {
-    state.coachPool!.push({
+    state.coachPool ??= [];
+    state.coachPool.push({
       id: "coach_" + p.id,
       name: p.ign,
       fame,
@@ -167,15 +168,16 @@ export function seasonRetirements(
   }
 
   // AI 教练签约：空槽位按概率从自由池签入（同生态）
+  state.coachPool ??= [];
   for (const t of Object.values(state.teams)) {
     if (t.id === state.myTeamId) continue;
     for (const slot of ["training", "mapTactics", "match"] as const) {
       if (t.staff[slot]) continue;
-      if (!state.coachPool!.length) break;
+      if (!state.coachPool.length) break;
       if (!rng.chance(0.22)) continue;
-      const best = [...state.coachPool!].sort((a, b) => b.value - a.value)[0]!;
+      const best: CoachFreeAgent = [...state.coachPool].sort((a, b) => b.value - a.value)[0]!;
       t.staff[slot] = { name: best.name, value: best.value };
-      state.coachPool = state.coachPool!.filter((c) => c.id !== best.id);
+      state.coachPool = state.coachPool.filter((c: CoachFreeAgent) => c.id !== best.id);
       notes.push({ day: 1, kind: "transfer", text: `🎙 ${t.name} 邀请退役名将 ${best.name} 出任${slot === "training" ? "训练" : slot === "mapTactics" ? "地图战术" : "比赛"}教练（能力 ${best.value}）。` });
     }
   }
@@ -251,22 +253,23 @@ export function resolveRetireCard(
   }
 }
 
-/** 签约教练自由池选手到教练组槽位（替换允许） */
+/** 签约教练自由池选手到教练组槽位（替换允许）。coachPool 自兜底（不依赖 worker migrate）。 */
 export function signCoach(state: GameState, coachId: string, slot: "training" | "mapTactics" | "match"): string | null {
   const team = state.myTeamId ? state.teams[state.myTeamId] : null;
   if (!team) return "无俱乐部";
-  const idx = state.coachPool!.findIndex((c) => c.id === coachId);
+  state.coachPool ??= [];
+  const idx = state.coachPool.findIndex((c) => c.id === coachId);
   if (idx < 0) return "该教练已被签走";
-  const c = state.coachPool![idx]!;
+  const c = state.coachPool[idx]!;
   // 顶替：原槽位教练回流自由池（v1.x：支持换人与解雇的闭环）
   const cur = team.staff[slot];
   if (cur?.coachId) {
-    const origin = state.coachPool!.find((x) => x.id === cur.coachId);
+    const origin = state.coachPool.find((x) => x.id === cur.coachId);
     if (origin) origin.value = cur.value; // 在岗期间能力可能成长，回池同步
-    else state.coachPool!.push({ id: cur.coachId, name: cur.name, fame: 50, comm: cur.value, titles: 0, mvps: 0, isIgl: false, homegrownClubId: team.id, retiredYear: state.year, value: cur.value });
+    else state.coachPool.push({ id: cur.coachId, name: cur.name, fame: 50, comm: cur.value, titles: 0, mvps: 0, isIgl: false, homegrownClubId: team.id, retiredYear: state.year, value: cur.value });
   }
   team.staff[slot] = { name: c.name, value: c.value, coachId: c.id };
-  state.coachPool!.splice(idx, 1);
+  state.coachPool.splice(idx, 1);
   return null;
 }
 
@@ -274,13 +277,14 @@ export function signCoach(state: GameState, coachId: string, slot: "training" | 
 export function fireCoach(state: GameState, slot: "training" | "mapTactics" | "match"): string {
   const team = state.myTeamId ? state.teams[state.myTeamId] : null;
   if (!team) return "无俱乐部";
+  state.coachPool ??= [];
   const cur = team.staff[slot];
   if (!cur) return "该位置本来就空缺。";
-  const origin = cur.coachId ? state.coachPool!.find((x) => x.id === cur.coachId) : null;
+  const origin = cur.coachId ? state.coachPool.find((x) => x.id === cur.coachId) : null;
   if (origin) {
     origin.value = Math.max(40, cur.value - 2);
   } else {
-    state.coachPool!.push({ id: cur.coachId ?? "coach_fired_" + slot + "_" + state.day, name: cur.name, fame: 50, comm: cur.value, titles: 0, mvps: 0, isIgl: false, homegrownClubId: team.id, retiredYear: state.year, value: Math.max(40, cur.value - 2) });
+    state.coachPool.push({ id: cur.coachId ?? "coach_fired_" + slot + "_" + state.day, name: cur.name, fame: 50, comm: cur.value, titles: 0, mvps: 0, isIgl: false, homegrownClubId: team.id, retiredYear: state.year, value: Math.max(40, cur.value - 2) });
   }
   team.staff[slot] = undefined;
   state.manager.reputation = clamp((state.manager.reputation ?? 50) - 1, 20, 99);
