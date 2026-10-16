@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "../store.ts";
 import { generateWorld } from "../../core/worldgen.ts";
 import { REGIONS } from "../../core/sim/day.ts";
@@ -12,7 +12,11 @@ const PERSONALITY_CN: Record<string, string> = {
 };
 
 export function StartScreen() {
-  const { hasSave, newGame, continueGame, busy } = useStore();
+  const { hasSave, newGame, continueGame, busy, importSaveText } = useStore();
+  const importRef = useRef<HTMLInputElement>(null);
+  const doImport = (file: File) => {
+    void file.text().then((t) => importSaveText(t));
+  };
   const [seed, setSeed] = useState(() => Math.floor(Math.random() * 900000) + 1000);
   const [selected, setSelected] = useState<string | null>(null);
   const [origin, setOrigin] = useState<"legend" | "grassroots" | "analyst" | null>(null);
@@ -110,9 +114,40 @@ export function StartScreen() {
             <button className="primary" disabled={busy} onClick={() => void continueGame()}>
               继续上次存档
             </button>
+            <button className="small" disabled={busy} onClick={() => importRef.current?.click()}>📥 导入存档文件（JSON）</button>
+            <input
+              ref={importRef}
+              type="file"
+              accept="application/json,.json"
+              style={{ display: "none" }}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) doImport(f);
+                e.target.value = "";
+              }}
+            />
             <span className="muted small">自动存档保存在本浏览器（IndexedDB）；其他槽位/备份在下方列表切换。</span>
           </div>
           <SaveSlotList />
+        </div>
+      )}
+      {!hasSave && (
+        <div className="card">
+          <div className="row" style={{ flexWrap: "wrap", gap: 10, alignItems: "center" }}>
+            <span className="muted small">本地没有存档。想把别的浏览器/设备的进度带过来？</span>
+            <button className="small" disabled={busy} onClick={() => importRef.current?.click()}>📥 导入存档文件（JSON）</button>
+            <input
+              ref={importRef}
+              type="file"
+              accept="application/json,.json"
+              style={{ display: "none" }}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) doImport(f);
+                e.target.value = "";
+              }}
+            />
+          </div>
         </div>
       )}
 
