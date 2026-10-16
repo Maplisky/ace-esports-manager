@@ -104,10 +104,17 @@ export function ManagerPage(props: { state: GameState }) {
 /** 教练组（v1.0-1 退役转教练）：三槽位 + 教练自由池签约（退役选手转型，GDD §8.3） */
 function CoachStaffCard({ state }: { state: GameState }) {
   const signCoach = useStore((s) => s.signCoach);
+  const fireCoachAction = useStore((s) => s.fireCoach);
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
   const team = state.myTeamId ? state.teams[state.myTeamId] : null;
   if (!team) return null;
+  const fire = async (slot: "training" | "mapTactics" | "match") => {
+    setBusy(slot);
+    const message = await fireCoachAction(slot);
+    setBusy(null);
+    setMsg(message);
+  };
   const slots: { key: "training" | "mapTactics" | "match"; label: string; desc: string }[] = [
     { key: "training", label: "🏋 训练教练", desc: "个人训练收益" },
     { key: "mapTactics", label: "🗺 地图战术教练", desc: "图池熟练收益" },
@@ -132,6 +139,11 @@ function CoachStaffCard({ state }: { state: GameState }) {
               {cur ? (
                 <div style={{ marginTop: 4 }}>
                   <b>{cur.name}</b> <span className="tag green">能力 {cur.value}</span>
+                  <div style={{ marginTop: 6 }}>
+                    <button className="small" disabled={busy !== null} onClick={() => void fire(s.key)} title="解约后教练回到自由池（能力 -2），俱乐部声望 -1">
+                      解约（声望 -1）
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="muted" style={{ marginTop: 4 }}>空缺</div>

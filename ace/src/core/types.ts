@@ -185,11 +185,11 @@ export interface Team {
   bond: number;
   /** 赞助商（GDD §8.4） */
   sponsors: Sponsor[];
-  /** 教练组（GDD §8.3 v1.7：训练/地图战术/比赛三类助教，主数值 0-99） */
+  /** 教练组（GDD §8.3 v1.7：训练/地图战术/比赛三类助教，主数值 0-99；coachId = 解雇时归还原自由池的键） */
   staff: {
-    training?: { name: string; value: number };
-    mapTactics?: { name: string; value: number };
-    match?: { name: string; value: number };
+    training?: { name: string; value: number; coachId?: string };
+    mapTactics?: { name: string; value: number; coachId?: string };
+    match?: { name: string; value: number; coachId?: string };
   };
   /** 青训营（v0.9）：≤18 岁选手池，不占一线名单；成长 ×1.5、比赛经验 ×0.5（GDD §6.5） */
   academy: string[];

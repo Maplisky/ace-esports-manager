@@ -257,7 +257,31 @@ export function signCoach(state: GameState, coachId: string, slot: "training" | 
   const idx = state.coachPool!.findIndex((c) => c.id === coachId);
   if (idx < 0) return "该教练已被签走";
   const c = state.coachPool![idx]!;
-  team.staff[slot] = { name: c.name, value: c.value };
+  // 顶替：原槽位教练回流自由池（v1.x：支持换人与解雇的闭环）
+  const cur = team.staff[slot];
+  if (cur?.coachId) {
+    const origin = state.coachPool!.find((x) => x.id === cur.coachId);
+    if (origin) origin.value = cur.value; // 在岗期间能力可能成长，回池同步
+    else state.coachPool!.push({ id: cur.coachId, name: cur.name, fame: 50, comm: cur.value, titles: 0, mvps: 0, isIgl: false, homegrownClubId: team.id, retiredYear: state.year, value: cur.value });
+  }
+  team.staff[slot] = { name: c.name, value: c.value, coachId: c.id };
   state.coachPool!.splice(idx, 1);
   return null;
+}
+
+/** 解雇教练（v1.x 用户反馈）：回自由池 + 声望 -1（业内口碑）；本人上限回落 2（离岗生疏）。零 RNG。 */
+export function fireCoach(state: GameState, slot: "training" | "mapTactics" | "match"): string {
+  const team = state.myTeamId ? state.teams[state.myTeamId] : null;
+  if (!team) return "无俱乐部";
+  const cur = team.staff[slot];
+  if (!cur) return "该位置本来就空缺。";
+  const origin = cur.coachId ? state.coachPool!.find((x) => x.id === cur.coachId) : null;
+  if (origin) {
+    origin.value = Math.max(40, cur.value - 2);
+  } else {
+    state.coachPool!.push({ id: cur.coachId ?? "coach_fired_" + slot + "_" + state.day, name: cur.name, fame: 50, comm: cur.value, titles: 0, mvps: 0, isIgl: false, homegrownClubId: team.id, retiredYear: state.year, value: Math.max(40, cur.value - 2) });
+  }
+  team.staff[slot] = undefined;
+  state.manager.reputation = clamp((state.manager.reputation ?? 50) - 1, 20, 99);
+  return `${cur.name} 已解约（声望 -1）。他回到了教练自由池。`;
 }

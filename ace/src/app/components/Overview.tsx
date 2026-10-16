@@ -11,12 +11,14 @@ export function TopBar(props: {
   budget: number; ap: number; confidence: number; nextLabel: string;
   /** 现金流预测（v1.3）：近 7 日净流——正绿负红，null 无数据不显示 */
   forecast?: { perDay: number; week: number } | null;
+  /** 点击俱乐部名（v1.x 用户反馈）：跳资料库查看对手/我队成员与交手记录 */
+  onInspectTeam?: () => void;
 }) {
   const date = formatDate(props.year, props.day);
   return (
     <div className="topbar">
       <span className="logo">ACE</span>
-      <div className="stat">
+      <div className="stat" style={{ cursor: props.onInspectTeam ? "pointer" : undefined }} onClick={props.onInspectTeam} title="查看成员与交手记录（资料库）">
         <span className="k">俱乐部</span>
         <span className="v" style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
           {props.teamLogo && <img src={props.teamLogo} alt="" width={18} height={18} style={{ borderRadius: 3, objectFit: "contain" }} />}

@@ -35,6 +35,9 @@ interface AppStore {
   hasSave: boolean;
   screen: Screen;
   page: Page;
+  /** 资料库聚焦的战队（inspectTeam 设置；null = 自由浏览） */
+  libraryFocus: string | null;
+  inspectTeam: (teamId: string) => void;
   state: GameState | null;
   records: Record<string, MatchRecord>;
   notes: string[];
@@ -94,6 +97,7 @@ interface AppStore {
   setStopDensity: (density: "light" | "normal" | "full") => Promise<void>;
   upgradeFacility: () => Promise<void>;
   signCoach: (coachId: string, slot: "training" | "mapTactics" | "match") => Promise<string | null>;
+  fireCoach: (slot: "training" | "mapTactics" | "match") => Promise<string | null>;
   /** 跳槽申请（v1.0-6，GDD §9.5）：休赛期教练市场 */
   applyJob: (teamId: string) => Promise<void>;
   /** 选秀权交易（v1.0-8，GDD §13）：转会窗内卖出/买进下届选秀签 */
@@ -169,6 +173,7 @@ export const useStore = create<AppStore>((set, get) => ({
   hasSave: false,
   screen: "start",
   page: "overview",
+  libraryFocus: null,
   state: null,
   records: {},
   notes: [],
@@ -260,6 +265,8 @@ export const useStore = create<AppStore>((set, get) => ({
 
   setScreen: (screen) => set({ screen }),
   setPage: (page) => set({ page }),
+  /** 查看对手（v1.x 用户反馈）：点队名 → 资料库并聚焦该队（交手记录） */
+  inspectTeam: (teamId) => set({ libraryFocus: teamId, page: "library" }),
 
   setStarters: async (starters) => {
     const res = await call<{ state: GameState; records: Record<string, MatchRecord> }>({ type: "setStarters", starters });
@@ -469,6 +476,12 @@ export const useStore = create<AppStore>((set, get) => ({
     const res = await call<{ state: GameState; error?: string }>({ type: "signCoach", coachId, slot });
     set({ state: res.state });
     return res.error ?? null;
+  },
+
+  fireCoach: async (slot) => {
+    const res = await call<{ state: GameState; message?: string }>({ type: "fireCoach", slot });
+    if (res.state) set({ state: res.state });
+    return res.message ?? null;
   },
 
   applyJob: async (teamId) => {

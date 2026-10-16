@@ -3,7 +3,7 @@ import { generateWorld, resetPlayerSeq, salaryFor, spawnFreeAgents, migrateMapsT
 import { initSeasonFixtures, advanceDay, playHeldMatch, interveneHeldMatch, settleMatch, migrateLegacyComps } from "../../core/sim/day.ts";
 import { simMatch } from "../../core/sim/match.ts";
 import { resolveEvent } from "../../core/sim/events.ts";
-import { signCoach } from "../../core/sim/retirement.ts";
+import { signCoach, fireCoach } from "../../core/sim/retirement.ts";
 import { initCareer, applyJob, applyTalents, selfStudy, SELF_STUDY_COST, SELF_STUDY_CAP, type ManagerSkillKey } from "../../core/sim/career.ts";
 import { draftPickTrade } from "../../core/sim/draft.ts";
 import { evaluateAchievements } from "../../core/sim/achievements.ts";
@@ -436,6 +436,10 @@ function handleWorkerMessage(e: MessageEvent) {
     } else {
       reply({ type: "snapshot", state: null, records: {} });
     }
+  } else if (type === "fireCoach") {
+    // 解雇教练（v1.x）：回流自由池 + 声望 -1
+    const message = state ? fireCoach(state, msg.slot as "training" | "mapTactics" | "match") : "无存档。";
+    reply({ type: "snapshot", ...snapshot(), message });
   } else if (type === "signCoach") {
     if (state?.myTeamId) {
       const err = signCoach(state, msg.coachId as string, msg.slot as "training" | "mapTactics" | "match");

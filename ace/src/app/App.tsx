@@ -45,7 +45,7 @@ const PAGES: { key: "overview" | "schedule" | "squad" | "tactics" | "training" |
 ];
 
 export function App() {
-  const { ready, screen, page, state, records, viewerFixtureId, viewerStartFinished, held, busy, toast, boot, setPage, closeViewer, advance, advanceToNextMatch, playHeld, scoutTeam, managerLife, matchIntervene, matchFinish } = useStore();
+  const { ready, screen, page, state, records, viewerFixtureId, viewerStartFinished, held, busy, toast, boot, setPage, closeViewer, advance, advanceToNextMatch, playHeld, scoutTeam, managerLife, matchIntervene, matchFinish, inspectTeam } = useStore();
   const [replayShell, setReplayShell] = useState<{ state: GameState; record: MatchRecord } | null>(null);
 
   useEffect(() => {
@@ -133,6 +133,7 @@ export function App() {
         stage={stageName(state.stage)}
         budget={myTeam?.budget ?? 0}
         forecast={cashFlowForecast(state)}
+        onInspectTeam={() => inspectTeam(myTeam?.id ?? "")}
         ap={state.actionPoints}
         confidence={Math.round(state.boardConfidence)}
         nextLabel={nextFixture ? nextFixtureLabel(state, nextFixture.teamA, nextFixture.teamB, nextFixture.day) : "赛季已收官"}

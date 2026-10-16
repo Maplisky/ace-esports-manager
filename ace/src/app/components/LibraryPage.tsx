@@ -1,7 +1,7 @@
 /**
  * 资料库页（v1.4-2 外围包，GDD 资料库）：全联盟选手/教练/战队检索 + 与我队的交手记录。
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { GameState } from "../../core/types.ts";
 import { useStore } from "../store.ts";
 import { PlayerFace, TeamLogo } from "./Avatar.tsx";
@@ -11,12 +11,15 @@ import { teamAvgOverall } from "../../core/sim/scrim.ts";
 
 export function LibraryPage(props: { state: GameState }) {
   const { state } = props;
+  const storeFocus = useStore((s) => s.libraryFocus);
   const [tab, setTab] = useState<"players" | "teams" | "coaches">("players");
   const [q, setQ] = useState("");
   const [dossierPid, setDossierPid] = useState<string | null>(null);
-  const [teamFocus, setTeamFocus] = useState<string | null>(null);
+  const [teamFocus, setTeamFocus] = useState<string | null>(storeFocus);
   const myId = state.myTeamId ?? "";
   const openViewer = useStore((s) => s.openViewer);
+  // store 聚焦变化（点队名跳转）时同步
+  useEffect(() => { if (storeFocus) setTeamFocus(storeFocus); }, [storeFocus]);
 
   const matched = (s: string) => !q || s.toLowerCase().includes(q.toLowerCase());
 
@@ -72,7 +75,11 @@ export function LibraryPage(props: { state: GameState }) {
               {players.map((p) => (
                 <tr key={p.id}>
                   <td><span className="row" style={{ gap: 6, alignItems: "center" }}><PlayerFace p={p} size={20} showTag={false} />{p.ign}</span></td>
-                  <td className="muted small">{p.teamId ? (state.teams[p.teamId]?.tag ?? "—") : "自由"}</td>
+                  <td className="muted small">{p.teamId ? (
+                    <button className="small ghost" onClick={() => { setTab("teams"); setTeamFocus(p.teamId); }} title="查看该队成员与交手记录">
+                      {state.teams[p.teamId]?.name ?? "—"}
+                    </button>
+                  ) : "自由"}</td>
                   <td>{p.age}</td>
                   <td><b>{p.overall}</b> <span className="muted small">/ {p.potential}</span></td>
                   <td className="muted small">${((p.salary ?? 0) / 1000).toFixed(0)}K 级</td>
