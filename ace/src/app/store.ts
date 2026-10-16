@@ -146,17 +146,33 @@ function ensureWorker(): Worker {
     // 供测试/诊断：worker 加载失败时在页面上可见
     (window as unknown as { __workerLoadError?: string }).__workerLoadError = e.message;
     console.error("[worker load]", e.message);
+    // 全部挂起消息以错误解除（防 UI 永久 busy）——用户反馈「卡在生成世界中」的根因兜底
+    for (const [, resolve] of pending) resolve({ __workerError: `worker 加载/运行失败：${e.message}` });
+    pending.clear();
   };
   return worker;
 }
 
-function call<T = Record<string, unknown>>(msg: Record<string, unknown>): Promise<T> {
+function call<T = Record<string, unknown>>(msg: Record<string, unknown>, timeoutMs = 120000): Promise<T> {
   const w = ensureWorker();
   const id = ++seq;
   return new Promise<T>((resolve) => {
     pending.set(id, (v) => resolve(v as T));
     w.postMessage({ ...msg, seq: id });
+    // 超时兜底（v1.x 用户反馈「卡在生成世界中」）：worker 崩溃/无回复时解除 busy 并给出错误，
+    // 迟到的回复因 pending 已删除而被忽略
+    setTimeout(() => {
+      if (pending.has(id)) {
+        pending.delete(id);
+        resolve({ __workerError: `操作超时（${Math.round(timeoutMs / 1000)} 秒无响应）。请刷新页面重试；若反复出现请 Ctrl+F5 强刷。` } as T);
+      }
+    }, timeoutMs);
   });
+}
+
+/** workerError / 超时的统一提示（toast；busy 解除由调用方处理） */
+function workerFail(message: string): void {
+  console.error("[worker]", message);
 }
 
 let records: Record<string, MatchRecord> = {};
@@ -197,8 +213,18 @@ export const useStore = create<AppStore>((set, get) => ({
   newGame: async (seed, teamId, origin, difficulty, talents, managerName) => {
     set({ busy: true });
     records = {};
-    await call({ type: "new", seed, teamId, origin, difficulty, talents, managerName });
-    const snap = await call<{ state: GameState; records: Record<string, MatchRecord> }>({ type: "getSnapshot" });
+    const res = await call<{ state?: GameState; __workerError?: string }>({ type: "new", seed, teamId, origin, difficulty, talents, managerName });
+    if (res.__workerError) {
+      set({ busy: false }); // 生成失败：解除 busy 留在开局页，用户可重试
+      get().showToast(`⚠ 生成失败：${res.__workerError.slice(0, 100)}`);
+      return;
+    }
+    const snap = await call<{ state: GameState; records: Record<string, MatchRecord>; __workerError?: string }>({ type: "getSnapshot" });
+    if (snap.__workerError || !snap.state) {
+      set({ busy: false });
+      get().showToast("⚠ 生成失败：无法读取世界状态，请刷新重试");
+      return;
+    }
     records = snap.records;
     await persist(snap.state);
     set({ state: snap.state, records, screen: "main", page: "overview", busy: false, notes: ["职业生涯开始。"], held: null });
