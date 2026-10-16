@@ -94,12 +94,24 @@ export function TacticsPage(props: { state: GameState }) {
           </span>
         </h3>
         <div className="row" style={{ marginBottom: 12, flexWrap: "wrap" }}>
-          {MAPS.map((m) => (
-            <button key={m.id} className={m.id === mapId ? "primary" : ""} onClick={() => { setMapId(m.id); setAdaptMsg(null); }}>
-              {m.name} <span className="muted small">{Math.round(team.mapPref[m.id] ?? 50)}</span>
-            </button>
-          ))}
+          {MAPS.map((m) => {
+            // 被摸透度（对齐原作）：同一预案连用越多，对手针对性越强（引擎 leak = min(1.2, usage×0.12)）
+            const usage = team.patternUsage[m.id] ?? 0;
+            const readPct = Math.min(100, Math.round((usage / 10) * 100));
+            return (
+              <button key={m.id} className={m.id === mapId ? "primary" : ""} onClick={() => { setMapId(m.id); setAdaptMsg(null); }}
+                title={usage >= 3 ? `这套打法已连用 ${usage} 场，被摸透 ${readPct}%——换一两个英雄，对手准备就白做一部分` : undefined}>
+                {m.name} <span className="muted small">{Math.round(team.mapPref[m.id] ?? 50)}</span>
+                {readPct >= 30 && <span className="tag" style={{ marginLeft: 4, color: readPct >= 70 ? "#f87171" : readPct >= 50 ? "#fb923c" : "#fbbf24" }}>摸透 {readPct}%</span>}
+              </button>
+            );
+          })}
         </div>
+        {(team.patternUsage[mapId] ?? 0) >= 3 && (
+          <div className="muted small" style={{ marginBottom: 10 }}>
+            ⚠ 这张图的预案被研究透了（连用 {team.patternUsage[mapId]} 场，被摸透 {Math.min(100, Math.round(((team.patternUsage[mapId] ?? 0) / 10) * 100))}%）。换一两个英雄，或赛前去赛前准备换个打法，对手的针对性准备就白做一部分。
+          </div>
+        )}
 
         <table>
           <thead>

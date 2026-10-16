@@ -439,8 +439,15 @@ export interface NewsItem {
 export interface TransferFeedItem {
   day: number;
   year: number;
-  kind: "done" | "bid" | "list" | "release" | "retire";
+  /** v1.x 检错对齐原作：rumor=传闻（三档浓度 c）/ wants=意向（好球员想离队）/ off=告吹（传闻谈崩） */
+  kind: "done" | "bid" | "list" | "release" | "retire" | "rumor" | "wants" | "off";
   text: string;
+  /** 传闻浓度（仅 rumor）：1=绯闻 2=有消息称 3=谈判中；谈判中约一周后见分晓 */
+  c?: 1 | 2 | 3;
+  /** 买方（ rumor/off 用：谁在关注 / 谈崩的是哪家） */
+  toTeamId?: string;
+  /** 涉事选手 */
+  playerId?: string;
 }
 
 /** 教练自由池条目（v1.0 退役转教练） */

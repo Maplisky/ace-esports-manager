@@ -688,7 +688,14 @@ function handleWorkerMessage(e: MessageEvent) {
         } else {
           const p = st.players[bid.playerId];
           if (p) p.morale = Math.max(10, p.morale - 4);
-          st.news.push({ day: st.day, kind: "transfer", text: `已拒绝 ${st.teams[buyer]?.name ?? "对方"} 对 ${p?.ign ?? "?"} 的报价（士气 -4）。` });
+          // 拒绝反馈（对齐原作 §8.2）：想走的人被拒加深不满；长期板凳被留队更衣室有话说
+          const wantsAway = (p?.benchedWeeks ?? 0) >= 4 || p?.listed === true;
+          if (p && wantsAway) {
+            p.morale = Math.max(10, p.morale - 6);
+            st.news.push({ day: st.day, kind: "transfer", important: true, text: `😠 已拒绝 ${st.teams[buyer]?.name ?? "对方"} 对 ${p.ign} 的报价——他本就想走，不满加深（士气 -10），小心更衣室。` });
+          } else {
+            st.news.push({ day: st.day, kind: "transfer", text: `已拒绝 ${st.teams[buyer]?.name ?? "对方"} 对 ${p?.ign ?? "?"} 的报价（士气 -4）。` });
+          }
         }
         st.incomingBids.splice(idx, 1);
       }

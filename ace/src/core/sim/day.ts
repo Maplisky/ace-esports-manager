@@ -12,6 +12,7 @@ import { aiWeeklyTransfers, resolveInquiries } from "./transfer.ts";
 import { rollPatch } from "./patch.ts";
 import { decayIntel } from "./intel.ts";
 import { narrativeAfterMyLoss, narrativeOnTitle } from "./narrative.ts";
+import { weeklyRumors } from "./rumors.ts";
 import { logFinance } from "./finance.ts";
 import { seasonRetirements } from "./retirement.ts";
 import { runDraft } from "./draft.ts";
@@ -785,6 +786,7 @@ export function advanceDay(
     careerWeeklyTick(state, notes); // 下课检查（v1.0-6：信任谷底/警告）
     refreshCommercialWeek(state, rng);
     decayIntel(state); // 情报过时衰减（GDD §7.2）
+    weeklyRumors(state, rng, notes); // 转会传闻/意向生态（v1.x 优化：对齐原作转会新闻页活性）
     // 轮换沟通周重置（GDD §6.4②：每周 2 次，跨周清空豁免名单）
     const weekIdx = Math.floor(state.day / 7);
     if (state.rotationTalks.week !== weekIdx) {

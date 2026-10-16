@@ -4,9 +4,15 @@
  * 一切随机经显式 Rng（确定性约定 §11.1）。
  */
 import { Rng, clamp, hashString } from "../rng.ts";
-import type { GameState, Player, Team, TransferOffer } from "../types.ts";
+import type { GameState, Player, Team, TransferFeedItem, TransferOffer } from "../types.ts";
 import { noteTacticsChanged } from "./scrim.ts";
 import { logFinance } from "./finance.ts";
+
+const FEED_CAP = 300;
+function pushFeed(state: GameState, item: TransferFeedItem): void {
+  state.transferFeed.push(item);
+  if (state.transferFeed.length > FEED_CAP) state.transferFeed.splice(0, state.transferFeed.length - FEED_CAP);
+}
 
 /** 转会窗（自然年内）：季前 · 夏季窗口 · 休赛期 */
 export const TRANSFER_WINDOWS: [number, number][] = [[1, 24], [123, 152], [233, 366]];

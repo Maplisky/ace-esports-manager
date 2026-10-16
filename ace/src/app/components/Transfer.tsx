@@ -373,11 +373,14 @@ export function TransferPage(props: { state: GameState }) {
       <PatchPanel state={state} />
 
       <CollapsibleCard title="📰 转会动态" defaultOpen={false} collapsedSummary={<span className="muted small">{feed.length} 条</span>}>
+        <div className="muted small" style={{ marginBottom: 6 }}>
+          盯上了谁别等太久，别的俱乐部也在买人。<b>传闻</b>分三档：<span className="tag">绯闻</span>只是传言、<span className="tag">有消息称</span>有俱乐部在关注、<span className="tag">谈判中</span>约一周后见分晓——成交标「传闻成真」，谈崩标「告吹」。
+        </div>
         {feed.length === 0 && <div className="muted small">还没有动态。</div>}
         {feed.map((n, i) => (
           <div key={i} className="news-item">
             <span className="muted small" style={{ marginRight: 4 }}>D{n.day}</span>
-            <span className="muted small">[{n.kind === "done" ? "成交" : n.kind === "bid" ? "报价" : n.kind === "list" ? "挂牌" : n.kind === "retire" ? "退役" : "解约"}] </span>
+            <span className="muted small">[{n.kind === "done" ? "成交" : n.kind === "bid" ? "报价" : n.kind === "list" ? "挂牌" : n.kind === "retire" ? "退役" : n.kind === "rumor" ? (n.c === 3 ? "谈判中" : n.c === 2 ? "有消息称" : "绯闻") : n.kind === "wants" ? "想走" : n.kind === "off" ? "告吹" : "解约"}] </span>
             {n.text}
           </div>
         ))}

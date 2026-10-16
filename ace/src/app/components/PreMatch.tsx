@@ -11,6 +11,7 @@ import { PlayerFace, AgentIcon } from "./Avatar.tsx";
 import { AgentSelect } from "./AgentSelect.tsx";
 import { MAPS } from "../../core/data/maps.ts";
 import { intelOf, intelLevel, estimateMapStrength, starsOf, mapStrengthBand } from "../../core/sim/intel.ts";
+import { aggrOfLineup, styleOf, styleCounterOf, STYLE_LABEL } from "../../core/sim/strength.ts";
 import { hashString } from "../../core/rng.ts";
 
 export interface PreMatchResult {
@@ -419,6 +420,8 @@ export function PreMatch(props: {
   // 对方常用阵容（该图情报 >0 时展示：对手首发的常用英雄）
   const oppIntel = intelOf(state, opp.id);
   const oppStarters = opp.starters.map((id) => state.players[id]).filter((x): x is Player => !!x);
+  // 我方本图风格（用首选预案的英雄算职责向量；无预案用 starters 默认池）
+  const myStyleForMap = styleOf(aggrOfLineup(myTeam.starters.map((id) => state.players[id]).filter((x): x is Player => !!x)));
   return (
     <div>
       {/* 对方常用阵容（该图情报 >0 时展示：对手首发的常用英雄）*/}
@@ -440,6 +443,17 @@ export function PreMatch(props: {
                 return <span className="muted small">对方图池预估 {b.lo}~{b.hi}（未侦察）</span>;
               })()
             )}
+            {/* 对手风格预测（情报 ≥2 解锁；对齐原作「这张图大概率是双哨卫，节奏放慢」） */}
+            {intelLevel(intelOf(state, opp.id)) >= 2 && oppStarters.length > 0 && (() => {
+              const oppStyle = styleOf(aggrOfLineup(oppStarters));
+              const counter = styleCounterOf(myStyleForMap, oppStyle);
+              const hint = counter > 0 ? "我方风格克制他——照常打" : counter < 0 ? "他会克我们——考虑换一套偏守预案" : "风格互不吃亏，拼执行";
+              return (
+                <span className="muted small" title="由对手首发职责向量推导（情报等级 ≥2 解锁）">
+                  对手大概率打 <b style={{ color: "#60a5fa" }}>{STYLE_LABEL[oppStyle]}</b>（{hint}）
+                </span>
+              );
+            })()}
             <span className="row" style={{ gap: 6, alignItems: "center" }}>
               <span className="muted small">阵容预案</span>
               <select
