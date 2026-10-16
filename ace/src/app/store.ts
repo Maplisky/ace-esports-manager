@@ -607,6 +607,12 @@ export const useStore = create<AppStore>((set, get) => ({
       records = get().records;
       await persist(state); // 「返回」不该丢进度：先写自动档
     }
-    set({ screen: "start", page: "overview", held: null, viewerFixtureId: null, viewerStartFinished: false, negotiation: null });
+    const entries = await listSaves();
+    set({
+      saves: entries,
+      hasSave: entries.length > 0,
+      screen: "start", page: "overview",
+      held: null, viewerFixtureId: null, viewerStartFinished: false, negotiation: null,
+    });
   },
 }));
