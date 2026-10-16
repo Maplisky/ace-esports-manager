@@ -13,9 +13,10 @@ function fmtDate(iso: string): string {
 }
 
 export function SystemPage() {
-  const { state, saves, refreshSaves, saveToSlot, loadFromKey, removeSave, exportSave, importSaveText, setStopDensity } = useStore();
+  const { state, saves, refreshSaves, saveToSlot, loadFromKey, removeSave, exportSave, importSaveText, setStopDensity, backToStart } = useStore();
   const fileRef = useRef<HTMLInputElement>(null);
   const [audioOn, setAudioOn] = useState(audioEnabled());
+  const [backed, setBacked] = useState(false);
 
   useEffect(() => {
     void refreshSaves();
@@ -56,6 +57,13 @@ export function SystemPage() {
     <div>
       <div className="card" style={{ padding: "14px 18px" }}>
         <h3 style={{ marginBottom: 4 }}>⚙️ 体验设置</h3>
+        <div className="row" style={{ flexWrap: "wrap", gap: 8, alignItems: "center", marginBottom: 8 }}>
+          <span className="small">返回主界面（开局页可新建/切换存档）</span>
+          <button className="small" disabled={!state || backed} onClick={() => void backToStart().then(() => setBacked(true))} title="离开前自动保存一次">
+            {backed ? "✅ 已保存 · 可在下方读取任一存档" : "🏠 返回开头（自动保存）"}
+          </button>
+          {backed && <span className="tag green">已写入自动档</span>}
+        </div>
         <div className="row" style={{ flexWrap: "wrap", gap: 8, alignItems: "center", marginBottom: 8 }}>
           <span className="small">推进停靠密度</span>
           {([["light", "稀疏", "只在比赛日停靠，杂项提示只入新闻"], ["normal", "标准", "现状：比赛停靠 + 推进提示"], ["full", "密集", "每周一停靠并附训练周报"]] as const).map(([k, label, tip]) => (

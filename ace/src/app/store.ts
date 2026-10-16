@@ -99,6 +99,8 @@ interface AppStore {
   signCoach: (coachId: string, slot: "training" | "mapTactics" | "match") => Promise<string | null>;
   fireCoach: (slot: "training" | "mapTactics" | "match") => Promise<string | null>;
   poachCoach: (fromTeamId: string, slot: "training" | "mapTactics" | "match", offer: number) => Promise<string | null>;
+  /** 返回开头（v1.x 用户反馈）：先持久化当前进度再切开局界面——开局页可新建/切换存档 */
+  backToStart: () => Promise<void>;
   /** 跳槽申请（v1.0-6，GDD §9.5）：休赛期教练市场 */
   applyJob: (teamId: string) => Promise<void>;
   /** 选秀权交易（v1.0-8，GDD §13）：转会窗内卖出/买进下届选秀签 */
@@ -597,5 +599,14 @@ export const useStore = create<AppStore>((set, get) => ({
       records = res.records ?? get().records;
       set({ state: res.state, records });
     }
+  },
+
+  backToStart: async () => {
+    const state = get().state;
+    if (state) {
+      records = get().records;
+      await persist(state); // 「返回」不该丢进度：先写自动档
+    }
+    set({ screen: "start", page: "overview", held: null, viewerFixtureId: null, viewerStartFinished: false, negotiation: null });
   },
 }));

@@ -4,7 +4,6 @@ import { generateWorld } from "../../core/worldgen.ts";
 import { REGIONS } from "../../core/sim/day.ts";
 import { ORIGINS, TALENT_POOL, TALENT_BASE, TALENT_CAP, TALENT_PRESETS, SKILL_CN, type ManagerSkillKey } from "../../core/sim/career.ts";
 import { TeamLogo } from "./Avatar.tsx";
-
 const PERSONALITY_CN: Record<string, string> = {
   spender: "董事会期望：大牌与成绩",
   youth: "董事会期望：培养新人",
@@ -105,12 +104,13 @@ export function StartScreen() {
 
       {hasSave && (
         <div className="card">
-          <div className="row">
+          <div className="row" style={{ flexWrap: "wrap", gap: 10, alignItems: "center" }}>
             <button className="primary" disabled={busy} onClick={() => void continueGame()}>
               继续上次存档
             </button>
-            <span className="muted small">自动存档保存在本浏览器（IndexedDB）</span>
+            <span className="muted small">自动存档保存在本浏览器（IndexedDB）；其他槽位/备份在下方列表切换。</span>
           </div>
+          <SaveSlotList />
         </div>
       )}
 
@@ -254,6 +254,33 @@ export function StartScreen() {
         <span className="muted small">
           {challenge ? "挑战参数已锁定；开局后到「挑战」页查看成绩与提交。" : "出身决定起步资源与声望；下课、跳槽与名人堂在生涯中等着你。"}
         </span>
+      </div>
+    </div>
+  );
+}
+
+/** 存档槽位列表（v1.x 用户反馈：开档界面可切换任一存档，不只 auto）——自动/手动 3 槽/每日备份 */
+function SaveSlotList() {
+  const { saves, loadFromKey, refreshSaves, continueGame, busy } = useStore();
+  useEffect(() => { void refreshSaves(); }, [refreshSaves]);
+  const LABELS: Record<string, string> = { slot1: "手动槽 1", slot2: "手动槽 2", slot3: "手动槽 3" };
+  const auto = saves.find((e) => e.key === "auto");
+  const others = saves.filter((e) => e.key !== "auto");
+  if (saves.length === 0) return null;
+  return (
+    <div style={{ marginTop: 10, borderTop: "1px dashed var(--line)", paddingTop: 8 }}>
+      <div className="muted small" style={{ marginBottom: 4 }}>全部存档（读取即切换；备份也可读）：</div>
+      <div className="row" style={{ flexWrap: "wrap", gap: 6 }}>
+        {auto && (
+          <button className="small primary" disabled={busy} onClick={() => void continueGame()}>
+            ▶ 自动档{auto.meta ? ` · ${auto.meta.teamTag} ${auto.meta.year}年第${auto.meta.day}天` : ""}
+          </button>
+        )}
+        {others.map((e) => (
+          <button key={e.key} className="small" disabled={busy} onClick={() => void loadFromKey(e.key)} title={e.meta ? `${e.meta.teamTag} · ${e.meta.manager} · ${e.meta.difficulty}` : undefined}>
+            {LABELS[e.key] ?? (e.key.startsWith("bak-") ? `备份 ${e.key.slice(4)}` : e.key)}{e.meta ? ` · ${e.meta.teamTag} D${e.meta.day}` : ""}
+          </button>
+        ))}
       </div>
     </div>
   );
