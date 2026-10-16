@@ -94,9 +94,10 @@ export function TutorialOverlay() {
 
   return (
     <>
-      {/* 无锚点时也要有暗幕；有锚点时洞外由 box-shadow 遮罩负责 */}
+      {/* 挖孔层：box-shadow 画暗幕，pointer-events:none——不挡玩家查看页面本体 */}
+      {holeStyle && <div style={holeStyle} />}
+      {/* 居中卡（无锚点步骤）才有全屏暗幕，点击可前进 */}
       {!holeStyle && <div style={{ position: "fixed", inset: 0, background: "rgba(4,5,9,0.78)", zIndex: 120 }} onClick={() => tutorialNext()} />}
-      {holeStyle && <div style={holeStyle} onClick={() => tutorialNext()} />}
       <div className="card" style={{ ...cardStyle, padding: "14px 18px", borderColor: "var(--accent)" }}>
         <div className="row" style={{ justifyContent: "space-between", marginBottom: 6 }}>
           <b style={{ color: "var(--accent)" }}>🎓 新手引导 · {tutorial.idx + 1}/{TUTORIAL_STEPS.length}</b>

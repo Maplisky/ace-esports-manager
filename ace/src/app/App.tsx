@@ -69,7 +69,9 @@ export function App() {
   }, [held, tutOn, tutorial.active, tutorial.graduate, tutorialGoto]);
   const onMatchFinished = () => {
     if (viewerFixtureId) void matchFinish(viewerFixtureId); // v1.0-8：播放结束才结算
-    if (tutOn && !tutorial.graduate) tutorialGraduate(); // 教程未毕业 → 首场结算即毕业卡
+    // 教程未毕业 → 首场结算即毕业卡（限定生涯前 1 场：翻旧回放不走 onFinished 语义）
+    const firstMatch = ((state?.manager.career?.wins ?? 0) + (state?.manager.career?.losses ?? 0)) <= 1;
+    if (tutOn && !tutorial.graduate && firstMatch) tutorialGraduate();
   };
 
   // 分享回放链接（v1.0-12，GDD §9.4）：#replay=<code> → 解码 → 壳世界渲染播放器（无需存档）

@@ -13,8 +13,10 @@ export function PageHelpCard(props: { page: TutPage }) {
   if (!items || items.length === 0) return null;
   if (state?.tutorial?.mode !== true) return null;
   const tutActiveHere = tutorial.active && TUTORIAL_STEPS[tutorial.idx]?.page === props.page;
+  // key 强制重挂载：defaultOpen 只在挂载时读取，而教程激活晚于卡片首挂
   return (
     <CollapsibleCard
+      key={tutActiveHere ? "tut-open" : "tut-closed"}
       title="📖 本页导读"
       defaultOpen={tutActiveHere}
       collapsedSummary="点开查看本页每个元素的作用与用法"

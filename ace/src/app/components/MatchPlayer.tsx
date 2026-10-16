@@ -329,10 +329,10 @@ export function MatchPlayer(props: {
     if (!props.guide) return null;
     if (finished) return "结算页怎么看：ACS＝伤害÷回合×1.45，MVP 从胜方产生（ACS 最高 +18 加成）、败方最佳标 SMVP；关掉后可在「战术」页看摸透度变化。";
     if (iglCard) return "🎯 你的 IGL 正在读图：建议基于对手近几回合的开局趋势。「采纳」不耗暂停次数、效果 80%；忽略也完全没关系。";
-    const called = (record.interventions?.length ?? 0) > 0;
-    if (!called && round && round.n >= 3 && pos.ei >= 0) return "轮到你了：点下方「⏸ 暂停喊话」选一个战术（持续 3 回合）——喊出一次后这条提示消失。选「抱团前压」这类稳一点的开局即可。";
+    const manualCalled = (record.interventions ?? []).some((iv) => !iv.igl); // IGL 采纳不算手动喊话
+    if (!manualCalled && round && round.n >= 3 && pos.ei >= 0) return "轮到你了：点下方「⏱ 喊战术」选一个开局战术（效果持续 3 回合）——喊出一次后这条提示消失。拿不准就选「抱团前压」这类稳一点的。";
     if (round && (buys?.A === "force" || buys?.B === "force")) return "经济局·force：钱不够全枪，起半装备（强度 −6.5）赌一波——赢了回血，输了更穷。";
-    if (round && (buys?.A === "eco" || buys?.B === "eco")) return "经济局·eco：起裸装省钱（强度 −15），把经济留给下一波满配长枪。手枪局（每图第 1/13 回合）双方都会重置到 $800。";
+    if (round && (buys?.A === "eco" || buys?.B === "eco")) return "经济局·eco：起裸装省钱（强度 −15），把经济留给下一波满配长枪。手枪局（每图第 1、13 回合，超长局 25）双方都会重置到 $800。";
     if (pos.mi === 0 && pos.ri === 0 && pos.ei === -1) return "对战比什么：每个回合＝攻方强度 − 守方强度 ＋ 经济修正 ＋ 战术喊话 ＋ 临场发挥。先到 13 回合且领先 2 拿下这张图。你的准备（训练/情报/预案）都在给这些项加码。";
     return null;
   })();
