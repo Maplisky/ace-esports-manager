@@ -1,15 +1,20 @@
 import type { GameState, MatchRecord } from "../../core/types.ts";
 import { useStore } from "../store.ts";
 import { formatDate } from "./Overview.tsx";
+import { TeamLogo } from "./Avatar.tsx";
+import { EventProgressCards } from "./EventProgressCards.tsx";
 
 export function SchedulePage(props: { state: GameState; records: Record<string, MatchRecord> }) {
   const { state, records } = props;
   const myId = state.myTeamId ?? "";
   const { openViewer } = useStore();
   const mine = state.fixtures.filter((f) => f.teamA === myId || f.teamB === myId);
+  const eventComps = Object.values(state.comps).filter((c) => ["cup", "masters", "champions"].includes(c.stage));
 
   return (
-    <div className="card">
+    <div>
+      {eventComps.length > 0 && <EventProgressCards state={state} myId={myId} comps={eventComps} />}
+      <div className="card">
       <h3>📅 赛程（我的比赛）</h3>
       <table>
         <thead>
@@ -52,6 +57,7 @@ export function SchedulePage(props: { state: GameState; records: Record<string, 
           })}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }
