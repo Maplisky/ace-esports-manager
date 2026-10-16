@@ -11,20 +11,23 @@ test("疲劳 >70 → 休息保状态（即使主职责项还有空间）", () =>
   assert.equal(r.reason, "rest-fatigue");
 });
 
-test("主职责项：决斗者练枪法 / 先锋练意识 / 控场练道具 / 哨卫练意识；指挥优先指挥", () => {
+test("主职责项：决斗者练枪法 / 先锋控场主打道具 / 哨卫练意识；指挥优先指挥", () => {
   assert.equal(recommendPlan(base, "duelist").key, "aim");
-  assert.equal(recommendPlan(base, "initiator").key, "awareness");
+  assert.equal(recommendPlan(base, "initiator").key, "utility");
   assert.equal(recommendPlan(base, "controller").key, "utility");
   assert.equal(recommendPlan(base, "sentinel").key, "awareness");
   assert.equal(recommendPlan({ ...base, isIgl: true }, "duelist").key, "igl");
 });
 
-test("主职责项达上限 → 次职责项 fallback（决斗者→反应 / 控场→协同）", () => {
+test("主职责项达上限 → 次职责项 fallback（决斗者→反应 / 先锋控场→意识）", () => {
   const duelist = { ...base, attrs: { ...base.attrs, aim: 95 } };
   assert.equal(recommendPlan(duelist, "duelist").key, "reaction");
   assert.equal(recommendPlan(duelist, "duelist").reason, "secondary");
+  const initiator = { ...base, attrs: { ...base.attrs, utility: 95 } };
+  assert.equal(recommendPlan(initiator, "initiator").key, "awareness");
+  assert.equal(recommendPlan(initiator, "initiator").reason, "secondary");
   const controller = { ...base, attrs: { ...base.attrs, utility: 95 } };
-  assert.equal(recommendPlan(controller, "controller").key, "teamwork");
+  assert.equal(recommendPlan(controller, "controller").key, "awareness");
 });
 
 test("主职责未上限但次职责已上限 → 仍练主项（次职责只做 fallback）", () => {

@@ -26,22 +26,22 @@ export const INDIVIDUAL_OPTIONS: readonly IndividualOption[] = [
 
 export const OPTION_BY_KEY: ReadonlyMap<string, IndividualOption> = new Map(INDIVIDUAL_OPTIONS.map((o) => [o.key, o]));
 
-/** 推荐项目：按主职责 + 是否指挥（GDD §6.3 v1.1 修正：按实际职责而非申报位置） */
+/** 推荐项目：按主职责 + 是否指挥（GDD §6.3 v1.1 修正：按实际职责而非申报位置；先锋/控场主打道具） */
 export function recommendFocus(duty: "duelist" | "initiator" | "controller" | "sentinel", isIgl: boolean): string {
   if (isIgl) return "igl";
   switch (duty) {
     case "duelist": return "aim";
-    case "initiator": return "awareness";
+    case "initiator": return "utility";
     case "controller": return "utility";
     case "sentinel": return "awareness";
   }
 }
 
-/** 各职责的次要训练项（主项达到成长上限时的 fallback，GDD §6.3 v1.4） */
+/** 各职责的次要训练项（主项达到成长上限时的 fallback，GDD §6.3 v1.4；先锋/控场次打意识） */
 const SECONDARY_FOCUS: Record<"duelist" | "initiator" | "controller" | "sentinel", string> = {
   duelist: "reaction",
-  initiator: "utility",
-  controller: "teamwork",
+  initiator: "awareness",
+  controller: "awareness",
   sentinel: "clutch",
 };
 
