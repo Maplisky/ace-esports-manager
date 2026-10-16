@@ -3,6 +3,7 @@ import type { GameState } from "../../core/types.ts";
 import { useState } from "react";
 import { useStore } from "../store.ts";
 import { SKILL_CN, SELF_STUDY_COST, SELF_STUDY_CAP, type ManagerSkillKey } from "../../core/sim/career.ts";
+import { coachCompensation } from "../../core/sim/retirement.ts";
 
 const fmt = (v: number) => `$${Math.round(v)}`;
 
@@ -189,6 +190,88 @@ function CoachStaffCard({ state }: { state: GameState }) {
         </table>
       )}
       {msg && <div className="muted small" style={{ marginTop: 6 }}>{msg}</div>}
+      <PoachCard state={state} onMsg={setMsg} />
+    </div>
+  );
+}
+
+/** 挖角他队教练（v1.x 用户反馈，对齐原作两段式）：补偿金 = 身价 × 倍率；倍率越高成功率越高；失败钱照付声望-1 */
+function PoachCard({ state, onMsg }: { state: GameState; onMsg: (m: string) => void }) {
+  const poachCoach = useStore((s) => s.poachCoach);
+  const [busy, setBusy] = useState(false);
+  const [mult, setMult] = useState(1.6);
+  const team = state.myTeamId ? state.teams[state.myTeamId] : null;
+  if (!team) return null;
+  const slots: { key: "training" | "mapTactics" | "match"; label: string }[] = [
+    { key: "training", label: "训练" },
+    { key: "mapTactics", label: "地图战术" },
+    { key: "match", label: "比赛" },
+  ];
+  const targets: { team: NonNullable<ReturnType<typeof Object.values>> extends never ? never : any; slot: "training" | "mapTactics" | "match"; label: string; value: number; comp: number }[] = [];
+  for (const t of Object.values(state.teams)) {
+    if (t.id === team.id) continue;
+    for (const s of slots) {
+      const c = t.staff[s.key];
+      if (c) targets.push({ team: t, slot: s.key, label: s.label, value: c.value, comp: coachCompensation(c.value) });
+    }
+  }
+  targets.sort((a, b) => b.value - a.value);
+  const chanceHint = (comp: number) => {
+    const m = mult / Math.max(1, comp);
+    void m;
+    const repDiff = ((state.manager.reputation ?? 50) - 55) * 0.4;
+    const base = 25 + (mult / Math.max(1, 1)) - 1.6 * 50;
+    void base; void repDiff;
+    // 展示口径与 core poachCoach 公式同源：0.25 + (mult-1.6)*0.5 + repDiff + negotiation
+    const p = Math.round(Math.max(10, Math.min(92, (0.25 + (mult - 1.6) * 0.5 + ((state.manager.reputation ?? 50) - 55) * 0.004 + ((state.manager.skills.negotiation ?? 50) - 50) * 0.004) * 100)));
+    void comp;
+    return p;
+  };
+
+  return (
+    <div style={{ marginTop: 12 }}>
+      <div className="row" style={{ flexWrap: "wrap", gap: 8, alignItems: "center", marginBottom: 8 }}>
+        <b>🏴‍☠️ 挖角他队教练</b>
+        <span className="muted small">先付补偿金（1 行动力），他也可能不来——你声望越低、对方越大牌越要溢价。</span>
+        <span className="row" style={{ gap: 4 }}>
+          {[1.3, 1.6, 2.2].map((m) => (
+            <button key={m} className={mult === m ? "small primary" : "small"} onClick={() => setMult(m)}>×{m}</button>
+          ))}
+        </span>
+        <span className="muted small">当前倍率下成功率约 {chanceHint(mult)}%（对每位目标相同；实际按声望差浮动）</span>
+      </div>
+      {targets.length === 0 ? (
+        <div className="muted small">联盟里暂时没有在岗教练（各队教练组空缺中）。</div>
+      ) : (
+        <table>
+          <thead>
+            <tr><th style={{ textAlign: "left" }}>教练</th><th>现俱乐部</th><th>岗位</th><th>能力</th><th>参考补偿</th><th></th></tr>
+          </thead>
+          <tbody>
+            {targets.slice(0, 20).map((t, i) => (
+              <tr key={t.team.id + t.slot}>
+                <td style={{ textAlign: "left" }}><b>{t.team.coach.name === t.team.staff[t.slot]?.name ? t.team.staff[t.slot]!.name : t.team.staff[t.slot]!.name}</b></td>
+                <td className="muted small">{t.team.name}</td>
+                <td className="muted small">{t.label}教练</td>
+                <td><b>{t.value}</b></td>
+                <td className="muted small">${(t.comp / 1000).toFixed(0)}K → 报价 ${((t.comp * mult) / 1000).toFixed(0)}K</td>
+                <td>
+                  <button
+                    className="small"
+                    disabled={busy || team.budget < t.comp * mult || state.actionPoints < 1}
+                    onClick={() => {
+                      setBusy(true);
+                      void poachCoach(t.team.id, t.slot, Math.round(t.comp * mult)).then((m) => { onMsg(m ?? ""); setBusy(false); });
+                    }}
+                  >
+                    挖角（1 行动力）
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }

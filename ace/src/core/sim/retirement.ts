@@ -8,6 +8,7 @@
 import { clamp, hashString, Rng } from "../rng.ts";
 import type { CoachFreeAgent, GameState, PendingEventCard, Player, RetireLogItem, TransferFeedItem } from "../types.ts";
 import { narrativeOnRetire } from "./narrative.ts";
+import { logFinance } from "./finance.ts";
 
 /** 名望折算（GDD §8.3：MVP/冠军/实力） */
 export function fameOf(p: Player): number {
@@ -284,4 +285,43 @@ export function fireCoach(state: GameState, slot: "training" | "mapTactics" | "m
   team.staff[slot] = undefined;
   state.manager.reputation = clamp((state.manager.reputation ?? 50) - 1, 20, 99);
   return `${cur.name} 已解约（声望 -1）。他回到了教练自由池。`;
+}
+
+/** 教练身价（参考补偿金）：主数值 × 2200——value 70 ≈ $154K（对齐原作「参考补偿只是身价，付了不等于放人」） */
+export function coachCompensation(value: number): number {
+  return Math.round(value * 2200 / 1000) * 1000;
+}
+
+/**
+ * 挖角他队教练（v1.x 用户反馈，对齐原作两段式简化版）：
+ * 补偿金付给原俱乐部；成功率 = 0.25 + 倍率加成（1.6×≈五成 / 2.2×≈九成） + 声望差 + 谈判技能 − 对方声望。
+ * 失败：补偿金照付（挖人未遂）、声望 -1；成功：教练入槽（原队槽位清空），能力 -1（换环境适应期）。
+ */
+export function poachCoach(state: GameState, fromTeamId: string, slot: "training" | "mapTactics" | "match", offer: number, rng: Rng): string {
+  const team = state.myTeamId ? state.teams[state.myTeamId] : null;
+  const from = state.teams[fromTeamId];
+  if (!team || !from) return "俱乐部不存在。";
+  if (fromTeamId === state.myTeamId) return "那是你自己的教练组。";
+  const cur = from.staff[slot];
+  if (!cur) return `${from.name} 的这个位置本来就空缺。`;
+  const comp = coachCompensation(cur.value);
+  if (offer < comp) return `补偿金低于参考身价（${fmtMoney(comp)}）——对方直接拒绝接触。`;
+  if (team.budget < offer) return "俱乐部资金不足以支付这笔补偿金。";
+  team.budget -= offer;
+  from.budget += offer;
+  logFinance(state, `事件 · 挖角教练补偿金（付 ${from.name}）`, -offer);
+  state.manager.reputation = clamp((state.manager.reputation ?? 50) - 1, 20, 99);
+  const mult = offer / Math.max(1, comp);
+  const repDiff = ((state.manager.reputation ?? 50) - (from.reputation ?? 50)) * 0.004;
+  const chance = clamp(0.25 + (mult - 1.6) * 0.5 + repDiff + ((state.manager.skills.negotiation ?? 50) - 50) * 0.004, 0.1, 0.92);
+  if (!rng.chance(chance)) {
+    return `挖角未遂：${from.name} 收下补偿金后仍不放人，${cur.name} 选择留任（声望 -1）。`;
+  }
+  from.staff[slot] = undefined;
+  team.staff[slot] = { name: cur.name, value: Math.max(40, cur.value - 1) };
+  return `挖角成功：${cur.name}（能力 ${cur.value}）加盟你的教练组${mult >= 2 ? "（溢价签下，即插即用）" : ""}。原队怒不可遏。`;
+}
+
+function fmtMoney(v: number): string {
+  return v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(2)}M` : `$${Math.round(v / 1000)}K`;
 }

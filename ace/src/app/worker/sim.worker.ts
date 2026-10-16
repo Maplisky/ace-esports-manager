@@ -3,7 +3,7 @@ import { generateWorld, resetPlayerSeq, salaryFor, spawnFreeAgents, migrateMapsT
 import { initSeasonFixtures, advanceDay, playHeldMatch, interveneHeldMatch, settleMatch, migrateLegacyComps } from "../../core/sim/day.ts";
 import { simMatch } from "../../core/sim/match.ts";
 import { resolveEvent } from "../../core/sim/events.ts";
-import { signCoach, fireCoach } from "../../core/sim/retirement.ts";
+import { signCoach, fireCoach, poachCoach } from "../../core/sim/retirement.ts";
 import { initCareer, applyJob, applyTalents, selfStudy, SELF_STUDY_COST, SELF_STUDY_CAP, type ManagerSkillKey } from "../../core/sim/career.ts";
 import { draftPickTrade } from "../../core/sim/draft.ts";
 import { evaluateAchievements } from "../../core/sim/achievements.ts";
@@ -435,6 +435,16 @@ function handleWorkerMessage(e: MessageEvent) {
       reply({ type: "snapshot", ...snapshot(), notes: notes.map((n) => n.text), message });
     } else {
       reply({ type: "snapshot", state: null, records: {} });
+    }
+  } else if (type === "poachCoach") {
+    // 挖角他队教练（v1.x 用户反馈）：补偿金两段式——付钱接触 → 概率成交
+    if (state && state.actionPoints >= 1) {
+      state.actionPoints--;
+      const message = poachCoach(state, msg.fromTeamId as string, msg.slot as "training" | "mapTactics" | "match", msg.offer as number, new Rng(hashString(`${state.seed}:poach:${state.day}:${msg.fromTeamId}`)));
+      pushNews([{ day: state.day, kind: "transfer", important: message.includes("成功"), text: message }]);
+      reply({ type: "snapshot", ...snapshot(), message });
+    } else {
+      reply({ type: "snapshot", ...snapshot(), message: state ? "行动力不足：挖角花 1 点。" : "无存档。" });
     }
   } else if (type === "fireCoach") {
     // 解雇教练（v1.x）：回流自由池 + 声望 -1

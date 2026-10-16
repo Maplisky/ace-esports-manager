@@ -98,6 +98,7 @@ interface AppStore {
   upgradeFacility: () => Promise<void>;
   signCoach: (coachId: string, slot: "training" | "mapTactics" | "match") => Promise<string | null>;
   fireCoach: (slot: "training" | "mapTactics" | "match") => Promise<string | null>;
+  poachCoach: (fromTeamId: string, slot: "training" | "mapTactics" | "match", offer: number) => Promise<string | null>;
   /** 跳槽申请（v1.0-6，GDD §9.5）：休赛期教练市场 */
   applyJob: (teamId: string) => Promise<void>;
   /** 选秀权交易（v1.0-8，GDD §13）：转会窗内卖出/买进下届选秀签 */
@@ -480,6 +481,12 @@ export const useStore = create<AppStore>((set, get) => ({
 
   fireCoach: async (slot) => {
     const res = await call<{ state: GameState; message?: string }>({ type: "fireCoach", slot });
+    if (res.state) set({ state: res.state });
+    return res.message ?? null;
+  },
+
+  poachCoach: async (fromTeamId, slot, offer) => {
+    const res = await call<{ state: GameState; message?: string }>({ type: "poachCoach", fromTeamId, slot, offer });
     if (res.state) set({ state: res.state });
     return res.message ?? null;
   },
