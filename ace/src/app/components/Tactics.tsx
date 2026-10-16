@@ -90,7 +90,7 @@ export function TacticsPage(props: { state: GameState }) {
       <div className="card">
         <h3>🗺 每图预案 · {map.name}
           <span className="muted small" style={{ marginLeft: 10 }}>
-            图池熟练 {Math.round(team.mapPref[mapId] ?? 50)} / 95 · 每图最多 8 套预案（GDD §7.1）
+            图池熟练 {Math.round(team.mapPref[mapId] ?? 50)} / 95 · 每图最多 8 套预案
           </span>
         </h3>
         <div className="row" style={{ marginBottom: 12, flexWrap: "wrap" }}>

@@ -480,7 +480,7 @@ function NegotiationModal(props: { state: GameState; player: Player; onClose: ()
               <select value={role} onChange={(e) => { setRole(e.target.value as Player["promisedRole"]); setTrack(undefined); }}>
                 {Object.entries(ROLE_CN).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
               </select>
-            </td><td className="muted small">承诺未兑现会积累不满（GDD §6.4）</td></tr>
+            </td><td className="muted small">承诺未兑现会积累不满</td></tr>
             {(role === "bench" || role === "rotation") && (
               <tr><td>替补三正路</td><td>
                 <select value={track ?? ""} onChange={(e) => setTrack((e.target.value || undefined) as Player["track"])}>
@@ -489,7 +489,7 @@ function NegotiationModal(props: { state: GameState; player: Player; onClose: ()
                   <option value="learner" disabled={player.age > 21}>学习型替补（≤21 岁：训练 +10%）</option>
                   <option value="mentor" disabled={player.age < 28}>导师型替补（≥28 岁：降档惩罚减半）</option>
                 </select>
-              </td><td className="muted small">按年龄限定；影响谈判意愿与后续成长（GDD §6.4）</td></tr>
+              </td><td className="muted small">按年龄限定；影响谈判意愿与后续成长</td></tr>
             )}
           </tbody>
         </table>

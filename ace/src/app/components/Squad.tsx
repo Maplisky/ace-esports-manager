@@ -95,7 +95,7 @@ export function SquadPage(props: { state: GameState }) {
       </div>
 
       <div className="card">
-        <h3>🪑 替补席（轮换时用「轮换沟通」尽量提前打招呼——GDD §6.4）</h3>
+        <h3>🪑 替补席（轮换时用「轮换沟通」尽量提前打招呼）</h3>
         <table>
           <thead>
             <tr><th>选手</th><th>位置</th><th>能力</th><th>潜力</th><th>状态</th><th>连续板凳</th><th>操作</th></tr>
@@ -140,7 +140,7 @@ export function SquadPage(props: { state: GameState }) {
       </div>
 
       <div className="card">
-        <h3>🔄 轮换沟通（GDD §6.4② · 本周 {state.rotationTalks.used}/2 次）</h3>
+        <h3>🔄 轮换沟通（本周 {state.rotationTalks.used}/2 次）</h3>
         <div className="muted small" style={{ marginBottom: 8 }}>
           赛前与将被轮换的选手沟通（每周 2 次）：沟通后他本周不因轮换扣士气。核心/首发承诺的选手坐板凳，每周士气 −3。
         </div>

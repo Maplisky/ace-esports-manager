@@ -313,7 +313,7 @@ export function PreMatch(props: {
               </tbody>
             </table>
             <div className="muted small" style={{ margin: "8px 0" }}>
-              首发需恰好 5 人{starters.length !== 5 && <span className="tag orange" style={{ marginLeft: 6 }}>当前 {starters.length} 人，先调整到 5 人</span>} · 带伤上场的选手强度 −20%（GDD §5.2）
+              首发需恰好 5 人{starters.length !== 5 && <span className="tag orange" style={{ marginLeft: 6 }}>当前 {starters.length} 人，先调整到 5 人</span>} · 带伤上场的选手强度 −20%
             </div>
             <div className="row" style={{ justifyContent: "flex-end" }}>
               <button className="primary" disabled={starters.length !== 5} onClick={() => { startBp(); setStep(1); }}>下一步：BP →</button>

@@ -71,10 +71,10 @@ export function AchievementsPage(props: { state: GameState }) {
 
       <div className="card" style={{ padding: "12px 18px" }}>
         <div className="row" style={{ justifyContent: "space-between", marginBottom: 2 }}>
-          <b>🎭 挑战剧本（§18-7 · v1.x）</b>
+          <b>🎭 挑战剧本（即将推出）</b>
           <span className="muted small">0/4</span>
         </div>
-        <div className="muted small" style={{ marginBottom: 8 }}>开局参数组合 + 成就判定——与成就系统共用判定器，待 v1.x 开放。</div>
+        <div className="muted small" style={{ marginBottom: 8 }}>开局参数组合 + 成就判定——与成就系统共用判定器，敬请期待。</div>
         {["全青训夺冠", "全年零转会", "次级队十年一城", "仅 U24 阵容"].map((s) => (
           <div key={s} style={{ display: "flex", gap: 10, alignItems: "center", padding: "7px 10px", marginBottom: 4, borderRadius: 8, background: "var(--panel2)", opacity: 0.55 }}>
             <span style={{ fontSize: 18 }}>🔒</span>

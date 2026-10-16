@@ -51,7 +51,7 @@ export function ManagerPage(props: { state: GameState }) {
           </button>
           {upgradeBusy && <span className="muted small">施工中…</span>}
         </div>
-        <div className="muted small" style={{ marginTop: 6 }}>升级费用随等级递增（原作公式 60000 + 等级² × 90 美元，俱乐部预算支出）。</div>
+        <div className="muted small" style={{ marginTop: 6 }}>升级费用随等级递增（60000 + 等级² × 90 美元，俱乐部预算支出）。</div>
       </div>
 
       <div className="card">
@@ -130,7 +130,7 @@ function CoachStaffCard({ state }: { state: GameState }) {
   };
   return (
     <div className="card">
-      <h3>🎖 教练组（退役选手转型执教 · GDD §8.3）</h3>
+      <h3>🎖 教练组（退役选手转型执教）</h3>
       <div className="row" style={{ gap: 10, flexWrap: "wrap", marginBottom: 10 }}>
         {slots.map((s) => {
           const cur = team.staff[s.key];

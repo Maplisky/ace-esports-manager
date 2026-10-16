@@ -184,7 +184,7 @@ export function TrainingPage(props: { state: GameState }) {
       <ScrimPanel state={state} />
 
             <div className="card" style={{ padding: "12px 16px", marginTop: 14 }}>
-        <h3>🎭 练英雄（GDD §6.3：最多 5 人/周，熟练 +4.2×效率/周；效率 = 0.7 +（意识+道具）/400）</h3>
+        <h3>🎭 练英雄（最多 5 人/周，熟练 +4.2×效率/周；效率 = 0.7 +（意识+道具）/400）</h3>
         <div className="muted small" style={{ margin: "6px 0" }}>
           已选 {Object.values(agentPicks).filter(Boolean).length}/5 人 · 练非池内英雄从 34 熟练起步，达标后自动入池 · 上限 100（本命）
         </div>
