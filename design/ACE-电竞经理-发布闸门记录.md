@@ -67,3 +67,17 @@
 ## ⏸ 阻塞项
 
 - v1.0-13 部署：阻塞于发布形态决策（GitHub Pages 建议先行；vite base './' 已就绪）
+
+## ✅ v1.0-13 GitHub Pages 上线（2026-10-16）
+
+- 用户确认形态：GitHub Pages 先行；gh CLI 2.102.0 安装 + 设备码授权（Maplisky）
+- 仓库转公开（免费 Pages 前提，§14 数据口径由用户接受）；Pages Source=GitHub Actions
+- 部署故障两修：
+  1. **工作流位置**：GitHub 只注册仓库根 `.github/workflows/`——此前文件在 `ace/` 子目录（git toplevel 是父目录所致）从不注册，`workflows API total_count=0`；迁移到根并移除 steps 的 working-directory（upload path `ace/dist` 不变）
+  2. **working-directory 误删**：迁移提交把 build 三步的 `working-directory: ace` 一并删了导致 npm ci 失败——恢复
+- 构建 36s 成功（build+deploy 双 job success）；线上验证全过：
+  - 首页 `https://maplisky.github.io/ace-esports-manager/` 200 + IAB 真浏览器渲染（开局面板完整）
+  - 挑战包 `challenges/c-2026-01.json` 200（C-2026-01 青春风暴 seed 880042）
+  - 线上 bundle 与本地逐字节一致（index-BMamO4t1.js 986,218B）
+  - **`#replay=` 分享链接线上端到端回放成功**：KRÜ 4-8 100T 第 13 回合（2D 战术板/击杀流/经济条/关键回合自动导播全渲染）
+- Steam 端：待流量信号 + §14 授权重估（上 Steam 需切霞/岚虚构皮肤）
