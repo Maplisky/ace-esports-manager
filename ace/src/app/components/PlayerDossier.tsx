@@ -8,7 +8,7 @@ import { AGENT_BY_ID } from "../../core/data/agents.ts";
 import { marketValue, salaryExpectation } from "../../core/sim/transfer.ts";
 import { PlayerFace, SyntheticBadge } from "./Avatar.tsx";
 import { TRAIT_BY_KEY } from "../../core/data/traits.ts";
-import { AttrRadar } from "./Radar.tsx";
+import { AttrRadar, attrColor } from "./Radar.tsx";
 import { buildAgentGroups, DUTY_ORDER } from "./AgentSelect.tsx";
 
 const ATTR_CN: Record<string, string> = {
@@ -16,16 +16,7 @@ const ATTR_CN: Record<string, string> = {
   clutch: "残局", teamwork: "协同", communication: "沟通", igl: "指挥",
 };
 
-/** 八维六档色阶（90+ 顶级绿 → <50 暗红） */
-function attrColor(v: number): string {
-  if (v >= 90) return "#16a34a";
-  if (v >= 80) return "#4ade80";
-  if (v >= 70) return "#60a5fa";
-  if (v >= 60) return "#fbbf24";
-  if (v >= 50) return "#fb923c";
-  return "#f87171";
-}
-
+/** 八维六档色阶（90+ 顶级绿 → <50 暗红）——实现已统一到 Radar.tsx（消除双源漂移） */
 const fmtK = (v: number) => (Math.abs(v) >= 1_000_000 ? `$${(v / 1_000_000).toFixed(1)}M` : Math.abs(v) >= 1000 ? `$${Math.round(v / 1000)}K` : `$${v}`);
 
 export function PlayerDossier(props: { state: GameState; player: Player; onClose: () => void }) {

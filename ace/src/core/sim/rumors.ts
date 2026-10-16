@@ -8,9 +8,9 @@
 import type { GameState, NewsItem, TransferFeedItem } from "../types.ts";
 import { Rng, clamp } from "../rng.ts";
 import { logFinance } from "./finance.ts";
+import { TRANSFER_WINDOWS } from "./transfer.ts";
 
 const RUMOR_LABEL: Record<1 | 2 | 3, string> = { 1: "绯闻", 2: "有消息称", 3: "谈判中" };
-
 function pushFeed(state: GameState, item: TransferFeedItem): void {
   state.transferFeed.push(item);
   if (state.transferFeed.length > 300) state.transferFeed.splice(0, state.transferFeed.length - 300);
@@ -35,7 +35,7 @@ function seasonRecord(state: GameState, teamId: string): { w: number; l: number 
  */
 export function weeklyRumors(state: GameState, rng: Rng, notes: NewsItem[]): void {
   const myId = state.myTeamId ?? "";
-  const windowOpen = [1, 24, 123, 152, 233, 366].some((d, i, a) => i % 2 === 0 && state.day >= d && state.day <= a[i + 1]);
+  const windowOpen = TRANSFER_WINDOWS.some(([a, b]) => state.day >= a && state.day <= b);
   // 意向（wants）不限窗口——烂队好球员随时想走； rumor 只在窗内活跃
   // 1) 战绩差 AI 队的好球员提离队（意向）——不满口径：士气 <55（本作用 morale 低代表怨气，GDD §6.2）
   for (const t of Object.values(state.teams)) {
@@ -118,9 +118,4 @@ export function weeklyRumors(state: GameState, rng: Rng, notes: NewsItem[]): voi
 
 function fmtFee(v: number): string {
   return v >= 1_000_000 ? `$${(v / 1_000_000).toFixed(1)}M` : `$${Math.round(v / 1000)}K`;
-}
-
-/** 传闻条目显示前缀（UI 与 core 同源） */
-export function rumorPrefix(c: 1 | 2 | 3 | undefined): string {
-  return c ? RUMOR_LABEL[c] : "";
 }

@@ -289,9 +289,8 @@ export function aiWeeklyTransfers(state: GameState, rng: Rng, onBid: (offer: Tra
 
   // AI 挂牌/摘牌（v0.8 用户需求：让「挂牌」列活起来）——仅他队；性格定概率，换血型最活跃
   if (inTransferWindow(state.day)) {
-    // Deadline Day（GDD §18 #6）：窗口末 3 天挂牌与互挖密度 ×2（仪式感）
-    const windowsDL: [number, number][] = [[1, 24], [123, 152], [233, 366]];
-    const deadlineSoon = windowsDL.some(([a, b]) => state.day >= b - 2 && state.day <= b);
+    // Deadline Day（GDD §18 #6）：窗口末 3 天挂牌与互挖密度 ×2（仪式感）——窗口常量与 TRANSFER_WINDOWS 同源
+    const deadlineSoon = WINDOWS.some(([a, b]) => state.day >= b - 2 && state.day <= b);
     const dlMul = deadlineSoon ? 2 : 1;
     const LIST_PERSONALITY: Record<Team["personality"], number> = { wheeler: 0.35, spender: 0.1, youth: 0.08, steady: 0.03 };
     for (const t of Object.values(state.teams)) {

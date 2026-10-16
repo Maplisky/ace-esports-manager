@@ -1,5 +1,5 @@
 /** 经理页（GDD v0.5-5 教练个人经济）：个人钱包/饱腹/心情 + 生活动作 */
-import type { GameState } from "../../core/types.ts";
+import type { GameState, Team } from "../../core/types.ts";
 import { useState } from "react";
 import { useStore } from "../store.ts";
 import { SKILL_CN, SELF_STUDY_COST, SELF_STUDY_CAP, type ManagerSkillKey } from "../../core/sim/career.ts";
@@ -207,7 +207,7 @@ function PoachCard({ state, onMsg }: { state: GameState; onMsg: (m: string) => v
     { key: "mapTactics", label: "地图战术" },
     { key: "match", label: "比赛" },
   ];
-  const targets: { team: NonNullable<ReturnType<typeof Object.values>> extends never ? never : any; slot: "training" | "mapTactics" | "match"; label: string; value: number; comp: number }[] = [];
+  const targets: { team: Team; slot: "training" | "mapTactics" | "match"; label: string; value: number; comp: number }[] = [];
   for (const t of Object.values(state.teams)) {
     if (t.id === team.id) continue;
     for (const s of slots) {
@@ -216,17 +216,9 @@ function PoachCard({ state, onMsg }: { state: GameState; onMsg: (m: string) => v
     }
   }
   targets.sort((a, b) => b.value - a.value);
-  const chanceHint = (comp: number) => {
-    const m = mult / Math.max(1, comp);
-    void m;
-    const repDiff = ((state.manager.reputation ?? 50) - 55) * 0.4;
-    const base = 25 + (mult / Math.max(1, 1)) - 1.6 * 50;
-    void base; void repDiff;
-    // 展示口径与 core poachCoach 公式同源：0.25 + (mult-1.6)*0.5 + repDiff + negotiation
-    const p = Math.round(Math.max(10, Math.min(92, (0.25 + (mult - 1.6) * 0.5 + ((state.manager.reputation ?? 50) - 55) * 0.004 + ((state.manager.skills.negotiation ?? 50) - 50) * 0.004) * 100)));
-    void comp;
-    return p;
-  };
+  // 展示口径与 core poachCoach 公式同源（不针对具体目标的近似：按对方声望≈55 估算）
+  const chanceHint = () =>
+    Math.round(Math.max(10, Math.min(92, (0.25 + (mult - 1.6) * 0.5 + ((state.manager.reputation ?? 50) - 55) * 0.004 + ((state.manager.skills.negotiation ?? 50) - 50) * 0.004) * 100)));
 
   return (
     <div style={{ marginTop: 12 }}>
@@ -238,7 +230,7 @@ function PoachCard({ state, onMsg }: { state: GameState; onMsg: (m: string) => v
             <button key={m} className={mult === m ? "small primary" : "small"} onClick={() => setMult(m)}>×{m}</button>
           ))}
         </span>
-        <span className="muted small">当前倍率下成功率约 {chanceHint(mult)}%（对每位目标相同；实际按声望差浮动）</span>
+        <span className="muted small">当前倍率下成功率约 {chanceHint()}%（对每位目标相同；实际按声望差浮动）</span>
       </div>
       {targets.length === 0 ? (
         <div className="muted small">联盟里暂时没有在岗教练（各队教练组空缺中）。</div>
