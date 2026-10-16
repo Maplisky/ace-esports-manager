@@ -51,10 +51,11 @@ export function selfStudy(state: GameState, skill: ManagerSkillKey): string {
 }
 
 /** 出身定义（开档 3 选 1：2 强 1 弱 + 起始资源差异，GDD §9.5） */
-export const ORIGINS: { key: "legend" | "grassroots" | "analyst"; label: string; desc: string }[] = [
-  { key: "legend", label: "前豪门名宿", desc: "声望 +15、谈判 +5、个人钱包 +$60K——名头好借，期望也高" },
-  { key: "grassroots", label: "次级联赛草根", desc: "眼光 +8、俱乐部预算 +$400K——从泥地里爬上来的实干派" },
-  { key: "analyst", label: "数据分析师出身", desc: "战术 +5、眼光 +5、声望 -5——更衣室待证明自己" },
+/** 出身定义（开档 3 选 1：2 强 1 弱 + 起始资源差异，GDD §9.5）。skillBonus 供开档 UI 与 initCareer 同源显示 */
+export const ORIGINS: { key: "legend" | "grassroots" | "analyst"; label: string; desc: string; skillBonus: Partial<Record<ManagerSkillKey, number>> }[] = [
+  { key: "legend", label: "前豪门名宿", desc: "声望 +15、谈判 +5、个人钱包 +$60K——名头好借，期望也高", skillBonus: { negotiation: 5 } },
+  { key: "grassroots", label: "次级联赛草根", desc: "眼光 +8、俱乐部预算 +$400K——从泥地里爬上来的实干派", skillBonus: { scouting: 8 } },
+  { key: "analyst", label: "数据分析师出身", desc: "战术 +5、眼光 +5、声望 -5——更衣室待证明自己", skillBonus: { tactics: 5, scouting: 5 } },
 ];
 
 /** 开档初始化生涯账本并应用出身加成 */

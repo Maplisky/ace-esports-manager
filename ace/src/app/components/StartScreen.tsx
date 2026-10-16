@@ -219,19 +219,27 @@ export function StartScreen() {
           ))}
         </div>
         <div className="startgrid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
-          {(Object.keys(SKILL_CN) as ManagerSkillKey[]).map((k) => (
-            <div key={k} className="row" style={{ justifyContent: "space-between", alignItems: "center", gap: 6 }}>
-              <span className="small">{SKILL_CN[k]} <b>{TALENT_BASE + (talents[k] ?? 0)}</b></span>
-              <span className="row" style={{ gap: 4 }}>
-                <button className="small" onClick={() => setTalent(k, -1)}>−</button>
-                <span className="muted small" style={{ width: 28, textAlign: "center" }}>+{talents[k] ?? 0}</span>
-                <button className="small" onClick={() => setTalent(k, 1)} disabled={talentLeft <= 0}>＋</button>
-              </span>
-            </div>
-          ))}
+          {(Object.keys(SKILL_CN) as ManagerSkillKey[]).map((k) => {
+            // 实时显示「天赋+出身」合成值（v1.x 用户反馈：出身选择看不出影响）——加成表与 initCareer 同源
+            const bonus = origin ? (ORIGINS.find((o) => o.key === origin)?.skillBonus[k] ?? 0) : 0;
+            const final = Math.min(TALENT_CAP, TALENT_BASE + (talents[k] ?? 0) + bonus);
+            return (
+              <div key={k} className="row" style={{ justifyContent: "space-between", alignItems: "center", gap: 6 }}>
+                <span className="small">
+                  {SKILL_CN[k]} <b style={bonus > 0 ? { color: "var(--green)" } : undefined}>{final}</b>
+                  {bonus > 0 && <span className="muted small">（含出身 +{bonus}）</span>}
+                </span>
+                <span className="row" style={{ gap: 4 }}>
+                  <button className="small" onClick={() => setTalent(k, -1)}>−</button>
+                  <span className="muted small" style={{ width: 28, textAlign: "center" }}>+{talents[k] ?? 0}</span>
+                  <button className="small" onClick={() => setTalent(k, 1)} disabled={talentLeft <= 0}>＋</button>
+                </span>
+              </div>
+            );
+          })}
         </div>
         <div className="muted small" style={{ marginTop: 8 }}>
-          八维基础 {TALENT_BASE}，共 {TALENT_POOL} 点（单项上限 {TALENT_CAP}）。出身加成会叠加在天赋之上——天赋只决定你是谁，出身决定你从哪来。
+          八维基础 {TALENT_BASE}，共 {TALENT_POOL} 点（单项上限 {TALENT_CAP}）。绿色数值 = 天赋 + <b>当前已选出身</b>的加成——第 3 步换出身，这里的数值会实时变。
         </div>
       </div>
 
