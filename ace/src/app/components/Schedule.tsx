@@ -3,6 +3,7 @@ import { useStore } from "../store.ts";
 import { formatDate } from "./Overview.tsx";
 import { TeamLogo } from "./Avatar.tsx";
 import { EventProgressCards } from "./EventProgressCards.tsx";
+import { BracketView } from "./BracketView.tsx";
 
 export function SchedulePage(props: { state: GameState; records: Record<string, MatchRecord> }) {
   const { state, records } = props;
@@ -10,10 +11,20 @@ export function SchedulePage(props: { state: GameState; records: Record<string, 
   const { openViewer } = useStore();
   const mine = state.fixtures.filter((f) => f.teamA === myId || f.teamB === myId);
   const eventComps = Object.values(state.comps).filter((c) => ["cup", "masters", "champions"].includes(c.stage));
+  // 晋级图：当前/最近的国际淘汰赛（Masters 优先，其次 Champions）
+  const bracketComp =
+    (state.comps["masters"] && state.fixtures.some((f) => f.comp === "masters" && f.label.includes("胜者组第1轮")) ? "masters" : null) ??
+    (state.comps["champions"] && state.fixtures.some((f) => f.comp === "champions" && f.label.includes("胜者组第1轮")) ? "champions" : null);
 
   return (
     <div>
       {eventComps.length > 0 && <EventProgressCards state={state} myId={myId} comps={eventComps} />}
+      {bracketComp && (
+        <div className="card">
+          <h3>🗺 晋级图 · {state.comps[bracketComp]?.name} 双败淘汰</h3>
+          <BracketView state={state} compKey={bracketComp} myId={myId} />
+        </div>
+      )}
       <div className="card">
       <h3>📅 赛程（我的比赛）</h3>
       <table>
