@@ -9,6 +9,8 @@ import { PlayerDossier } from "./PlayerDossier.tsx";
 import { REGIONS } from "../../core/sim/day.ts";
 import { teamAvgOverall } from "../../core/sim/scrim.ts";
 
+const ROLE_CN: Record<string, string> = { core: "核心", starter: "首发", rotation: "轮换", bench: "替补" };
+
 export function LibraryPage(props: { state: GameState }) {
   const { state } = props;
   const storeFocus = useStore((s) => s.libraryFocus);
@@ -18,6 +20,8 @@ export function LibraryPage(props: { state: GameState }) {
   const [teamFocus, setTeamFocus] = useState<string | null>(storeFocus);
   const myId = state.myTeamId ?? "";
   const openViewer = useStore((s) => s.openViewer);
+  // 选中战队时自动切到战队标签并聚焦（外部 storeFocus 触发）
+  useEffect(() => { if (storeFocus) { setTab("teams"); setTeamFocus(storeFocus); } }, [storeFocus]);
   // store 聚焦变化（点队名跳转）时同步
   useEffect(() => { if (storeFocus) setTeamFocus(storeFocus); }, [storeFocus]);
 
@@ -74,12 +78,34 @@ export function LibraryPage(props: { state: GameState }) {
             <tbody>
               {players.map((p) => (
                 <tr key={p.id}>
-                  <td><span className="row" style={{ gap: 6, alignItems: "center" }}><PlayerFace p={p} size={20} showTag={false} />{p.ign}</span></td>
-                  <td className="muted small">{p.teamId ? (
-                    <button className="small ghost" onClick={() => { setTab("teams"); setTeamFocus(p.teamId); }} title="查看该队成员与交手记录">
-                      {state.teams[p.teamId]?.name ?? "—"}
-                    </button>
-                  ) : "自由"}</td>
+                  <td>
+                    <span
+                      className="row"
+                      style={{ gap: 6, alignItems: "center", cursor: "pointer" }}
+                      onClick={() => setDossierPid(p.id)}
+                      title="查看选手个人档案"
+                    >
+                      <PlayerFace p={p} size={20} showTag={false} />
+                      <b style={{ borderBottom: "1px dashed var(--line)" }}>{p.ign}</b>
+                    </span>
+                  </td>
+                  <td>
+                    {p.teamId ? (() => {
+                      const t = state.teams[p.teamId];
+                      if (!t) return <span className="muted small">—</span>;
+                      return (
+                        <span
+                          className="row"
+                          style={{ gap: 5, alignItems: "center", cursor: "pointer" }}
+                          onClick={() => { setTab("teams"); setTeamFocus(t.id); }}
+                          title={`查看 ${t.name} 的成员与交手记录`}
+                        >
+                          <TeamLogo team={t} size={16} />
+                          <span className="muted small">{t.name}</span>
+                        </span>
+                      );
+                    })() : <span className="muted small">自由</span>}
+                  </td>
                   <td>{p.age}</td>
                   <td><b>{p.overall}</b> <span className="muted small">/ {p.potential}</span></td>
                   <td className="muted small">${((p.salary ?? 0) / 1000).toFixed(0)}K 级</td>
@@ -92,20 +118,51 @@ export function LibraryPage(props: { state: GameState }) {
 
         {tab === "teams" && (
           <div className="startgrid">
-            {teams.map((t) => (
-              <div key={t.id} className="teamcard" onClick={() => setTeamFocus(t.id === teamFocus ? null : t.id)}>
-                <div className="row" style={{ justifyContent: "space-between", gap: 6, alignItems: "center" }}>
-                  <span className="row" style={{ gap: 6, alignItems: "center", minWidth: 0 }}>
-                    <TeamLogo team={t} size={20} />
-                    <b style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.name}</b>
-                  </span>
-                  <span className={`tag${t.tier === 1 ? " red" : ""}`}>{t.tier === 1 ? "VCT" : "挑战者"}</span>
+            {teams.map((t) => {
+              const focused = teamFocus === t.id;
+              const roster = t.roster.map((pid) => state.players[pid]).filter((p): p is NonNullable<typeof p> => !!p);
+              return (
+                <div key={t.id}>
+                  <div
+                    className={`teamcard${focused ? " sel" : ""}`}
+                    onClick={() => setTeamFocus(focused ? null : t.id)}
+                    title={focused ? "点击收起成员列表" : "点击查看成员与交手记录"}
+                  >
+                    <div className="row" style={{ justifyContent: "space-between", gap: 6, alignItems: "center" }}>
+                      <span className="row" style={{ gap: 6, alignItems: "center", minWidth: 0 }}>
+                        <TeamLogo team={t} size={20} />
+                        <b style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.name}</b>
+                      </span>
+                      <span className={`tag${t.tier === 1 ? " red" : ""}`}>{t.tier === 1 ? "VCT" : "挑战者"}</span>
+                    </div>
+                    <div className="muted small" style={{ marginTop: 4 }}>
+                      声望 {t.reputation} · 强度 {Math.round(teamAvgOverall(state, t.id))} · {REGIONS.find((r) => r.id === t.regionId)?.label ?? t.regionId}
+                    </div>
+                    {focused && (
+                      <div style={{ marginTop: 8, borderTop: "1px dashed var(--line)", paddingTop: 6 }} onClick={(e) => e.stopPropagation()}>
+                        <div className="muted small" style={{ marginBottom: 4 }}>当前阵容（{roster.length} 人）——点击选手查看档案：</div>
+                        {roster.length === 0 && <div className="muted small">名单为空。</div>}
+                        {roster.sort((a, b) => b.overall - a.overall).map((p) => (
+                          <div
+                            key={p.id}
+                            className="row"
+                            style={{ gap: 6, alignItems: "center", padding: "3px 0", cursor: "pointer", borderRadius: 6 }}
+                            onClick={() => setDossierPid(p.id)}
+                            title="查看选手个人档案"
+                          >
+                            <PlayerFace p={p} size={18} showTag={false} />
+                            <span className="small" style={{ minWidth: 90 }}>{p.ign}</span>
+                            <span className="tag">{ROLE_CN[p.promisedRole] ?? "—"}</span>
+                            <b className="small">{p.overall}</b>
+                          </div>
+                        ))}
+                        <div className="muted small" style={{ marginTop: 4 }}>交手记录见下方「vs {t.name}」卡片。</div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div className="muted small" style={{ marginTop: 4 }}>
-                  声望 {t.reputation} · 强度 {Math.round(teamAvgOverall(state, t.id))} · {REGIONS.find((r) => r.id === t.regionId)?.label ?? t.regionId}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 
