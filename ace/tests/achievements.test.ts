@@ -55,13 +55,20 @@ test("四条剧本路径各至少一成就在构造状态下可解锁；通用�
   assert.ok(notes.every((n) => n.text.includes("🏆")));
 });
 
-test("首胜经真实结算路径点亮：playHeldMatch → settleMatch → evaluate（赢方）", () => {
+test("首胜经真实结算路径点亮：settleMatch（非教学局）→ evaluate（赢方）", () => {
+  // 教学局（生涯首场）不计 wins（v1.0-11 口径）——要测「赢下解锁首胜」必须跳过教学局：
+  // 先打完教学局置 tutorialDone，再对第二场做真实结算（RNG 流移动后 seed111 我队第二场对 FURIA）
   const s = build();
   const f = s.fixtures.find((x) => !x.played && x.teamA !== "" && x.teamB !== "" && (x.teamA === s.myTeamId || x.teamB === s.myTeamId))!;
   const rec = playHeldMatch(s, f.id, {});
   assert.ok(rec);
   settleMatch(s, f.id, rec, () => {});
-  const won = (rec!.winner === "A" && f.teamA === s.myTeamId) || (rec!.winner === "B" && f.teamB === s.myTeamId);
+  assert.ok(s.manager.career!.tutorialDone, "教学局已置位");
+  const f2 = s.fixtures.find((x) => !x.played && x.teamA !== "" && x.teamB !== "" && (x.teamA === s.myTeamId || x.teamB === s.myTeamId))!;
+  const rec2 = playHeldMatch(s, f2.id, {});
+  assert.ok(rec2);
+  settleMatch(s, f2.id, rec2, () => {});
+  const won = (rec2!.winner === "A" && f2.teamA === s.myTeamId) || (rec2!.winner === "B" && f2.teamB === s.myTeamId);
   const notes = dummy();
   evaluateAchievements(s, notes);
   if (won) {
