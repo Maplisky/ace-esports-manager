@@ -471,12 +471,28 @@ export function generateWorld(seed: number): GameState {
       }
       skeleton.roster = realRoster;
       skeleton.starters = realRoster.slice(0, 5); // vlr roster 顺序即首发优先
-      if (vt.coach) skeleton.coach.name = vt.coach.alias;
+      // 教练组用真实数据（v1.x 用户反馈「FOKUS 教练不是真实数据」）：coach=null 的队显示「暂无主教练」；
+      // 真实 staff 按 role 映射进对应槽位（assistant/coach/head→训练/战术/比赛择近），无真实数据清掉随机占位名
+      if (vt.coach) {
+        skeleton.coach.name = vt.coach.alias;
+      } else if (vt.staff.length > 0) {
+        skeleton.coach.name = `代理教练 ${vt.staff[0]!.alias}`;
+      } else {
+        skeleton.coach.name = "暂无主教练";
+      }
       const roleSlot: (keyof NonNullable<Team["staff"]>)[] = ["training", "mapTactics", "match"];
-      vt.staff.slice(0, 3).forEach((st, si) => {
-        const slot = skeleton.staff[roleSlot[si]!];
-        if (slot) slot.name = st.alias;
+      // 清掉随机占位：真实 staff 覆盖后，无真实数据的槽位留空（AI 赛季末会从教练池签人补位）
+      skeleton.staff = {};
+      const roleFit = (role: string): keyof NonNullable<Team["staff"]> =>
+        /head/i.test(role) ? "mapTactics" : /analyst/i.test(role) ? "match" : "training";
+      vt.staff.slice(0, 3).forEach((st) => {
+        const slot = roleFit(st.role);
+        if (!skeleton.staff[slot]) skeleton.staff[slot] = { name: st.alias, value: 0 };
       });
+      for (const s of ["training", "mapTactics", "match"] as const) {
+        const slot = skeleton.staff[s];
+        if (slot && slot.value === 0) slot.value = clamp(Math.round(skeleton.coach.tactics + rng.int(-8, 8)), 30, 90);
+      }
       skeleton.vlrId = vt.vlrId;
       skeleton.logo = vt.logo ?? undefined;
       skeleton.reputation = clamp(Math.round((tier === 1 ? 50 : 30) + (16 - Math.min(i, 15)) * 2 + rng.int(0, 8)), 25, 90);
