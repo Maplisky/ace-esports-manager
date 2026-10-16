@@ -168,7 +168,7 @@ export function MatchPlayer(props: {
   const oppTeamId = mySide === "A" ? record.teamB : record.teamA;
   const intelPts = state.scouting?.[oppTeamId]?.points ?? 0;
   const matchCoach = myTeamId ? state.teams[myTeamId]?.staff?.match?.value ?? 0 : 0;
-  const hintPrecise = intelPts >= 1 && matchCoach >= 50; // 预期提示精度 = 情报 × 比赛型教练（GDD §5.4）
+  const hintPrecise = intelPts >= 5 && matchCoach >= 50; // 预期提示精确 = 情报 ≥5（梯度侦察）× 比赛型教练（GDD §5.4）
 
   const doIntervene = (mapIdx: number, roundNo: number, tactic: string, igl: boolean) => {
     awaitingRecord.current = true;

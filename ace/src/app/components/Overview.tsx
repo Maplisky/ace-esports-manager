@@ -167,7 +167,17 @@ export function OverviewPage(props: {
             <button className="small" disabled={props.busy || state.actionPoints < 1} onClick={() => props.onScout(nextOppId)}>
               🔍 侦察对手（1 行动力，情报 +2）
             </button>
-            <span className="muted small">情报带来针对性准备加成（最高 +2.2 强度），长期不侦察会过时。</span>
+            <span className="muted small">
+              情报带来针对性准备加成（最高 +2.2 强度），长期不侦察会过时。
+              {(() => {
+                // 梯度解锁提示（检错对齐原作：一次侦察只给方向，持续投入才全知）
+                const lv = intel;
+                if (lv < 2) return " 再侦察 1 次：解锁对手风格预测。";
+                if (lv < 4) return ` 再侦察 ${Math.ceil((4 - lv) / 2)} 次：看对手常用阵容三人。`;
+                if (lv < 6) return ` 再侦察 ${Math.ceil((6 - lv) / 2)} 次：看全队五人 + 暂停提示精确化。`;
+                return " 情报充足：阵容/风格/精确提示全解锁。";
+              })()}
+            </span>
           </div>
         </div>
       )}

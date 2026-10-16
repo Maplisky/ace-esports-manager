@@ -443,8 +443,8 @@ export function PreMatch(props: {
                 return <span className="muted small">对方图池预估 {b.lo}~{b.hi}（未侦察）</span>;
               })()
             )}
-            {/* 对手风格预测（情报 ≥2 解锁；对齐原作「这张图大概率是双哨卫，节奏放慢」） */}
-            {intelLevel(intelOf(state, opp.id)) >= 2 && oppStarters.length > 0 && (() => {
+            {/* 对手风格预测（情报 ≥4 解锁——梯度侦察：一次侦察只给图池星级，风格要持续投入） */}
+            {intelLevel(intelOf(state, opp.id)) >= 2 && intelOf(state, opp.id) >= 4 && oppStarters.length > 0 && (() => {
               const oppStyle = styleOf(aggrOfLineup(oppStarters));
               const counter = styleCounterOf(myStyleForMap, oppStyle);
               const hint = counter > 0 ? "我方风格克制他——照常打" : counter < 0 ? "他会克我们——考虑换一套偏守预案" : "风格互不吃亏，拼执行";
@@ -557,12 +557,12 @@ export function PreMatch(props: {
         </div>
       </div>
 
-      {/* 对方常用阵容（情报门控） */}
-      {oppIntel > 0 && (
+      {/* 对方常用阵容（梯度情报：≥2 看到第 1 人，≥4 前 3 人，≥6 全员——一次侦察只给方向，持续投入才全知） */}
+      {oppIntel >= 2 && (
         <div className="card" style={{ padding: "10px 14px", marginBottom: 10 }}>
           <h3 style={{ marginBottom: 8 }}>🎯 {opp.name} 常用阵容（情报 {Math.round(oppIntel)}/10，估算）</h3>
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            {oppStarters.map((p) => {
+            {oppStarters.slice(0, oppIntel >= 6 ? 5 : oppIntel >= 4 ? 3 : 1).map((p) => {
               const aid = p.agentPool[0] ?? "omen";
               const a = AGENT_BY_ID.get(aid);
               return (
@@ -575,7 +575,10 @@ export function PreMatch(props: {
               );
             })}
           </div>
-          <div className="muted small" style={{ marginTop: 6 }}>情报越高越接近真实倾向；正式比赛中对方可能针对性调整。</div>
+          <div className="muted small" style={{ marginTop: 6 }}>
+            情报越高越接近真实倾向；正式比赛中对方可能针对性调整。
+            {oppIntel < 6 && ` 再侦察 ${6 - Math.ceil(oppIntel)} 次（情报 +${6 - Math.round(oppIntel)}）可看全队五人。`}
+          </div>
         </div>
       )}
 
