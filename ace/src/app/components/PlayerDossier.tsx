@@ -129,9 +129,19 @@ export function PlayerDossier(props: { state: GameState; player: Player; onClose
             </div>
           )}
 
-          {/* 英雄池：按位置分组、纯熟练度（vlr 数据只体现在熟练度数值里） */}
+          {/* 英雄池：按位置分组、纯熟练度（vlr 数据只体现在熟练度数值里）。
+              池子大时（位置多/英雄多）限制最大高度、组内纵向滑动——布局大小恒定不撑爆窗口 */}
           <h3 style={{ margin: "14px 0 8px" }}>🎭 英雄池（按场上位置 · 熟练度）</h3>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 10 }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+              gap: 10,
+              maxHeight: groups.length >= 3 ? 420 : undefined,
+              overflowY: groups.length >= 3 ? "auto" : undefined,
+              paddingRight: 4,
+            }}
+          >
             {groups.map((g) => (
               <div key={g.key}>
                 <div className="muted small" style={{ marginBottom: 4, fontWeight: 700 }}>{groupLabel(g.key)}</div>
@@ -161,6 +171,9 @@ export function PlayerDossier(props: { state: GameState; player: Player; onClose
               </div>
             ))}
           </div>
+          {groups.length >= 3 && (
+            <div className="muted small" style={{ marginTop: 4 }}>英雄池较大，区域内滚动查看全部。</div>
+          )}
 
           {/* 生涯累计 */}
           <h3 style={{ margin: "14px 0 8px" }}>🏆 生涯累计（本存档）</h3>
