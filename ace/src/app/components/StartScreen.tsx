@@ -25,6 +25,8 @@ export function StartScreen() {
   const [sortBy, setSortBy] = useState<"region" | "reputation" | "payroll">("region");
   /** 赛区折叠（v1.x 用户反馈）：64 支全展开太冗杂——默认只展开 Americas，其余折叠 */
   const [expandedRegions, setExpandedRegions] = useState<Set<string>>(() => new Set([REGIONS[0]?.id ?? ""]));
+  /** 声望/薪资分档折叠（v1.x 用户反馈）：默认全收起 */
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(() => new Set());
   // 种子挑战赛模式（GDD §11.5 v1.x）：挑战页带参跳转 → 锁 seed/出身/难度，过滤不符档位；开始后清除
   const [challenge] = useState<{ id: string; name: string; seed: number; origin?: string; difficulty?: string; tier?: number; maxAge?: number } | null>(() => {
     try {
@@ -221,11 +223,45 @@ export function StartScreen() {
             </div>
           );
         })}
-        {sortBy !== "region" && (
-          <div className="startgrid">
-            {teams.slice().sort((a, b) => (sortBy === "reputation" ? b.reputation - a.reputation : a.payPct - b.payPct)).map(teamCard)}
-          </div>
-        )}
+        {sortBy !== "region" && (() => {
+          // 分档折叠（v1.x 用户反馈）：按声望/薪资健康排序时按数据区间分组，默认全收起、点组头展开
+          const sorted = teams.slice().sort((a, b) => (sortBy === "reputation" ? b.reputation - a.reputation : a.payPct - b.payPct));
+          const groupOf = (t: (typeof sorted)[number]): string =>
+            sortBy === "reputation"
+              ? t.reputation >= 80 ? "豪门（声望 80+）" : t.reputation >= 65 ? "劲旅（声望 65-79）" : t.reputation >= 50 ? "中游（声望 50-64）" : "新贵（声望 <50）"
+              : t.payPct <= 30 ? "薪资极健康（≤30%）" : t.payPct <= 60 ? "健康（30-60%）" : t.payPct <= 100 ? "可控（60-100%）" : "超载（>100%，慎选）";
+          const groups = new Map<string, typeof sorted>();
+          for (const t of sorted) {
+            const g = groupOf(t);
+            if (!groups.has(g)) groups.set(g, []);
+            groups.get(g)!.push(t);
+          }
+          return [...groups.entries()].map(([g, list]) => {
+            const expanded = expandedGroups.has(g);
+            return (
+              <div key={g} style={{ marginBottom: 10 }}>
+                <div
+                  className="row"
+                  style={{ alignItems: "center", gap: 8, margin: "8px 0 6px", cursor: "pointer", userSelect: "none", padding: "6px 10px", borderRadius: 8, background: "rgba(255,255,255,0.03)" }}
+                  onClick={() => setExpandedGroups((cur) => {
+                    const next = new Set(cur);
+                    if (next.has(g)) next.delete(g);
+                    else next.add(g);
+                    return next;
+                  })}
+                  title={expanded ? "点击折叠" : "点击展开"}
+                >
+                  <span style={{ width: 12 }}>{expanded ? "▾" : "▸"}</span>
+                  <b>{g}</b>
+                  <span className="muted small">{list.length} 支</span>
+                  <span className="grow" />
+                  <span className="muted small">{expanded ? "收起 ▴" : "展开 ▾"}</span>
+                </div>
+                {expanded && <div className="startgrid">{list.map(teamCard)}</div>}
+              </div>
+            );
+          });
+        })()}
       </div>
 
       <div className="card">
