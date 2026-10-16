@@ -203,6 +203,8 @@ h1.title em { color: var(--accent); font-style: normal; text-shadow: 0 0 22px rg
 .stinger {
   position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
   pointer-events: none; z-index: 95;
+  /* 蒙版本体随特效一起淡出：状态残留一帧也不可见（v1.x 检错：定时器被 cleanup 清掉时蒙版曾卡死） */
+  animation: stingerIn 1.7s ease forwards;
   background: radial-gradient(ellipse at center, rgba(3, 4, 8, 0.6) 18%, transparent 68%);
 }
 .stinger-main { font-size: 46px; font-weight: 900; color: #fff; text-shadow: 0 0 26px rgba(251, 146, 60, 0.95), 0 2px 0 #000; animation: stingerIn 1.7s ease forwards; }

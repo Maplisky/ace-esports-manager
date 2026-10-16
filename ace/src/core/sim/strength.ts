@@ -138,11 +138,14 @@ function dutyVectorOf(p: Player): DutyVector {  // 选手职责 = 英雄池职�
   return sum;
 }
 
-/** 自动分配英雄：标准位（决斗/先锋/控场/哨卫/自由）按职责覆盖 + 熟练度贪心 */
-function assignAgents(lineup: Player[]): Record<string, string> {
+/** 自动分配英雄：标准位（决斗/先锋/控场/哨卫/自由）按职责覆盖 + 熟练度贪心。
+ *  地图成分折入评分（v1.x 用户反馈：开阔/走廊/点位/垂直 → computeFit），
+ *  同一套阵容在不同图的自动英雄组合随之变化；玩家预案/手动锁仍最高优先（GDD §7.1）。 */
+function assignAgents(lineup: Player[], map: MapDef, patchMeta?: Record<string, number>): Record<string, string> {
   const need: (keyof DutyVector)[] = ["duelist", "initiator", "controller", "sentinel"];
   const used = new Set<string>();
   const out: Record<string, string> = {};
+  const jointFit = (agentId: string) => computeFit(agentId, map) * (patchMeta?.[agentId] ?? 1);
   // 先满足四个标准位：找职责向量在该位最高、且池里有该职责英雄的选手
   for (const duty of need) {
     let bestPid: string | null = null;
@@ -155,7 +158,7 @@ function assignAgents(lineup: Player[]): Record<string, string> {
         if (used.has("agent:" + agentId)) continue;
         const a = AGENT_BY_ID.get(agentId);
         if (!a) continue;
-        const score = dv[duty] * (p.agentPro[agentId] ?? 0) * 0.01 + a.duty[duty] * 0.5;
+        const score = dv[duty] * (p.agentPro[agentId] ?? 0) * 0.01 + a.duty[duty] * 0.5 + (jointFit(agentId) - 1) * 0.8;
         if (score > bestScore) {
           bestScore = score;
           bestPid = p.id;
@@ -169,7 +172,7 @@ function assignAgents(lineup: Player[]): Record<string, string> {
       used.add("agent:" + bestAgent);
     }
   }
-  // 自由位：剩余选手最强英雄；同场不重复（池内全撞车才允许回落）
+  // 自由位：剩余选手最强英雄（叠图适同权重）；同场不重复（池内全撞车才允许回落）
   for (const p of lineup) {
     if (out[p.id]) continue;
     const free = p.agentPool.filter((a) => !used.has("agent:" + a));
@@ -177,7 +180,7 @@ function assignAgents(lineup: Player[]): Record<string, string> {
     let best = pool[0] ?? p.agentPool[0] ?? "omen";
     let bestPro = -1;
     for (const a of pool) {
-      const pro = p.agentPro[a] ?? 0;
+      const pro = (p.agentPro[a] ?? 0) + (jointFit(a) - 1) * 40;
       if (pro > bestPro) {
         bestPro = pro;
         best = a;
@@ -230,8 +233,8 @@ export function computeSide(input: TeamMapInput): SideStrength {
   const prepMod = clamp((input.intel ?? 0) * 0.22, 0, 2.2);
   const shortHandedMod = -Math.max(0, missing) * 18;
 
-  // 英雄分配：自动分配打底，玩家首选预案覆盖（GDD §7.1 预案决定上图英雄）
-  const autoAgents = assignAgents(lineup);
+  // 英雄分配：自动分配打底（随地图成分变化），玩家首选预案覆盖（GDD §7.1 预案决定上图英雄）
+  const autoAgents = assignAgents(lineup, map, patchMeta);
   const agents = { ...autoAgents };
   if (input.agentAssign) {
     for (const p of lineup) {

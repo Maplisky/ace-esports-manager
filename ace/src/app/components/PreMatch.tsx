@@ -207,12 +207,15 @@ export function PreMatch(props: {
 
   const activeMaps = bp?.picks ?? [];
 
-  // 单图五人英雄分配（显示与 confirm 共用）：手动选择优先；预案值/自动池回退时
+  // 单图五人英雄分配（显示与 confirm 共用）：手动选择优先；预案值优先，自动池回退时
+  // 按图适（computeFit × 版本 meta）+熟练度挑选——与引擎自动分配同口径，默认建议随图变化；
   // 跳过本图已被他人占用的英雄——默认阵容永远合法，重复警告只针对手动冲突
   const resolveMapAgents = (mapId: string): Record<string, string> => {
     const presets = myTeam.presets[mapId] ?? [];
     const chosen = presetChoice[mapId] ?? presets.find((p) => p.preferred)?.name ?? presets[0]?.name ?? "";
     const preset = presets.find((p) => p.name === chosen);
+    const mapDef = MAPS.find((x) => x.id === mapId) ?? MAPS[0]!;
+    const patchMeta = Object.fromEntries((state.patchNotes?.slice(-1)[0]?.changes ?? []).map((c) => [c.agentId, c.meta]));
     const taken = new Set<string>();
     const out: Record<string, string> = {};
     for (const p of starterPlayers) {
@@ -222,11 +225,14 @@ export function PreMatch(props: {
         aid = manual;
       } else {
         const pool = p.agentPool;
-        aid =
-          [preset?.agents[p.id], ...pool].find((a) => a && !taken.has(a)) ??
-          pool.find((a) => !taken.has(a)) ??
-          pool[0] ??
-          "omen";
+        const presetAid = [preset?.agents[p.id]].find((a) => a && !taken.has(a));
+        if (presetAid) {
+          aid = presetAid;
+        } else {
+          const free = pool.filter((a) => !taken.has(a));
+          const scoreOf = (a: string) => (p.agentPro[a] ?? 0) + (computeFit(a, mapDef) * (patchMeta[a] ?? 1) - 1) * 40;
+          aid = (free.length ? free : pool).slice().sort((x, y) => scoreOf(y) - scoreOf(x))[0] ?? pool[0] ?? "omen";
+        }
       }
       taken.add(aid);
       out[p.id] = aid;

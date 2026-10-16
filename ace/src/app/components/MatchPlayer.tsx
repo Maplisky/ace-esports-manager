@@ -233,9 +233,15 @@ export function MatchPlayer(props: {
 
   // 高光 stinger：最新揭示的事件为 ACE/残局/零封时，弹全屏大字横幅（自动导播仪式感）
   useEffect(() => {
-    if (!round || pos.ei < 0 || pos.ei >= round.events.length) return;
+    if (!round || pos.ei < 0 || pos.ei >= round.events.length) {
+      setStinger(null); // 回合结果揭示/切换时清残留——否则暗色蒙版卡在屏上（清理会先杀掉 1700ms 定时器）
+      return;
+    }
     const e = round.events[pos.ei]!;
-    if (e.t !== "ace" && e.t !== "clutch" && e.t !== "flawless") return;
+    if (e.t !== "ace" && e.t !== "clutch" && e.t !== "flawless") {
+      setStinger(null); // 播放快于特效时长时定时器已被 cleanup 清掉，必须在此显式落下蒙版
+      return;
+    }
     const main = e.t === "ace" ? "ACE！" : e.t === "clutch" ? `1v${e.vs ?? 1} 残局！` : "零封！";
     const sub = e.t === "flawless" ? "满编无伤拿下回合" : `${ign(e.s ?? "")} 力挽狂澜`;
     setStinger({ main, sub });
