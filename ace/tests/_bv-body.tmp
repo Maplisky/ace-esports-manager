@@ -1,26 +1,3 @@
-/** 经营偏差修补包（v1.4 第一刀，GDD §8.4/§9.5）：
- *  赞助门槛 45/60/75 + 业绩条款倍率 / 直播 60% 入个人钱包 + 人气值 / 教练心态胜负 ±10 / 自我进修。
- */
-import { test } from "node:test";
-import assert from "node:assert/strict";
-import { generateWorld, resetPlayerSeq } from "../src/core/worldgen.ts";
-import { initSeasonFixtures, advanceDay } from "../src/core/sim/day.ts";
-import { resetFixtureSeq } from "../src/core/sim/fixtures.ts";
-import { Rng } from "../src/core/rng.ts";
-import { weeklySponsorIncome, acceptGig, signStream, TIER_DEF } from "../src/core/sim/business.ts";
-import { selfStudy, SELF_STUDY_COST, SELF_STUDY_CAP } from "../src/core/sim/career.ts";
-import { applyMatchEffects, simMatch } from "../src/core/sim/match.ts";
-import type { GameState } from "../src/core/types.ts";
-
-function build(seed = 81): GameState {
-  resetPlayerSeq();
-  resetFixtureSeq();
-  const state = generateWorld(seed);
-  initSeasonFixtures(state);
-  state.myTeamId = Object.values(state.teams).find((t) => t.tier === 1)!.id;
-  return state;
-}
-
 test("赞助门槛：三档 repNeed = 45/60/75（GDD §8.4）", () => {
   assert.deepEqual(TIER_DEF.map((t) => t.repNeed), [45, 60, 75]);
 });

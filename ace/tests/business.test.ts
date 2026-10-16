@@ -1,16 +1,30 @@
-/** 商务系统回归（GDD §8.4 v0.5-4）：赞助周收入/档位门槛/商务日惩罚/直播分成 */
+/** 商务系统回归（v0.5-4 基础 + v1.4 经营修补包）：赞助/商务日/直播/业绩条款/教练心态/自我进修 */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { generateWorld } from "../src/core/worldgen.ts";
+import { generateWorld, resetPlayerSeq } from "../src/core/worldgen.ts";
 import { initSeasonFixtures, advanceDay } from "../src/core/sim/day.ts";
-import { refreshCommercialWeek, sponsorSignChance, signSponsorOffer } from "../src/core/sim/business.ts";
+import { resetFixtureSeq } from "../src/core/sim/fixtures.ts";
+import { refreshCommercialWeek, sponsorSignChance, signSponsorOffer, weeklySponsorIncome, acceptGig, signStream, TIER_DEF } from "../src/core/sim/business.ts";
+import { selfStudy, SELF_STUDY_COST, SELF_STUDY_CAP } from "../src/core/sim/career.ts";
+import { simMatch, applyMatchEffects } from "../src/core/sim/match.ts";
 import { Rng } from "../src/core/rng.ts";
+import type { GameState } from "../src/core/types.ts";
 
-function setup() {
-  const state = generateWorld(21);
+function setup(seed = 21): GameState {
+  resetPlayerSeq(); resetFixtureSeq();
+  const state = generateWorld(seed);
   initSeasonFixtures(state);
   state.myTeamId = Object.values(state.teams).find((t) => t.tier === 1)!.id;
   state.day = 10;
+  return state;
+}
+
+/** v14 修补包测试 helper（种子 81 起，与旧 setup 区分） */
+function build14(seed = 81): GameState {
+  resetPlayerSeq(); resetFixtureSeq();
+  const state = generateWorld(seed);
+  initSeasonFixtures(state);
+  state.myTeamId = Object.values(state.teams).find((t) => t.tier === 1)!.id;
   return state;
 }
 
@@ -93,4 +107,75 @@ test("赞助意向：签成即从意向列表移除（用户反馈：残留 21 �
   state.day += 11;
   state.sponsorOffers = state.sponsorOffers.filter((o) => o.expires > state.day);
   assert.equal(state.sponsorOffers.length, 0);
+});
+
+// ───── v1.4 经营修补包回归（自 business-v14 合并，2026-10-16）─────
+
+test("v14 赞助门槛：三档 repNeed = 45/60/75（GDD §8.4）", () => {
+  assert.deepEqual(TIER_DEF.map((t) => t.repNeed), [45, 60, 75]);
+});
+
+test("v14 直播 60/40：俱乐部 40% + 选手钱包 60% + 人气 +2/周（签约 +5）", () => {
+  const s = setup();
+  const pid = s.teams[s.myTeamId!]!.starters[0]!;
+  const p = s.players[pid]!;
+  const r = signStream(s, pid, 2, new Rng(7));
+  assert.ok(r.ok);
+  assert.equal(p.popularity, 5, "签约即获人气 +5");
+  p.stream!.weekly = 10_000;
+  s.teams[s.myTeamId!]!.sponsors = []; // 排除赞助干扰
+  const income = weeklySponsorIncome(s);
+  assert.equal(income, 4_000, "俱乐部拿 40%");
+  assert.equal(p.wallet, 6_000, "选手个人钱包拿 60%");
+  assert.equal(p.popularity, 7, "直播周人气 +2");
+});
+
+test("v14 人气值加成商务邀约报酬（0.2%/点）", () => {
+  const s = setup();
+  const pid = s.teams[s.myTeamId!]!.starters[1]!;
+  const p = s.players[pid]!;
+  p.popularity = 50;
+  s.gigOffers.push({ id: "G1", playerId: pid, brand: "测试品牌", pay: 10_000, day: s.day });
+  const r = acceptGig(s, "G1");
+  assert.ok(r.ok);
+  assert.ok(r.text.includes("人气加成"), "高人气提示");
+});
+
+test("v14 赞助业绩条款：夺冠 ×1.5 / 四强 ×1.2 / 无条款赞助不乘", () => {
+  const s = build14();
+  const t = s.teams[s.myTeamId!]!;
+  t.sponsors = [
+    { id: "S1", name: "有条款", tier: 1, perSeason: 480_000, years: 1, signedYear: s.year, bonus: true },
+    { id: "S2", name: "无条款", tier: 1, perSeason: 480_000, years: 1, signedYear: s.year, bonus: false },
+  ];
+  s.sponsorMult = 1.5;
+  assert.equal(weeklySponsorIncome(s), Math.round(10_000 * 1.5) + 10_000, "带条款 ×1.5、无条款 ×1");
+  s.sponsorMult = 1.2;
+  assert.equal(weeklySponsorIncome(s), Math.round(10_000 * 1.2) + 10_000);
+});
+
+test("v14 教练心态：我的正式赛胜负 ±10（applyMatchEffects）", () => {
+  const s = build14();
+  const myId = s.myTeamId!;
+  const opp = Object.values(s.teams).find((t) => t.id !== myId)!;
+  const rec = simMatch(s, myId, opp.id, 1, 4242, "mood-test");
+  const mood0 = s.manager.life.mood;
+  applyMatchEffects(s, rec);
+  const won = rec.winner === "A";
+  assert.equal(s.manager.life.mood, Math.max(0, Math.min(100, mood0 + (won ? 10 : -10))), "胜负 ±10");
+});
+
+test("v14 自我进修：$5K → 技能 +1；不足拒付；封顶 75", () => {
+  const s = build14();
+  s.manager.life.wallet = 20_000;
+  const t0 = s.manager.skills.tactics ?? 50;
+  const r1 = selfStudy(s, "tactics");
+  assert.ok(r1.includes("→"), r1);
+  assert.equal(s.manager.skills.tactics, t0 + 1);
+  assert.equal(s.manager.life.wallet, 20_000 - SELF_STUDY_COST);
+  s.manager.life.wallet = 100;
+  assert.ok(selfStudy(s, "tactics").includes("不足"));
+  s.manager.life.wallet = 100_000;
+  s.manager.skills.tactics = SELF_STUDY_CAP;
+  assert.ok(selfStudy(s, "tactics").includes("上限"));
 });

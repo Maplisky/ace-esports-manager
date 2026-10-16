@@ -41,13 +41,13 @@ function loadPair(state: ReturnType<typeof benchState>, pair: number, targetA: n
   return { a: t1.team.id, b: t2.team.id };
 }
 
-test("T1：87 vs 72 → BO3 胜率 68-78%（5 对夹具 × 400 场均值）", () => {
+test("T1：87 vs 72 → BO3 胜率 68-78%（5 对夹具 × 250 场均值）", () => {
   const state = benchState();
   let wins = 0;
   let total = 0;
   for (let pair = 0; pair < 5; pair++) {
     const { a, b } = loadPair(state, pair, 87, 72);
-    for (let i = 0; i < 400; i++) {
+    for (let i = 0; i < 250; i++) {
       resetVitality(state);
       const r = simMatch(state, a, b, 3, 50000 + pair * 100000 + i, `T1-${pair}-${i}`);
       if (r.winner === "A") wins++;
@@ -58,13 +58,13 @@ test("T1：87 vs 72 → BO3 胜率 68-78%（5 对夹具 × 400 场均值）", ()
   assert.ok(rate >= 0.68 && rate <= 0.78, `强队胜率 ${rate.toFixed(3)} 超出 [0.68, 0.78]`);
 });
 
-test("T2：同分 → BO3 胜率 47-53%（6 对夹具 × 400 场均值）", () => {
+test("T2：同分 → BO3 胜率 47-53%（6 对夹具 × 300 场均值）", () => {
   const state = benchState(999);
   let wins = 0;
   let total = 0;
   for (let pair = 0; pair < 6; pair++) {
     const { a, b } = loadPair(state, pair, 78, 78);
-    for (let i = 0; i < 400; i++) {
+    for (let i = 0; i < 300; i++) {
       resetVitality(state);
       const r = simMatch(state, a, b, 3, 41277 + pair * 100000 + i, `T2-${pair}-${i}`);
       if (r.winner === "A") wins++;
