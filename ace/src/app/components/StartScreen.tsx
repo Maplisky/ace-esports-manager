@@ -19,6 +19,8 @@ export function StartScreen() {
   const [difficulty, setDifficulty] = useState<"normal" | "hard" | "pro">("normal");
   const [talents, setTalents] = useState<Record<ManagerSkillKey, number>>(() => ({ ...TALENT_PRESETS[0]!.points }));
   const [sortBy, setSortBy] = useState<"region" | "reputation" | "payroll">("region");
+  /** 赛区折叠（v1.x 用户反馈）：64 支全展开太冗杂——默认只展开 Americas，其余折叠 */
+  const [expandedRegions, setExpandedRegions] = useState<Set<string>>(() => new Set([REGIONS[0]?.id ?? ""]));
   // 种子挑战赛模式（GDD §11.5 v1.x）：挑战页带参跳转 → 锁 seed/出身/难度，过滤不符档位；开始后清除
   const [challenge] = useState<{ id: string; name: string; seed: number; origin?: string; difficulty?: string; tier?: number; maxAge?: number } | null>(() => {
     try {
@@ -155,19 +157,35 @@ export function StartScreen() {
           ))}
           <span className="muted small">薪资 = 名单年薪 ÷ 预算（≤60% 健康 / ≤100% 可控 / 超载红色）</span>
         </div>
-        {sortBy === "region" && REGIONS.map((r) => (
-          <div key={r.id} style={{ marginBottom: 14 }}>
-            <div className="row" style={{ alignItems: "center", gap: 8, margin: "10px 0 6px" }}>
-              <img src={r.logo} alt={r.label} width={20} height={20} style={{ borderRadius: 4 }} />
-              <b>VCT {r.label}</b>
-              <span className="muted small">
-                {teams.filter((t) => t.regionId === r.id && t.tier === 1).length} 支合作队 ·{" "}
-                {teams.filter((t) => t.regionId === r.id && t.tier === 2).length} 支挑战者
-              </span>
+        {sortBy === "region" && REGIONS.map((r) => {
+          const expanded = expandedRegions.has(r.id);
+          return (
+            <div key={r.id} style={{ marginBottom: 10 }}>
+              <div
+                className="row"
+                style={{ alignItems: "center", gap: 8, margin: "8px 0 6px", cursor: "pointer", userSelect: "none", padding: "6px 10px", borderRadius: 8, background: "rgba(255,255,255,0.03)" }}
+                onClick={() => setExpandedRegions((cur) => {
+                  const next = new Set(cur);
+                  if (next.has(r.id)) next.delete(r.id);
+                  else next.add(r.id);
+                  return next;
+                })}
+                title={expanded ? "点击折叠" : "点击展开"}
+              >
+                <span style={{ width: 12 }}>{expanded ? "▾" : "▸"}</span>
+                <img src={r.logo} alt={r.label} width={20} height={20} style={{ borderRadius: 4 }} />
+                <b>VCT {r.label}</b>
+                <span className="muted small">
+                  {teams.filter((t) => t.regionId === r.id && t.tier === 1).length} 支合作队 ·{" "}
+                  {teams.filter((t) => t.regionId === r.id && t.tier === 2).length} 支挑战者
+                </span>
+                <span className="grow" />
+                <span className="muted small">{expanded ? "收起 ▴" : "展开 ▾"}</span>
+              </div>
+              {expanded && <div className="startgrid">{teams.filter((t) => t.regionId === r.id).map(teamCard)}</div>}
             </div>
-            <div className="startgrid">{teams.filter((t) => t.regionId === r.id).map(teamCard)}</div>
-          </div>
-        ))}
+          );
+        })}
         {sortBy !== "region" && (
           <div className="startgrid">
             {teams.slice().sort((a, b) => (sortBy === "reputation" ? b.reputation - a.reputation : a.payPct - b.payPct)).map(teamCard)}
