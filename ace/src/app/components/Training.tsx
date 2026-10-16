@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { GameState, ScrimGoal } from "../../core/types.ts";
 import { MAPS, MAP_BY_ID } from "../../core/data/maps.ts";
 import { AGENT_BY_ID } from "../../core/data/agents.ts";
-import { INDIVIDUAL_OPTIONS, OPTION_BY_KEY, recommendFocus, XP_PER_DAY, XP_PER_ATTR_POINT } from "../../core/data/training.ts";
+import { INDIVIDUAL_OPTIONS, OPTION_BY_KEY, recommendFocus, recommendPlan, XP_PER_DAY, XP_PER_ATTR_POINT } from "../../core/data/training.ts";
 import { teamAvgOverall, scrimSparringCoef, scrimAcceptChance } from "../../core/sim/scrim.ts";
 import { intelOf, intelLevel, estimateMapStrength, starsOf, mapStrengthBand } from "../../core/sim/intel.ts";
 import { STYLE_LABEL, type StyleKey } from "../../core/sim/strength.ts";
@@ -110,7 +110,26 @@ export function TrainingPage(props: { state: GameState }) {
       </div>
 
       <div className="card">
-        <h3>🎯 个人训练（每名选手独立项目 · {XP_PER_ATTR_POINT} 经验 = +1 属性）</h3>
+        <div className="row" style={{ justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+          <h3 style={{ margin: 0 }}>🎯 个人训练（每名选手独立项目 · {XP_PER_ATTR_POINT} 经验 = +1 属性）</h3>
+          <button
+            className="primary small"
+            onClick={() => {
+              // 一键推荐训练（v1.4）：疲劳优先休息 → 主职责项未上限 → 次职责项 → 全上限休息
+              const next = { ...schedules };
+              for (const p of roster) {
+                const plan = recommendPlan(p, primaryDuty(state, p.id));
+                next[p.id] = plan.key;
+              }
+              setSchedules(next);
+            }}
+          >
+            ⚡ 一键推荐训练
+          </button>
+        </div>
+        <div className="muted small" style={{ marginBottom: 8 }}>
+          推荐逻辑：疲劳 70 以上先休息保状态 → 优先练主职责项 → 该项接近上限则练次职责项 → 全部接近上限则休息。
+        </div>
         <table>
           <thead>
             <tr><th>选手</th><th style={{ width: 150 }}>训练项目</th><th>具体指标</th><th style={{ width: 160 }}>进度 → 下一点</th><th>本周预期</th></tr>

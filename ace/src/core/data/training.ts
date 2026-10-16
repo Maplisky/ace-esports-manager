@@ -37,6 +37,47 @@ export function recommendFocus(duty: "duelist" | "initiator" | "controller" | "s
   }
 }
 
+/** 各职责的次要训练项（主项达到成长上限时的 fallback，GDD §6.3 v1.4） */
+const SECONDARY_FOCUS: Record<"duelist" | "initiator" | "controller" | "sentinel", string> = {
+  duelist: "reaction",
+  initiator: "utility",
+  controller: "teamwork",
+  sentinel: "clutch",
+};
+
+/** 训练推荐计划项（v1.4 一键推荐）：fatigue>70 或全属性近上限 → 休息保状态 */
+export interface PlanRecommendation {
+  key: string;
+  reason: "primary" | "secondary" | "rest-fatigue" | "rest-capped";
+}
+
+/** 属性成长上限（与 day.ts 训练结算同口径：potential + 5，硬顶 99） */
+function attrCapped(p: { attrs: { aim: number; reaction: number; awareness: number; utility: number; clutch: number; teamwork: number; communication: number; igl: number }; potential: number }, attr: string): boolean {
+  const cap = Math.min(99, p.potential + 5);
+  return (p.attrs[attr as keyof typeof p.attrs] ?? 50) >= cap;
+}
+
+/**
+ * 一键训练推荐（v1.4 用户反馈）：
+ * 1) 疲劳 >70 → 休息（疲劳伤害训练收益减半，先恢复）；
+ * 2) 主职责项（IGL 优先指挥）未达上限 → 练主项；
+ * 3) 主项已上限 → 次职责项未上限 → 练次项；
+ * 4) 全部接近上限 → 休息保状态。
+ */
+export function recommendPlan(
+  p: { attrs: { aim: number; reaction: number; awareness: number; utility: number; clutch: number; teamwork: number; communication: number; igl: number }; potential: number; fatigue: number; isIgl: boolean },
+  duty: "duelist" | "initiator" | "controller" | "sentinel",
+): PlanRecommendation {
+  if (p.fatigue > 70) return { key: "rest", reason: "rest-fatigue" };
+  const primary = recommendFocus(duty, p.isIgl);
+  const primaryAttr = OPTION_BY_KEY.get(primary)?.attr;
+  if (primaryAttr && !attrCapped(p, primaryAttr)) return { key: primary, reason: "primary" };
+  const secondary = SECONDARY_FOCUS[duty];
+  const secondaryAttr = OPTION_BY_KEY.get(secondary)?.attr;
+  if (secondaryAttr && !attrCapped(p, secondaryAttr)) return { key: secondary, reason: "secondary" };
+  return { key: "rest", reason: "rest-capped" };
+}
+
 /** 每训练日经验基准（GDD §6.3：1.4~3.2/日 = 原作周 7~16 均摊 5 个训练日） */
 export const XP_PER_DAY: [number, number] = [1.4, 3.2];
 export const XP_PER_ATTR_POINT = 100;
