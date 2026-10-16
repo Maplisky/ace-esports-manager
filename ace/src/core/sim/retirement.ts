@@ -5,7 +5,7 @@
  * 教练自由池可被任何俱乐部签入教练组空槽（声望=fame 折算，AI 同生态）。
  * 一切随机走显式 Rng；确定性约定不变。
  */
-import { clamp, hashString, Rng } from "../rng.ts";
+import { clamp, Rng } from "../rng.ts";
 import type { CoachFreeAgent, GameState, PendingEventCard, Player, RetireLogItem, TransferFeedItem } from "../types.ts";
 import { narrativeOnRetire } from "./narrative.ts";
 import { logFinance } from "./finance.ts";

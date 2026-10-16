@@ -17,11 +17,6 @@ export function currentPatch(state: GameState): PatchNote | null {
   return state.patchNotes?.[state.patchNotes.length - 1] ?? null;
 }
 
-/** 单英雄在本图的联合强度 = fit × meta（§4.3 二维相乘） */
-export function agentPatchStrength(agentId: string, mapId: string, meta: number, computeFitFn: (agentId: string, mapId: string) => number): number {
-  return meta * computeFitFn(agentId, mapId);
-}
-
 /** 发布新版本：每赛段调用一次（day = 赛段首日）。重掷 4-6 名英雄 meta，产出 Patch 公告。 */
 export function rollPatch(state: GameState, segKey: string, rng: Rng): PatchNote {
   const prev = currentPatch(state);

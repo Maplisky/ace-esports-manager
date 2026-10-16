@@ -14,7 +14,6 @@ import { decayIntel } from "./intel.ts";
 import { narrativeAfterMyLoss, narrativeOnTitle } from "./narrative.ts";
 import { weeklyRumors } from "./rumors.ts";
 import { logFinance } from "./finance.ts";
-import { seasonRetirements } from "./retirement.ts";
 import { runDraft } from "./draft.ts";
 import { noteMatchResult, careerWeeklyTick, noteManagerTitle, checkCareerMilestone } from "./career.ts";
 import { refreshCommercialWeek, weeklySponsorIncome } from "./business.ts";

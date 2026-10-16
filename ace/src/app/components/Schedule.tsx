@@ -1,7 +1,6 @@
 import type { GameState, MatchRecord } from "../../core/types.ts";
 import { useStore } from "../store.ts";
 import { formatDate } from "./Overview.tsx";
-import { TeamLogo } from "./Avatar.tsx";
 import { EventProgressCards } from "./EventProgressCards.tsx";
 import { BracketView } from "./BracketView.tsx";
 

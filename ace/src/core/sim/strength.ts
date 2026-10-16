@@ -8,7 +8,6 @@
 import { clamp } from "../rng.ts";
 import { AGENT_BY_ID } from "../data/agents.ts";
 import { computeFit } from "./fit.ts";
-import { currentPatch } from "./patch.ts";
 import type { MapDef, Player, Team, DutyVector } from "../types.ts";
 
 const LINEUP_WEIGHTS = [1.22, 1.10, 1.00, 0.90, 0.78] as const;

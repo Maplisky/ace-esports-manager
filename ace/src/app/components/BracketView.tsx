@@ -5,7 +5,6 @@
  * 数据派生自 fixtures（label + winnerTeamId），零新状态。
  */
 import type { GameState } from "../../core/types.ts";
-import { TeamLogo } from "./Avatar.tsx";
 
 const tag = (state: GameState, id: string | null | undefined) =>
   (id && state.teams[id]?.tag) || "待定";

@@ -10,7 +10,7 @@ import { MAP_BY_ID } from "../../core/data/maps.ts";
 import { tacticLabel } from "../../core/data/mapplans.ts";
 import { Tactical2D } from "./Tactical2D.tsx";
 import { liveLines, liveMeta, summarizeMatch, pickMvps, type StatRow } from "../../core/sim/matchstats.ts";
-import { PLAYER_CALLS, callLabel, callDesc, type TacticCallDef } from "../../core/sim/tactics.ts";
+import { PLAYER_CALLS, callLabel, type TacticCallDef } from "../../core/sim/tactics.ts";
 import { buildReplayPayload, anonymizeReplay, shareLinkOf } from "../../core/sim/share.ts";
 import { sfx } from "../audio.ts";
 import type { GameState, IglReading, MapRecord, MatchRecord, RoundEvent } from "../../core/types.ts";
