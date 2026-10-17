@@ -246,7 +246,8 @@ export function App() {
               if (viewerFixtureId) void matchIntervene(viewerFixtureId, mapIdx, round, tactic, igl);
             }}
             onFinished={onMatchFinished}
-            guide={state.tutorial?.mode === true && state.tutorial?.done === false}
+            // 教程贴士只在可交互的实况比赛显示——历史回放不可喊话，「轮到你了」类提示是误导
+            guide={live && state.tutorial?.mode === true && state.tutorial?.done === false}
             onClose={closeViewer}
           />
         );

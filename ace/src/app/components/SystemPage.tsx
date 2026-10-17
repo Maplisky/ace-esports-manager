@@ -13,7 +13,7 @@ function fmtDate(iso: string): string {
 }
 
 export function SystemPage() {
-  const { state, saves, refreshSaves, saveToSlot, loadFromKey, removeSave, exportSave, importSaveText, setStopDensity, backToStart, setTutorial } = useStore();
+  const { state, saves, refreshSaves, saveToSlot, loadFromKey, removeSave, exportSave, importSaveText, setStopDensity, backToStart, setTutorial, tutorial, tutorialGoto } = useStore();
   const fileRef = useRef<HTMLInputElement>(null);
   const [audioOn, setAudioOn] = useState(audioEnabled());
   const [backed, setBacked] = useState(false);
@@ -80,6 +80,9 @@ export function SystemPage() {
           </button>
           {tutMode && tutDone && (
             <button className="small" onClick={() => void setTutorial(undefined, false)}>📖 重看引导</button>
+          )}
+          {tutMode && !tutDone && (
+            <button className="small" onClick={() => tutorialGoto(tutorial.idx || 0)}>▶ 继续引导（第 {(tutorial.idx || 0) + 1} 步）</button>
           )}
           <span className="muted small">文明6式带练：板块一圈 + 完整首场；每步可跳过，页面顶部有常驻导读</span>
         </div>

@@ -32,7 +32,8 @@ export function TutorialOverlay() {
       if (cancelled) return;
       const el = step.anchor ? document.querySelector<HTMLElement>(`[data-tut="${step.anchor satisfies TutId}"]`) : null;
       if (el) {
-        el.scrollIntoView({ block: "center", behavior: "smooth" });
+        // instant 滚动：smooth 进程中取 rect 会拿到中途坐标，挖孔停在错位（滚动结束后无人重算）
+        el.scrollIntoView({ block: "center", behavior: "instant" });
         const r = el.getBoundingClientRect();
         setRect({ x: r.left, y: r.top, w: r.width, h: r.height });
       } else {
@@ -48,11 +49,14 @@ export function TutorialOverlay() {
     };
     raf = window.setTimeout(tryLocate, 60);
     const onResize = () => locate();
+    const onScroll = () => locate(); // 玩家手动滚动时跟随
     window.addEventListener("resize", onResize);
+    window.addEventListener("scroll", onScroll, true); // capture：捕获内部滚动容器
     return () => {
       cancelled = true;
       window.clearTimeout(raf);
       window.removeEventListener("resize", onResize);
+      window.removeEventListener("scroll", onScroll, true);
     };
   }, [step, page, tutorial.idx]);
 
