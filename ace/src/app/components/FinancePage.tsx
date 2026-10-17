@@ -99,10 +99,23 @@ export function FinancePage(props: { state: GameState }) {
         </div>
         {/* 瀑布（按天聚合） */}
         <svg viewBox={`0 0 ${W} ${H}`} style={{ width: "100%", maxWidth: W }}>
-          <line x1={pad.l} y1={yOf(win.start)} x2={W - pad.r} y2={yOf(win.start)} stroke="rgba(255,255,255,0.25)" strokeDasharray="3 3" />
-          <text x={pad.l - 6} y={yOf(win.start) + 3} fontSize={9} textAnchor="end" fill="rgba(255,255,255,0.5)">{fmtK(win.start)}</text>
-          <text x={pad.l - 6} y={yOf(hi) + 8} fontSize={9} textAnchor="end" fill="rgba(255,255,255,0.35)">{fmtK(hi)}</text>
-          <text x={pad.l - 6} y={yOf(lo) - 2} fontSize={9} textAnchor="end" fill="rgba(255,255,255,0.35)">{fmtK(lo)}</text>
+          {(() => {
+            // 左轴标注去重：期初/最高/最低按「显示文本」判重——资金单边走势时期初与极值同值、
+            // 小额窗口时两端舍入后同文，同一数字画两遍即用户看到的「重复的起始资金」
+            const startText = fmtK(win.start);
+            const hiText = fmtK(hi);
+            const loText = fmtK(lo);
+            const showStart = startText !== hiText && startText !== loText;
+            const showLo = loText !== hiText;
+            return (
+              <>
+                <line x1={pad.l} y1={yOf(win.start)} x2={W - pad.r} y2={yOf(win.start)} stroke="rgba(255,255,255,0.25)" strokeDasharray="3 3" />
+                {showStart && <text x={pad.l - 6} y={yOf(win.start) + 3} fontSize={9} textAnchor="end" fill="rgba(255,255,255,0.5)">{startText}</text>}
+                <text x={pad.l - 6} y={yOf(hi) + 8} fontSize={9} textAnchor="end" fill="rgba(255,255,255,0.35)">{hiText}</text>
+                {showLo && <text x={pad.l - 6} y={yOf(lo) - 2} fontSize={9} textAnchor="end" fill="rgba(255,255,255,0.35)">{loText}</text>}
+              </>
+            );
+          })()}
           {bars.map((b) => {
             const x = xOf(b.i);
             const w = Math.max(3, (W - pad.l - pad.r) / Math.max(1, daySteps.length) - 2);
