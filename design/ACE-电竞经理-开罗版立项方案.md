@@ -128,15 +128,23 @@
 
 ### M0 执行结论（2026-10-20，模拟器侧完成，真机闸门待补）
 
-**结论：Godot 4.7.2 + C# 的 Android 出包链路与动画管线双验证通过（模拟器），C# 代码已在 Android 上实际执行。原定「C# 不可行则降级 GDScript」不触发，M1 按 C# 路线推进。** 真机安装验证待用户手机接入后补做。
+**结论：Godot 4.7.2 + C# 的 Android 出包链路与动画管线双验证通过（模拟器），C# 代码已在 Android 上实际执行。原定「C# 不可行则降级 GDScript」不触发，M1 按 C# 路线推进。** 真机安装验证由模拟器启动实验替代（用户批示 2026-10-20）：冷启动 ≈475-620ms、Home/返回/连杀连启中断面全过、稳态 PSS ≈188MB、logcat 零应用错误，内置 15 项像素自审计（内容坐标自适应分辨率）三连启动全 PASS。
 
 | 验证项 | 结果 | 证据 |
 |---|---|---|
-| 出包链路 | ✅ gradle `assembleMonoRelease` 产出签名 APK（184MB，arm64+x86_64 双架构，含完整 mono 组件与 BCL） | `kairo/builds/kairo-m0-mono.apk` |
-| C# on Android | ✅ mono 引擎启动、C# 事件流驱动演出、截图自存、9.2s 自退，logcat 零错误 | API35 模拟器 logcat `[m0] saved …` 三连 |
-| 动画管线 | ✅ 程序化小人+调色板换装+事件驱动庆祝/阵亡，桌面像素审计 9 项全 PASS + 视觉模型交叉复核（抓出并修复阵亡者庆祝 bug） | `kairo/m0/shots/`、`m0/audit_m0.gd` |
-| 模拟器渲染 | ✅ API35 + host GPU（GLES3）正常；⚠️ API30 镜像 GPU 翻译层仅 ES2，跑不了 Godot 4（镜像问题，非 APK 问题） | logcat EGL 对比 |
-| 体积基线 | 双架构 184MB；后续优化项：仅 arm64 可省约半、ABI split、AOT | — |
+| 出包链路 | ✅ gradle `assembleMonoRelease` 产出签名 APK（184MB，arm64+x86_64 双架构，含完整 mono 组件与 BCL）；**headless 与 --editor 模式均验证可用（CI 可用 headless）** | `kairo/builds/kairo-m0.apk` |
+| C# on Android | ✅ mono 引擎启动、C# 事件流驱动演出、截图自存、自审计、约 10s 自退，logcat 零应用错误 | API35 模拟器 logcat `[m0]`/`[audit]` 全套 |
+| 动画管线 | ✅ 程序化小人+调色板换装+事件驱动庆祝/阵亡；像素审计 15 项桌面+设备双 PASS（视觉模型交叉复核曾抓出阵亡者庆祝 bug） | `kairo/m0/shots/`、`Main.cs#SelfAudit` |
+| 启动实验 | ✅ 冷启动 475-620ms；HOME 存活/BACK 优雅退/force-stop ×3 零 FATAL；连续启动审计三连 PASS | 检错轮记录（本节+README 方法论） |
+| 模拟器渲染 | ✅ API35 + host GPU（GLES3）；⚠️ API30 镜像 GPU 翻译层仅 ES2 跑不了 Godot 4（镜像问题） | logcat EGL 对比 |
+| 体积基线 | 双架构 184MB；稳态内存 PSS ≈188MB；后续优化项：仅 arm64 可省约半、ABI split、AOT | — |
+
+**检错轮修复的缺陷（2026-10-20 启动实验抓出）**：
+1. 阵亡者被误触发庆祝动画（round_win 无差别 Cheer）→ 死亡态豁免。
+2. 设备视口纹理 = 窗口分辨率（模拟器横屏信箱 607×1080）≠ 内容设计分辨率 720×1280 → 审计断言全部改为分辨率自适应映射（kx/ky + 面积因子缩放阈值）。
+3. GLES3 设备 Modulate 压暗在线性色彩空间（桌面 GL 在 sRGB 空间）→ 颜色断言谓词兼容两种空间。
+4. 庆祝弹跳相位随帧率漂移导致截图非确定 → 截图改为相位锁定捕获（等离屏 ≥6px 瞬间）。
+5. 5 处 C# 可空警告（CS8618）清零；`shots/` 归档目录 .gdignore 隔离出包。
 
 **M0 过程中解决的环境级问题（复现时按 kairo/README 排查）**：
 1. 本机 SteamTools（Watt Toolkit）对 github.com 做 TLS 中间人 → Java/gradle 全挂；已将 SteamTools 根 + GTS 根导入用户信任库 `G:/WorkLoad/tools/keys/kairo-cacerts.p12`，经 gradle.properties systemProp 注入（系统 JDK cacerts 无管理员权限不可写）。
@@ -180,6 +188,7 @@
 
 ## 变更记录
 
+- 2026-10-20 v0.4：**启动实验轮 + 检错修复**——模拟器替代真机闸门（用户批示）：冷启动/中断面/内存/logcat 全过，15 项像素自审计内置 APK（分辨率自适应）三连 PASS；修复 5 项缺陷（阵亡者庆祝、视口分辨率映射、线性空间压暗、弹跳相位、可空警告）；headless 导出实测可用（CI 前置解除）。方法论文档化至 kairo/README。
 - 2026-10-20 v0.3：**M0 执行结论落档**——出包链路（assembleMonoRelease 签名 APK）与动画管线（程序化小人+调色板，像素审计全 PASS）双验证通过，C# 已在 Android 模拟器（API35）实际执行；「降级 GDScript」预案不触发，M1 按 C# 路线推进；环境级问题（SteamTools TLS、.sln 前置、CS0101 污染、构建模板手装要点）入 §8 备查。真机闸门待补。
 - 2026-10-20 v0.2：定位升级为独立新作（两个不同的游戏）；玩法主线确立为基地建设（合战忍者村式）+ 阵容训练开罗化（冠军足球物语式）；双开局确认；动画风格为硬需求，美术管线改为程序化小人+调色板+AI 静态肖像；权威关系收窄为「不得修改共享内核语义」；新增次级联赛等开罗专属结构归属 C# 侧；原六项待定项落地；里程碑扩 M0 动画管线、M2 经济表格化、M3 接管模式。同日补充：本作仅出 Android APK、不做网页版；web 伴侣模式决策与本项目解耦（§10-6 理由修正）；比赛演出四层分镜入 §3.5（场馆选手动画 + 小地图窗 + 击杀播报 + 底部战绩板，庆祝梯度）。
 - 2026-10-20 v0.1：立项决策固化（六项）+ 架构/移植策略/里程碑/风险/待定项初稿。

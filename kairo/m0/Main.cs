@@ -1,4 +1,5 @@
 using Godot;
+using System;
 using System.Collections.Generic;
 
 namespace Kairo.M0;
@@ -6,7 +7,7 @@ namespace Kairo.M0;
 /// <summary>
 /// M0 竖版验证场景：§3.5 四层分镜的微缩版，全部由硬编码回放事件流驱动。
 /// 红线：本场景只消费 Stream 事件做反应动画，不产生任何比赛事实。
-/// 自动截图到 user://m0/（约 9 秒后自动退出）。
+/// 运行约 9 秒：三张截图存 user://m0/，随后对截图做像素自审计并把 PASS/FAIL 打到控制台（桌面控制台 / 设备 logcat），自动退出。
 /// </summary>
 public partial class Main : Node2D
 {
@@ -14,6 +15,7 @@ public partial class Main : Node2D
 
     private static readonly string[] Names = { "A1", "A2", "A3", "A4", "A5", "B1", "B2", "B3", "B4", "B5" };
 
+    /// <summary>硬编码回放事件流（时间秒）。未来替换为共享内核的确定性回放流。</summary>
     private static readonly List<Ev> Stream = new()
     {
         new(2.0f, "round_start", 0, 0, "第 1 回合 · ASCENT"),
@@ -33,17 +35,18 @@ public partial class Main : Node2D
     {
         (1.2f, "shot1_walk_palette.png"),
         (4.6f, "shot2_kill_feed.png"),
-        (7.42f, "shot3_cheer.png"),
+        // shot3（庆祝）为相位锁定捕获：_t≥7.0 后等 A1 离屏瞬间再拍，见 _Process
     };
 
-    private SystemFont _font;
-    private Label _banner;
-    private Label _score;
+    private SystemFont _font = null!;
+    private Label _banner = null!;
+    private Label _score = null!;
     private float _bannerTtl;
     private float _t;
     private int _cursor;
     private int _shotCursor;
     private int _killsA, _killsB, _aliveA = 5, _aliveB = 5, _roundA, _roundB;
+    private bool _auditDone, _shot3Done;
 
     public override void _Ready()
     {
@@ -141,6 +144,12 @@ public partial class Main : Node2D
             Capture(_shots[_shotCursor].Name);
             _shotCursor++;
         }
+        // 庆祝截图相位锁定：等弹跳离屏（跨帧率确定性），8.8s 兜底强制拍
+        if (!_shot3Done && _t >= 7.0f && (_players.Count > 0 && _players[0].Airborne || _t >= 8.8f))
+        {
+            _shot3Done = true;
+            Capture("shot3_cheer.png");
+        }
 
         foreach (var w in _walkers) w.Update(dt);
         foreach (var p in _players) p.Update(dt);
@@ -164,7 +173,12 @@ public partial class Main : Node2D
             if (_bannerTtl <= 0) _banner.Visible = false;
         }
 
-        if (_t >= 9.2f)
+        if (!_auditDone && _shot3Done && _t >= 9.0f)
+        {
+            _auditDone = true;
+            SelfAudit();
+        }
+        if (_t >= 9.8f)
         {
             GD.Print("[m0] done");
             GetTree().Quit();
@@ -215,6 +229,83 @@ public partial class Main : Node2D
         GetViewport().GetTexture().GetImage().SavePng($"user://m0/{name}");
         GD.Print($"[m0] saved {name}");
     }
+
+    // ---------- 像素自审计（与桌面基线同源断言；设备端在 logcat 出结果） ----------
+
+    private static int Count(Image img, int x0, int y0, int x1, int y1, Func<Color, bool> pred)
+    {
+        int hits = 0;
+        for (int y = y0; y < y1; y++)
+            for (int x = x0; x < x1; x++)
+                if (pred(img.GetPixel(x, y)))
+                    hits++;
+        return hits;
+    }
+
+    private static bool Near(Color c, string hex, int tol) =>
+        Mathf.Abs(c.R8 - Color.FromHtml(hex).R8) <= tol &&
+        Mathf.Abs(c.G8 - Color.FromHtml(hex).G8) <= tol &&
+        Mathf.Abs(c.B8 - Color.FromHtml(hex).B8) <= tol;
+
+    private static bool Light(Color c) => c.R8 > 100 && c.G8 > 100 && c.B8 > 100 && Mathf.Abs(c.R8 - c.B8) < 40;
+
+    /// <summary>变暗的蓝衣（阵亡压暗）：蓝主导且显著偏暗。兼容 sRGB 空间压暗（桌面）与线性空间压暗（GLES3 设备）两种渲染结果。</summary>
+    private static bool DeadBlue(Color c) => c.R8 < 60 && c.G8 < 90 && c.B8 > 90 && c.B8 < 190 && c.B8 - c.R8 > 40;
+    private static bool ScoreBg(Color c) => Near(c, "#14161f", 6);
+
+    private void Check(string id, float value, float min, float max, ref int pass)
+    {
+        bool ok = value >= min && value <= max;
+        if (ok) pass++;
+        GD.Print($"[audit] {id}={value:0} {(ok ? "PASS" : "FAIL")} (expect {min:0}..{max:0})");
+    }
+
+    /// <summary>
+    /// 加载三张自存截图做像素断言。断言全部用 720×1280 内容坐标表达，按截图实际分辨率等比映射
+    /// （设备窗口尺寸≠视口设计尺寸，如模拟器横屏信箱 607×1080），计数阈值按面积因子缩放。
+    /// 阈值基准：2026-10-20 桌面 720×1280 基线实测值。
+    /// </summary>
+    private void SelfAudit()
+    {
+        int pass = 0, total = 0;
+        var s1 = Image.LoadFromFile(ProjectSettings.GlobalizePath("user://m0/shot1_walk_palette.png"));
+        var s2 = Image.LoadFromFile(ProjectSettings.GlobalizePath("user://m0/shot2_kill_feed.png"));
+        var s3 = Image.LoadFromFile(ProjectSettings.GlobalizePath("user://m0/shot3_cheer.png"));
+
+        if (s1 == null || s2 == null || s3 == null)
+        {
+            GD.Print("[audit] SUMMARY 0/10 PASS (screenshots missing)");
+            return;
+        }
+
+        float kx = s1.GetWidth() / 720f, ky = s1.GetHeight() / 1280f;
+        float area = kx * ky;
+        GD.Print($"[audit] shot size {s1.GetWidth()}x{s1.GetHeight()} (content 720x1280, area factor {area:0.000})");
+
+        int CountC(Image img, float x0, float y0, float x1, float y1, Func<Color, bool> pred) =>
+            Count(img, (int)(x0 * kx), (int)(y0 * ky), (int)(x1 * kx), (int)(y1 * ky), pred);
+        float T(float v) => v * area;
+
+        string[] shirts = { "#d04040", "#3a6ad0", "#38a058", "#d0a020", "#9048c0", "#30a8b0" };
+        foreach (var shirt in shirts)
+        {
+            string hex = shirt;
+            Check($"palette-{hex}", CountC(s1, 0, 270, 720, 465, c => Near(c, hex, 12)), T(60), 1e6f, ref pass); total++;
+        }
+        Check("minimap-red", CountC(s1, 0, 0, 720, 250, c => Near(c, "#e05a5a", 10)), T(50), 1e6f, ref pass); total++;
+        Check("minimap-blue", CountC(s1, 0, 0, 720, 250, c => Near(c, "#5a7ae0", 10)), T(50), 1e6f, ref pass); total++;
+        Check("desks-wood", CountC(s1, 0, 680, 720, 1070, c => Near(c, "#6b4a32", 8)), T(500), 1e6f, ref pass); total++;
+        Check("baseline-no-cheer", CountC(s1, 100, 770, 320, 795, c => Near(c, "#d04040", 12)), 0, 0, ref pass); total++;
+        Check("banner-text", CountC(s2, 0, 555, 720, 625, Light), T(80), 1e6f, ref pass); total++;
+        Check("dead-dim", CountC(s2, 420, 930, 620, 1070, DeadBlue), T(80), 1e6f, ref pass); total++;
+        Check("cheer-jump", CountC(s3, 100, 770, 320, 795, c => Near(c, "#d04040", 12)), T(40), 1e6f, ref pass); total++;
+        Check("board-bg-top", CountC(s1, 0, 0, 720, 640, ScoreBg), 0, T(999), ref pass); total++;
+        Check("board-bg-bottom", CountC(s1, 0, 640, 720, 1280, ScoreBg), T(100000), 1e7f, ref pass); total++;
+
+        GD.Print($"[audit] SUMMARY {pass}/{total} PASS");
+    }
+
+    // ---------- 布景工具 ----------
 
     private void Panel(float x, float y, float w, float h, string hex)
     {
