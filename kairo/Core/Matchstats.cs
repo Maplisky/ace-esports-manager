@@ -72,7 +72,7 @@ public static class Matchstats
                     if (e.T != "kill" || e.S == null || e.V == null) continue;
                     Add(outMap, e.S, 1, 0, 0, 0, e.Dmg ?? 150);
                     Add(outMap, e.V, 0, 1, 0, 0, 0);
-                    if (e.First) Add(outMap, e.S, 0, 0, 0, 1, 0);
+                    if (e.First == true) Add(outMap, e.S, 0, 0, 0, 1, 0);
                 }
                 // 回合完成（历史回合，或当前回合结果已揭示）→ 残伤与助攻揭晓
                 bool completed = !isCurrent || upTo.Ei >= r.Events.Count;

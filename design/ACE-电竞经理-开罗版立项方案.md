@@ -188,6 +188,8 @@
 
 ## 变更记录
 
+- 2026-10-21 v1.0：**M1-match 完成**——比赛引擎（781 行）全量移植：确定性 hash 开局战术/IGL 场上阅读（零 RNG）、干预重模拟（不消耗 RNG）、招牌战术泄露（只读指纹）、经济/大招/高光事件全链。黄金轨迹：5 场完整比赛（14 图/约 350 回合/数千事件）逐位一致 + 重模拟一致性双闸，累计 54 项测试绿（TS 201/201 同步绿）。**检错轮战果**：①`Math.exp` 平台失配（187/2048=9.1%）→ detExp 收敛（fdlibm e_exp 双端）；②TS 可选字段三连（`first`/AI 暂停 call 键/干预 igl 的 undefined-vs-false/null 语义）→ bool? 可空化；③detExp 收敛后 scrim 测试夹具刀锋翻转 → 多 seed 池加固。map.ts 前三图逐图对齐验证法（逐图概要 + rounds 子树深比对定位）沉淀于 MatchGoldenTests。
+
 - 2026-10-21 v0.9：**M1-match 前置三叶子（intel/veto/tactics）完成**——情报系统（侦察/衰减/图池预估/散布区间）、BP 禁选（3 赛制 × 先手掷硬币 × 噪声）、战术喊话表（AI + 玩家 8 项 + 点位后缀语义）移植；黄金轨迹（12 情报操作 / 18 BP 案例 / 14 喊话 id 矩阵，世界夹具同源 generateWorld(42)）21/21 绿，累计 53 项。Types 增补 Scouting/Difficulty/StyleCounter/PatchNotes/LastPattern（match.ts 亦需）。下一步 match.ts 本体（781 行，比赛模拟核心）。
 
 - 2026-10-21 v0.8：**M1-matchstats 完成**——比赛记录类型（RoundEvent/RoundRecord/MapRecord 等）+ 数据面板函数（liveAcs/liveLines/liveMeta/summarizeMatch/pickMvps）移植；黄金轨迹 = Rng(999) 合成夹具（2 图 21 回合，双端 rng 调用序逐位对齐重建）+ 9 探针 + 赛后汇总/MVP，3/3 绿。语义细节：TS truthy 空对象（`end.ults={}` 也替换快照）在 C# 用可空类型复刻；char/string 索引差异（`p[0]`）记入移植陷阱。

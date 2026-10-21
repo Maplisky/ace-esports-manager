@@ -12,7 +12,8 @@ public sealed class RoundEvent
     public string? S { get; set; }
     /// <summary>受害者</summary>
     public string? V { get; set; }
-    public bool First { get; set; }
+    /// <summary>是否首杀（TS 可选字段：非首杀事件不存在该键，C# 用 null 对应）</summary>
+    public bool? First { get; set; }
     /// <summary>1vX 残局 X</summary>
     public int? Vs { get; set; }
     /// <summary>大招就绪的档位</summary>
@@ -84,11 +85,6 @@ public sealed class PlayerLine
     public double Damage { get; set; }
     public int Rounds { get; set; }
     public double Acs { get; set; }
-}
-
-public sealed class EdgeBreakdown
-{
-    public double Base, Igl, Chem, Coach, Meta, Map, Prep, Familiarity, ShortHanded, Aim, Awareness, MapTactics;
 }
 
 public sealed class IglReading
@@ -182,7 +178,7 @@ public sealed class MapRecord
     /// <summary>本图英雄分配（插入序=分配序）</summary>
     public OrderedDict<string, string> Agents { get; set; } = new();
     /// <summary>双方强度归因分解</summary>
-    public EdgeBreakdown EdgesA { get; set; } = new();
-    public EdgeBreakdown EdgesB { get; set; } = new();
+    public Strength.SideEdge EdgesA { get; set; } = new();
+    public Strength.SideEdge EdgesB { get; set; } = new();
     public List<IglReading> Readings { get; set; } = new();
 }

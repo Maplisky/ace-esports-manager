@@ -102,7 +102,8 @@ test("训练赛：扣 1 行动力 / 不动正式赛账本（fixtures 与 played 
 
 test("胜负 × 收益系数：胜不给全量情报；负场情报进度全量（强度差制造两路覆盖）", () => {
   let sawWin = false, sawLoss = false;
-  for (const seed of [43, 44, 45]) {
+  // detmath 收敛后个别 seed 的刀锋回合可能翻转，多 seed 池保证两路覆盖（意图不变）
+  for (const seed of [43, 44, 45, 46, 47, 48]) {
     // 弱对手 → 胜场路径
     const sW = build(seed);
     const weak = pickOpp(sW, () => true);

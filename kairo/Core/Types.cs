@@ -174,7 +174,8 @@ public sealed class Team
     public StaffSlots Staff { get; set; } = new();
     public List<string> Academy { get; set; } = new();
     public OrderedDict<string, int> PatternUsage { get; set; } = new();
-    public OrderedDict<string, object> Presets { get; set; } = new();
+    /// <summary>地图预案库（mapId → 预案列表）</summary>
+    public OrderedDict<string, List<Preset>> Presets { get; set; } = new();
     /// <summary>招牌战术指纹（mapId → 上场阵容指纹；结算点写入，simMap 只读）</summary>
     public OrderedDict<string, string> LastPattern { get; set; } = new();
 }

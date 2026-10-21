@@ -5,6 +5,7 @@
  * 注意：会修改 state（生涯累计、赛后疲劳/状态/士气）——由日推进统一调度。
  */
 import { Rng, clamp, hashString } from "../rng.ts";
+import { detExp } from "../detmath.ts";
 import { MAP_BY_ID, MAPS } from "../data/maps.ts";
 import { AGENT_BY_ID, ULT_TIER_BONUS, ultCostOf } from "../data/agents.ts";
 import {
@@ -347,7 +348,7 @@ function simMap(
     const comeback = trailing ? 0.35 * sideOf({ A, B }, trailing).str!.mid : 0;
     const m = atkTerms - defTerms + (trailing === atkSide ? comeback : trailing ? -comeback : 0) + (atkSide === "A" ? leakToA : leakToB);
 
-    const pAtk = 1 / (1 + Math.exp(-m / LOGISTIC_K));
+    const pAtk = 1 / (1 + detExp(-m / LOGISTIC_K));
     const attackerWins = rng.chance(pAtk);
     const winSide: "A" | "B" = attackerWins ? atkSide : atkSide === "A" ? "B" : "A";
     const winSim = sideOf({ A, B }, winSide);

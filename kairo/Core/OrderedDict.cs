@@ -9,7 +9,7 @@ namespace Kairo.Core;
 /// 插入序字典 — TS Record/Map 的确定性对应物（JS 对象枚举按插入序，C# Dictionary 无序）。
 /// 模拟内核中一切"键值集合"语义必须用此类型，保证遍历序跨语言一致。
 /// </summary>
-public sealed class OrderedDict<K, V> : IEnumerable<KeyValuePair<K, V>> where K : notnull
+public sealed class OrderedDict<K, V> : IReadOnlyDictionary<K, V> where K : notnull
 {
     private readonly Dictionary<K, V> _map = new();
     private readonly List<K> _order = new();

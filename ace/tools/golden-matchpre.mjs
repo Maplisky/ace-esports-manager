@@ -13,6 +13,7 @@ import { writeFileSync, mkdirSync } from 'node:fs';
 const state = generateWorld(42);
 const teams = Object.values(state.teams);
 const teamIds = teams.slice(0, 8).map((t) => t.id);
+state.styleCounter ??= {};
 
 // 情报序列：侦察/衰减/读取
 const intelSeq = [];
