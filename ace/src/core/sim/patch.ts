@@ -10,6 +10,7 @@ import { AGENT_BY_ID } from "../data/agents.ts";
 import { AGENTS } from "../data/agents.ts";
 import { MAPS } from "../data/maps.ts";
 import { computeFit } from "./fit.ts";
+import { detToFixed2 } from "../detmath.ts";
 import { Rng } from "../rng.ts";
 
 /** 当前生效的 Patch（GameState.patchNotes 末条） */
@@ -48,7 +49,7 @@ export function rollPatch(state: GameState, segKey: string, rng: Rng): PatchNote
       const mapName = mapDef.name;
       mapNotes.push({
         mapId: m,
-        text: `在「${mapName}」其适配 ${best.fit.toFixed(2)}，${best.c.dir === "nerf" ? "控图价值仍高于平替——平替不成立" : "加强后优先级进一步上升"}`,
+        text: `在「${mapName}」其适配 ${detToFixed2(best.fit)}，${best.c.dir === "nerf" ? "控图价值仍高于平替——平替不成立" : "加强后优先级进一步上升"}`,
       });
     }
   }

@@ -62,6 +62,20 @@ export function detPowInt(base: number, exp: number): number {
   return result;
 }
 
+/**
+ * 定点 2 位小数格式化（替代 toFixed(2) 的平台舍入差异）：
+ * q = v·100 半数远离零取整（JsRound 语义）→ 整数 k，再纯整数拼接字符串。
+ * 双端（TS/C#）对同一 v 产出逐字符相同的结果。
+ */
+export function detToFixed2(v: number): string {
+  const k = Math.round(v * 100); // Math.round = 半数向 +∞，双端以同一整数结论对齐（k 为整数，无舍入歧义）
+  const neg = k < 0;
+  const a = Math.abs(k);
+  const intPart = Math.floor(a / 100);
+  const frac = a % 100;
+  return `${neg ? "-" : ""}${intPart}.${frac < 10 ? "0" : ""}${frac}`;
+}
+
 /** ln2 三段 Cody-Waite 拆分（exp 归约用）：程序化推导，双端一致 */
 const LN2_HI = maskLow(LN2, 28);
 const LN2_REM1 = LN2 - LN2_HI;

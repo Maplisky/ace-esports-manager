@@ -133,6 +133,20 @@ public static class DetMath
         return y;
     }
 
+    /// <summary>
+    /// 定点 2 位小数格式化（与 TS detToFixed2 逐字符一致）：k = JsRound(v·100)，
+    /// 纯整数拼接。JS Math.round(v*100) 与 JsRound(v*100) 同语义（半数向 +∞）。
+    /// </summary>
+    public static string ToFixed2(double v)
+    {
+        long k = (long)JsRound(v * 100);
+        bool neg = k < 0;
+        long a = Math.Abs(k);
+        long intPart = a / 100;
+        long frac = a % 100;
+        return $"{(neg ? "-" : "")}{intPart}.{(frac < 10 ? "0" : "")}{frac}";
+    }
+
     /// <summary>cos 核，r ∈ [-π/4, π/4]。系数取自 fdlibm __kernel_cos（公有领域）。</summary>
     private static double KernelCos(double r)
     {

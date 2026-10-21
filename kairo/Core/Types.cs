@@ -139,7 +139,8 @@ public sealed class PatchChange
     public double Meta { get; set; }
     /// <summary>buff / nerf</summary>
     public string Dir { get; set; } = "buff";
-    public double Pct { get; set; }
+    /// <summary>变化幅度百分比（整数，Math.round 产物）</summary>
+    public int Pct { get; set; }
 }
 
 public sealed class PatchNote
