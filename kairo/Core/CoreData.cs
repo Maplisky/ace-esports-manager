@@ -15,6 +15,16 @@ public static class CoreData
     public static List<VlrTeamStat> RealTeams { get; private set; } = new();
     public static Dictionary<int, VlrPlayerStat> RealPlayersByVlr { get; private set; } = new();
     public static Dictionary<string, AgentDef> AgentById { get; private set; } = new();
+    public static Dictionary<string, MapDef> MapById { get; private set; } = new();
+
+    /// <summary>大招就绪加成（GDD §5.4 v1.5 调参表；未知档位缺省 0.4）。</summary>
+    public static readonly Dictionary<string, double> UltTierBonus = new()
+    {
+        ["core"] = 0.6, ["harvest"] = 0.5, ["combo"] = 0.5, ["utility"] = 0.4, ["info"] = 0.25,
+    };
+
+    /// <summary>大招所需点数（按特工区分；未知 id 缺省 7）。</summary>
+    public static int UltCostOf(string agentId) => AgentById.TryGetValue(agentId, out var a) ? a.UltCost : 7;
 
     private static readonly object Gate = new();
     private static bool _loaded;
@@ -31,6 +41,7 @@ public static class CoreData
             RealTeams = teams;
             RealPlayersByVlr = players.ToDictionary(p => p.VlrId);
             AgentById = agents.ToDictionary(a => a.Id);
+            MapById = maps.ToDictionary(m => m.Id);
             _loaded = true;
         }
     }

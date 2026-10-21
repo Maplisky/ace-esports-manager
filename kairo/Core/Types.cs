@@ -226,6 +226,8 @@ public sealed class GameState
     public List<PatchNote> PatchNotes { get; set; } = new();
     /// <summary>难度：normal/hard/pro（AI 侦察强度用）</summary>
     public string? Difficulty { get; set; }
+    /// <summary>赛程（插入序=生成序）</summary>
+    public List<Fixture> Fixtures { get; set; } = new();
     public Manager Manager { get; set; } = new();
     public int BoardConfidence { get; set; }
     public object? Objective { get; set; }

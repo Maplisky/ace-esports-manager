@@ -100,6 +100,75 @@ public sealed class IglReading
     public bool Correct { get; set; }
 }
 
+/// <summary>地图预案（GDD §7.1）：选手 id → 英雄 id（插入序=配置序）。</summary>
+public sealed class Preset
+{
+    public string Name { get; set; } = "";
+    public OrderedDict<string, string> Agents { get; set; } = new();
+    public bool Preferred { get; set; }
+}
+
+/// <summary>赛程条目（GDD §5.3）：赛果/手动 BP 锁/干预列表的事实源。</summary>
+public sealed class Fixture
+{
+    public string Id { get; set; } = "";
+    public int Day { get; set; }
+    public string Stage { get; set; } = "";
+    public string Comp { get; set; } = "";
+    public string TeamA { get; set; } = "";
+    public string TeamB { get; set; } = "";
+    /// <summary>赛制 1/3/5</summary>
+    public int Bo { get; set; }
+    public string Label { get; set; } = "";
+    public bool Played { get; set; }
+    /// <summary>胜者队 id（积分/推进的唯一事实源）</summary>
+    public string? WinnerTeamId { get; set; }
+    /// <summary>玩家手动 BP 锁定的图序列（引擎优先于自动 BP）</summary>
+    public List<string>? MapLock { get; set; }
+    /// <summary>赛前准备每图英雄分配（插入序）</summary>
+    public OrderedDict<string, OrderedDict<string, string>>? AgentLock { get; set; }
+    public string? NextFixtureId { get; set; }
+    public string? NextLoserFixtureId { get; set; }
+    /// <summary>已结算（我方比赛先出 Record 供播放器，后结算）</summary>
+    public bool? Settled { get; set; }
+    /// <summary>玩家比赛中干预列表（重模拟的唯一输入）</summary>
+    public List<MatchIntervention>? Interventions { get; set; }
+}
+
+/// <summary>玩家比赛中干预（v1.0-8）：同 seed 重模拟的唯一输入（不消耗 RNG）。</summary>
+public sealed class MatchIntervention
+{
+    /// <summary>图序号（MatchRecord.Maps 下标）</summary>
+    public int Map { get; set; }
+    /// <summary>生效回合（该回合起持续 3 回合；IGL 采纳 2 回合）</summary>
+    public int Round { get; set; }
+    /// <summary>战术 id</summary>
+    public string Tactic { get; set; } = "";
+    /// <summary>IGL 场上阅读采纳（效果 80%、不耗暂停次数）</summary>
+    public bool? Igl { get; set; }
+}
+
+public sealed class MatchRecord
+{
+    public string Id { get; set; } = "";
+    public long Seed { get; set; }
+    /// <summary>赛制 1/3/5</summary>
+    public int Format { get; set; }
+    public string TeamA { get; set; } = "";
+    public string TeamB { get; set; } = "";
+    public string Stage { get; set; } = "";
+    public int Day { get; set; }
+    public List<MapRecord> Maps { get; set; } = new();
+    /// <summary>[A 图胜, B 图胜]</summary>
+    public int ScoreA { get; set; }
+    public int ScoreB { get; set; }
+    /// <summary>胜方 A/B</summary>
+    public string Winner { get; set; } = "A";
+    public string? Mvp { get; set; }
+    /// <summary>玩家干预审计（随比赛落档）</summary>
+    public List<MatchIntervention>? Interventions { get; set; }
+}
+
 public sealed class MapRecord
 {
     public string Map { get; set; } = "";
