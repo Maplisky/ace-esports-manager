@@ -84,6 +84,10 @@ public sealed class Player
     public List<string> Traits { get; set; } = new();
     /// <summary>野心（退役检定输入，35-85）</summary>
     public int Ambition { get; set; }
+    /// <summary>替补三正路（v1.0）：successor/mentor/learner</summary>
+    public string? Track { get; set; }
+    /// <summary>接班人的导师（队内首发老将 id）</summary>
+    public string? MentorId { get; set; }
     public int InjuredUntilDay { get; set; }
     public bool Homegrown { get; set; }
     public int BenchedWeeks { get; set; }
@@ -294,6 +298,14 @@ public sealed class ManagerLife
     public int Mood { get; set; }
 }
 
+public sealed class CareerEnding
+{
+    /// <summary>fired/retired/hall</summary>
+    public string Kind { get; set; } = "fired";
+    public int Year { get; set; }
+    public int Day { get; set; }
+}
+
 public sealed class ManagerCareer
 {
     public int StartYear { get; set; }
@@ -308,8 +320,12 @@ public sealed class ManagerCareer
     public bool Warned { get; set; }
     /// <summary>出身：legend/grassroots/analyst</summary>
     public string? Origin { get; set; }
+    /// <summary>分类冠军账本（大满贯判定；插入序）</summary>
+    public OrderedDict<string, int> TitleKinds { get; set; } = new();
+    /// <summary>跳槽次数（雇佣兵线成就数据源）</summary>
+    public int JobHops { get; set; }
     /// <summary>终局（下课/收官/强制退休）：写入后停止推进</summary>
-    public string? Ending { get; set; }
+    public CareerEnding? Ending { get; set; }
 }
 
 public sealed class Manager
