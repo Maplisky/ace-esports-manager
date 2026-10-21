@@ -188,6 +188,8 @@
 
 ## 变更记录
 
+- 2026-10-21 v0.8：**M1-matchstats 完成**——比赛记录类型（RoundEvent/RoundRecord/MapRecord 等）+ 数据面板函数（liveAcs/liveLines/liveMeta/summarizeMatch/pickMvps）移植；黄金轨迹 = Rng(999) 合成夹具（2 图 21 回合，双端 rng 调用序逐位对齐重建）+ 9 探针 + 赛后汇总/MVP，3/3 绿。语义细节：TS truthy 空对象（`end.ults={}` 也替换快照）在 C# 用可空类型复刻；char/string 索引差异（`p[0]`）记入移植陷阱。
+
 - 2026-10-21 v0.7：**M1-sim 前两模块（fit/strength）完成**——黄金轨迹（fit 矩阵 28×10 / 职责权重 / 54 个 computeSide 案例 × 18 字段）逐位一致，C# 侧累计 29/29 绿。检错轮再抓三类移植错误：int/double 算术陷阱（TS number 全程 double：shortHanded `-0*18=-0` 符号位都一致）、xUnit 并行测试与模块级 playerSeq 的竞态（生成闸门原子化 resetSeq）、测试数据加载的线程安全。README 增补「确定性红线三件套」与改核工作流。sim/ 余 22 模块（match/day/transfer…5348 行）按依赖序推进。
 
 - 2026-10-21 v0.6：**M1-worldgen 完成**——版本化 JSON 数据包落地（`ace/tools/export-data-package.mjs` → `kairo/Core.Data/`，28 英雄/10 图/64 队/330 选手，TS 唯一数据源）；C# 移植 worldgen 全量（含 OrderedDict 插入序容器、稳定排序、JS 语义取整三件套确定性红线）；worldgen 黄金轨迹（4 seed × 626 选手/64 队完整世界 + salary/overall 向量）逐位一致，22/22 测试绿。**`Math.pow` 平台失配风险同口径收敛**（detPowInt 双端同序循环乘，salary 曲线改用）。检错轮黄金轨迹抓出 5 个移植错误（多余逐属性取整 / primaryDuty 语义 / agentPro 实为 double / IGL 强转 / seed 溢出 int）全部修复。TS 201/201 绿（detPowInt 无回归）。
