@@ -42,19 +42,10 @@ public static class Worldgen
     private static readonly string[] SynSuffix = { "", "", "X", "7", "2", "ee", "z", "99", "01" };
     private static readonly string[] CoachNames = { "老K", "阿澈", "白熊", "萧然", "陆离", "顾行", "苏木", "陈野", "洛尘", "祁风", "温叙", "关山" };
 
-    private static List<AgentDef> _agents = new();
-    private static List<MapDef> _maps = new();
-    private static List<VlrTeamStat> _realTeams = new();
-    private static Dictionary<int, VlrPlayerStat> _realPlayersByVlr = new();
-    private static HashSet<string> _agentIds = new();
+    // 数据经 CoreData 持有（LoadData 委托），本类不自带副本
 
     /// <summary>装载数据包（生成前必须调用一次）。</summary>
-    public static void LoadData(string dataDir)
-    {
-        (_agents, _maps, _realTeams, var players) = DataPackage.Load(dataDir);
-        _realPlayersByVlr = players.ToDictionary(p => p.VlrId);
-        _agentIds = _agents.Select(a => a.Id).ToHashSet();
-    }
+    public static void LoadData(string dataDir) => CoreData.Load(dataDir);
 
     private static double AttrGet(PlayerAttrs a, string k) => k switch
     {
@@ -136,6 +127,8 @@ public static class Worldgen
     }
 
     private static int _playerIdSeq;
+    /// <summary>生成闸门：playerIdSeq 为模块级状态（TS 同款），并发生成必须串行。</summary>
+    private static readonly object GenGate = new();
 
     /// <summary>测试辅助：重置全局玩家 ID 序列（保证两次生成完全一致）。</summary>
     public static void ResetPlayerSeq() => _playerIdSeq = 0;
@@ -153,7 +146,7 @@ public static class Worldgen
         var byAgent = new List<(string, int, double, double)>();
         foreach (var s in vlrP.Stats)
         {
-            if (!_agentIds.Contains(s.Agent) || s.Rounds <= 0) continue;
+            if (!CoreData.AgentById.ContainsKey(s.Agent) || s.Rounds <= 0) continue;
             rounds += s.Rounds;
             rating += s.Rating * s.Rounds;
             acs += s.Acs * s.Rounds;
@@ -219,7 +212,7 @@ public static class Worldgen
         var out0 = new List<string>();
         if (vlrId != null)
         {
-            var p = _realPlayersByVlr.GetValueOrDefault(vlrId.Value);
+            var p = CoreData.RealPlayersByVlr.GetValueOrDefault(vlrId.Value);
             var w = p != null ? WeightedStatsOf(p) : null;
             if (w != null)
             {
@@ -247,7 +240,7 @@ public static class Worldgen
     }
 
     /// <summary>starters 模板中的职责序 + 自由位。</summary>
-    private static List<AgentDef> ByDuty(string d) => _agents.Where(a => PrimaryDuty(a.Duty) == d).ToList();
+    private static List<AgentDef> ByDuty(string d) => CoreData.Agents.Where(a => PrimaryDuty(a.Duty) == d).ToList();
 
     /// <summary>职责向量主职责（TS agents.ts#primaryDuty 语义：bestV 从 -1 起，遍历 initiator→controller→sentinel→duelist，严格 &gt;）。</summary>
     public static string PrimaryDuty(DutyVector d)
@@ -348,7 +341,7 @@ public static class Worldgen
     private static Player MakeRealPlayer(Rng rng, VlrPlayerStat vlrP, string teamId, int tier, bool forceIgl)
     {
         var w = WeightedStatsOf(vlrP);
-        var mainAgent = w != null ? _agents.FirstOrDefault(a => a.Id == w.ByAgent[0].Agent) : null;
+        var mainAgent = w != null ? CoreData.Agents.FirstOrDefault(a => a.Id == w.ByAgent[0].Agent) : null;
         var usedDuty = mainAgent != null ? PrimaryDuty(mainAgent.Duty) : rng.Pick(DutyKeys.ToList());
         bool isIgl = forceIgl || (vlrP.Captain && rng.Chance(0.85));
 
@@ -360,7 +353,7 @@ public static class Worldgen
             attrs = AttrsFromVlr(w, usedDuty, isIgl);
             int DutyRank(string agentId)
             {
-                var a = _agents.FirstOrDefault(x => x.Id == agentId);
+                var a = CoreData.Agents.FirstOrDefault(x => x.Id == agentId);
                 if (a == null) return 9;
                 int best = 9;
                 double bv = -1;
@@ -452,7 +445,7 @@ public static class Worldgen
     private static Team MakeTeamSkeleton(Rng rng, string id, string name, string tag, int tier, string regionId)
     {
         var mapPref = new OrderedDict<string, int>();
-        foreach (var m in _maps) mapPref[m.Id] = rng.Int(45, 75);
+        foreach (var m in CoreData.Maps) mapPref[m.Id] = rng.Int(45, 75);
         var personalities = new[] { "spender", "youth", "steady", "wheeler" };
         return new Team
         {
@@ -488,9 +481,18 @@ public static class Worldgen
     }
 
     /// <summary>生成 v0.7 世界：四大赛区 64 队（真实数据快照），每队 ≤7 真实 roster + 青训补位。</summary>
-    public static GameState GenerateWorld(long seed)
+    public static GameState GenerateWorld(long seed, bool resetSeq = false)
     {
-        if (_agents.Count == 0) throw new InvalidOperationException("Worldgen.LoadData must be called before GenerateWorld.");
+        if (CoreData.Agents.Count == 0) throw new InvalidOperationException("Worldgen.LoadData must be called before GenerateWorld.");
+        lock (GenGate)
+        {
+            if (resetSeq) _playerIdSeq = 0; // 重置必须在闸门内（与 TS resetPlayerSeq()+generateWorld 两步等价且原子）
+            return GenerateWorldInner(seed);
+        }
+    }
+
+    private static GameState GenerateWorldInner(long seed)
+    {
         var rng = new Rng((uint)seed);
         var players = new List<Player>();
         var teams = new OrderedDict<string, Team>();
@@ -499,7 +501,7 @@ public static class Worldgen
         // 赛区插入序 = REAL_TEAMS 首次出现序（TS Map 插入序语义）
         var regionOrder = new List<string>();
         var byRegion = new Dictionary<string, List<VlrTeamStat>>();
-        foreach (var t in _realTeams)
+        foreach (var t in CoreData.RealTeams)
         {
             if (!byRegion.TryGetValue(t.Region, out var arr))
             {
@@ -521,7 +523,7 @@ public static class Worldgen
                 bool iglSet = false;
                 foreach (var vlrId in vt.Roster)
                 {
-                    if (!_realPlayersByVlr.TryGetValue(vlrId, out var vlrP)) continue;
+                    if (!CoreData.RealPlayersByVlr.TryGetValue(vlrId, out var vlrP)) continue;
                     var p = MakeRealPlayer(rng, vlrP, id, tier, false);
                     if (!iglSet && p.IsIgl) iglSet = true;
                     players.Add(p);

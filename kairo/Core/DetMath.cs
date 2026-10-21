@@ -36,7 +36,7 @@ public static class DetMath
     /// </summary>
     public static double Log(double x)
     {
-        if (x != x) return double.NaN;
+        if (double.IsNaN(x)) return double.NaN;
         if (x <= 0) return x == 0 ? double.NegativeInfinity : double.NaN;
         if (x == 1) return 0;
         // frexp：x = f * 2^e，f ∈ [1,2)。乘除 2 的幂均为精确操作。

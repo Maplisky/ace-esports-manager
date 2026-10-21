@@ -18,12 +18,7 @@ public sealed class WorldgenGoldenTests
 
     private static readonly Lazy<string> DataDir = new(() => Path.Combine(AppContext.BaseDirectory, "Core.Data"));
 
-    private static void EnsureData()
-    {
-        if (WorldgenTestsState.Loaded) return;
-        WorldgenTestsState.Loaded = true;
-        Worldgen.LoadData(DataDir.Value);
-    }
+    private static void EnsureData() => WorldgenTestsState.EnsureLoaded();
 
     private static string Hex(double v) => BitConverter.DoubleToInt64Bits(v).ToString("x16");
 
@@ -191,8 +186,7 @@ public sealed class WorldgenGoldenTests
     {
         EnsureData();
         var expected = Golden.Value["seeds"]!.AsArray().First(s => s!["seed"]!.GetValue<long>() == seed)!;
-        Worldgen.ResetPlayerSeq();
-        var state = Worldgen.GenerateWorld(seed);
+        var state = Worldgen.GenerateWorld(seed, resetSeq: true);
         var actual = DumpWorld(state);
         AssertDeepEqual(expected, actual, $"seed{seed}");
     }
@@ -234,5 +228,17 @@ public sealed class WorldgenGoldenTests
 
 internal static class WorldgenTestsState
 {
-    public static bool Loaded;
+    private static readonly object Gate = new();
+    private static bool _loaded;
+
+    public static void EnsureLoaded()
+    {
+        if (_loaded) return;
+        lock (Gate)
+        {
+            if (_loaded) return;
+            Worldgen.LoadData(Path.Combine(AppContext.BaseDirectory, "Core.Data"));
+            _loaded = true;
+        }
+    }
 }

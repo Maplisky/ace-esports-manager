@@ -188,6 +188,8 @@
 
 ## 变更记录
 
+- 2026-10-21 v0.7：**M1-sim 前两模块（fit/strength）完成**——黄金轨迹（fit 矩阵 28×10 / 职责权重 / 54 个 computeSide 案例 × 18 字段）逐位一致，C# 侧累计 29/29 绿。检错轮再抓三类移植错误：int/double 算术陷阱（TS number 全程 double：shortHanded `-0*18=-0` 符号位都一致）、xUnit 并行测试与模块级 playerSeq 的竞态（生成闸门原子化 resetSeq）、测试数据加载的线程安全。README 增补「确定性红线三件套」与改核工作流。sim/ 余 22 模块（match/day/transfer…5348 行）按依赖序推进。
+
 - 2026-10-21 v0.6：**M1-worldgen 完成**——版本化 JSON 数据包落地（`ace/tools/export-data-package.mjs` → `kairo/Core.Data/`，28 英雄/10 图/64 队/330 选手，TS 唯一数据源）；C# 移植 worldgen 全量（含 OrderedDict 插入序容器、稳定排序、JS 语义取整三件套确定性红线）；worldgen 黄金轨迹（4 seed × 626 选手/64 队完整世界 + salary/overall 向量）逐位一致，22/22 测试绿。**`Math.pow` 平台失配风险同口径收敛**（detPowInt 双端同序循环乘，salary 曲线改用）。检错轮黄金轨迹抓出 5 个移植错误（多余逐属性取整 / primaryDuty 语义 / agentPro 实为 double / IGL 强转 / seed 溢出 int）全部修复。TS 201/201 绿（detPowInt 无回归）。
 
 - 2026-10-21 v0.5：**M1-rng 完成并完成确定性数学收敛**——Kairo.Core 类库（纯 C# 零 Godot 依赖）+ 黄金轨迹流程落地；RNG 全 API 与 TS 权威实现逐位一致（7 seed 全套）；平台数学探针证实 V8 与 .NET 的 Math.log/cos ±1 ulp 失配（Log 310/4096、Cos 106/4096、Sqrt 0），按 §5-5 预案收敛为自实现 detLog/detCos/detSin（fdlibm 系系数 + Cody-Waite，TS 侧为权威、C# 逐操作镜像），双端零失配，TS 201/201 绿。worldgen/sim 移植下一步。
