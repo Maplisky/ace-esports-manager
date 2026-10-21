@@ -87,7 +87,12 @@ public sealed class Player
     public int InjuredUntilDay { get; set; }
     public bool Homegrown { get; set; }
     public int BenchedWeeks { get; set; }
+    /// <summary>本周商务占用天数（≥2 天训练收益 −25%/天；每周重置）</summary>
     public int CommercialDays { get; set; }
+    /// <summary>个人积蓄（§8.4 v1.4：直播 60% 分成入个人钱包；旧档缺省 0）</summary>
+    public int Wallet { get; set; }
+    /// <summary>人气值 0-100（直播涨人气；加成商务邀约报酬）</summary>
+    public int? Popularity { get; set; }
     public StreamContract? Stream { get; set; }
     /// <summary>生日（赛季内第 N 天）</summary>
     public int BirthdayDay { get; set; }
@@ -103,7 +108,7 @@ public sealed class Coach
     public int Motivation { get; set; }
 }
 
-public sealed class Sponsor
+public class Sponsor
 {
     public string Id { get; set; } = "";
     public string Name { get; set; } = "";
@@ -111,6 +116,23 @@ public sealed class Sponsor
     public int PerSeason { get; set; }
     public int Years { get; set; }
     public int SignedYear { get; set; }
+    /// <summary>业绩条款（§8.4 v1.4）：联赛四强 ×1.2 / 夺冠 ×1.5——默认签约即带；weeklySponsorIncome 以 bonus===false 区分无条款</summary>
+    public bool? Bonus { get; set; }
+}
+
+/// <summary>赞助意向（赞助 + 过期日）。</summary>
+public sealed class SponsorOffer : Sponsor
+{
+    public int Expires { get; set; }
+}
+
+public sealed class GigOffer
+{
+    public string Id { get; set; } = "";
+    public string PlayerId { get; set; } = "";
+    public string Brand { get; set; } = "";
+    public int Pay { get; set; }
+    public int Day { get; set; }
 }
 
 public sealed class StaffSlot
@@ -348,6 +370,12 @@ public sealed class GameState
     public List<TransferFeedItem> TransferFeed { get; set; } = new();
     /// <summary>退役留档（名宿叙事数据源）</summary>
     public List<RetireLogItem> RetireLog { get; set; } = new();
+    /// <summary>赞助意向池（我队）</summary>
+    public List<SponsorOffer> SponsorOffers { get; set; } = new();
+    /// <summary>选手商务邀约池（我队）</summary>
+    public List<GigOffer> GigOffers { get; set; } = new();
+    /// <summary>赞助业绩倍率（联赛四强 1.2 / 夺冠 1.5；缺省 1）</summary>
+    public double? SponsorMult { get; set; }
     public Manager Manager { get; set; } = new();
     public int BoardConfidence { get; set; }
     public object? Objective { get; set; }
