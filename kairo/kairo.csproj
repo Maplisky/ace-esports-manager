@@ -8,5 +8,12 @@
   <ItemGroup>
     <!-- android/build 是导出产物目录（含导出时复制的 .cs），不参与编译 -->
     <Compile Remove="android/**/*.cs" />
+    <!-- Core 是独立类库（Kairo.Core），由下方 ProjectReference 引入；此处排除避免双编译 -->
+    <Compile Remove="Core/**/*.cs" />
+    <!-- 测试工程独立编译 -->
+    <Compile Remove="Core.Tests/**/*.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="Core\Kairo.Core.csproj" />
   </ItemGroup>
 </Project>

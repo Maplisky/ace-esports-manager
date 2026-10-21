@@ -2,6 +2,7 @@
  * 确定性 RNG — xoshiro128** + splitmix32 播种（GDD §11.1）
  * 规则：一切模拟随机必须经 Rng 实例，禁止 Math.random（CI 双跑比对依赖此约定）。
  */
+import { detCos, detLog } from './detmath.ts';
 
 /** FNV-1a：字符串 → 32 位种子 */
 export function hashString(s: string): number {
@@ -107,13 +108,13 @@ export class Rng {
     return arr;
   }
 
-  /** Box–Muller 正态 */
+  /** Box–Muller 正态（detLog/detCos：确定性数学，双端逐位一致） */
   norm(mean = 0, sd = 1): number {
     let u = 0;
     let v = 0;
     while (u === 0) u = this.next();
     while (v === 0) v = this.next();
-    return mean + sd * Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+    return mean + sd * Math.sqrt(-2 * detLog(u)) * detCos(2 * Math.PI * v);
   }
 
   clampNorm(mean: number, sd: number, min: number, max: number): number {

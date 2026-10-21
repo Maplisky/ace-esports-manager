@@ -54,3 +54,20 @@ adb install -r builds/kairo-m0.apk && adb shell monkey -p com.maplisky.kairo 1
 ## M0 场景结构（m0/）
 
 `Main.tscn` = §3.5 四层分镜微缩版：顶部小地图事件窗 / 调色板小人走路带 / 场馆双方选手+击杀播报 / 底部战绩板。硬编码回放事件流驱动，演出层只消费事件（红线）。运行末尾对自存截图做 15 项像素自审计（`SelfAudit()`，桌面与设备同一实现，设备端结果在 logcat）；`shots/` 为桌面截图存档（已 .gdignore，不进包）。
+
+## M1：共享内核移植（进行中）
+
+结构：`Core/`（Kairo.Core 类库，**纯 C# 零 Godot 依赖**，模拟内核的家）+ `Core.Tests/`（xUnit 黄金轨迹回放）+ TS 侧记录器 `../ace/tools/golden-rng.mjs`。
+
+- **黄金轨迹流程**：TS（`ace/src/core`，唯一权威实现）录制固定 seed 的 API 输出 → `Core.Tests/Golden/*.golden.json`（浮点为 IEEE754 位型 16-hex）→ C# 回放**逐位比对**（禁止十进制容差）。
+- **RNG 已完成**（xoshiro128\*\* + splitmix32）：7 seed × (64 next + 全 API ops) + fork/afterfork 逐位一致。
+- **确定性数学已收敛**（`ace/src/core/detmath.ts` ↔ `Core/DetMath.cs`，双端必须逐操作对齐）：平台 Math.log/cos 在 V8 与 .NET 间存在 ±1 ulp 失配（探针 4096 输入：Log 310、Cos 106、Sqrt 0），`Rng.norm()` 改用自实现 detLog/detCos/detSin（fdlibm 系系数 + π/2 三段 Cody-Waite，纯 IEEE 四则）后双端零失配。TS 侧 201/201 测试绿（行为改变已验证无回归）。
+- 下一步：worldgen → sim/ 移植。
+
+```bash
+# 重录黄金（TS 侧，改内核后必须）
+cd ../ace && node tools/golden-rng.mjs
+
+# 跑 C# 黄金回放
+cd ../kairo && dotnet test Core.Tests/Kairo.Core.Tests.csproj
+```

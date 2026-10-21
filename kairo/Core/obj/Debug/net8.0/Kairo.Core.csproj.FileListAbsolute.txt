@@ -1,0 +1,12 @@
+G:\WorkLoad\vct\kairo\Core\obj\Debug\net8.0\Kairo.Core.GeneratedMSBuildEditorConfig.editorconfig
+G:\WorkLoad\vct\kairo\Core\obj\Debug\net8.0\Kairo.Core.AssemblyInfoInputs.cache
+G:\WorkLoad\vct\kairo\Core\obj\Debug\net8.0\Kairo.Core.AssemblyInfo.cs
+G:\WorkLoad\vct\kairo\Core\obj\Debug\net8.0\Kairo.Core.csproj.CoreCompileInputs.cache
+G:\WorkLoad\vct\kairo\Core\obj\Debug\net8.0\Kairo.Core.sourcelink.json
+G:\WorkLoad\vct\kairo\Core\bin\Debug\net8.0\Kairo.Core.deps.json
+G:\WorkLoad\vct\kairo\Core\bin\Debug\net8.0\Kairo.Core.dll
+G:\WorkLoad\vct\kairo\Core\bin\Debug\net8.0\Kairo.Core.pdb
+G:\WorkLoad\vct\kairo\Core\obj\Debug\net8.0\Kairo.Core.dll
+G:\WorkLoad\vct\kairo\Core\obj\Debug\net8.0\refint\Kairo.Core.dll
+G:\WorkLoad\vct\kairo\Core\obj\Debug\net8.0\Kairo.Core.pdb
+G:\WorkLoad\vct\kairo\Core\obj\Debug\net8.0\ref\Kairo.Core.dll
