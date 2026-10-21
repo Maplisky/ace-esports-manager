@@ -133,6 +133,48 @@ public sealed class ScoutEntry
     public int Last { get; set; }
 }
 
+public sealed class PendingEventOption
+{
+    public string Label { get; set; } = "";
+    /// <summary>结果文本（选定后展示）</summary>
+    public string Result { get; set; } = "";
+    /// <summary>数值效果（目标选手士气/全队士气/预算/声望/信任/不满/疲劳/羁绊/董事会信心）</summary>
+    public int? Morale { get; set; }
+    public int? TeamMorale { get; set; }
+    public int? Budget { get; set; }
+    public int? Reputation { get; set; }
+    public int? Trust { get; set; }
+    public int? Grievance { get; set; }
+    public int? Fatigue { get; set; }
+    public int? Bond { get; set; }
+    public int? BoardConfidence { get; set; }
+}
+
+/// <summary>待决策事件卡实例（抽取时已绑定目标选手）。</summary>
+public sealed class PendingEventCard
+{
+    public string Uid { get; set; } = "";
+    public string CardId { get; set; } = "";
+    public string Title { get; set; } = "";
+    public string Text { get; set; } = "";
+    /// <summary>负面卡（抑制器计数用）</summary>
+    public bool Negative { get; set; }
+    public string? TargetPlayerId { get; set; }
+    public int Day { get; set; }
+    public List<PendingEventOption> Options { get; set; } = new();
+    /// <summary>卡专属数据（如选秀卡冻结新秀 id；随存档序列化）</summary>
+    public OrderedDict<string, object>? Payload { get; set; }
+}
+
+public sealed class NewsItem
+{
+    public int Day { get; set; }
+    /// <summary>kind：league/signing/scandal/milestone 等</summary>
+    public string Kind { get; set; } = "league";
+    public bool Important { get; set; }
+    public string Text { get; set; } = "";
+}
+
 public sealed class PatchChange
 {
     public string AgentId { get; set; } = "";
@@ -149,6 +191,20 @@ public sealed class PatchNote
     public List<PatchChange> Changes { get; set; } = new();
     /// <summary>mapNotes（mapId → 文本；插入序）</summary>
     public OrderedDict<string, string> MapNotes { get; set; } = new();
+}
+
+public sealed class FinanceLogState
+{
+    public List<FinanceEntry> Log { get; set; } = new();
+}
+
+public sealed class FinanceEntry
+{
+    public int Day { get; set; }
+    public string Label { get; set; } = "";
+    public int Amount { get; set; }
+    /// <summary>分类（读取时按 label 推导，不入账）</summary>
+    public string? Cat { get; set; }
 }
 
 public sealed class Team
@@ -230,6 +286,12 @@ public sealed class GameState
     public string? Difficulty { get; set; }
     /// <summary>赛程（插入序=生成序）</summary>
     public List<Fixture> Fixtures { get; set; } = new();
+    /// <summary>待决策事件卡队列（上限 4）</summary>
+    public List<PendingEventCard> PendingEvents { get; set; } = new();
+    /// <summary>财务流水（唯一事实源，裁剪至最近 100 条）</summary>
+    public FinanceLogState Finances { get; set; } = new();
+    /// <summary>新闻流（插入序）</summary>
+    public List<NewsItem> News { get; set; } = new();
     public Manager Manager { get; set; } = new();
     public int BoardConfidence { get; set; }
     public object? Objective { get; set; }
