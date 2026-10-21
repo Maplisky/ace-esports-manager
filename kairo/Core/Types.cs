@@ -127,6 +127,29 @@ public sealed class StaffSlots
     public StaffSlot? Match { get; set; }
 }
 
+public sealed class ScoutEntry
+{
+    public double Points { get; set; }
+    public int Last { get; set; }
+}
+
+public sealed class PatchChange
+{
+    public string AgentId { get; set; } = "";
+    public double Meta { get; set; }
+    /// <summary>buff / nerf</summary>
+    public string Dir { get; set; } = "buff";
+    public double Pct { get; set; }
+}
+
+public sealed class PatchNote
+{
+    public string Version { get; set; } = "";
+    public List<PatchChange> Changes { get; set; } = new();
+    /// <summary>mapNotes（mapId → 文本；插入序）</summary>
+    public OrderedDict<string, string> MapNotes { get; set; } = new();
+}
+
 public sealed class Team
 {
     public string Id { get; set; } = "";
@@ -152,6 +175,8 @@ public sealed class Team
     public List<string> Academy { get; set; } = new();
     public OrderedDict<string, int> PatternUsage { get; set; } = new();
     public OrderedDict<string, object> Presets { get; set; } = new();
+    /// <summary>招牌战术指纹（mapId → 上场阵容指纹；结算点写入，simMap 只读）</summary>
+    public OrderedDict<string, string> LastPattern { get; set; } = new();
 }
 
 public sealed class ManagerSkills
@@ -193,6 +218,14 @@ public sealed class GameState
     public OrderedDict<string, Team> Teams { get; set; } = new();
     public OrderedDict<string, Player> Players { get; set; } = new();
     public int LastEventDay { get; set; }
+    /// <summary>情报（oppTeamId → {points,last}；插入序=侦察序）</summary>
+    public OrderedDict<string, ScoutEntry> Scouting { get; set; } = new();
+    /// <summary>风格特训应对熟练度（StyleKey → 点数）</summary>
+    public OrderedDict<string, double> StyleCounter { get; set; } = new();
+    /// <summary>当前版本补丁（末位为生效版本）</summary>
+    public List<PatchNote> PatchNotes { get; set; } = new();
+    /// <summary>难度：normal/hard/pro（AI 侦察强度用）</summary>
+    public string? Difficulty { get; set; }
     public Manager Manager { get; set; } = new();
     public int BoardConfidence { get; set; }
     public object? Objective { get; set; }

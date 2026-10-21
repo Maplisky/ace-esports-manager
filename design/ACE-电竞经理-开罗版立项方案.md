@@ -188,6 +188,8 @@
 
 ## 变更记录
 
+- 2026-10-21 v0.9：**M1-match 前置三叶子（intel/veto/tactics）完成**——情报系统（侦察/衰减/图池预估/散布区间）、BP 禁选（3 赛制 × 先手掷硬币 × 噪声）、战术喊话表（AI + 玩家 8 项 + 点位后缀语义）移植；黄金轨迹（12 情报操作 / 18 BP 案例 / 14 喊话 id 矩阵，世界夹具同源 generateWorld(42)）21/21 绿，累计 53 项。Types 增补 Scouting/Difficulty/StyleCounter/PatchNotes/LastPattern（match.ts 亦需）。下一步 match.ts 本体（781 行，比赛模拟核心）。
+
 - 2026-10-21 v0.8：**M1-matchstats 完成**——比赛记录类型（RoundEvent/RoundRecord/MapRecord 等）+ 数据面板函数（liveAcs/liveLines/liveMeta/summarizeMatch/pickMvps）移植；黄金轨迹 = Rng(999) 合成夹具（2 图 21 回合，双端 rng 调用序逐位对齐重建）+ 9 探针 + 赛后汇总/MVP，3/3 绿。语义细节：TS truthy 空对象（`end.ults={}` 也替换快照）在 C# 用可空类型复刻；char/string 索引差异（`p[0]`）记入移植陷阱。
 
 - 2026-10-21 v0.7：**M1-sim 前两模块（fit/strength）完成**——黄金轨迹（fit 矩阵 28×10 / 职责权重 / 54 个 computeSide 案例 × 18 字段）逐位一致，C# 侧累计 29/29 绿。检错轮再抓三类移植错误：int/double 算术陷阱（TS number 全程 double：shortHanded `-0*18=-0` 符号位都一致）、xUnit 并行测试与模块级 playerSeq 的竞态（生成闸门原子化 resetSeq）、测试数据加载的线程安全。README 增补「确定性红线三件套」与改核工作流。sim/ 余 22 模块（match/day/transfer…5348 行）按依赖序推进。
