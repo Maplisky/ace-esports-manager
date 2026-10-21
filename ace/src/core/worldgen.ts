@@ -4,6 +4,7 @@
  * 选手属性由 vlr.gg 逐英雄统计（rounds 加权）推导；无统计/缺员以青训虚拟生成并标注 synthetic。
  */
 import { Rng, clamp, hashString } from "./rng.ts";
+import { detPowInt } from "./detmath.ts";
 import { AGENTS, primaryDuty } from "./data/agents.ts";
 import { MAPS } from "./data/maps.ts";
 import { REAL_TEAMS, REAL_PLAYERS_BY_VLR, type VlrPlayerStat, type VlrTeamStat } from "./data/real/real-data.ts";
@@ -75,9 +76,9 @@ function generateAttrs(rng: Rng, target: number, duty: DutyKey, isIgl: boolean):
   return attrs;
 }
 
-/** 薪资曲线：overall 67 ≈ $21K/季，78 ≈ $171K/季（调参表可调；base 已是美元，勿再放大） */
+/** 薪资曲线：overall 67 ≈ $21K/季，78 ≈ $171K/季（调参表可调；base 已是美元，勿再放大）。detPowInt 保证双端逐位一致 */
 export function salaryFor(overall: number, tier: 1 | 2): number {
-  const base = 0.06 * Math.pow(1.21, overall);
+  const base = 0.06 * detPowInt(1.21, overall);
   const scaled = base * (tier === 1 ? 1 : 0.45);
   return Math.round(scaled / 1000) * 1000;
 }

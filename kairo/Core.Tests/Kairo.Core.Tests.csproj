@@ -16,4 +16,7 @@
   <ItemGroup>
     <Content Include="Golden/**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Core.Data\*.json" Link="Core.Data\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

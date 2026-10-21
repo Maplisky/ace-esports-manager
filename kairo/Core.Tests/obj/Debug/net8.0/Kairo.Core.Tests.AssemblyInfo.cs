@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Kairo.Core.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+42b6d2c43bc77b7678d3f9bc8725b18e308e8359")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9e29157060d8d1bc139ccd4c88edee967115ae94")]
 [assembly: System.Reflection.AssemblyProductAttribute("Kairo.Core.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Kairo.Core.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

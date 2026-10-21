@@ -1,0 +1,12 @@
+{
+  "format": 1,
+  "source": "ace/src/core/data（唯一权威数据源，勿手改 JSON）",
+  "coreCommit": "9e29157",
+  "counts": {
+    "agents": 28,
+    "maps": 10,
+    "teams": 64,
+    "players": 330
+  },
+  "note": "数组顺序即语义顺序（agents=职责分组序/teams=赛区插入序/players=vlr id 无序仅查表）"
+}

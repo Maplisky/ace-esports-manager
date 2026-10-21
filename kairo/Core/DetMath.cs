@@ -79,6 +79,28 @@ public static class DetMath
         return -KernelCos(r);
     }
 
+    /// <summary>整数幂（exp ≥ 0）：固定顺序循环乘，与 TS detPowInt 逐位一致（替代平台 Math.Pow）。</summary>
+    public static double PowInt(double baseVal, long exp)
+    {
+        double result = 1;
+        for (long i = 0; i < exp; i++) result *= baseVal;
+        return result;
+    }
+
+    /// <summary>
+    /// JS Math.round 语义：最接近值、平局向 +∞（含 0.49999999999999994 边界）。
+    /// 与 .NET Math.Round（银行家舍入）不同，模拟内核一切取整必须经此。
+    /// </summary>
+    public static double JsRound(double x)
+    {
+        if (double.IsNaN(x) || double.IsInfinity(x)) return x;
+        double f = Math.Floor(x);
+        double diff = x - f;
+        if (diff > 0.5) return f + 1;
+        if (diff < 0.5) return f;
+        return f + 1; // 恰为 0.5 → 向 +∞（JS Math.round(-0.5) === -0，数值上同为 0）
+    }
+
     /// <summary>cos 核，r ∈ [-π/4, π/4]。系数取自 fdlibm __kernel_cos（公有领域）。</summary>
     private static double KernelCos(double r)
     {

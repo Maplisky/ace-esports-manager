@@ -55,6 +55,13 @@ export function detLog(x: number): number {
   return logF + e * LN2;
 }
 
+/** 整数幂（exp ≥ 0）：固定顺序循环乘，双端逐位一致（替代平台 Math.pow，用于薪资曲线等） */
+export function detPowInt(base: number, exp: number): number {
+  let result = 1;
+  for (let i = 0; i < exp; i++) result *= base;
+  return result;
+}
+
 /** cos(x)，x ∈ [0, 2π)。π/2 三段归约 + [-π/4,π/4] 核多项式。 */
 export function detCos(x: number): number {
   const n = Math.floor(x / PIO2 + 0.5); // Floor(+0.5)：双端舍入语义一致

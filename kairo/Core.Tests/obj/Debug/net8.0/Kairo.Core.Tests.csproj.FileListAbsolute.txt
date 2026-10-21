@@ -101,3 +101,9 @@ G:\WorkLoad\vct\kairo\Core.Tests\obj\Debug\net8.0\refint\Kairo.Core.Tests.dll
 G:\WorkLoad\vct\kairo\Core.Tests\obj\Debug\net8.0\Kairo.Core.Tests.pdb
 G:\WorkLoad\vct\kairo\Core.Tests\obj\Debug\net8.0\Kairo.Core.Tests.genruntimeconfig.cache
 G:\WorkLoad\vct\kairo\Core.Tests\obj\Debug\net8.0\ref\Kairo.Core.Tests.dll
+G:\WorkLoad\vct\kairo\Core.Tests\bin\Debug\net8.0\Golden\worldgen.golden.json
+G:\WorkLoad\vct\kairo\Core.Tests\bin\Debug\net8.0\Core.Data\agents.json
+G:\WorkLoad\vct\kairo\Core.Tests\bin\Debug\net8.0\Core.Data\manifest.json
+G:\WorkLoad\vct\kairo\Core.Tests\bin\Debug\net8.0\Core.Data\maps.json
+G:\WorkLoad\vct\kairo\Core.Tests\bin\Debug\net8.0\Core.Data\real-players.json
+G:\WorkLoad\vct\kairo\Core.Tests\bin\Debug\net8.0\Core.Data\real-teams.json

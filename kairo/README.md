@@ -61,8 +61,16 @@ adb install -r builds/kairo-m0.apk && adb shell monkey -p com.maplisky.kairo 1
 
 - **黄金轨迹流程**：TS（`ace/src/core`，唯一权威实现）录制固定 seed 的 API 输出 → `Core.Tests/Golden/*.golden.json`（浮点为 IEEE754 位型 16-hex）→ C# 回放**逐位比对**（禁止十进制容差）。
 - **RNG 已完成**（xoshiro128\*\* + splitmix32）：7 seed × (64 next + 全 API ops) + fork/afterfork 逐位一致。
-- **确定性数学已收敛**（`ace/src/core/detmath.ts` ↔ `Core/DetMath.cs`，双端必须逐操作对齐）：平台 Math.log/cos 在 V8 与 .NET 间存在 ±1 ulp 失配（探针 4096 输入：Log 310、Cos 106、Sqrt 0），`Rng.norm()` 改用自实现 detLog/detCos/detSin（fdlibm 系系数 + π/2 三段 Cody-Waite，纯 IEEE 四则）后双端零失配。TS 侧 201/201 测试绿（行为改变已验证无回归）。
-- 下一步：worldgen → sim/ 移植。
+- **worldgen 已完成**：数据包（`Core.Data/*.json`，TS 导出）+ 世界生成全量移植；黄金 = 4 seed 完整世界快照（插入序数组 + 浮点位型 hex + 键序校验），22/22 绿。
+- **确定性红线三件套**（移植 TS 语义必须遵守）：
+  1. Record/Map 语义一律 `OrderedDict`（TS 插入序枚举；C# Dictionary 无序）；
+  2. 排序一律 LINQ `OrderBy/OrderByDescending`（稳定序 = ES2019+ sort；`List.Sort` 不稳定禁用）；
+  3. 取整一律 `DetMath.JsRound`（JS 半数向 +∞；.NET 默认银行家舍入）；幂用 `DetMath.PowInt`（平台 pow 逐位不可靠）。
+- **TS 侧对应物**：`detmath.ts`（detLog/detCos/detSin/detPowInt，权威实现）；改任何 TS 内核函数后必须重录黄金。
+- 工作流：改 TS 内核 → `node tools/golden-rng.mjs && node tools/golden-worldgen.mjs`（ace/ 下）→ `dotnet test Core.Tests`（kairo/ 下）。
+- 下一步：sim/ 移植（match/day/transfer/finance…24 文件，按依赖序）。
+- **确定性数学已收敛**（`ace/src/core/detmath.ts` ↔ `Core/DetMath.cs`，双端必须逐操作对齐）：平台 Math.log/cos 在 V8 与 .NET 间存在 ±1 ulp 失配（探针 4096 输入：Log 310、Cos 106、Sqrt 0），`Rng.norm()` 改用自实现 detLog/detCos/detSin（fdlibm 系系数 + π/2 三段 Cody-Waite，纯 IEEE 四则）后双端零失配。TS 侧 201/201 测试绿（行为改变已验证无回归）。**detPowInt 同理收敛 Math.pow（worldgen 薪资曲线）。**
+- 下一步：sim/ 移植（match/day/transfer/finance…24 文件，按依赖序）。
 
 ```bash
 # 重录黄金（TS 侧，改内核后必须）
