@@ -1,4 +1,6 @@
 .godot/
 builds/
 android/build/
+bin/
+obj/
 *.tmp
