@@ -170,8 +170,9 @@ public sealed class GoldenRngTests
     }
 
     /// <summary>
-    /// 确定性数学逐位裁决：detLog/detCos/detSin（自实现，纯 IEEE 四则）与 TS 权威实现
-    /// 必须零失配。平台 Math.log/cos 的 ±1 ulp 失配已由此收敛（2026-10-21）。
+    /// 确定性数学逐位裁决：detLog/detCos/detSin/detExp（自实现，纯 IEEE 四则）与 TS 权威实现
+    /// 必须零失配。平台 Math.log/cos/exp 的 ±1 ulp 失配已由此收敛（2026-10-21）。
+    /// 另输出平台 Math.Exp 基线失配数（仅报告，不作断言）。
     /// </summary>
     [Fact]
     public void DetMath_BitExact()
@@ -181,8 +182,11 @@ public sealed class GoldenRngTests
         var detLog = probe.GetProperty("detLog").EnumerateArray().Select(x => x.GetString()!).ToArray();
         var detCos = probe.GetProperty("detCos").EnumerateArray().Select(x => x.GetString()!).ToArray();
         var detSin = probe.GetProperty("detSin").EnumerateArray().Select(x => x.GetString()!).ToArray();
+        var expInputs = probe.GetProperty("expInputs").EnumerateArray().Select(x => Bits(x.GetString()!)).ToArray();
+        var detExp = probe.GetProperty("detExp").EnumerateArray().Select(x => x.GetString()!).ToArray();
+        var v8Exp = probe.GetProperty("exp").EnumerateArray().Select(x => x.GetString()!).ToArray();
 
-        int logBad = 0, cosBad = 0, sinBad = 0;
+        int logBad = 0, cosBad = 0, sinBad = 0, expBad = 0;
         for (int i = 0; i < inputs.Length; i++)
         {
             double x = inputs[i];
@@ -190,8 +194,16 @@ public sealed class GoldenRngTests
             if (BitsOf(DetMath.Cos(2 * Math.PI * x)) != detCos[i]) cosBad++;
             if (BitsOf(DetMath.Sin(2 * Math.PI * x)) != detSin[i]) sinBad++;
         }
+        for (int i = 0; i < expInputs.Length; i++)
+        {
+            if (BitsOf(DetMath.Exp(expInputs[i])) != detExp[i]) expBad++;
+        }
+        // 平台基线（V8 Math.exp vs .NET Math.Exp，输入域 [-5,5]）：仅报告
+        int v8ExpBad = v8Exp.Select((h, i) => (h, i)).Count(t => BitsOf(Math.Exp(expInputs[t.i])) != t.h);
+        Console.Error.WriteLine($"[baseline] Math.Exp platform mismatch (V8 vs .NET, [-5,5]): {v8ExpBad}/{expInputs.Length}");
         Assert.True(logBad == 0, $"detLog mismatch: {logBad}/{inputs.Length}");
         Assert.True(cosBad == 0, $"detCos mismatch: {cosBad}/{inputs.Length}");
         Assert.True(sinBad == 0, $"detSin mismatch: {sinBad}/{inputs.Length}");
+        Assert.True(expBad == 0, $"detExp mismatch: {expBad}/{expInputs.Length}");
     }
 }

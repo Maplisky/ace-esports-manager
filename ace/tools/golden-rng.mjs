@@ -5,7 +5,7 @@
  * 运行：node tools/golden-rng.mjs（在 ace/ 下）
  */
 import { Rng, hashString } from '../src/core/rng.ts';
-import { detLog, detCos, detSin } from '../src/core/detmath.ts';
+import { detLog, detCos, detSin, detExp } from '../src/core/detmath.ts';
 import { writeFileSync, mkdirSync } from 'node:fs';
 
 const hex64 = (x) => {
@@ -62,11 +62,17 @@ const mathprobe = {
   log: inputs.map((h) => hex64(Math.log(readHex(h)))),
   cos: inputs.map((h) => hex64(Math.cos(2 * Math.PI * readHex(h)))),
   sqrt: inputs.map((h) => hex64(Math.sqrt(readHex(h)))),
+  // exp 探针：logistic 实际输入域 [-5,5]（x*10-5）+ 原始 (0,1)
+  expInputs: inputs.slice(0, 2048).map((h) => hex64(readHex(h) * 10 - 5)),
+  exp: null,
+  detExp: null,
   // 确定性数学（双端权威实现，0 容断言对象）
   detLog: inputs.map((h) => hex64(detLog(readHex(h)))),
   detCos: inputs.map((h) => hex64(detCos(2 * Math.PI * readHex(h)))),
   detSin: inputs.map((h) => hex64(detSin(2 * Math.PI * readHex(h)))),
 };
+mathprobe.exp = mathprobe.expInputs.map((h) => hex64(Math.exp(readHex(h))));
+mathprobe.detExp = mathprobe.expInputs.map((h) => hex64(detExp(readHex(h))));
 
 const out = {
   meta: {

@@ -17,6 +17,12 @@ public static class DetMath
     private static readonly double Pio2Mid = MaskLow(Pio2Rem1, 30);
     private static readonly double Pio2Lo = Pio2Rem1 - Pio2Mid;
 
+    /// <summary>ln2 三段 Cody-Waite 拆分（exp 归约用，与 TS maskLow 推导逐位一致）。</summary>
+    private static readonly double Ln2Hi = MaskLow(Ln2, 28);
+    private static readonly double Ln2Rem1 = Ln2 - Ln2Hi;
+    private static readonly double Ln2Mid = MaskLow(Ln2Rem1, 30);
+    private static readonly double Ln2Lo = Ln2Rem1 - Ln2Mid;
+
     private const double Ln2 = 0.6931471805599453;
 
     private static double BitsOf(double x) => BitConverter.DoubleToInt64Bits(x);
@@ -99,6 +105,32 @@ public static class DetMath
         if (diff > 0.5) return f + 1;
         if (diff < 0.5) return f;
         return f + 1; // 恰为 0.5 → 向 +∞（JS Math.round(-0.5) === -0，数值上同为 0）
+    }
+
+    /// <summary>
+    /// 指数函数 exp(x)（fdlibm __ieee754_exp 算法，与 TS detExp 逐操作对齐）：
+    /// k = Floor(x/ln2 + 0.5) 归约，三段补偿，P 多项式，2^k 精确逐次缩放。
+    /// </summary>
+    public static double Exp(double x)
+    {
+        if (double.IsNaN(x)) return double.NaN;
+        if (x > 709.782712893384) return double.PositiveInfinity;
+        if (x < -745.1332191019411) return 0;
+        long k = (long)Math.Floor(x / Ln2 + 0.5);
+        double r = ((x - k * Ln2Hi) - k * Ln2Mid) - k * Ln2Lo;
+        double z = r * r;
+        const double P1 = 1.66666666666666019037e-01;
+        const double P2 = -2.77777777770155933842e-03;
+        const double P3 = 6.61375632143793436117e-05;
+        const double P4 = -1.65339022054652515390e-06;
+        const double P5 = 4.13813679705723846039e-08;
+        const double P6 = -9.96439500486238409018e-10;
+        double c = r - z * (P1 + r * (P2 + r * (P3 + r * (P4 + r * (P5 + r * P6)))));
+        double y = 1 - ((z * c) / (c + 2) - r);
+        long e = k;
+        while (e > 0) { y *= 2; e--; }
+        while (e < 0) { y *= 0.5; e++; }
+        return y;
     }
 
     /// <summary>cos 核，r ∈ [-π/4, π/4]。系数取自 fdlibm __kernel_cos（公有领域）。</summary>

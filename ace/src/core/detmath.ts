@@ -62,6 +62,41 @@ export function detPowInt(base: number, exp: number): number {
   return result;
 }
 
+/** ln2 三段 Cody-Waite 拆分（exp 归约用）：程序化推导，双端一致 */
+const LN2_HI = maskLow(LN2, 28);
+const LN2_REM1 = LN2 - LN2_HI;
+const LN2_MID = maskLow(LN2_REM1, 30);
+const LN2_LO = LN2_REM1 - LN2_MID;
+
+/**
+ * 指数函数 exp(x)（fdlibm __ieee754_exp 算法）：k = round(x/ln2) 归约，
+ * r = x - k·ln2（三段补偿，|r| ≤ ln2/2），P 多项式 + 1 封闭式，2^k 用精确的逐次乘除。
+ * 输出与 V8/.NET 的 Math.exp 可能差若干 ulp —— 刻意的确定性换位。
+ * 模拟内核现实输入域 |x| ≤ ~5（logistic），全域实现仍保留（钳位溢出边界）。
+ */
+export function detExp(x: number): number {
+  if (x !== x) return NaN;
+  if (x > 709.782712893384) return Infinity;
+  if (x < -745.1332191019411) return 0;
+  const k = Math.floor(x / LN2 + 0.5); // Floor(+0.5)：双端舍入语义一致
+  // r = x - k·ln2，三段补偿
+  const r = ((x - k * LN2_HI) - k * LN2_MID) - k * LN2_LO;
+  const z = r * r;
+  const P1 = 1.66666666666666019037e-01;
+  const P2 = -2.77777777770155933842e-03;
+  const P3 = 6.61375632143793436117e-05;
+  const P4 = -1.65339022054652515390e-06;
+  const P5 = 4.13813679705723846039e-08;
+  const P6 = -9.96439500486238409018e-10;
+  const c = r - z * (P1 + r * (P2 + r * (P3 + r * (P4 + r * (P5 + r * P6)))));
+  let y = 1 - ((z * c) / (c + 2) - r);
+  // 2^k 精确缩放（乘除 2 的幂无损）
+  let e = k;
+  while (e > 0) { y *= 2; e--; }
+  while (e < 0) { y *= 0.5; e++; }
+  return y;
+}
+
 /** cos(x)，x ∈ [0, 2π)。π/2 三段归约 + [-π/4,π/4] 核多项式。 */
 export function detCos(x: number): number {
   const n = Math.floor(x / PIO2 + 0.5); // Floor(+0.5)：双端舍入语义一致
