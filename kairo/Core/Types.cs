@@ -279,6 +279,27 @@ public sealed class Team
     public OrderedDict<string, string> LastPattern { get; set; } = new();
 }
 
+/// <summary>选秀权交易转移（from 的一个签位转给 to）。</summary>
+public sealed class DraftPickMove
+{
+    public string From { get; set; } = "";
+    public string To { get; set; } = "";
+}
+
+public sealed class DraftPickRow
+{
+    public int PickNo { get; set; }
+    public string TeamId { get; set; } = "";
+    /// <summary>我队签位决策前留空（结算后补记）</summary>
+    public string PlayerId { get; set; } = "";
+}
+
+public sealed class LastDraftRecord
+{
+    public int Year { get; set; }
+    public List<DraftPickRow> Picks { get; set; } = new();
+}
+
 public sealed class ManagerSkills
 {
     public int Training { get; set; }
@@ -386,6 +407,12 @@ public sealed class GameState
     public List<TransferFeedItem> TransferFeed { get; set; } = new();
     /// <summary>退役留档（名宿叙事数据源）</summary>
     public List<RetireLogItem> RetireLog { get; set; } = new();
+    /// <summary>冠军积分（Champions 资格/选秀顺位）</summary>
+    public OrderedDict<string, double> CircuitPoints { get; set; } = new();
+    /// <summary>选秀权交易记录（应用即清空）</summary>
+    public List<DraftPickMove> DraftPickMoves { get; set; } = new();
+    /// <summary>上届选秀留档</summary>
+    public LastDraftRecord? LastDraft { get; set; }
     /// <summary>赞助意向池（我队）</summary>
     public List<SponsorOffer> SponsorOffers { get; set; } = new();
     /// <summary>选手商务邀约池（我队）</summary>

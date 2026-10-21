@@ -681,6 +681,14 @@ public static class Worldgen
     /// <summary>生成自由人并入 state（迁移补池 / 休赛期补强共用）。</summary>
     public static void SpawnFreeAgents(GameState state, Rng rng, int count)
     {
+        lock (GenGate)
+        {
+            SpawnFreeAgentsInner(state, rng, count);
+        }
+    }
+
+    private static void SpawnFreeAgentsInner(GameState state, Rng rng, int count)
+    {
         var usedIgns = new HashSet<string>(state.Players.Values.Select(p => p.Ign));
         for (int i = 0; i < count; i++)
         {
@@ -693,6 +701,14 @@ public static class Worldgen
 
     /// <summary>生成选秀新秀池：16-18 岁联盟新血，不入队；少量「本届天才」潜力拔高。</summary>
     public static List<Player> SpawnRookieClass(GameState state, Rng rng, int count)
+    {
+        lock (GenGate)
+        {
+            return SpawnRookieClassInner(state, rng, count);
+        }
+    }
+
+    private static List<Player> SpawnRookieClassInner(GameState state, Rng rng, int count)
     {
         var usedIgns = new HashSet<string>(state.Players.Values.Select(p => p.Ign));
         var rookies = new List<Player>();
