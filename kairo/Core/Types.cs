@@ -171,7 +171,8 @@ public sealed class NewsItem
     public int Day { get; set; }
     /// <summary>kind：league/signing/scandal/milestone 等</summary>
     public string Kind { get; set; } = "league";
-    public bool Important { get; set; }
+    /// <summary>TS 可选字段：未写即为缺省（dump 省键）</summary>
+    public bool? Important { get; set; }
     public string Text { get; set; } = "";
 }
 
@@ -271,12 +272,48 @@ public sealed class ManagerLife
     public int Mood { get; set; }
 }
 
+public sealed class ManagerCareer
+{
+    public int StartYear { get; set; }
+    public int Seasons { get; set; }
+    /// <summary>经理冠军数（联赛+国际赛）</summary>
+    public int Titles { get; set; }
+    public int Wins { get; set; }
+    public int Losses { get; set; }
+    /// <summary>当前连败（下课触发器）</summary>
+    public int LoseStreak { get; set; }
+    /// <summary>董事会已警告（信任 ≤20 后置位）</summary>
+    public bool Warned { get; set; }
+    /// <summary>出身：legend/grassroots/analyst</summary>
+    public string? Origin { get; set; }
+    /// <summary>终局（下课/收官/强制退休）：写入后停止推进</summary>
+    public string? Ending { get; set; }
+}
+
 public sealed class Manager
 {
     public string Name { get; set; } = "";
     public int Reputation { get; set; }
     public ManagerSkills Skills { get; set; } = new();
     public ManagerLife Life { get; set; } = new();
+    /// <summary>生涯账本（v1.0-6）：下课/名人堂/五年之约的数据源</summary>
+    public ManagerCareer? Career { get; set; }
+}
+
+public sealed class RetireLogItem
+{
+    public int Year { get; set; }
+    public string Ign { get; set; } = "";
+    /// <summary>path=coach 时为教练名；选手退役时为退役时队伍名</summary>
+    public string Name { get; set; } = "";
+    public int Age { get; set; }
+    public int Titles { get; set; }
+    public int Mvps { get; set; }
+    public int Overall { get; set; }
+    /// <summary>coach/media/fade/mentor</summary>
+    public string Path { get; set; } = "fade";
+    public string? TeamName { get; set; }
+    public string? CoachId { get; set; }
 }
 
 /// <summary>GameState：worldgen 填充子集；sim 移植时增量补集合字段。</summary>
@@ -309,6 +346,8 @@ public sealed class GameState
     public List<NewsItem> News { get; set; } = new();
     /// <summary>转会流水（feed 即账本，裁剪至最近 300 条）</summary>
     public List<TransferFeedItem> TransferFeed { get; set; } = new();
+    /// <summary>退役留档（名宿叙事数据源）</summary>
+    public List<RetireLogItem> RetireLog { get; set; } = new();
     public Manager Manager { get; set; } = new();
     public int BoardConfidence { get; set; }
     public object? Objective { get; set; }
