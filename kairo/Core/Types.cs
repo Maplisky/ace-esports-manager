@@ -175,6 +175,21 @@ public sealed class NewsItem
     public string Text { get; set; } = "";
 }
 
+/// <summary>转会流水条目（feed 即账本）：done/bid/list/release/retire/rumor/wants/off。</summary>
+public sealed class TransferFeedItem
+{
+    public int Day { get; set; }
+    public int Year { get; set; }
+    public string Kind { get; set; } = "rumor";
+    public string Text { get; set; } = "";
+    /// <summary>传闻浓度（仅 rumor）：1=绯闻 2=有消息称 3=谈判中</summary>
+    public int? C { get; set; }
+    /// <summary>买方（rumor/off：谁在关注 / 谈崩的是哪家；wants：意向去向）</summary>
+    public string? ToTeamId { get; set; }
+    /// <summary>涉事选手</summary>
+    public string? PlayerId { get; set; }
+}
+
 public sealed class PatchChange
 {
     public string AgentId { get; set; } = "";
@@ -292,6 +307,8 @@ public sealed class GameState
     public FinanceLogState Finances { get; set; } = new();
     /// <summary>新闻流（插入序）</summary>
     public List<NewsItem> News { get; set; } = new();
+    /// <summary>转会流水（feed 即账本，裁剪至最近 300 条）</summary>
+    public List<TransferFeedItem> TransferFeed { get; set; } = new();
     public Manager Manager { get; set; } = new();
     public int BoardConfidence { get; set; }
     public object? Objective { get; set; }

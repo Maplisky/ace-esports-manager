@@ -147,6 +147,15 @@ public static class DetMath
         return $"{(neg ? "-" : "")}{intPart}.{(frac < 10 ? "0" : "")}{frac}";
     }
 
+    /// <summary>定点 1 位小数格式化（与 TS detToFixed1 逐字符一致）。</summary>
+    public static string ToFixed1(double v)
+    {
+        long k = (long)JsRound(v * 10);
+        bool neg = k < 0;
+        long a = Math.Abs(k);
+        return $"{(neg ? "-" : "")}{a / 10}.{a % 10}";
+    }
+
     /// <summary>cos 核，r ∈ [-π/4, π/4]。系数取自 fdlibm __kernel_cos（公有领域）。</summary>
     private static double KernelCos(double r)
     {

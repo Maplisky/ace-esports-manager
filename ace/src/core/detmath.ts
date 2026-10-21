@@ -63,6 +63,16 @@ export function detPowInt(base: number, exp: number): number {
 }
 
 /**
+ * 定点 1 位小数格式化（detToFixed2 的 1 位版，fmtFee 用）。
+ */
+export function detToFixed1(v: number): string {
+  const k = Math.round(v * 10);
+  const neg = k < 0;
+  const a = Math.abs(k);
+  return `${neg ? "-" : ""}${Math.floor(a / 10)}.${a % 10}`;
+}
+
+/**
  * 定点 2 位小数格式化（替代 toFixed(2) 的平台舍入差异）：
  * q = v·100 半数远离零取整（JsRound 语义）→ 整数 k，再纯整数拼接字符串。
  * 双端（TS/C#）对同一 v 产出逐字符相同的结果。
