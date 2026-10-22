@@ -61,6 +61,9 @@ adb install -r builds/kairo-m0.apk && adb shell monkey -p com.maplisky.kairo 1
 20. **设施升级期间按当前等级产出**（m2a）：Ready 判定看 Level≥1 而非"无施工"——L1→L2 施工中 L1 持续产出，首次建造（Level=0）才无产出。
 21. **Godot 用户参数必须在 `--` 之后**（m2c）：`godot ... res://m2/GrayBox.tscn --graybox-auto` 会被引擎吞掉（OS.GetCmdlineUserArgs 为空 → 自退不触发 → headless 永挂）；必须写 `-- --graybox-auto`。
 22. **xUnit 并行集合污染模块级序列**（m2c）：fixture id 参与比赛种子，两个测试类并行各建世界时 ResetFixtureSeq 互踩 → 同一黄金忽绿忽红。装配级 `[assembly: CollectionBehavior(DisableTestParallelization)]` 一刀切（套件 ~25s 可接受）。
+23. **Android extra_args 进完整参数表而非 user args**（m3f）：设备端 `command_line/extra_args` 传入的参数出现在 `OS.GetCmdlineArgs()` 而**不在** `OS.GetCmdlineUserArgs()`（桌面 `--` 后才进 user args）——auto 审计检测必须双来源 `GetCmdlineArgs().Concat(GetCmdlineUserArgs())`，否则设备端审计静默不启动（应用挂菜单无输出，极似死锁）。
+24. **4.7 的 keystore 环境变量带 `_RELEASE_`/`_DEBUG_` 中缀**（m3f）：`GODOT_ANDROID_KEYSTORE_RELEASE_PATH/USER/PASSWORD`（源码 export_plugin.h 常量实证；旧文档的 `GODOT_ANDROID_KEYSTORE_PATH` 不被读取，报"找不到发布密钥库"）。签名方案为 v2（`keytool -printcert -jarfile` 看不到，用 `apksigner verify --print-certs`）。
+25. **Core.Data 打包路径**（m3f）：非资源 json 须在 preset `include_filter="*.json"` 才进包（打包形态 = `assets/Core.Data/*.json` 直挂 res:// 根）。导出后 `GlobalizePath` 直读失效而 Godot FileAccess 可读——宿主层 `AssetBridge.ExportDataDir`（FileAccess → user://core-data/）桥给 Core 的 File API，Core 保持引擎无关。
 
 ## M0 场景结构（m0/）
 

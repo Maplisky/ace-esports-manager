@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="VCT冠军经理"
-run/main_scene="res://m0/Main.tscn"
+run/main_scene="res://m2/GrayBox.tscn"
 config/features=PackedStringArray("4.7", "C#")
 config/icon="res://icon.svg"
 

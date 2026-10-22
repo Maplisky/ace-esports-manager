@@ -34,14 +34,16 @@ public partial class Theater : Node2D
 
     public override void _Ready()
     {
-        string dataDir = ProjectSettings.GlobalizePath("res://Core.Data");
+        string dataDir = Kairo.M2.AssetBridge.ExportDataDir("res://Core.Data");
         Worldgen.LoadData(dataDir);
         BaseOps.DataDirOverride = dataDir;
 
         _font = new SystemFont { FontNames = new[] { "Microsoft YaHei UI", "Microsoft YaHei", "sans-serif" } };
         Kairo.M2.Sfx.Init(this);
         BuildScene();
-        if (OS.GetCmdlineUserArgs().Contains("--watch-auto")) AutoPlay();
+        // auto 检测双来源：桌面 -- 后进 user args；Android extra_args 进完整参数表（坑 23）
+        var allArgs = OS.GetCmdlineArgs().Concat(OS.GetCmdlineUserArgs());
+        if (allArgs.Any(a => a.Contains("watch-auto"))) AutoPlay();
     }
 
     private void BuildScene()
@@ -166,7 +168,8 @@ public partial class Theater : Node2D
     public override void _Process(double delta)
     {
         // auto 审计加速播放（headless 无观感需求；24s/回合 × 56 回合 ≈ 800 实秒远超 CI 超时）
-        float dt = (float)delta * (OS.GetCmdlineUserArgs().Contains("--watch-auto") ? 20f : 1f);
+        var allArgs = OS.GetCmdlineArgs().Concat(OS.GetCmdlineUserArgs());
+        float dt = (float)delta * (allArgs.Any(a => a.Contains("watch-auto")) ? 20f : 1f);
         _t += dt;
         while (_cursor < _stream.Count && _stream[_cursor].T <= _t)
         {

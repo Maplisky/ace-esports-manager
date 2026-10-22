@@ -35,8 +35,9 @@ public partial class GrayBox : Node2D
 
     public override void _Ready()
     {
-        // 资产与数据装载（桌面：res:// 即工程目录；设备端由应用层 GlobalizePath 解析）
-        string dataDir = ProjectSettings.GlobalizePath("res://Core.Data");
+        // 资产装载（M4 打包路径）：FileAccess 经 PCK 导出到 user:// 物理目录再交 Core——
+        // 编辑器内与导出包内同一条路径（GlobalizePath 直读在导出后失效）
+        string dataDir = AssetBridge.ExportDataDir("res://Core.Data");
         Worldgen.LoadData(dataDir);
         BaseOps.DataDirOverride = dataDir;
 
@@ -48,7 +49,9 @@ public partial class GrayBox : Node2D
         BuildStartMenu();
         BuildSaveMenu();
         Redraw();
-        if (OS.GetCmdlineUserArgs().Contains("--graybox-auto"))
+        // auto 检测双来源：桌面 -- 后进 user args；Android extra_args 进完整参数表（坑 23）
+        var allArgs = OS.GetCmdlineArgs().Concat(OS.GetCmdlineUserArgs());
+        if (allArgs.Any(a => a.Contains("graybox-auto")))
         {
             // 自动审计走自定义开局（覆盖最长的代码路径：建队/签约/赛程重建）
             DoStart(new StartConfig { Mode = StartMode.Custom, TeamName = "自动验证队" });
@@ -70,11 +73,13 @@ public partial class GrayBox : Node2D
     private void RunAutoAudit()
     {
         Log("[auto] 脚本化灰盒实验开始");
+        GD.Print("[graybox-audit] start: build+train");
         BuyPlot();
         BuildRange();   // 空地 → range
         BuildRange();   // 第二座（升级其一）
         TrainAwareness();
         Advance(90);
+        GD.Print($"[graybox-audit] advanced: day={_state.Day}");
         var myTeam = _state.Teams[_state.MyTeamId!];
         int facilities = myTeam.Facilities;
         var anyPlayer = _state.Players.Values.First(p => p.TeamId == _state.MyTeamId);
