@@ -664,6 +664,9 @@ public static class DaySim
             .ToList();
     }
 
+    /// <summary>公开积分榜（晋级体系等 C# 侧系统读取；排序语义同 SortedTable）。</summary>
+    public static List<StandingsEntry> PublicSortedTable(GameState state, string compKey) => SortedTable(state, compKey);
+
     /// <summary>联赛收官发积分（仅 t1 合作联赛计入国际赛积分；挑战者不计）。</summary>
     public static void AwardLeagueCircuitPoints(GameState state, string compKey)
     {

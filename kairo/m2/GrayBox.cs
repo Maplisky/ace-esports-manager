@@ -1,5 +1,6 @@
 using Godot;
 using Kairo.Core;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -18,6 +19,14 @@ public partial class GrayBox : Node2D
     private Label _log = null!;
     private readonly List<string> _logLines = new();
     private readonly List<(ColorRect Rect, Label Text)> _cells = new();
+
+    // 设施详情面板（点格子弹出）：容器节点集，Visible 切换
+    private readonly List<CanvasItem> _panel = new();
+    private readonly List<Button> _buildBtns = new();
+    private Button _upgBtn = null!;
+    private Button _demolishBtn = null!;
+    private Label _panelInfo = null!;
+    private (int X, int Y)? _selected;
 
     private const int CellW = 156;
     private const int CellH = 116;
@@ -96,10 +105,28 @@ public partial class GrayBox : Node2D
             }
         }
 
-        _log = new Label { Position = new Vector2(20, 720), Size = new Vector2(680, 300) };
+        _log = new Label { Position = new Vector2(20, 928), Size = new Vector2(680, 96) };
         _log.AddThemeFontOverride("font", _font);
-        _log.AddThemeFontSizeOverride("font_size", 16);
+        _log.AddThemeFontSizeOverride("font_size", 15);
         AddChild(_log);
+
+        // 设施详情面板（默认隐藏；点格子弹出——立项 §11-6：详情走点按面板，不依赖缩放）
+        var back = new ColorRect { Position = new Vector2(20, 640), Size = new Vector2(680, 276), Color = Color.FromHtml("#101820ee") };
+        AddChild(back);
+        _panel.Add(back);
+        _panelInfo = new Label { Position = new Vector2(36, 650), Size = new Vector2(648, 90) };
+        _panelInfo.AddThemeFontOverride("font", _font);
+        _panelInfo.AddThemeFontSizeOverride("font_size", 18);
+        AddChild(_panelInfo);
+        _panel.Add(_panelInfo);
+        PanelButton("升级", new Vector2(36, 748), () => UpgradeAt(_selected!.Value.X, _selected!.Value.Y), isBuild: false);
+        PanelButton("拆除", new Vector2(216, 748), () => DemolishAt(_selected!.Value.X, _selected!.Value.Y), isBuild: false);
+        PanelButton("射击房", new Vector2(36, 748), () => BuildAt(_selected!.Value.X, _selected!.Value.Y, "range"));
+        PanelButton("商店", new Vector2(216, 748), () => BuildAt(_selected!.Value.X, _selected!.Value.Y, "shop"));
+        PanelButton("场馆", new Vector2(396, 748), () => BuildAt(_selected!.Value.X, _selected!.Value.Y, "arena"));
+        PanelButton("宿舍", new Vector2(556, 748), () => BuildAt(_selected!.Value.X, _selected!.Value.Y, "dorm"));
+        PanelButton("关闭", new Vector2(556, 838), () => { _selected = null; Redraw(); }, isBuild: false);
+        SetPanelVisible(false);
 
         AddButton("推进 1 天", new Vector2(20, 1032), () => Advance(1));
         AddButton("推进 7 天", new Vector2(260, 1032), () => Advance(7));
@@ -108,6 +135,66 @@ public partial class GrayBox : Node2D
         AddButton("建射击房", new Vector2(260, 1120), BuildRange);
         AddButton("全队练意识", new Vector2(500, 1120), TrainAwareness);
         AddButton("重开", new Vector2(20, 1208), () => { NewGame(); Redraw(); });
+    }
+
+    private Button PanelButton(string text, Vector2 pos, System.Action onClick, bool isBuild = true)
+    {
+        var b = new Button { Position = pos, Size = new Vector2(150, 64), Text = text };
+        b.AddThemeFontOverride("font", _font);
+        b.AddThemeFontSizeOverride("font_size", 19);
+        b.Pressed += onClick;
+        AddChild(b);
+        _panel.Add(b);
+        if (isBuild) _buildBtns.Add(b);
+        else if (text == "升级") _upgBtn = b;
+        else if (text == "拆除") _demolishBtn = b;
+        return b;
+    }
+
+    private void SetPanelVisible(bool visible)
+    {
+        foreach (var n in _panel) n.Visible = visible;
+    }
+
+    /// <summary>格子点击 → 换算网格坐标弹详情面板（空地给快捷建造，设施给升级/拆除）。</summary>
+    public override void _Input(InputEvent e)
+    {
+        if (e is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left } click)
+        {
+            var pos = GetGlobalMousePosition();
+            int gx = (int)((pos.X - GridX) / (CellW + 12));
+            int gy = (int)((pos.Y - GridY) / (CellH + 12));
+            if (gx >= 0 && gx < 4 && gy >= 0 && gy < 4
+                && pos.X >= GridX + gx * (CellW + 12) && pos.X <= GridX + gx * (CellW + 12) + CellW
+                && pos.Y >= GridY + gy * (CellH + 12) && pos.Y <= GridY + gy * (CellH + 12) + CellH)
+            {
+                _selected = (gx, gy);
+                Redraw();
+            }
+        }
+    }
+
+    private void BuildAt(int x, int y, string facilityId)
+    {
+        var err = BaseOps.StartBuild(_state, _state.Base!, x, y, facilityId);
+        Log(err ?? $"({x},{y}) 开工 {BaseOps.Table.Facility(facilityId)!.Name}");
+        Redraw();
+    }
+
+    private void UpgradeAt(int x, int y)
+    {
+        var plot = _state.Base!.Plots[BaseState.KeyOf(x, y)];
+        if (plot.BuildingId == null) { Log("空地请先选择设施。"); return; }
+        var err = BaseOps.StartBuild(_state, _state.Base!, x, y, plot.BuildingId);
+        Log(err ?? $"({x},{y}) 升工 {plot.BuildingId} {plot.PendingLevel} 级");
+        Redraw();
+    }
+
+    private void DemolishAt(int x, int y)
+    {
+        var err = BaseOps.Demolish(_state, _state.Base!, x, y);
+        Log(err ?? $"({x},{y}) 已拆除（返还 30%）");
+        Redraw();
     }
 
     private void AddButton(string text, Vector2 pos, System.Action onClick)
@@ -237,7 +324,42 @@ public partial class GrayBox : Node2D
                 text.Text = $"{name}\n{status}";
             }
         }
-        _log.Text = string.Join("\n", _logLines.TakeLast(16));
+        _log.Text = string.Join("\n", _logLines.TakeLast(12));
+
+        // 详情面板：选中格 → 信息 + 按钮组（空地=建造四选，设施=升级/拆除）
+        if (_selected is { } sel && _state.Base!.Plots.TryGetValue(BaseState.KeyOf(sel.X, sel.Y), out var sp))
+        {
+            SetPanelVisible(true);
+            var def = sp.BuildingId != null ? BaseOps.Table.Facility(sp.BuildingId) : null;
+            if (def == null)
+            {
+                _panelInfo.Text = $"({sel.X},{sel.Y}) 空地——选择设施开工：";
+                foreach (var btn in _buildBtns) btn.Visible = true;
+                _upgBtn.Visible = false;
+                _demolishBtn.Visible = false;
+            }
+            else
+            {
+                var eff = def.Effects;
+                string effText = string.Join(" · ", new[]
+                {
+                    eff.Facilities.Count > 0 ? $"训练加成 {eff.Get("facilities", Math.Max(1, sp.Level))}" : null,
+                    eff.RestBonus.Count > 0 ? $"恢复 +{eff.Get("restBonus", Math.Max(1, sp.Level))}" : null,
+                    eff.Morale.Count > 0 ? $"士气 +{eff.Get("morale", Math.Max(1, sp.Level))}" : null,
+                    eff.Capacity.Count > 0 ? $"容量 {eff.Get("capacity", Math.Max(1, sp.Level))}" : null,
+                    eff.WeeklyIncome.Count > 0 ? $"周收入 {eff.Get("weeklyIncome", Math.Max(1, sp.Level))}" : null,
+                }.Where(s => s != null));
+                string status = sp.BuildRemainDays > 0 ? $"施工中（剩 {sp.BuildRemainDays} 天，按 {sp.Level} 级产出）" : $"{sp.Level} 级";
+                _panelInfo.Text = $"({sel.X},{sel.Y}) {def.Name} · {status}\n{effText}\n下一级造价 {(sp.Level < 3 ? def.Cost[sp.Level].ToString() : "—")}（满 3 级）";
+                foreach (var btn in _buildBtns) btn.Visible = false;
+                _upgBtn.Visible = sp.Level < 3;
+                _demolishBtn.Visible = true;
+            }
+        }
+        else
+        {
+            SetPanelVisible(false);
+        }
     }
 
     private void Log(string line)

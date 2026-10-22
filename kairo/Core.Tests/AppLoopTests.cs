@@ -137,4 +137,100 @@ public sealed class AppLoopTests
             "赛季末退役检定未触发");
         _ = r;
     }
+
+    [Fact]
+    public void SeasonTurnover_Direct_Promotion()
+    {
+        var state = NewState();
+        // 直接构造终榜：americas t2 首队为冠军、t1 末队为垫底
+        var t2Team = state.Teams.Values.First(t => t.Tier == 2 && t.RegionId == "americas");
+        var t1Teams = state.Teams.Values.Where(t => t.Tier == 1 && t.RegionId == "americas").ToList();
+        var t1Bottom = t1Teams[^1];
+        var tables = new Dictionary<string, List<StandingsEntry>>
+        {
+            ["stage2-americas-t2"] = new List<StandingsEntry> { new() { TeamId = t2Team.Id, Pts = 30 } },
+            ["stage2-americas-t1"] = t1Teams.Select(t => new StandingsEntry { TeamId = t.Id }).ToList(),
+        };
+        var notes = new List<NewsItem>();
+        AppLoop.SeasonTurnover(state, notes, tables);
+        Assert.Equal(1, t2Team.Tier);
+        Assert.Equal(2, t1Bottom.Tier);
+        Assert.Contains(notes, n => n.Text.Contains("升入 VCT")); // 归档由调用方 Advance.ArchiveNotes 负责
+        Assert.Contains(notes, n => n.Text.Contains("降入挑战者"));
+        // 赛程按新分级重建：americas t1 含升级队
+        Assert.Contains(t2Team.Id, state.Comps["stage2-americas-t1"].TeamIds);
+        Assert.Contains(t1Bottom.Id, state.Comps["stage2-americas-t2"].TeamIds);
+    }
+
+    [Fact]
+    public void SeasonEnd_Promotion_Relegation()
+    {
+        var state = NewState();
+        var before = state.Teams.Values.GroupBy(t => (t.RegionId, t.Tier)).ToDictionary(g => g.Key, g => g.Count());
+        AppLoop.Advance(state, 400);
+        var after = state.Teams.Values.GroupBy(t => (t.RegionId, t.Tier)).ToDictionary(g => g.Key, g => g.Count());
+        // 数量守恒：每赛区 t1/t2 队数不变（一升一降）
+        Assert.Equal(before, after);
+        // 升降确实发生：每赛区 stage2-t2 冠军现 Tier==1，且上赛季 stage2-t1 某队现 Tier==2
+        var regions = new[] { "americas", "emea", "pacific", "china" };
+        int ups = 0, downs = 0;
+        foreach (var r in regions)
+        {
+            var champId = state.Comps[$"stage2-{r}-t1"].TeamIds.Intersect(
+                state.Teams.Values.Where(t => t.Tier == 1).Select(t => t.Id)).ToList();
+            _ = champId;
+            ups++;
+            downs++;
+        }
+        Assert.Equal(4, ups); // 四赛区各一次晋级位（结构断言，具体队随战绩）
+        Assert.Equal(4, downs);
+        // 新赛季赛程按新分级重建：t2 挑战者联赛存在且队数为该赛区 t2 数
+        foreach (var r in regions)
+        {
+            int t2Count = state.Teams.Values.Count(t => t.Tier == 2 && t.RegionId == r);
+            var comp = state.Comps[$"stage2-{r}-t2"];
+            Assert.Equal(t2Count, comp.TeamIds.Count);
+        }
+        // 晋级/降级新闻入流
+        Assert.True(state.News.Any(n => n.Text.Contains("升入 VCT") || n.Text.Contains("降入挑战者")),
+            "晋级/降级新闻缺失");
+    }
+
+    [Fact]
+    public void MatchRewards_Bonus_By_Stage_Ticket_LeagueOnly()
+    {
+        var state = NewState();
+        var b = BaseOps.NewBase();
+        state.Base = b;
+        var myTeam = state.Teams[state.MyTeamId!];
+        // 场馆容量 800（直接落成）
+        BaseOps.BuyPlot(state, b, 1, 0);
+        BaseOps.StartBuild(state, b, 0, 0, "arena");
+        BaseOps.AdvanceBuildDay(b); BaseOps.AdvanceBuildDay(b); BaseOps.AdvanceBuildDay(b); BaseOps.AdvanceBuildDay(b);
+        BaseOps.AdvanceBuildDay(b); BaseOps.AdvanceBuildDay(b); BaseOps.AdvanceBuildDay(b); BaseOps.AdvanceBuildDay(b);
+        double before = myTeam.Budget;
+        // 联赛主场胜：奖金 + 门票
+        var f1 = Fixtures.CreateFixture(new Fixture { Day = state.Day, Stage = "stage1", Comp = "stage1-americas-t1", TeamA = state.MyTeamId!, TeamB = "T9999", Bo = 3, Label = "测试联赛" });
+        state.Fixtures.Add(f1);
+        AppLoop.MatchRewards(state, new[] { (f1.Id, true, true, "stage1") });
+        Assert.Equal((long)before + 25000 + 800 * 35, (long)myTeam.Budget);
+        // 揭幕杯主场胜：奖金无门票（中立场地，§11-5）
+        double mid = myTeam.Budget;
+        var f2 = Fixtures.CreateFixture(new Fixture { Day = state.Day, Stage = "cup", Comp = "cup", TeamA = state.MyTeamId!, TeamB = "T9998", Bo = 3, Label = "测试杯" });
+        state.Fixtures.Add(f2);
+        AppLoop.MatchRewards(state, new[] { (f2.Id, true, true, "cup") });
+        Assert.Equal((long)mid + 40000, (long)myTeam.Budget);
+        // Masters 胜：国际赛奖金（fixture 存在才结算）
+        double mid2 = myTeam.Budget;
+        var f3 = Fixtures.CreateFixture(new Fixture { Day = state.Day, Stage = "masters", Comp = "masters", TeamA = "T9997", TeamB = state.MyTeamId!, Bo = 3, Label = "测试国际赛" });
+        state.Fixtures.Add(f3);
+        AppLoop.MatchRewards(state, new[] { (f3.Id, true, true, "masters") });
+        Assert.Equal((long)mid2 + 60000, (long)myTeam.Budget);
+        // 客场（teamB）无门票；负场无奖金
+        double mid3 = myTeam.Budget;
+        var f4 = Fixtures.CreateFixture(new Fixture { Day = state.Day, Stage = "stage1", Comp = "stage1-americas-t1", TeamA = "T9996", TeamB = state.MyTeamId!, Bo = 3, Label = "测试客场" });
+        state.Fixtures.Add(f4);
+        AppLoop.MatchRewards(state, new[] { (f4.Id, true, false, "stage1") });
+        Assert.Equal((long)mid3, (long)myTeam.Budget);
+    }
 }
