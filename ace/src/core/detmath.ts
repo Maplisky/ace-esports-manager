@@ -63,6 +63,15 @@ export function detPowInt(base: number, exp: number): number {
 }
 
 /**
+ * 任意实数幂（base > 0）：detExp(exp · detLog(base))。
+ * 精度低于平台 Math.pow（可能差若干 ulp），但双端逐位一致——市场身价等展示/谈判数值用。
+ */
+export function detPow(base: number, exp: number): number {
+  if (base === 1) return 1;
+  return detExp(exp * detLog(base));
+}
+
+/**
  * 定点 1 位小数格式化（detToFixed2 的 1 位版，fmtFee 用）。
  */
 export function detToFixed1(v: number): string {

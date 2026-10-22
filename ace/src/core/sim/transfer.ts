@@ -4,6 +4,7 @@
  * 一切随机经显式 Rng（确定性约定 §11.1）。
  */
 import { Rng, clamp, hashString } from "../rng.ts";
+import { detPow, detPowInt } from "../detmath.ts";
 import type { GameState, Player, Team, TransferFeedItem, TransferOffer } from "../types.ts";
 import { noteTacticsChanged } from "./scrim.ts";
 import { logFinance } from "./finance.ts";
@@ -29,9 +30,9 @@ export function graceRemain(state: GameState): number | null {
   return 0;
 }
 
-/** 身价（调参见 GDD §12）：基础 × 潜力溢价 × 年龄系数 × 级别系数 */
+/** 身价（调参见 GDD §12）：基础 × 潜力溢价 × 年龄系数 × 级别系数。detPow 保证双端一致 */
 export function marketValue(p: Player, tier: 1 | 2): number {
-  const base = Math.pow(Math.max(4, p.overall - 48), 2.2) * 300;
+  const base = detPow(Math.max(4, p.overall - 48), 2.2) * 300;
   const potF = 1 + Math.max(0, p.potential - p.overall) * 0.03;
   const ageF = p.age <= 21 ? 1.25 : p.age <= 25 ? 1.1 : p.age <= 29 ? 0.9 : 0.65;
   const tierF = tier === 1 ? 1 : 0.45;
@@ -39,9 +40,9 @@ export function marketValue(p: Player, tier: 1 | 2): number {
   return Math.round(v / 1000) * 1000;
 }
 
-/** 薪资期望（求购方视角）；按目标级别与当前薪资取高者上浮 10% */
+/** 薪资期望（求购方视角）；按目标级别与当前薪资取高者上浮 10%。detPowInt 保证双端一致 */
 export function salaryExpectation(p: Player, targetTier: 1 | 2): number {
-  const market = 0.06 * Math.pow(1.21, clamp(p.overall + 2, 50, 95));
+  const market = 0.06 * detPowInt(1.21, clamp(p.overall + 2, 50, 95));
   const cur = Math.max(p.salary, 0);
   return Math.max(Math.round(Math.max(market, cur) * 1.1), 12000);
 }

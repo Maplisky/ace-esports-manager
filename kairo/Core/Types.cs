@@ -79,6 +79,8 @@ public sealed class Player
     public OrderedDict<string, double> Xp { get; set; } = new();
     public string Focus { get; set; } = "rest";
     public bool Listed { get; set; }
+    /// <summary>已挂牌周数（AI 摘牌计时）</summary>
+    public int? ListedWeeks { get; set; }
     public int ReleaseClause { get; set; }
     public bool NoPoach { get; set; }
     public List<string> Traits { get; set; } = new();
@@ -327,6 +329,45 @@ public sealed class CareerEnding
     public int Day { get; set; }
 }
 
+/// <summary>转会报价（含即时谈判进度；GDD §8.2 v1.1）。</summary>
+public sealed class TransferOffer
+{
+    public string Id { get; set; } = "";
+    public string PlayerId { get; set; } = "";
+    /// <summary>null = 自由签约</summary>
+    public string? FromTeam { get; set; }
+    public string ToTeam { get; set; } = "";
+    /// <summary>转会费（TS 各赋值点均经 Math.round 取整）</summary>
+    public int Fee { get; set; }
+    public int Salary { get; set; }
+    public int Years { get; set; }
+    public int SigningBonus { get; set; }
+    /// <summary>core/starter/rotation/bench</summary>
+    public string PromisedRole { get; set; } = "bench";
+    /// <summary>替补三正路：successor/mentor/learner</summary>
+    public string? Track { get; set; }
+    /// <summary>报价日（答复窗 7 天）</summary>
+    public int Day { get; set; }
+    /// <summary>谈判轮次（1-3）；0 = 尚未开谈</summary>
+    public int Round { get; set; }
+    /// <summary>AI 最新诉求文本</summary>
+    public string Demand { get; set; } = "";
+    /// <summary>接受概率 0-100（实时评估）</summary>
+    public int Attitude { get; set; }
+}
+
+/// <summary>问价单（原作式异步：2-5 天后反馈要价与意向）。</summary>
+public sealed class TransferInquiry
+{
+    public string Id { get; set; } = "";
+    public string PlayerId { get; set; } = "";
+    public int AskDay { get; set; }
+    public int ResolveDay { get; set; }
+    public bool Done { get; set; }
+    public int AskingFee { get; set; }
+    public string Intent { get; set; } = "";
+}
+
 public sealed class ManagerCareer
 {
     public int StartYear { get; set; }
@@ -413,6 +454,10 @@ public sealed class GameState
     public List<DraftPickMove> DraftPickMoves { get; set; } = new();
     /// <summary>上届选秀留档</summary>
     public LastDraftRecord? LastDraft { get; set; }
+    /// <summary>收到 AI 报价（待我方答复）</summary>
+    public List<TransferOffer> IncomingBids { get; set; } = new();
+    /// <summary>问价单（原作式异步）</summary>
+    public List<TransferInquiry> Inquiries { get; set; } = new();
     /// <summary>赞助意向池（我队）</summary>
     public List<SponsorOffer> SponsorOffers { get; set; } = new();
     /// <summary>选手商务邀约池（我队）</summary>

@@ -93,6 +93,13 @@ public static class DetMath
         return result;
     }
 
+    /// <summary>任意实数幂（base &gt; 0）：Exp(exp · Log(base))，与 TS detPow 逐位一致。</summary>
+    public static double Pow(double baseVal, double exp)
+    {
+        if (baseVal == 1) return 1;
+        return Exp(exp * Log(baseVal));
+    }
+
     /// <summary>
     /// JS Math.round 语义：最接近值、平局向 +∞（含 0.49999999999999994 边界）。
     /// 与 .NET Math.Round（银行家舍入）不同，模拟内核一切取整必须经此。
