@@ -122,14 +122,30 @@ public static class Events
     }
 
     /// <summary>结算事件卡：应用选项效果并移出队列。返回结果文本（含目标名）。
-    /// 退役/选秀/里程碑卡专属结算待对应模块移植后接入（当前池不含这三类卡，黄金不受影响）。</summary>
+    /// 退役/选秀/里程碑卡走专属结算（数值效果系统无法表达），先出队再结算——对齐 TS resolveEvent 路由序。</summary>
     public static (string Result, string Note)? ResolveEvent(GameState state, string uid, int optionIndex, Rng rng)
     {
         int idx = state.PendingEvents.FindIndex(e => e.Uid == uid);
         if (idx < 0) return null;
         var card = state.PendingEvents[idx];
-        if (card.CardId is "retire-keep" or "draft-pick" or "milestone-five")
-            throw new NotImplementedException("专属结算待 retirement/draft/career 模块移植");
+        if (card.CardId == Retirement.RetireCardId)
+        {
+            state.PendingEvents.RemoveAt(idx);
+            var r = Retirement.ResolveRetireCard(state, card, optionIndex, rng);
+            return r;
+        }
+        if (card.CardId == Draft.DraftCardId)
+        {
+            state.PendingEvents.RemoveAt(idx);
+            var d = Draft.ResolveDraftCard(state, card, optionIndex);
+            return (d.Result, d.Note);
+        }
+        if (card.CardId == Career.MilestoneCardId)
+        {
+            state.PendingEvents.RemoveAt(idx);
+            var m = Career.ResolveMilestoneCard(state, card, optionIndex);
+            return (m.Result, m.Note);
+        }
         if (optionIndex < 0 || optionIndex >= card.Options.Count) return null;
         var opt = card.Options[optionIndex];
         var myTeam = state.MyTeamId != null && state.Teams.TryGetValue(state.MyTeamId, out var mt) ? mt : null;
@@ -169,5 +185,5 @@ public static class Events
         return (result, $"【{card.Title}】{result}");
     }
 
-    private static void teamBond(Team team, int delta) => team.Bond = (int)Math.Min(100, Math.Max(0, team.Bond + delta));
+    private static void teamBond(Team team, int delta) => team.Bond = Math.Min(100, Math.Max(0, team.Bond + delta));
 }

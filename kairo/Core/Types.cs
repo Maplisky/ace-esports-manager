@@ -91,6 +91,8 @@ public sealed class Player
     public string? Track { get; set; }
     /// <summary>接班人的导师（队内首发老将 id）</summary>
     public string? MentorId { get; set; }
+    /// <summary>转导师型替补的年份（retirement 劝留卡写入）</summary>
+    public int? MentorSince { get; set; }
     public int InjuredUntilDay { get; set; }
     public bool Homegrown { get; set; }
     public int BenchedWeeks { get; set; }
@@ -265,13 +267,15 @@ public sealed class Team
     public List<string> Starters { get; set; } = new();
     public Coach Coach { get; set; } = new();
     public int Facilities { get; set; }
-    public int Budget { get; set; }
+    /// <summary>预算（TS number 语义：退役补偿等小数运算不改写，严禁 int 截断）</summary>
+    public double Budget { get; set; }
     public int Reputation { get; set; }
     /// <summary>spender/youth/steady/wheeler</summary>
     public string Personality { get; set; } = "steady";
     /// <summary>图池熟练 20-95（插入序 = MAPS 序；周结算 +0.4×比赛折减浮点累进，round 会吃掉小数增量）</summary>
     public OrderedDict<string, double> MapPref { get; set; } = new();
-    public int Bond { get; set; }
+    /// <summary>羁绊 0-100（TS number 语义：训练赛收益含小数增量）</summary>
+    public double Bond { get; set; }
     public List<Sponsor> Sponsors { get; set; } = new();
     public StaffSlots Staff { get; set; } = new();
     public List<string> Academy { get; set; } = new();
@@ -482,6 +486,47 @@ public sealed class GameState
     public OrderedDict<string, string> AgentTraining { get; set; } = new();
     /// <summary>赛区风格 META（赛区 id → 风格/进攻性均值；展示+国际赛叙事）</summary>
     public OrderedDict<string, RegionMetaEntry> RegionMeta { get; set; } = new();
+    /// <summary>训练赛记录（上限 20 条）</summary>
+    public List<ScrimLogEntry> ScrimLog { get; set; } = new();
+    /// <summary>已解锁成就（id → 解锁时间；幂等判定）</summary>
+    public OrderedDict<string, AchievementUnlock> Achievements { get; set; } = new();
+    /// <summary>教练自由池（退役名宿；任何俱乐部可签）</summary>
+    public List<CoachFreeAgent> CoachPool { get; set; } = new();
+}
+
+public sealed class ScrimLogEntry
+{
+    public int Day { get; set; }
+    public string OppId { get; set; } = "";
+    public string MapId { get; set; } = "";
+    /// <summary>blend/style/mappool</summary>
+    public string Goal { get; set; } = "";
+    public int ScoreA { get; set; }
+    public int ScoreB { get; set; }
+    public bool Won { get; set; }
+}
+
+public sealed class AchievementUnlock
+{
+    public int Year { get; set; }
+    public int Day { get; set; }
+}
+
+/// <summary>教练自由池成员（退役选手折算；fame 名望 / value 执教能力）。</summary>
+public sealed class CoachFreeAgent
+{
+    public string Id { get; set; } = "";
+    public string Name { get; set; } = "";
+    public int Fame { get; set; }
+    /// <summary>沟通属性（double：来自选手八维）</summary>
+    public double Comm { get; set; }
+    public int Titles { get; set; }
+    public int Mvps { get; set; }
+    public bool IsIgl { get; set; }
+    /// <summary>母队（青训出身；名宿回归叙事用）</summary>
+    public string? HomegrownClubId { get; set; }
+    public int RetiredYear { get; set; }
+    public int Value { get; set; }
 }
 
 public sealed class StandingsEntry

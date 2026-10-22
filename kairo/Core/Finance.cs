@@ -42,30 +42,30 @@ public static class Finance
 
     public sealed class FinanceWindow
     {
-        /// <summary>窗口起点余额（= 当前预算 − 窗口内流水合计）</summary>
-        public int Start;
+        /// <summary>窗口起点余额（= 当前预算 − 窗口内流水合计；budget 为 TS number 可为小数）</summary>
+        public double Start;
         public List<FinanceEntry> Entries = new();
         /// <summary>瀑布步进：每笔后的累计余额（含起点）</summary>
-        public List<(int Day, int Balance, string Label, int Amount)> Steps = new();
+        public List<(int Day, double Balance, string Label, int Amount)> Steps = new();
         /// <summary>窗口终点余额——对账不变量：恒等于当前预算</summary>
-        public int End;
+        public double End;
     }
 
     /// <summary>windowDays（默认 30）现金流窗口：取 [day-window+1, day] 的流水。</summary>
     public static FinanceWindow GetFinanceWindow(GameState state, int windowDays = 30)
     {
         var my = state.MyTeamId != null && state.Teams.TryGetValue(state.MyTeamId, out var t) ? t : null;
-        int budget = my?.Budget ?? 0;
+        double budget = my?.Budget ?? 0;
         int from = state.Day - windowDays + 1;
         var entries = state.Finances.Log
             .Where(e => e.Day >= from && e.Day <= state.Day)
             .Select(e => new FinanceEntry { Day = e.Day, Label = e.Label, Amount = e.Amount, Cat = Categorize(e.Label) })
             .ToList();
         int net = entries.Sum(e => e.Amount);
-        int start = budget - net;
+        double start = budget - net;
         var window = new FinanceWindow { Start = start, Entries = entries };
         window.Steps.Add((from, start, "期初", 0));
-        int acc = start;
+        double acc = start;
         foreach (var e in entries)
         {
             acc += e.Amount;
