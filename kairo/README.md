@@ -59,10 +59,21 @@ adb install -r builds/kairo-m0.apk && adb shell monkey -p com.maplisky.kairo 1
 18. **node 24 跑 `node --test tests/` 目录形式失效**（报 MODULE_NOT_FOUND），用 glob：`node --test tests/*.test.ts`。
 19. **fdlibm 移植必须对着 netlib 原版逐行核**（m2a 检错）：detExp 旧实现 `z·c`（应为 `r·c`）+ 六系数（fdlibm 只有 P1-P5 五个）+ 丢 k≠0 的 hi/lo 补偿式 `one-((lo-(x*c)/(2-c))-hi)`——不是 ulp 级误差而是全域 0.3-4.7% 失准，且因双端一致、黄金锁定而**静默存活**。教训：确定性 ≠ 正确性，黄金锁定的是实现不是语义；"移植精度比平台低"的注释不能当失准的遮羞布，发现失准就查原版。
 20. **设施升级期间按当前等级产出**（m2a）：Ready 判定看 Level≥1 而非"无施工"——L1→L2 施工中 L1 持续产出，首次建造（Level=0）才无产出。
+21. **Godot 用户参数必须在 `--` 之后**（m2c）：`godot ... res://m2/GrayBox.tscn --graybox-auto` 会被引擎吞掉（OS.GetCmdlineUserArgs 为空 → 自退不触发 → headless 永挂）；必须写 `-- --graybox-auto`。
+22. **xUnit 并行集合污染模块级序列**（m2c）：fixture id 参与比赛种子，两个测试类并行各建世界时 ResetFixtureSeq 互踩 → 同一黄金忽绿忽红。装配级 `[assembly: CollectionBehavior(DisableTestParallelization)]` 一刀切（套件 ~25s 可接受）。
 
 ## M0 场景结构（m0/）
 
 `Main.tscn` = §3.5 四层分镜微缩版：顶部小地图事件窗 / 调色板小人走路带 / 场馆双方选手+击杀播报 / 底部战绩板。硬编码回放事件流驱动，演出层只消费事件（红线）。运行末尾对自存截图做 15 项像素自审计（`SelfAudit()`，桌面与设备同一实现，设备端结果在 logcat）；`shots/` 为桌面截图存档（已 .gdignore，不进包）。
+
+## M2 灰盒主循环（m2/，进行中）
+
+`m2/GrayBox.tscn` = 竖屏灰盒可玩场景：顶部状态条（年/日/阶段/预算/信任/训练加成/场馆）+ 4×4 基地网格（地块/设施等级/施工进度，按设施类别着色）+ 日志 + 按钮（推进 1/7/30 天、购地、建/升级射击房、全队课表、重开）。全部交互经 `Core/AppLoop.cs`（确定性日循环：内核 advanceDay + 门票/施工/周结算/成就/翻年退役钩子），经济参数在 `Core.Data/economy.json` 热调。headless 自检（启动实验方法论）：
+
+```bash
+G:/WorkLoad/tools/godot/Godot_v4.7.2-stable_mono_win64/Godot_v4.7.2-stable_mono_win64_console.exe --headless --path . res://m2/GrayBox.tscn -- --graybox-auto
+# 退出码 0/1 = PASS/FAIL；打印 [graybox-audit] day/budget/facilities/plots/xp
+```
 
 ## M1：共享内核移植（✅ 已完成，快照固化见 [KERNEL-SYNC.md](KERNEL-SYNC.md)）
 

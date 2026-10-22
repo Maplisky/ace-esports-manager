@@ -120,10 +120,18 @@ public sealed class PlotState
 /// <summary>基地操作与结算（全部确定性：价格/效果均来自表格常量，零 RNG）。</summary>
 public static class BaseOps
 {
-    private static readonly Lazy<EconomyTable> TableLazy = new(() =>
-        JsonSerializer.Deserialize<EconomyTable>(
-            File.ReadAllText(Path.Combine(FindDataDir(), "economy.json")),
-            new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, PropertyNameCaseInsensitive = true })!);
+    private static readonly Lazy<EconomyTable> TableLazy = new(LoadTable);
+
+    /// <summary>宿主（Godot 应用层）可注入的资产目录覆盖：Core 保持无引擎依赖，设备端路径由应用层解析。</summary>
+    public static string? DataDirOverride;
+
+    private static EconomyTable LoadTable()
+    {
+        var dir = DataDirOverride ?? FindDataDir();
+        return JsonSerializer.Deserialize<EconomyTable>(
+            File.ReadAllText(Path.Combine(dir, "economy.json")),
+            new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase, PropertyNameCaseInsensitive = true })!;
+    }
 
     public static EconomyTable Table => TableLazy.Value;
 
