@@ -72,7 +72,8 @@ jobs:
           TPL="$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.mono"
           mkdir -p android/build
           unzip -q -o "$TPL/android_source.zip" -d android/build
-          printf '%s' "${GODOT_VERSION}.mono" > android/.build_version
+          # .build_version 用点分版本（tag 连字符转点：4.7.2-stable → 4.7.2.stable.mono）
+          printf '%s' "${GODOT_VERSION//-/.}.mono" > android/.build_version
           test -f android/build/build.gradle
         working-directory: ${{ env.PROJECT_PATH }}
 
