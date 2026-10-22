@@ -46,6 +46,7 @@ public partial class GrayBox : Node2D
         LoadWorld();
         BuildUi();
         BuildStartMenu();
+        BuildSaveMenu();
         Redraw();
         if (OS.GetCmdlineUserArgs().Contains("--graybox-auto"))
         {
@@ -65,7 +66,7 @@ public partial class GrayBox : Node2D
         _logLines.Clear();
     }
 
-    /// <summary>启动实验（m0 方法论）：headless 脚本化跑一段赛季 + 经济自检 + 自退。</summary>
+    /// <summary>启动实验（m0 方法论）：headless 脚本化跑一段赛季 + 经济自检 + 存读往返 + 自退。</summary>
     private void RunAutoAudit()
     {
         Log("[auto] 脚本化灰盒实验开始");
@@ -78,8 +79,16 @@ public partial class GrayBox : Node2D
         int facilities = myTeam.Facilities;
         var anyPlayer = _state.Players.Values.First(p => p.TeamId == _state.MyTeamId);
         double xp = anyPlayer.Xp.TryGetValue("awareness", out var aw) ? aw : 0;
-        bool ok = facilities >= 3 && _state.Base!.Plots.Count >= 2 && xp > 0 && _state.Day >= 90;
-        GD.Print($"[graybox-audit] day={_state.Day} budget={myTeam.Budget:F0} facilities={facilities} plots={_state.Base!.Plots.Count} rosterXpAwareness={xp:F1} ok={ok}");
+        // 存读往返：存于 D90 → 推进 1 天 → 读档 → 应回到 D90 且预算一致（读档后界面状态恢复路径）
+        DoSave(1);
+        int dayAtSave = _state.Day;
+        double budgetAtSave = myTeam.Budget;
+        Advance(1);
+        DoLoad(1);
+        bool roundtrip = _state.Day == dayAtSave && System.Math.Abs(_state.Teams[_state.MyTeamId!].Budget - budgetAtSave) < 0.5
+            && _state.Base!.Plots.Count >= 2;
+        bool ok = facilities >= 3 && _state.Base!.Plots.Count >= 2 && xp > 0 && _state.Day >= 90 && roundtrip;
+        GD.Print($"[graybox-audit] day={_state.Day} budget={myTeam.Budget:F0} facilities={facilities} plots={_state.Base!.Plots.Count} rosterXpAwareness={xp:F1} roundtrip={roundtrip} ok={ok}");
         GD.Print($"[graybox-audit] {(ok ? "PASS" : "FAIL")}");
         GetTree().Quit(ok ? 0 : 1);
     }
@@ -117,7 +126,100 @@ public partial class GrayBox : Node2D
             DoStart(new StartConfig { Mode = StartMode.Takeover, TeamName = _nameInput.Text }));
         MenuButton("(c) 剧本「欠薪弱旅」· 仅 $800K", 720, () =>
             DoStart(new StartConfig { Mode = StartMode.Script }));
-        MenuButton("重开世界（换 seed 前的占位）", 860, () => { LoadWorld(); Redraw(); });
+        MenuButton("存档管理（读取 / 删除）", 860, () => { SetMenuVisible(false); OpenSaveMenu(); });
+    }
+
+    // ── 存档管理菜单（SaveSystem.List/Load/Delete 接线）：3 槽信息行 + 存入/读档/删除 ──
+
+    private readonly List<CanvasItem> _saveMenu = new();
+    private readonly List<Label> _slotLabels = new();
+    private string SaveDir => System.IO.Path.Combine(
+        System.IO.Path.GetDirectoryName(ProjectSettings.GlobalizePath("user://")) ?? ".", "saves");
+
+    private void BuildSaveMenu()
+    {
+        var back = new ColorRect { Position = new Vector2(0, 0), Size = new Vector2(720, 1280), Color = Color.FromHtml("#0d141b") };
+        AddChild(back);
+        _saveMenu.Add(back);
+        var title = new Label { Position = new Vector2(0, 140), Size = new Vector2(720, 70), Text = "存档管理", HorizontalAlignment = HorizontalAlignment.Center };
+        title.AddThemeFontOverride("font", _font);
+        title.AddThemeFontSizeOverride("font_size", 44);
+        AddChild(title);
+        _saveMenu.Add(title);
+        for (int i = 0; i < 3; i++)
+        {
+            var label = new Label { Position = new Vector2(40, 270 + i * 130), Size = new Vector2(640, 90) };
+            label.AddThemeFontOverride("font", _font);
+            label.AddThemeFontSizeOverride("font_size", 19);
+            AddChild(label);
+            _slotLabels.Add(label);
+            _saveMenu.Add(label);
+            int slot = i + 1;
+            SaveMenuButton("存入", new Vector2(40, 360 + i * 130), () => { DoSave(slot); RefreshSaveMenu(); });
+            SaveMenuButton("读档", new Vector2(200, 360 + i * 130), () => DoLoad(slot));
+            SaveMenuButton("删除", new Vector2(360, 360 + i * 130), () => { SaveSystem.Delete(SaveDir, slot); RefreshSaveMenu(); Sfx.Play("save"); });
+        }
+        SaveMenuButton("返回", new Vector2(110, 700), () => { SetSaveMenuVisible(false); SetMenuVisible(true); });
+    }
+
+    private void SaveMenuButton(string text, Vector2 pos, System.Action onClick)
+    {
+        var b = new Button { Position = pos, Size = new Vector2(150, 60), Text = text };
+        b.AddThemeFontOverride("font", _font);
+        b.AddThemeFontSizeOverride("font_size", 19);
+        b.Pressed += onClick;
+        AddChild(b);
+        _saveMenu.Add(b);
+    }
+
+    private void OpenSaveMenu()
+    {
+        RefreshSaveMenu();
+        SetSaveMenuVisible(true);
+    }
+
+    private void SetSaveMenuVisible(bool visible)
+    {
+        foreach (var n in _saveMenu) n.Visible = visible;
+    }
+
+    /// <summary>刷新槽位信息行（队名/年/日/阶段/保存时间；空槽显示提示）。</summary>
+    private void RefreshSaveMenu()
+    {
+        var slots = SaveSystem.List(SaveDir);
+        for (int i = 0; i < _slotLabels.Count && i < slots.Count; i++)
+        {
+            var s = slots[i];
+            _slotLabels[i].Text = s.TeamName.Length == 0
+                ? $"槽位 {sLotLabel(s.Slot)}：空（可存入当前进度）"
+                : $"槽位 {sLotLabel(s.Slot)}：{s.TeamName}｜Y{s.Year} D{s.Day} · {s.Stage}｜{s.SavedAt:MM-dd HH:mm}";
+        }
+    }
+
+    /// <summary>读档：载入 GameState 并恢复界面状态（基地页/小人就位/选择态清空/菜单关闭）。</summary>
+    private void DoLoad(int slot)
+    {
+        try
+        {
+            var loaded = SaveSystem.Load(SaveDir, slot);
+            if (loaded == null) { Log($"槽位 {sLotLabel(slot)} 为空。"); return; }
+            _state = loaded.Value.State;
+            _page = "base";
+            _selPlayer = null;
+            _selFree = null;
+            _watchActive = false;
+            foreach (var a in _avatars) a.QueueFree();
+            _avatars.Clear();
+            SetSaveMenuVisible(false);
+            _life.Rebuild(_state);
+            Sfx.Play("roundWin");
+            Log($"读档成功：{loaded.Value.Info.TeamName}（Y{_state.Year} D{_state.Day}）");
+            Redraw();
+        }
+        catch (Exception ex)
+        {
+            Log($"读档失败：{ex.Message}");
+        }
     }
 
     private void MenuButton(string text, int y, System.Action onClick)
@@ -241,8 +343,7 @@ public partial class GrayBox : Node2D
     {
         try
         {
-            string dir = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(ProjectSettings.GlobalizePath("user://")) ?? ".", "saves");
-            SaveSystem.Save(_state, dir, slot, _startMode.ToString());
+            SaveSystem.Save(_state, SaveDir, slot, _startMode.ToString());
             Sfx.Play("save");
             Log($"已存入槽位 {sLotLabel(slot)}（Y{_state.Year} D{_state.Day}）");
         }
