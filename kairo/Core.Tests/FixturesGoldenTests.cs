@@ -112,7 +112,7 @@ public sealed class FixturesGoldenTests
     {
         return caseNode["fixtures"]!.AsArray()
             .Where(f => f!["label"]!.GetValue<string>().Contains("胜者组第1轮"))
-            .Select(f => (f["teamA"]!.GetValue<string>(), f["teamB"]!.GetValue<string>()))
+            .Select(f => (f!["teamA"]!.GetValue<string>(), f!["teamB"]!.GetValue<string>()))
             .ToList();
     }
 

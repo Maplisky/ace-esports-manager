@@ -100,8 +100,8 @@ public sealed class NarrativeGoldenTests
         }
         var debutPids = Narrative.CaptureDebuts(state).ToHashSet();
         Assert.Equal(
-            Golden.Value["debutsDump"]!["debutPids"]!.AsArray().Select(x => x!.GetValue<string>()),
-            debutPids);
+            Golden.Value["debutsDump"]!["debutPids"]!.AsArray().Select(x => x!.GetValue<string>()).OrderBy(x => x, StringComparer.Ordinal),
+            debutPids.OrderBy(x => x, StringComparer.Ordinal));
         var notes5 = new List<NewsItem>();
         Narrative.NarrativeOnMyMatch(state, "FX_debut", BuildRec(state, "B", teams[0].Starters[0], new[] { 200 }), notes5, debutPids);
         AssertDeepEqual(Golden.Value["notes5"]!, DumpNotes(notes5), "notes5");

@@ -83,7 +83,7 @@ public sealed class EventsGoldenTests
             Events.ResolveEvent(state, card.Uid, 0, rng);
         }
         AssertDeepEqual(caseD["trace"]!, new JsonArray(trace.ToArray()), "deadline.trace");
-        Assert.Equal(0, state.PendingEvents.Count);
+        Assert.Empty(state.PendingEvents);
     }
 
     [Fact]

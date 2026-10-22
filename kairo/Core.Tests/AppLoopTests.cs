@@ -59,7 +59,7 @@ public sealed class AppLoopTests
         Assert.Equal(3, myTeam.Facilities);          // 修正量输入落点
         // 预算精确账：50M − 地 800K − 射击房 400K − 周边店 250K + 基地周收入 6000 + 内核商务周收入 4833
         Assert.Equal(50_000_000L - 1_450_000 + 10_833, (long)myTeam.Budget);
-        Assert.True(r.Notes.Any(n => n.Contains("基地周报")));
+        Assert.Contains(r.Notes, n => n.Contains("基地周报"));
     }
 
     [Fact]
@@ -166,25 +166,17 @@ public sealed class AppLoopTests
     public void SeasonEnd_Promotion_Relegation()
     {
         var state = NewState();
+        var tierBefore = state.Teams.Values.ToDictionary(t => t.Id, t => t.Tier);
         var before = state.Teams.Values.GroupBy(t => (t.RegionId, t.Tier)).ToDictionary(g => g.Key, g => g.Count());
         AppLoop.Advance(state, 400);
         var after = state.Teams.Values.GroupBy(t => (t.RegionId, t.Tier)).ToDictionary(g => g.Key, g => g.Count());
         // 数量守恒：每赛区 t1/t2 队数不变（一升一降）
         Assert.Equal(before, after);
-        // 升降确实发生：每赛区 stage2-t2 冠军现 Tier==1，且上赛季 stage2-t1 某队现 Tier==2
-        var regions = new[] { "americas", "emea", "pacific", "china" };
-        int ups = 0, downs = 0;
-        foreach (var r in regions)
-        {
-            var champId = state.Comps[$"stage2-{r}-t1"].TeamIds.Intersect(
-                state.Teams.Values.Where(t => t.Tier == 1).Select(t => t.Id)).ToList();
-            _ = champId;
-            ups++;
-            downs++;
-        }
-        Assert.Equal(4, ups); // 四赛区各一次晋级位（结构断言，具体队随战绩）
-        Assert.Equal(4, downs);
+        // 升降确实发生：至少 8 队 Tier 变动（4 赛区 × 一升一降）
+        int changed = state.Teams.Values.Count(t => tierBefore[t.Id] != t.Tier);
+        Assert.True(changed >= 8, $"Tier 变动队数不足：{changed}");
         // 新赛季赛程按新分级重建：t2 挑战者联赛存在且队数为该赛区 t2 数
+        var regions = new[] { "americas", "emea", "pacific", "china" };
         foreach (var r in regions)
         {
             int t2Count = state.Teams.Values.Count(t => t.Tier == 2 && t.RegionId == r);

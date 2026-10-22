@@ -142,7 +142,7 @@ public static class DaySim
         {
             var t1Teams = all.Where(t => t.Tier == 1 && (string.IsNullOrEmpty(t.RegionId) ? "xia" : t.RegionId) == rId);
             var aggrs = t1Teams
-                .Select(t => Strength.AggrOfLineup(t.Starters.Select(id => state.Players.TryGetValue(id, out var pl) ? pl : null).Where(p => p != null).ToList()))
+                .Select(t => Strength.AggrOfLineup(t.Starters.Select(id => state.Players.TryGetValue(id, out var pl) ? pl : null).Where(p => p != null).Select(p => p!).ToList()))
                 .Where(v => v > 0)
                 .ToList();
             double aggr = aggrs.Count > 0 ? aggrs.Sum() / aggrs.Count : 0.5;
@@ -466,9 +466,8 @@ public static class DaySim
         {
             if (p.InjuredUntilDay > state.Day) continue;
             bool isMine = myTeam != null && p.TeamId == myTeam.Id;
-            // 青训营成长加速（GDD §6.5）：≤18 岁青训学员个人经验 ×1.5
             double acadF = p.Homegrown && p.Age <= 18 && (myTeam?.Academy?.Contains(p.Id) ?? false) ? 1.5 : 1.0;
-            if (isMine)
+            if (myTeam != null && isMine)
             {
                 // ── 团队层选手效果：复盘日给全队意识/沟通经验 ──
                 int reviewDays = state.TeamSchedule.Count(s => s == "review");

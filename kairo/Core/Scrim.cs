@@ -107,7 +107,7 @@ public static class Scrim
 
         // ── 目标收益（GDD §5.6 三选一）──
         var oppStyle = Strength.StyleOf(Strength.AggrOfLineup(
-            opp.Starters.Select(id => state.Players.TryGetValue(id, out var sp) ? sp : null).Where(p => p != null).ToList()));
+            opp.Starters.Select(id => state.Players.TryGetValue(id, out var sp) ? sp : null).Where(p => p != null).Select(p => p!).ToList()));
         string effectText;
         if (req.Goal == "blend")
         {
