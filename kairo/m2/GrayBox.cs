@@ -126,8 +126,11 @@ public partial class GrayBox : Node2D
         _menu.Add(b);
     }
 
+    private StartMode _startMode = StartMode.Script;
+
     private void DoStart(StartConfig cfg)
     {
+        _startMode = cfg.Mode;
         var log = NewGame.Start(_state, cfg);
         Career.InitCareer(_state, "analyst");
         foreach (var line in log) Log(line);
@@ -216,7 +219,32 @@ public partial class GrayBox : Node2D
         _act4 = AddButton("购地", new Vector2(20, 1120), () => { if (_page == "market") RespondBid(false); else if (_page == "squad") ToggleListed(); else BuyPlot(); });
         _act5 = AddButton("建射击房", new Vector2(260, 1120), () => { if (_page == "squad") ReleaseOne(); else BuildRange(); });
         _act6 = AddButton("全队练意识", new Vector2(500, 1120), TrainAwareness);
-        _restartBtn = AddButton("重开", new Vector2(560, 1208), () => { LoadWorld(); SetMenuVisible(true); });
+        _restartBtn = AddButton("菜单", new Vector2(560, 1208), () => { LoadWorld(); SetMenuVisible(true); });
+        // 存档槽位按钮（1-3：点按=保存；Shift+点按=读档——灰盒简式；正式版走存档菜单）
+        for (int i = 0; i < 3; i++)
+        {
+            int slot = i + 1;
+            var b = AddButton($"存{sLotLabel(slot)}", new Vector2(20 + i * 220, 960), () => DoSave(slot));
+            _saveBtns.Add(b);
+        }
+    }
+
+    private static string sLotLabel(int slot) => slot switch { 1 => "①", 2 => "②", 3 => "③", _ => slot.ToString() };
+    private readonly List<Button> _saveBtns = new();
+
+    /// <summary>保存到槽位（user://saves；SaveSystem 目录由宿主解析）。</summary>
+    private void DoSave(int slot)
+    {
+        try
+        {
+            string dir = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(ProjectSettings.GlobalizePath("user://")) ?? ".", "saves");
+            SaveSystem.Save(_state, dir, slot, _startMode.ToString());
+            Log($"已存入槽位 {sLotLabel(slot)}（Y{_state.Year} D{_state.Day}）");
+        }
+        catch (Exception ex)
+        {
+            Log($"存档失败：{ex.Message}");
+        }
     }
 
     private Button _act1 = null!, _act2 = null!, _act3 = null!, _act4 = null!, _act5 = null!, _act6 = null!;
@@ -504,7 +532,7 @@ public partial class GrayBox : Node2D
         if (last == null) { Log("还没有已完成的比赛。"); return; }
         long seed = Rng.HashString($"{_state.Seed}:{last.Id}");
         var rec = Match.SimMatch(_state, last.TeamA, last.TeamB, last.Bo, seed, last.Id, last.MapLock, last.AgentLock);
-        _stream = ReplayStream.Compile(rec);
+        _stream = ReplayStream.Compile(rec, _state.Players.Values.ToDictionary(p => p.Id, p => p.Ign));
         _watchT = 0;
         _watchCursor = 0;
         _watchKillsA = _watchKillsB = 0;
@@ -536,10 +564,18 @@ public partial class GrayBox : Node2D
             _watchCursor++;
         }
         foreach (var a in _watchActors) a.Update(dt);
+        var last = _watchCursor > 0 ? _stream[Math.Min(_watchCursor, _stream.Count) - 1] : null;
+        string lastText = last == null ? "" : last.Kind switch
+        {
+            "kill" => $"{(last.IgnA.Length > 0 ? last.IgnA : $"P{last.A}")} 击倒 {(last.IgnB.Length > 0 ? last.IgnB : $"P{last.B}")}{(last.Tag.Length > 0 ? " · " + last.Tag : "")}",
+            "ace" => $"{(last.IgnA.Length > 0 ? last.IgnA : $"P{last.A}")} 五杀 ACE！",
+            "clutch" => $"{(last.IgnA.Length > 0 ? last.IgnA : $"P{last.A}")} 残局 {last.Tag}",
+            _ => last.Tag,
+        };
         _pageView.Text = _watchTitle + "\n\n" + string.Join("\n", _watchActors.Select((a, i) =>
             $"{(i < 5 ? "A" : "B")}{i % 5 + 1} {(a.Dead ? "✖" : "●")}").Chunk(5).Select(g => string.Join("  ", g))) +
             $"\n\n回合 {_watchRoundA}-{_watchRoundB}｜击杀 {_watchKillsA}-{_watchKillsB}｜存活 {_watchAliveA}-{_watchAliveB}" +
-            $"\n\n播报：{(_watchCursor > 0 ? _stream[Math.Min(_watchCursor, _stream.Count) - 1].Tag : "")}";
+            $"\n\n播报：{lastText}";
         if (_watchCursor >= _stream.Count)
         {
             _watchActive = false;

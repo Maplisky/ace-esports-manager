@@ -19,6 +19,10 @@ public sealed class ReplayEvent
     public int B { get; init; }
     /// <summary>播报文本（爆头/残局/回合标题等）</summary>
     public string Tag { get; init; } = "";
+    /// <summary>击杀者 ign（kill/ace/clutch 事件；演出层播报直用真名）</summary>
+    public string IgnA { get; init; } = "";
+    /// <summary>受害者 ign（kill 事件）</summary>
+    public string IgnB { get; init; } = "";
 }
 
 /// <summary>
@@ -32,7 +36,7 @@ public static class ReplayStream
     private const float RoundBudget = 24f;
     private const float RoundGap = 2.5f;
 
-    public static List<ReplayEvent> Compile(MatchRecord rec)
+    public static List<ReplayEvent> Compile(MatchRecord rec, IReadOnlyDictionary<string, string>? igns = null)
     {
         var evs = new List<ReplayEvent>();
         float t = 1.0f;
@@ -40,11 +44,11 @@ public static class ReplayStream
         var pids = rec.Maps.Count > 0 ? rec.Maps[0].Lines.Keys.ToList() : new List<string>();
         var slot = new Dictionary<string, int>();
         for (int i = 0; i < pids.Count && i < 10; i++) slot[pids[i]] = i;
-
+        string Ign(string? pid) => pid != null
+            ? (igns != null && igns.TryGetValue(pid, out var g) ? g : FallbackIgn(pid))
+            : "";
         foreach (var map in rec.Maps)
         {
-            // 每图 lines 序一致（同一 roster）；缺失时退化用本图
-            var mapSlots = map.Lines.Count >= pids.Count ? map.Lines.Keys.ToList() : pids;
             foreach (var round in map.Rounds)
             {
                 float roundT = t;
@@ -82,7 +86,11 @@ public static class ReplayStream
                         "defuse" => "拆包",
                         _ => "",
                     };
-                    evs.Add(new ReplayEvent { T = et, Kind = kind, Side = e.Side ?? round.Atk, A = s, B = v, Tag = tag });
+                    evs.Add(new ReplayEvent
+                    {
+                        T = et, Kind = kind, Side = e.Side ?? round.Atk, A = s, B = v, Tag = tag,
+                        IgnA = Ign(e.S), IgnB = Ign(e.V),
+                    });
                 }
                 // 回合结束
                 bool aWon = round.End.Win == "A";
@@ -102,18 +110,15 @@ public static class ReplayStream
             evs.Add(new ReplayEvent
             {
                 T = t, Kind = "map_end", Side = map.ScoreA > map.ScoreB ? "A" : "B",
-                Tag = $"{map.Map} {map.ScoreA}-{map.ScoreB}{(map.Mvp != null ? " · MVP " + IgnOf(rec, map, map.Mvp) : "")}",
+                Tag = $"{map.Map} {map.ScoreA}-{map.ScoreB}{(map.Mvp != null ? " · MVP " + Ign(map.Mvp) : "")}",
             });
             t += RoundGap * 2;
         }
         return evs;
     }
 
-    private static string IgnOf(MatchRecord rec, MapRecord map, string pid)
-    {
-        // Record 不带 ign（最小投影）；回放器由 Share.BuildReplayPayload 补名——此处仅返回 pid 尾段可读性占位
-        return pid.Length > 6 ? pid[..6] : pid;
-    }
+    /// <summary>无 ign 表时的确定性短名（pid 尾 6 位可读段）。</summary>
+    private static string FallbackIgn(string pid) => pid.Length > 6 ? pid[^6..] : pid;
 
     private static string HowCn(string how) => how switch
     {

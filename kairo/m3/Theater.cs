@@ -15,6 +15,7 @@ public partial class Theater : Node2D
 {
     private GameState _state = null!;
     private List<ReplayEvent> _stream = new();
+    private Dictionary<string, string> _igns = new();
     private string _recSeedInfo = "";
     private float _t;
     private int _cursor;
@@ -130,16 +131,18 @@ public partial class Theater : Node2D
         var rec = Match.SimMatch(_state, last.TeamA, last.TeamB, last.Bo, seed, last.Id, last.MapLock, last.AgentLock);
         GD.Print($"[theater] auto: sim done maps={rec.Maps.Count} rounds0={rec.Maps[0].Rounds.Count}");
         GD.Print("[theater] auto: compiling stream");
-        var stream = ReplayStream.Compile(rec);
+        var igns = _state.Players.Values.ToDictionary(p => p.Id, p => p.Ign);
+        var stream = ReplayStream.Compile(rec, igns);
         GD.Print($"[theater] auto: compiled {stream.Count} events");
-        Load(rec, $"{_state.Teams[last.TeamA].Tag} vs {_state.Teams[last.TeamB].Tag}");
+        Load(rec, $"{_state.Teams[last.TeamA].Tag} vs {_state.Teams[last.TeamB].Tag}", igns);
         GD.Print($"[theater] auto: stream={_stream.Count} playing");
     }
 
     /// <summary>装载一场比赛回放（宿主入口）。</summary>
-    public void Load(MatchRecord rec, string title)
+    public void Load(MatchRecord rec, string title, IReadOnlyDictionary<string, string>? igns = null)
     {
-        _stream = ReplayStream.Compile(rec);
+        _stream = ReplayStream.Compile(rec, igns);
+        _igns = igns?.ToDictionary(kv => kv.Key, kv => kv.Value) ?? new Dictionary<string, string>();
         _recSeedInfo = title;
         _title.Text = $"{title}｜BO{rec.Format}";
         _t = 0;
@@ -195,7 +198,7 @@ public partial class Theater : Node2D
                 victim.Die();
                 if (e.A < 5) { _killsA++; _aliveB--; } else { _killsB++; _aliveA--; }
                 killer.Flash();
-                Banner($"{SideName(e.A)} 击倒 {SideName(e.B)}{(e.Tag.Length > 0 ? " · " + e.Tag : "")}");
+                Banner($"{(e.IgnA.Length > 0 ? e.IgnA : SideName(e.A))} 击倒 {(e.IgnB.Length > 0 ? e.IgnB : SideName(e.B))}{(e.Tag.Length > 0 ? " · " + e.Tag : "")}");
                 _mapLog.Enqueue($"{SideTag(e.A)}✕{SideTag(e.B)}");
                 while (_mapLog.Count > 6) _mapLog.Dequeue();
                 _mapWin.Text = string.Join("  ", _mapLog);
@@ -209,10 +212,10 @@ public partial class Theater : Node2D
                 RefreshScore();
                 break;
             case "ace":
-                Banner("五杀 ACE！", 1.8f);
+                Banner($"{(e.IgnA.Length > 0 ? e.IgnA : SideName(e.A))} 五杀 ACE！", 1.8f);
                 break;
             case "clutch":
-                Banner($"残局 {e.Tag}", 1.8f);
+                Banner($"{(e.IgnA.Length > 0 ? e.IgnA : SideName(e.A))} 残局 {e.Tag}", 1.8f);
                 break;
             case "flawless":
                 Banner("完美团灭！", 1.6f);
@@ -226,12 +229,11 @@ public partial class Theater : Node2D
         }
     }
 
+    /// <summary>序号 → 真实 ign（由 Load 传入的全局 ign 表；事件流也带 IgnA/IgnB 直用）。</summary>
     private string SideName(int idx)
     {
-        var myTeam = _state.Teams[_state.MyTeamId!];
-        var roster = myTeam.Roster;
-        _ = roster;
-        return $"P{idx}"; // 正式接线时由 payload players 映射真实 ign
+        // 序号由 Compile 按 lines 插入序分配；宿主无逐事件 roster 映射时用事件自带 ign。
+        return $"P{idx}";
     }
 
     private string SideTag(int idx) => idx < 5 ? "A" : "B";
