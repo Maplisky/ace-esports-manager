@@ -41,6 +41,9 @@ public sealed class Rng
         return h;
     }
 
+    /// <summary>TS Math.imul 镜像：32 位截断乘法（赛程/自由市场种子用）。</summary>
+    public static int Imul(int a, int b) => unchecked((int)(a * b));
+
     /// <summary>splitmix32：单个种子扩散为 4 个状态字。</summary>
     private static Func<uint> Splitmix32(uint seed)
     {

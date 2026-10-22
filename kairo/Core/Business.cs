@@ -122,7 +122,7 @@ public static class Business
         {
             if (!state.Players.TryGetValue(pid, out var p) || p.Stream == null || p.Stream.UntilDay <= state.Day) continue;
             income += (int)DetMath.JsRound(p.Stream.Weekly * 0.4);
-            p.Wallet += (int)DetMath.JsRound(p.Stream.Weekly * 0.6); // 选手 60% 分成
+            p.Wallet = (p.Wallet ?? 0) + (int)DetMath.JsRound(p.Stream.Weekly * 0.6); // 选手 60% 分成
             p.Popularity = (int)Math.Min(100, Math.Max(0, (p.Popularity ?? 0) + 2)); // 人气值随直播上涨
         }
         return (int)income;

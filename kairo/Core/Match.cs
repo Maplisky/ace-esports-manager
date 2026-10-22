@@ -210,9 +210,9 @@ public static class Match
             bool won = (rec.Winner == "A" && teamId == rec.TeamA) || (rec.Winner == "B" && teamId == rec.TeamB);
             foreach (var p in ResolveMatchRoster(state, team))
             {
-                p.Fatigue = (int)Math.Min(100, Math.Max(0, p.Fatigue + rec.Maps.Count * 5));
-                p.Form = (int)Math.Min(99, Math.Max(30, p.Form + (won ? 1 : -1)));
-                p.Morale = (int)Math.Min(100, Math.Max(10, p.Morale + (won ? 2 : -2)));
+                p.Fatigue = Math.Min(100, Math.Max(0, p.Fatigue + rec.Maps.Count * 5));
+                p.Form = Math.Min(99, Math.Max(30, p.Form + (won ? 1 : -1)));
+                p.Morale = Math.Min(100, Math.Max(10, p.Morale + (won ? 2 : -2)));
             }
             if (teamId == state.MyTeamId)
             {

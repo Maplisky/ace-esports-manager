@@ -444,7 +444,7 @@ public static class Worldgen
 
     private static Team MakeTeamSkeleton(Rng rng, string id, string name, string tag, int tier, string regionId)
     {
-        var mapPref = new OrderedDict<string, int>();
+        var mapPref = new OrderedDict<string, double>();
         foreach (var m in CoreData.Maps) mapPref[m.Id] = rng.Int(45, 75);
         var personalities = new[] { "spender", "youth", "steady", "wheeler" };
         return new Team

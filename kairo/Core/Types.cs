@@ -64,9 +64,10 @@ public sealed class Player
     public int Overall { get; set; }
     public int Potential { get; set; }
     public int PeakOverall { get; set; }
-    public int Form { get; set; }
-    public int Morale { get; set; }
-    public int Fatigue { get; set; }
+    /// <summary>状态（TS number 语义：周结算产生小数，严禁 int 截断）</summary>
+    public double Form { get; set; }
+    public double Morale { get; set; }
+    public double Fatigue { get; set; }
     public int Salary { get; set; }
     public int ContractYears { get; set; }
     public List<string> AgentPool { get; set; } = new();
@@ -95,8 +96,8 @@ public sealed class Player
     public int BenchedWeeks { get; set; }
     /// <summary>本周商务占用天数（≥2 天训练收益 −25%/天；每周重置）</summary>
     public int CommercialDays { get; set; }
-    /// <summary>个人积蓄（§8.4 v1.4：直播 60% 分成入个人钱包；旧档缺省 0）</summary>
-    public int Wallet { get; set; }
+    /// <summary>个人积蓄（§8.4 v1.4：直播 60% 分成入个人钱包；TS 可选语义——入账前 undefined）</summary>
+    public int? Wallet { get; set; }
     /// <summary>人气值 0-100（直播涨人气；加成商务邀约报酬）</summary>
     public int? Popularity { get; set; }
     public StreamContract? Stream { get; set; }
@@ -268,8 +269,8 @@ public sealed class Team
     public int Reputation { get; set; }
     /// <summary>spender/youth/steady/wheeler</summary>
     public string Personality { get; set; } = "steady";
-    /// <summary>图池熟练 20-95（插入序 = MAPS 序）</summary>
-    public OrderedDict<string, int> MapPref { get; set; } = new();
+    /// <summary>图池熟练 20-95（插入序 = MAPS 序；周结算 +0.4×比赛折减浮点累进，round 会吃掉小数增量）</summary>
+    public OrderedDict<string, double> MapPref { get; set; } = new();
     public int Bond { get; set; }
     public List<Sponsor> Sponsors { get; set; } = new();
     public StaffSlots Staff { get; set; } = new();
@@ -466,8 +467,61 @@ public sealed class GameState
     public double? SponsorMult { get; set; }
     public Manager Manager { get; set; } = new();
     public int BoardConfidence { get; set; }
-    public object? Objective { get; set; }
+    public Objective? Objective { get; set; }
     public int ActionPoints { get; set; }
     public List<string> TeamSchedule { get; set; } = new();
     public List<string> TrainingMaps { get; set; } = new();
+    /// <summary>赛事表（插入序=创建序；新赛季清理保留 cup 与 stageN-x-tN）</summary>
+    public OrderedDict<string, Competition> Comps { get; set; } = new();
+    /// <summary>选手个人训练焦点（playerId → option key）</summary>
+    public OrderedDict<string, string> Schedules { get; set; } = new();
+    /// <summary>轮换沟通豁免名单（每周 2 次，跨周清空）</summary>
+    public List<string> RotationWaive { get; set; } = new();
+    public RotationTalksState RotationTalks { get; set; } = new();
+    /// <summary>练英雄计划（playerId → agentId；结算取前 5 条）</summary>
+    public OrderedDict<string, string> AgentTraining { get; set; } = new();
+    /// <summary>赛区风格 META（赛区 id → 风格/进攻性均值；展示+国际赛叙事）</summary>
+    public OrderedDict<string, RegionMetaEntry> RegionMeta { get; set; } = new();
+}
+
+public sealed class StandingsEntry
+{
+    public string TeamId { get; set; } = "";
+    public int W { get; set; }
+    public int L { get; set; }
+    public int MapW { get; set; }
+    public int MapL { get; set; }
+    public int RoundW { get; set; }
+    public int RoundL { get; set; }
+    public int Pts { get; set; }
+}
+
+public sealed class Competition
+{
+    public string Key { get; set; } = "";
+    public string Name { get; set; } = "";
+    public string Stage { get; set; } = "";
+    public List<string> TeamIds { get; set; } = new();
+    /// <summary>插入序=teamIds 序（积分榜平局时的稳定序依赖此序）</summary>
+    public OrderedDict<string, StandingsEntry> Standings { get; set; } = new();
+}
+
+/// <summary>董事会阶段目标（GDD §9.5）</summary>
+public sealed class Objective
+{
+    public string Stage { get; set; } = "";
+    public int PlaceAtLeast { get; set; }
+    public string Text { get; set; } = "";
+}
+
+public sealed class RegionMetaEntry
+{
+    public string Style { get; set; } = "";
+    public double Aggr { get; set; }
+}
+
+public sealed class RotationTalksState
+{
+    public int Week { get; set; }
+    public int Used { get; set; }
 }

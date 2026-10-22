@@ -78,6 +78,12 @@ public static class Strength
     public static string StyleOf(double aggr) =>
         aggr >= 0.6 ? "rush" : aggr >= 0.55 ? "aggro" : aggr > 0.45 ? "balanced" : aggr > 0.4 ? "methodical" : "lockdown";
 
+    /// <summary>风格中文标签（Masters 抽签叙事/风格特训 UI 用）。</summary>
+    public static readonly IReadOnlyDictionary<string, string> StyleLabel = new Dictionary<string, string>
+    {
+        ["rush"] = "快攻", ["aggro"] = "侵略", ["balanced"] = "均衡", ["methodical"] = "稳健", ["lockdown"] = "锁死",
+    };
+
     /// <summary>风格相性值：克制 +1.8 / 被克 -1.0 / 中性 0（不对称）。</summary>
     public static double StyleCounterOf(string mine, string theirs)
     {

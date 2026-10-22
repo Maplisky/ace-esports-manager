@@ -138,14 +138,14 @@ public static class Events
         bool targetOnMyTeam = target != null && target.TeamId == state.MyTeamId;
 
         if (opt.Morale.HasValue && target != null && targetOnMyTeam)
-            target.Morale = (int)Math.Min(100, Math.Max(10, target.Morale + opt.Morale.Value));
+            target.Morale = Math.Min(100, Math.Max(10, target.Morale + opt.Morale.Value));
         if (card.Negative && target != null) target.LastEventDay = state.Day; // 负面抑制器起点
         if (opt.TeamMorale.HasValue && myTeam != null)
         {
             foreach (var pid in myTeam.Roster)
             {
                 if (state.Players.TryGetValue(pid, out var p))
-                    p.Morale = (int)Math.Min(100, Math.Max(10, p.Morale + opt.TeamMorale.Value));
+                    p.Morale = Math.Min(100, Math.Max(10, p.Morale + opt.TeamMorale.Value));
             }
         }
         if (opt.Budget.HasValue && myTeam != null)
@@ -158,7 +158,7 @@ public static class Events
         if (opt.Bond.HasValue && myTeam != null)
             teamBond(myTeam, opt.Bond.Value);
         if (opt.Fatigue.HasValue && target != null && targetOnMyTeam)
-            target.Fatigue = (int)Math.Min(100, Math.Max(0, target.Fatigue + opt.Fatigue.Value));
+            target.Fatigue = Math.Min(100, Math.Max(0, target.Fatigue + opt.Fatigue.Value));
         if (opt.BoardConfidence.HasValue)
             state.BoardConfidence = (int)Math.Min(100, Math.Max(0, state.BoardConfidence + opt.BoardConfidence.Value));
 

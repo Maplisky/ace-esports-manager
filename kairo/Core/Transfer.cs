@@ -252,7 +252,7 @@ public static class Transfer
         p.Salary = offer.Salary;
         p.ContractYears = offer.Years;
         p.PromisedRole = offer.PromisedRole; // 承诺定位落地
-        p.Morale = (int)Math.Min(100, Math.Max(10, p.Morale + 8));
+        p.Morale = Math.Min(100, Math.Max(10, p.Morale + 8));
         p.BenchedWeeks = 0;
         p.Listed = false;
         // 替补三正路：签约落 track（bench/rotation 才有意义）
@@ -283,7 +283,7 @@ public static class Transfer
         team.Starters = team.Starters.Where(id => id != playerId).ToList();
         p.TeamId = null;
         p.ContractYears = 0;
-        p.Morale = (int)Math.Min(100, Math.Max(10, p.Morale - 6));
+        p.Morale = Math.Min(100, Math.Max(10, p.Morale - 6));
         state.TransferFeed.Add(new TransferFeedItem
         {
             Day = state.Day, Year = state.Year, Kind = "release",

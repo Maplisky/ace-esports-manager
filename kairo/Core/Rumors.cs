@@ -64,7 +64,7 @@ public static class Rumors
             var buyers = state.Teams.Values.Where(x => x.Id != t.Id && x.Reputation > t.Reputation).ToList();
             var to = buyers.Count > 0 ? rng.Pick(buyers) : null;
             star.Listed = true;
-            star.Morale = (int)Math.Min(100, Math.Max(10, star.Morale - 5));
+            star.Morale = Math.Min(100, Math.Max(10, star.Morale - 5));
             string why = $"战绩 {w} 胜 {l} 负";
             PushFeed(state, new TransferFeedItem
             {
@@ -90,7 +90,7 @@ public static class Rumors
                     Text = $"{RumorLabel(1)}：{buyer.Tag} 正在关注 {star.Ign}（{(state.Teams.TryGetValue(star.TeamId!, out var ot) ? ot.Tag : "?")} · {star.Overall}）。",
                 });
                 // 野心大的人听到传闻会飘（士气 -3）
-                if (star.Ambition > 70) star.Morale = (int)Math.Min(100, Math.Max(10, star.Morale - 3));
+                if (star.Ambition > 70) star.Morale = Math.Min(100, Math.Max(10, star.Morale - 3));
             }
         }
         if (!windowOpen) return;
@@ -145,7 +145,7 @@ public static class Rumors
                 if (to.Starters.Count < 5) to.Starters.Add(p.Id);
                 p.TeamId = to.Id;
                 p.Listed = false;
-                p.Morale = (int)Math.Min(100, Math.Max(10, p.Morale + 8));
+                p.Morale = Math.Min(100, Math.Max(10, p.Morale + 8));
                 Finance.LogFinance(state, $"转会收入 · {p.Ign}", fee);
                 PushFeed(state, new TransferFeedItem
                 {
@@ -157,7 +157,7 @@ public static class Rumors
             else
             {
                 f.Kind = "off";
-                p.Morale = (int)Math.Min(100, Math.Max(10, p.Morale + 3)); // 留队安抚
+                p.Morale = Math.Min(100, Math.Max(10, p.Morale + 3)); // 留队安抚
                 PushFeed(state, new TransferFeedItem
                 {
                     Day = state.Day, Year = state.Year, Kind = "off", PlayerId = p.Id, ToTeamId = to.Id,
