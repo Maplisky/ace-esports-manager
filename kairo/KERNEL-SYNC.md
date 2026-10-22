@@ -60,6 +60,6 @@ node --test tests/*.test.ts
 
 ## M1 之后待办（不阻塞快照有效性）
 
-- Mimosa 完整安全审计重跑（历次 hook 扫描缓冲不足，未宣称项目安全）。
+- ~~Mimosa 完整安全审计重跑~~ **2026-10-22 已完成 normal 深度扫描**（scanId `scan-2026-10-22T04-54-46.417Z-9851fe441287`，sealed `sha256:2010e3bd…`）：覆盖 214 文件/124 依赖包，29 条 findings **全部位于 `research/`**（逆向研究的第三方压缩 bundle：3 high SSRF + 26 medium），`kairo/` 与 `ace/src/` 游戏源码零命中。research/ 仅为研究素材不进任何构建产物。
 - release keystore 密码更换（当前 kairo-m0-dev 临时值）。
 - 真机闸门（README M0 计划）：mono APK 在实体 Android 设备启动实验。
