@@ -206,8 +206,20 @@ public partial class GrayBox : Node2D
         AddButton("观赏", new Vector2(160, 1208), () => ShowPage("watch"));
         AddButton("赛程", new Vector2(300, 1208), () => ShowPage("schedule"));
         AddButton("财务", new Vector2(500, 1208), () => ShowPage("finance"));
-        _restartBtn = AddButton("重开", new Vector2(560, 1032), () => { LoadWorld(); SetMenuVisible(true); });
+        AddButton("选手", new Vector2(20, 1120), () => ShowPage("squad"));
+        AddButton("市场", new Vector2(260, 1120), () => ShowPage("market"));
+        AddButton("赞助", new Vector2(500, 1120), () => ShowPage("biz"));
+        // 行动按钮（基地页=推进/购地/建造/课表；选手页=选择/课表/续约/挂牌/解约；市场页=选择/出价/答复报价；赞助页=签赞助/接邀约）
+        _act1 = AddButton("推进 1 天", new Vector2(20, 1032), () => { if (_page == "market") SelectNextFree(); else if (_page == "squad" || _page == "biz") SelectNextSquad(); else Advance(1); });
+        _act2 = AddButton("推进 7 天", new Vector2(260, 1032), () => { if (_page == "market") SignFree(); else if (_page == "squad") CycleFocus(); else if (_page == "biz") SignSponsor(); else Advance(7); });
+        _act3 = AddButton("推进 30 天", new Vector2(500, 1032), () => { if (_page == "market") RespondBid(true); else if (_page == "squad") RenewContract(); else if (_page == "biz") AcceptGigOne(); else Advance(30); });
+        _act4 = AddButton("购地", new Vector2(20, 1120), () => { if (_page == "market") RespondBid(false); else if (_page == "squad") ToggleListed(); else BuyPlot(); });
+        _act5 = AddButton("建射击房", new Vector2(260, 1120), () => { if (_page == "squad") ReleaseOne(); else BuildRange(); });
+        _act6 = AddButton("全队练意识", new Vector2(500, 1120), TrainAwareness);
+        _restartBtn = AddButton("重开", new Vector2(560, 1208), () => { LoadWorld(); SetMenuVisible(true); });
     }
+
+    private Button _act1 = null!, _act2 = null!, _act3 = null!, _act4 = null!, _act5 = null!, _act6 = null!;
 
     // ── 分页视图（立项 §3.3：赛事/财务概览开罗化轻量版）──
 
@@ -219,9 +231,258 @@ public partial class GrayBox : Node2D
     {
         // 观赏页：点按时编译最近一场已打比赛的真实 MatchRecord → 回放时间轴
         if (page == "watch") StartWatch();
+        // 市场页：进页即刷新一次赞助意向池（对齐内核 refreshCommercialWeek 的玩家侧入口）
         _page = page;
         _pageView.Visible = page != "base";
         _restartBtn.Visible = page == "base";
+        Redraw();
+    }
+
+    // ── 选手页（开罗式经营核心环：阵容/属性/合同/课表）──
+
+    /// <summary>选手页 + 行动菜单复合状态：选中选手 id。</summary>
+    private string? _selPlayer;
+    /// <summary>市场页选中的自由人 id。</summary>
+    private string? _selFree;
+
+    private string SquadPageText()
+    {
+        var team = _state.Teams[_state.MyTeamId!];
+        var lines = new List<string> { $"── {team.Name} · 阵容 {team.Roster.Count}/7（资金 ${team.Budget / 1000.0:F0}K）──" };
+        foreach (var pid in team.Roster)
+        {
+            if (!_state.Players.TryGetValue(pid, out var p)) continue;
+            string mark = pid == _selPlayer ? "▶" : " ";
+            lines.Add($"{mark}{p.Ign} {p.Overall} ({p.Potential})｜{p.Age}岁 ${p.Salary / 1000.0:F0}K×{p.ContractYears}年｜{RoleCn(p.PromisedRole)}｜疲劳 {(int)p.Fatigue} 士气 {(int)p.Morale}｜课表 {FocusCn(_state.Schedules.TryGetValue(pid, out var f) ? f : "rest")}");
+        }
+        if (_selPlayer != null && _state.Players.TryGetValue(_selPlayer, out var sel) && sel.TeamId == _state.MyTeamId)
+        {
+            lines.Add($"── {sel.Ign} 明细 ──");
+            lines.Add($"八维：枪法 {(int)sel.Attrs.Aim} 反应 {(int)sel.Attrs.Reaction} 意识 {(int)sel.Attrs.Awareness} 服务 {(int)sel.Attrs.Utility} 残局 {(int)sel.Attrs.Clutch} 配合 {(int)sel.Attrs.Teamwork} 沟通 {(int)sel.Attrs.Communication} 指挥 {(int)sel.Attrs.Igl}");
+            lines.Add($"经验：{string.Join(" ", sel.Xp.Select(kv => $"{CnAttr(kv.Key)}{kv.Value:F0}").Take(4))}｜身价 ${Transfer.MarketValue(sel, team.Tier) / 1000}K");
+            lines.Add($"期望薪资（t{team.Tier}）${Transfer.SalaryExpectation(sel, team.Tier) / 1000.0:F0}K/年");
+        }
+        lines.Add("── 底部按钮：课表/续约/挂牌/解约 ──");
+        return string.Join("\n", lines);
+    }
+
+    private static string RoleCn(string role) => role switch
+    {
+        "core" => "核心", "starter" => "首发", "rotation" => "轮换", _ => "替补",
+    };
+
+    private static string FocusCn(string key) => key switch
+    {
+        "aim" => "枪法", "reaction" => "反应", "awareness" => "意识", "utility" => "服务",
+        "clutch" => "残局", "teamwork" => "配合", "communication" => "沟通", "igl" => "指挥",
+        "rest" => "休息", _ => key,
+    };
+
+    private static string CnAttr(string key) => key switch
+    {
+        "aim" => "枪", "reaction" => "反", "awareness" => "识", "utility" => "务",
+        "clutch" => "残", "teamwork" => "配", "communication" => "通", "igl" => "指", _ => key,
+    };
+
+    /// <summary>选手行动按钮动作（对选中选手循环切课表 / 续约 / 挂牌 / 解约）。</summary>
+    private void CycleFocus()
+    {
+        if (_selPlayer == null) { Log("先在选手列表选中一人。"); return; }
+        var keys = new[] { "aim", "reaction", "awareness", "utility", "clutch", "teamwork", "communication", "igl", "rest" };
+        var cur = _state.Schedules.TryGetValue(_selPlayer, out var f) ? f : "rest";
+        int idx = (System.Array.IndexOf(keys, cur) + 1) % keys.Length;
+        _state.Schedules[_selPlayer] = keys[idx];
+        Log($"{_state.Players[_selPlayer].Ign} 课表 → {FocusCn(keys[idx])}（周结算生效）");
+    }
+
+    private void RenewContract()
+    {
+        if (_selPlayer == null || !_state.Players.TryGetValue(_selPlayer, out var p)) return;
+        int cost = p.Salary; // 续约签字费 = 一年年薪（开罗式简单口径）
+        var team = _state.Teams[_state.MyTeamId!];
+        if (team.Budget < cost) { Log($"资金不足（续约需 ${cost / 1000}K 签字费）。"); return; }
+        team.Budget -= cost;
+        Finance.LogFinance(_state, $"续约 · {p.Ign}", -cost);
+        p.ContractYears = Math.Min(5, p.ContractYears + 2);
+        p.Morale = MathUtil.Clamp(p.Morale + 5, 10, 100);
+        Log($"{p.Ign} 续约 +2 年（${p.Salary / 1000.0:F0}K/年），签字费 ${cost / 1000}K，士气 +5");
+        Redraw();
+    }
+
+    private void ToggleListed()
+    {
+        if (_selPlayer == null || !_state.Players.TryGetValue(_selPlayer, out var p)) return;
+        p.Listed = !p.Listed;
+        p.ListedWeeks = 0;
+        Log(p.Listed == true ? $"{p.Ign} 放上挂牌名单（AI 摘牌概率上升，士气 -3）" : $"{p.Ign} 撤下挂牌名单");
+        if (p.Listed == true) p.Morale = MathUtil.Clamp(p.Morale - 3, 10, 100);
+        Redraw();
+    }
+
+    private void ReleaseOne()
+    {
+        if (_selPlayer == null) return;
+        string text = Transfer.ReleasePlayer(_state, _selPlayer);
+        Log(text);
+        _selPlayer = null;
+        Redraw();
+    }
+
+    // ── 市场页（自由签约 + 谈判环）──
+
+    private List<Player> FreePool()
+    {
+        return _state.Players.Values
+            .Where(p => p.TeamId == null)
+            .OrderByDescending(p => p.Overall)
+            .ThenBy(p => p.Id, StringComparer.Ordinal)
+            .Take(12)
+            .ToList();
+    }
+
+    private string MarketPageText()
+    {
+        bool window = Transfer.InTransferWindow(_state.Day);
+        var grace = Transfer.GraceRemain(_state);
+        var lines = new List<string>
+        {
+            $"── 自由市场（{(window ? $"开放，窗余 {grace} 天" : "未开放——季前 8-24 / 夏窗 123-152 / 休赛 233+")}）──",
+        };
+        foreach (var p in FreePool())
+        {
+            string mark = p.Id == _selFree ? "▶" : " ";
+            lines.Add($"{mark}{p.Ign} {p.Overall} ({p.Potential}) {p.Age}岁｜身价 ${Transfer.MarketValue(p, 2) / 1000}K｜期望 ${Transfer.SalaryExpectation(p, 2) / 1000.0:F0}K/年");
+        }
+        if (_selFree != null && _state.Players.TryGetValue(_selFree, out var sel))
+        {
+            lines.Add($"── 报价 {sel.Ign} ──：底部「出价签约」按 期望薪资×1.2 · 3 年 · 核心位 直接开谈（态度实时评估）。");
+        }
+        // 我队收到的 AI 报价
+        if (_state.IncomingBids.Count > 0)
+        {
+            lines.Add("── AI 对我队报价 ──");
+            foreach (var b in _state.IncomingBids)
+            {
+                var p = _state.Players.TryGetValue(b.PlayerId, out var bp) ? bp : null;
+                lines.Add($"{p?.Ign ?? b.PlayerId}｜${b.Fee / 1000}K｜「接受/拒绝」见按钮");
+            }
+        }
+        return string.Join("\n", lines);
+    }
+
+    private void SelectNextSquad()
+    {
+        var roster = _state.Teams[_state.MyTeamId!].Roster;
+        if (roster.Count == 0) return;
+        int idx = _selPlayer == null ? -1 : roster.IndexOf(_selPlayer);
+        _selPlayer = roster[(idx + 1) % roster.Count];
+        Redraw();
+    }
+
+    private void SelectNextFree()
+    {
+        var pool = FreePool();
+        if (pool.Count == 0) return;
+        int idx = _selFree == null ? -1 : pool.FindIndex(p => p.Id == _selFree);
+        _selFree = pool[(idx + 1) % pool.Count].Id;
+        Redraw();
+    }
+
+    /// <summary>自由签约：报价 → 即时谈判（StartNegotiation）→ FinalizeOffer → 成交 CompleteTransfer。</summary>
+    private void SignFree()
+    {
+        if (_selFree == null || !_state.Players.TryGetValue(_selFree, out var p)) { Log("先在市场列表选中一名自由人。"); return; }
+        var team = _state.Teams[_state.MyTeamId!];
+        if (!Transfer.InTransferWindow(_state.Day)) { Log("转会窗未开放。"); return; }
+        if (team.Roster.Count >= 7) { Log("阵容已满（7 人）。"); return; }
+        int salary = (int)(Transfer.SalaryExpectation(p, team.Tier) * 1.2);
+        var offer = new TransferOffer
+        {
+            Id = $"GD{_state.Day}_{p.Id}",
+            PlayerId = p.Id,
+            FromTeam = null, // 自由签约
+            ToTeam = team.Id,
+            Fee = 0,
+            Salary = salary,
+            Years = 3,
+            SigningBonus = salary / 2,
+            PromisedRole = "starter",
+        };
+        var rng = new Rng((uint)Rng.HashString($"sign:{_state.Seed}:{_state.Day}:{p.Id}"));
+        var (_, attitude, insulting) = Transfer.StartNegotiation(_state, offer);
+        if (insulting) { Log($"{p.Ign} 认为报价缺乏诚意（态度 {attitude}）。"); return; }
+        var fin = Transfer.FinalizeOffer(_state, offer, rng);
+        if (!fin.Accepted) { Log(fin.Reason); return; }
+        var notes = Transfer.CompleteTransfer(_state, offer, rng);
+        foreach (var n in notes) Log(n);
+        Log($"{p.Ign} 加盟：${salary / 1000.0:F0}K/年 × 3 年（签字费 ${offer.SigningBonus / 1000}K，态度 {attitude}）");
+        _selFree = null;
+        Redraw();
+    }
+
+    private void RespondBid(bool accept)
+    {
+        var bid = _state.IncomingBids.FirstOrDefault();
+        if (bid == null) { Log("没有待答复的报价。"); return; }
+        var p = _state.Players.TryGetValue(bid.PlayerId, out var bp) ? bp : null;
+        if (accept)
+        {
+            var rng = new Rng((uint)Rng.HashString($"bid:{_state.Seed}:{_state.Day}:{bid.PlayerId}"));
+            var notes = Transfer.CompleteTransfer(_state, bid, rng);
+            foreach (var n in notes) Log(n);
+        }
+        else
+        {
+            if (p != null) p.Morale = MathUtil.Clamp(p.Morale - 4, 10, 100);
+            Log($"已拒绝对 {p?.Ign ?? bid.PlayerId} 的报价（士气 -4）。");
+        }
+        _state.IncomingBids.Remove(bid);
+        Redraw();
+    }
+
+    // ── 赞助页（商务环：意向签约 + 邀约处理）──
+
+    private string BizPageText()
+    {
+        var team = _state.Teams[_state.MyTeamId!];
+        int slots = team.Reputation >= 60 ? 4 : team.Reputation >= 35 ? 3 : 2;
+        var lines = new List<string> { $"── 赞助 {team.Sponsors.Count}/{slots}（声望 {team.Reputation}）──" };
+        foreach (var s in team.Sponsors)
+        {
+            lines.Add($"{s.Name}｜{(s.Tier == 3 ? "国际" : s.Tier == 2 ? "国民" : "地方")}品牌｜${s.PerSeason / 1000}K/赛季×{s.Years}年");
+        }
+        lines.Add("── 意向池（底部「签赞助」逐一检定）──");
+        foreach (var o in _state.SponsorOffers)
+        {
+            lines.Add($"{o.Name}｜{o.Tier} 档｜${o.PerSeason / 1000}K/赛季×{o.Years}年（{Math.Max(0, o.Expires - _state.Day)} 天后过期）");
+        }
+        lines.Add($"── 商务邀约 {_state.GigOffers.Count} 条（「接邀约」= 进账+占训练日）──");
+        foreach (var g in _state.GigOffers.Take(4))
+        {
+            var p = _state.Players.TryGetValue(g.PlayerId, out var gp) ? gp : null;
+            lines.Add($"{g.Brand} × {p?.Ign ?? "?"}｜${g.Pay / 1000}K");
+        }
+        return string.Join("\n", lines);
+    }
+
+    private void SignSponsor()
+    {
+        var rng = new Rng((uint)Rng.HashString($"sp:{_state.Seed}:{_state.Day}"));
+        var offer = _state.SponsorOffers.FirstOrDefault();
+        if (offer == null) { Log("意向池为空（随周刷新）。"); return; }
+        var (ok, text) = Business.SignSponsorOffer(_state, offer, rng);
+        Log(text);
+        _ = ok;
+        Redraw();
+    }
+
+    private void AcceptGigOne()
+    {
+        var gig = _state.GigOffers.FirstOrDefault();
+        if (gig == null) { Log("没有待处理的邀约。"); return; }
+        var (ok, text) = Business.AcceptGig(_state, gig.Id);
+        Log(text);
+        _ = ok;
         Redraw();
     }
 
@@ -560,12 +821,31 @@ public partial class GrayBox : Node2D
             }
         }
         _log.Text = string.Join("\n", _logLines.TakeLast(12));
-        // 分页视图联动（观赏页由 WatchTick 自绘，不走此路径）
+        // 行动按钮按页签改语义标签
+        switch (_page)
+        {
+            case "market":
+                _act1.Text = "下一位"; _act2.Text = "出价签约"; _act3.Text = "接受报价"; _act4.Text = "拒绝报价";
+                break;
+            case "biz":
+                _act1.Text = "下一位"; _act2.Text = "签赞助"; _act3.Text = "接邀约"; _act4.Text = "—"; _act5.Text = "—"; _act6.Text = "—";
+                break;
+            case "squad":
+                _act1.Text = "下一位"; _act2.Text = "课表"; _act3.Text = "续约"; _act4.Text = "挂牌"; _act5.Text = "解约"; _act6.Text = "—";
+                break;
+            default:
+                _act1.Text = "推进 1 天"; _act2.Text = "推进 7 天"; _act3.Text = "推进 30 天"; _act4.Text = "购地"; _act5.Text = "建射击房"; _act6.Text = "全队练意识";
+                break;
+        }
+        // 分页视图联动（观赏页由 WatchTick 自绘）
         if (_page == "watch" || !_pageView.Visible) return;
         _pageView.Text = _page switch
         {
             "schedule" => SchedulePageText(),
             "finance" => FinancePageText(),
+            "squad" => SquadPageText(),
+            "market" => MarketPageText(),
+            "biz" => BizPageText(),
             _ => "",
         };
 
