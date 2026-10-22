@@ -48,11 +48,12 @@ jobs:
           curl -sSL -o templates.tpz "$BASE/Godot_v${GODOT_VERSION}_mono_export_templates.tpz"
           mkdir -p "$RUNNER_TEMP/godot-bin"
           unzip -q godot.zip -d "$RUNNER_TEMP/godot-bin"
-          chmod +x "$RUNNER_TEMP/godot-bin"/*
+          GODOT_BIN="$RUNNER_TEMP/godot-bin/Godot_v${GODOT_VERSION}_mono_linux_x86_64/Godot_v${GODOT_VERSION}_mono_linux.x86_64"
+          chmod +x "$GODOT_BIN"
           mkdir -p "$HOME/.local/share/godot/export_templates"
           unzip -q templates.tpz -d "$RUNNER_TEMP/tpl"
           mv "$RUNNER_TEMP/tpl/templates" "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.mono"
-          "$RUNNER_TEMP/godot-bin/Godot_v${GODOT_VERSION}_mono_linux_x86_64" --version
+          "$GODOT_BIN" --version
         working-directory: ${{ runner.temp }}
 
       - name: Restore keystore from secret
@@ -75,7 +76,8 @@ jobs:
           set -e
           mkdir -p builds
           APK="builds/vct-champion-manager-${{ github.ref_name }}.apk"
-          "${{ runner.temp }}/godot-bin/Godot_v${GODOT_VERSION}_mono_linux_x86_64" --headless --path . --export-release "Android" "$APK"
+          GODOT_BIN="${{ runner.temp }}/godot-bin/Godot_v${GODOT_VERSION}_mono_linux_x86_64/Godot_v${GODOT_VERSION}_mono_linux.x86_64"
+          "$GODOT_BIN" --headless --path . --export-release "Android" "$APK"
           test -s "$APK"
           echo "APK_PATH=$APK" >> "$GITHUB_ENV"
 
