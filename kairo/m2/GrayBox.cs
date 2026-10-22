@@ -172,6 +172,12 @@ public partial class GrayBox : Node2D
         _log.AddThemeFontSizeOverride("font_size", 15);
         AddChild(_log);
 
+        // 赛程/财务分页视图（覆盖网格+日志区；ShowPage 切换可见性）
+        _pageView = new Label { Position = new Vector2(20, 110), Size = new Vector2(680, 914), Visible = false };
+        _pageView.AddThemeFontOverride("font", _font);
+        _pageView.AddThemeFontSizeOverride("font_size", 18);
+        AddChild(_pageView);
+
         // 设施详情面板（默认隐藏；点格子弹出——立项 §11-6：详情走点按面板，不依赖缩放）
         var back = new ColorRect { Position = new Vector2(20, 640), Size = new Vector2(680, 276), Color = Color.FromHtml("#101820ee") };
         AddChild(back);
@@ -196,7 +202,87 @@ public partial class GrayBox : Node2D
         AddButton("购地", new Vector2(20, 1120), BuyPlot);
         AddButton("建射击房", new Vector2(260, 1120), BuildRange);
         AddButton("全队练意识", new Vector2(500, 1120), TrainAwareness);
-        AddButton("重开", new Vector2(20, 1208), () => { LoadWorld(); SetMenuVisible(true); });
+        AddButton("基地", new Vector2(20, 1208), () => ShowPage("base"));
+        AddButton("赛程", new Vector2(260, 1208), () => ShowPage("schedule"));
+        AddButton("财务", new Vector2(500, 1208), () => ShowPage("finance"));
+        _restartBtn = AddButton("重开", new Vector2(560, 1032), () => { LoadWorld(); SetMenuVisible(true); });
+    }
+
+    // ── 分页视图（立项 §3.3：赛事/财务概览开罗化轻量版）──
+
+    private string _page = "base";
+    private Label _pageView = null!;
+    private Button _restartBtn = null!;
+
+    private void ShowPage(string page)
+    {
+        _page = page;
+        _pageView.Visible = page != "base";
+        _restartBtn.Visible = page == "base";
+        Redraw();
+    }
+
+    /// <summary>赛程页：我的比赛前后 4 场 + 积分榜前 4（联赛主视角）。</summary>
+    private string SchedulePageText()
+    {
+        var lines = new List<string>();
+        var my = _state.MyTeamId!;
+        var upcoming = _state.Fixtures
+            .Where(f => !f.Played && (f.TeamA == my || f.TeamB == my))
+            .OrderBy(f => f.Day).Take(4);
+        foreach (var f in upcoming)
+        {
+            string home = f.TeamA == my ? "主" : "客";
+            var oppId = f.TeamA == my ? f.TeamB : f.TeamA;
+            lines.Add($"D{f.Day} {home} vs {(_state.Teams.TryGetValue(oppId, out var ot) ? ot.Tag : oppId)}｜{f.Label}");
+        }
+        var past = _state.Fixtures
+            .Where(f => f.Played && (f.TeamA == my || f.TeamB == my) && f.WinnerTeamId != null)
+            .OrderByDescending(f => f.Day).Take(4);
+        foreach (var f in past)
+        {
+            bool won = f.WinnerTeamId == my;
+            lines.Add($"（{f.Day}日）{(won ? "胜" : "负")}｜{f.Label}");
+        }
+        // 我队所在挑战者联赛积分榜前 4
+        var compKey = $"stage2-{_state.Teams[my].RegionId}-t2";
+        if (_state.Comps.TryGetValue(compKey, out var comp))
+        {
+            var table = comp.Standings.Values
+                .OrderByDescending(s => s.Pts).ThenByDescending(s => s.MapW - s.MapL)
+                .Take(4).ToList();
+            lines.Add("── 挑战者联赛积分 ──");
+            foreach (var s in table)
+            {
+                string mark = s.TeamId == my ? "▶" : " ";
+                lines.Add($"{mark}{(_state.Teams.TryGetValue(s.TeamId, out var t) ? t.Tag : s.TeamId)} {s.W}胜{s.L}负 {s.Pts}分");
+            }
+        }
+        return string.Join("\n", lines);
+    }
+
+    /// <summary>财务页：30 天窗口流水瀑布（期初→末笔）+ 分类占比。</summary>
+    private string FinancePageText()
+    {
+        var win = Finance.GetFinanceWindow(_state);
+        var lines = new List<string>
+        {
+            $"── 30 天现金流（期末 ${win.End / 1000.0:F0}K）──",
+        };
+        foreach (var (day, balance, label, amount) in win.Steps.Skip(1).TakeLast(10))
+        {
+            lines.Add($"D{day} {(amount >= 0 ? "+" : "")}{amount / 1000.0:F1}K {label}（余 {balance / 1000.0:F0}K）");
+        }
+        var breakdown = Finance.FinanceBreakdown(win.Entries);
+        if (breakdown.Count > 0)
+        {
+            lines.Add("── 分类（收入/支出）──");
+            foreach (var (cat, income, expense) in breakdown)
+            {
+                lines.Add($"{Finance.CatCn(cat)} +{income / 1000.0:F0}K / -{expense / 1000.0:F0}K");
+            }
+        }
+        return string.Join("\n", lines);
     }
 
     private Button PanelButton(string text, Vector2 pos, System.Action onClick, bool isBuild = true)
@@ -241,9 +327,7 @@ public partial class GrayBox : Node2D
         var err = BaseOps.StartBuild(_state, _state.Base!, x, y, facilityId);
         Log(err ?? $"({x},{y}) 开工 {BaseOps.Table.Facility(facilityId)!.Name}");
         Redraw();
-    }
-
-    private void UpgradeAt(int x, int y)
+    }    private void UpgradeAt(int x, int y)
     {
         var plot = _state.Base!.Plots[BaseState.KeyOf(x, y)];
         if (plot.BuildingId == null) { Log("空地请先选择设施。"); return; }
@@ -259,13 +343,14 @@ public partial class GrayBox : Node2D
         Redraw();
     }
 
-    private void AddButton(string text, Vector2 pos, System.Action onClick)
+    private Button AddButton(string text, Vector2 pos, System.Action onClick)
     {
         var b = new Button { Position = pos, Size = new Vector2(200, 76), Text = text };
         b.AddThemeFontOverride("font", _font);
         b.AddThemeFontSizeOverride("font_size", 22);
         b.Pressed += onClick;
         AddChild(b);
+        return b;
     }
 
     // ── 操作 ──
@@ -388,6 +473,14 @@ public partial class GrayBox : Node2D
             }
         }
         _log.Text = string.Join("\n", _logLines.TakeLast(12));
+        // 分页视图联动
+        if (!_pageView.Visible) return;
+        _pageView.Text = _page switch
+        {
+            "schedule" => SchedulePageText(),
+            "finance" => FinancePageText(),
+            _ => "",
+        };
 
         // 详情面板：选中格 → 信息 + 按钮组（空地=建造四选，设施=升级/拆除）
         if (_selected is { } sel && _state.Base!.Plots.TryGetValue(BaseState.KeyOf(sel.X, sel.Y), out var sp))

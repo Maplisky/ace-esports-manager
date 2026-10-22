@@ -64,6 +64,8 @@ public static class AppLoop
             if (state.Day % 7 == 0) ApplyBaseWeekly(state, dayNotes);
             // 成就评估（对齐 TS worker：日推进后）
             Achievements.EvaluateAchievements(state, dayNotes);
+            // 解锁节奏提示（§9.1：首赛季按天开系统）
+            dayNotes.AddRange(Guide.DailyUnlockNotes(state));
             ArchiveNotes(state, dayNotes); // 钩子新闻（advanceDay 只归档它自己的 dayNotes）
             notes.AddRange(dayNotes);
             result.SeasonEnded = r.SeasonEnded;
