@@ -39,9 +39,21 @@ public static class Sfx
             Players.Add(player);
         }
         player.Stream = stream;
-        player.VolumeDb = -12f;
+        player.VolumeDb = VolumeFor(kind); // 分型调优：高频事件压低、奖励事件抬高
         player.Play();
     }
+
+    /// <summary>分型音量（dB）：kill 高频压制防疲劳；奖励/里程碑音突出。</summary>
+    private static float VolumeFor(string kind) => kind switch
+    {
+        "kill" => -15f,      // 每场百余次，压到衬托层
+        "save" => -16f,      // 确认音，轻
+        "build" => -10f,
+        "roundWin" => -7f,   // 回合奖励，突出
+        "cheer" => -6f,      // ACE/升级，最亮
+        "levelUp" => -7f,
+        _ => -12f,
+    };
 
     private static AudioStreamWav Synth(string kind)
     {

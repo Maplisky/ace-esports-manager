@@ -7,9 +7,9 @@ using System.Linq;
 namespace Kairo.M2;
 
 /// <summary>
-/// M2 灰盒主循环场景（GDD 开罗版立项 §9 M2：地块/设施/课表训练/比赛日/财务灰盒可玩，
-/// 一个赛季 + 基地从零到有跑通）。竖屏 720×1280：顶部状态条 / 中部基地网格 / 下部日志与按钮。
-/// 全部经 AppLoop（确定性内核）；无 RNG、无存档——灰盒验证经济曲线与交互闭环。
+/// 《VCT冠军经理》灰盒主场景（立项 §9 M2：地块/设施/课表训练/比赛日/财务可玩）。
+/// 竖屏 720×1280：顶部状态条 / 中部基地网格（训练小人+成长弹字）/ 赛程·财务·选手·市场·赞助·观赏分页 / 底部操作区。
+/// 全部经 AppLoop（确定性日循环）+ SaveSystem 三槽存档；开档三选（§3.1）。
 /// </summary>
 public partial class GrayBox : Node2D
 {
@@ -326,7 +326,7 @@ public partial class GrayBox : Node2D
         _act5 = AddButton("建射击房", new Vector2(260, 1120), () => { if (_page == "squad") ReleaseOne(); else BuildRange(); });
         _act6 = AddButton("全队练意识", new Vector2(500, 1120), TrainAwareness);
         _restartBtn = AddButton("菜单", new Vector2(560, 1208), () => { LoadWorld(); SetMenuVisible(true); });
-        // 存档槽位按钮（1-3：点按=保存；Shift+点按=读档——灰盒简式；正式版走存档菜单）
+        // 存档快捷钮（1-3：点按=保存；读档/删除走开档菜单「存档管理」）
         for (int i = 0; i < 3; i++)
         {
             int slot = i + 1;
@@ -877,10 +877,13 @@ public partial class GrayBox : Node2D
     private void Advance(int days)
     {
         var before = SnapshotGrowth();
+        int readyBefore = _state.Base!.Plots.Values.Count(p => p.Level > 0 && p.BuildRemainDays <= 0);
         var r = AppLoop.Advance(_state, days);
         foreach (var n in r.Notes.TakeLast(6)) Log(n);
         if (_state.Manager.Career?.Ending != null)
             Log($"—— 生涯终局（{_state.Manager.Career.Ending.Kind}）——世界冻结");
+        // 建造完成音：设施就绪数增加（升级也计）
+        if (_state.Base!.Plots.Values.Count(p => p.Level > 0 && p.BuildRemainDays <= 0) > readyBefore) Sfx.Play("levelUp");
         if (_page == "base" || _page == "squad") _life.ShowGrowth(_state, before); // 开罗式成长弹字
         _life.Rebuild(_state); // 施工落成/阵容变动 → 小人重新就位
         Redraw();

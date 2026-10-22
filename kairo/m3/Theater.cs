@@ -20,7 +20,9 @@ public partial class Theater : Node2D
     private float _t;
     private int _cursor;
     private readonly List<Actor> _players = new();
-    private readonly List<(Label Banner, float Ttl)> _feed = new();
+    private readonly List<(Control Row, float Ttl)> _feed = new();
+    /// <summary>演出序号 0-9 → 选手 pid（头像生成键；Load 时从 Record.Lines 插入序建表）。</summary>
+    private readonly Dictionary<int, string> _slotPid = new();
     private SystemFont _font = null!;
     private Label _mapWin = null!;
     private Label _score = null!;
@@ -144,6 +146,11 @@ public partial class Theater : Node2D
     {
         _stream = ReplayStream.Compile(rec, igns);
         _igns = igns?.ToDictionary(kv => kv.Key, kv => kv.Value) ?? new Dictionary<string, string>();
+        // 演出序号 → pid（头像键）：Lines 插入序前 5 = A 队，其后 = B 队（与 Compile 同规则）
+        _slotPid.Clear();
+        int i = 0;
+        foreach (var pid in (rec.Maps.Count > 0 ? rec.Maps[0].Lines.Keys : Enumerable.Empty<string>()).Take(10))
+            _slotPid[i++] = pid;
         _recSeedInfo = title;
         _title.Text = $"{title}｜BO{rec.Format}";
         _t = 0;
@@ -169,17 +176,17 @@ public partial class Theater : Node2D
         foreach (var p in _players) p.Update(dt);
         for (int i = _feed.Count - 1; i >= 0; i--)
         {
-            var (banner, ttl) = _feed[i];
+            var (row, ttl) = _feed[i];
             float left = ttl - dt;
             if (left <= 0)
             {
-                banner.QueueFree();
+                row.QueueFree();
                 _feed.RemoveAt(i);
             }
             else
             {
-                banner.Modulate = new Color(1, 1, 1, Mathf.Min(1, left));
-                _feed[i] = (banner, left);
+                row.Modulate = new Color(1, 1, 1, Mathf.Min(1, left));
+                _feed[i] = (row, left);
             }
         }
         if (!_done && _cursor >= _stream.Count)
@@ -200,7 +207,7 @@ public partial class Theater : Node2D
                 if (e.A < 5) { _killsA++; _aliveB--; } else { _killsB++; _aliveA--; }
                 killer.Flash();
                 Kairo.M2.Sfx.Play("kill");
-                Banner($"{(e.IgnA.Length > 0 ? e.IgnA : SideName(e.A))} 击倒 {(e.IgnB.Length > 0 ? e.IgnB : SideName(e.B))}{(e.Tag.Length > 0 ? " · " + e.Tag : "")}");
+                Banner($"{(e.IgnA.Length > 0 ? e.IgnA : SideName(e.A))} 击倒 {(e.IgnB.Length > 0 ? e.IgnB : SideName(e.B))}{(e.Tag.Length > 0 ? " · " + e.Tag : "")}", avatarPid: _slotPid.GetValueOrDefault(e.A));
                 _mapLog.Enqueue($"{SideTag(e.A)}✕{SideTag(e.B)}");
                 while (_mapLog.Count > 6) _mapLog.Dequeue();
                 _mapWin.Text = string.Join("  ", _mapLog);
@@ -216,10 +223,10 @@ public partial class Theater : Node2D
                 break;
             case "ace":
                 Kairo.M2.Sfx.Play("cheer");
-                Banner($"{(e.IgnA.Length > 0 ? e.IgnA : SideName(e.A))} 五杀 ACE！", 1.8f);
+                Banner($"{(e.IgnA.Length > 0 ? e.IgnA : SideName(e.A))} 五杀 ACE！", 1.8f, _slotPid.GetValueOrDefault(e.A));
                 break;
             case "clutch":
-                Banner($"{(e.IgnA.Length > 0 ? e.IgnA : SideName(e.A))} 残局 {e.Tag}", 1.8f);
+                Banner($"{(e.IgnA.Length > 0 ? e.IgnA : SideName(e.A))} 残局 {e.Tag}", 1.8f, _slotPid.GetValueOrDefault(e.A));
                 break;
             case "flawless":
                 Banner("完美团灭！", 1.6f);
@@ -242,18 +249,30 @@ public partial class Theater : Node2D
 
     private string SideTag(int idx) => idx < 5 ? "A" : "B";
 
-    private void Banner(string text, float ttl = 1.4f)
+    /// <summary>播报行（可带击杀者像素头像）；行容器统一渐隐回收。</summary>
+    private void Banner(string text, float ttl = 1.4f, string? avatarPid = null)
     {
-        var b = new Label
+        var row = new Control { Position = new Vector2(20, 430 + _feed.Count * 40), Size = new Vector2(680, 36) };
+        int textX = 0;
+        if (avatarPid != null)
         {
-            Position = new Vector2(20, 430 + _feed.Count * 40),
-            Size = new Vector2(680, 36),
-            Text = text,
-        };
+            var av = new TextureRect
+            {
+                Texture = Kairo.M2.AvatarFactory.Build(avatarPid),
+                Position = new Vector2(0, 2),
+                Size = new Vector2(32, 32),
+                ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+                StretchMode = TextureRect.StretchModeEnum.KeepAspect,
+            };
+            row.AddChild(av);
+            textX = 40;
+        }
+        var b = new Label { Position = new Vector2(textX, 0), Size = new Vector2(680 - textX, 36), Text = text };
         b.AddThemeFontOverride("font", _font);
         b.AddThemeFontSizeOverride("font_size", 22);
-        AddChild(b);
-        _feed.Add((b, ttl));
+        row.AddChild(b);
+        AddChild(row);
+        _feed.Add((row, ttl));
     }
 
     private void RefreshScore() =>
