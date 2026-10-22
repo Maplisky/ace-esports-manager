@@ -64,7 +64,7 @@ export function detPowInt(base: number, exp: number): number {
 
 /**
  * 任意实数幂（base > 0）：detExp(exp · detLog(base))。
- * 精度低于平台 Math.pow（可能差若干 ulp），但双端逐位一致——市场身价等展示/谈判数值用。
+ * 与平台 Math.pow 同精度量级（±1 ulp 级），且双端逐位一致——市场身价等展示/谈判数值用。
  */
 export function detPow(base: number, exp: number): number {
   if (base === 1) return 1;
@@ -95,35 +95,34 @@ export function detToFixed2(v: number): string {
   return `${neg ? "-" : ""}${intPart}.${frac < 10 ? "0" : ""}${frac}`;
 }
 
-/** ln2 三段 Cody-Waite 拆分（exp 归约用）：程序化推导，双端一致 */
-const LN2_HI = maskLow(LN2, 28);
-const LN2_REM1 = LN2 - LN2_HI;
-const LN2_MID = maskLow(LN2_REM1, 30);
-const LN2_LO = LN2_REM1 - LN2_MID;
+/** fdlibm ln2 两段常数（e_exp.c 原值；双端同位型） */
+const LN2_HI = 6.93147180369123816490e-01;
+const LN2_LO = 1.90821492927058770002e-10;
 
 /**
- * 指数函数 exp(x)（fdlibm __ieee754_exp 算法）：k = round(x/ln2) 归约，
- * r = x - k·ln2（三段补偿，|r| ≤ ln2/2），P 多项式 + 1 封闭式，2^k 用精确的逐次乘除。
- * 输出与 V8/.NET 的 Math.exp 可能差若干 ulp —— 刻意的确定性换位。
- * 模拟内核现实输入域 |x| ≤ ~5（logistic），全域实现仍保留（钳位溢出边界）。
+ * 指数函数 exp(x)（fdlibm __ieee754_exp 忠实移植）：
+ * k = round(x/ln2) 归约 → r = (x-k·ln2hi) - k·ln2lo（|r| ≤ ln2/2）→
+ * c = r - r²·(P1..P5 五系数) → y = 1 - ((lo - (r·c)/(2-c)) - hi) → 2^k 精确缩放。
+ * 2026-10-22 检错：旧实现 z·c（应为 r·c）、六系数（应为五）、丢 hi/lo 补偿式，全域 0.3-4.7% 失准。
+ * 输出与 Math.exp 差 ~1 ulp；双端逐位一致（C# DetMath.Exp 逐操作镜像）。
  */
 export function detExp(x: number): number {
   if (x !== x) return NaN;
   if (x > 709.782712893384) return Infinity;
   if (x < -745.1332191019411) return 0;
   const k = Math.floor(x / LN2 + 0.5); // Floor(+0.5)：双端舍入语义一致
-  // r = x - k·ln2，三段补偿
-  const r = ((x - k * LN2_HI) - k * LN2_MID) - k * LN2_LO;
-  const z = r * r;
+  const hi = x - k * LN2_HI; // k·ln2HI 对 |x|<1024 精确（HI 尾数低位全零）
+  const lo = k * LN2_LO;
+  const r = hi - lo;
+  const t = r * r;
   const P1 = 1.66666666666666019037e-01;
   const P2 = -2.77777777770155933842e-03;
   const P3 = 6.61375632143793436117e-05;
   const P4 = -1.65339022054652515390e-06;
   const P5 = 4.13813679705723846039e-08;
-  const P6 = -9.96439500486238409018e-10;
-  const c = r - z * (P1 + r * (P2 + r * (P3 + r * (P4 + r * (P5 + r * P6)))));
-  let y = 1 - ((z * c) / (c + 2) - r);
-  // 2^k 精确缩放（乘除 2 的幂无损）
+  const c = r - t * (P1 + t * (P2 + t * (P3 + t * (P4 + t * P5))));
+  // fdlibm k≠0 补偿式（k=0 时 lo=0、hi=x，与 k==0 式 one-((r*c)/(c-2)-r) 等价同轮）
+  let y = 1 - ((lo - (r * c) / (2.0 - c)) - hi);
   let e = k;
   while (e > 0) { y *= 2; e--; }
   while (e < 0) { y *= 0.5; e++; }

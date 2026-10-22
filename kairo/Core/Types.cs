@@ -492,6 +492,8 @@ public sealed class GameState
     public OrderedDict<string, AchievementUnlock> Achievements { get; set; } = new();
     /// <summary>教练自由池（退役名宿；任何俱乐部可签）</summary>
     public List<CoachFreeAgent> CoachPool { get; set; } = new();
+    /// <summary>基地建设（C# 侧开罗专属系统，TS 存档不含；null = 未开档）</summary>
+    public BaseState? Base { get; set; }
 }
 
 public sealed class ScrimLogEntry
