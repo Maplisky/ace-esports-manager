@@ -19,6 +19,10 @@
     "cupWin": 40000,
     "internationalWin": 60000
   },
+  "placementPrize": {
+    "note": "联赛收官名次奖（只发我队；index=名次-1，超出取末位）",
+    "prizes": [ 400000, 260000, 180000, 120000, 90000, 70000, 50000, 40000 ]
+  },
   "facilities": [
     {
       "id": "range",

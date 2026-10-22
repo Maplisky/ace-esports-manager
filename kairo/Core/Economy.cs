@@ -95,9 +95,16 @@ public sealed class EconomyTable
         public int InternationalWin { get; set; }
     }
 
+    /// <summary>联赛收官名次奖（index=名次-1；超出取末位）。</summary>
+    public sealed class PlacementPrizeConfig
+    {
+        public List<int> Prizes { get; set; } = new();
+    }
+
     public PlotConfig Plot { get; set; } = new();
     public TicketConfig Ticket { get; set; } = new();
     public MatchBonusConfig MatchBonus { get; set; } = new();
+    public PlacementPrizeConfig PlacementPrize { get; set; } = new();
     public List<FacilityDef> Facilities { get; set; } = new();
     public List<ComboDef> Combos { get; set; } = new();
 

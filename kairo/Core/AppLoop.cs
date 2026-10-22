@@ -62,6 +62,8 @@ public static class AppLoop
             if (state.Base != null) BaseOps.AdvanceBuildDay(state.Base);
             // 开罗钩子 ③：周结算（与内核周块同日界）
             if (state.Day % 7 == 0) ApplyBaseWeekly(state, dayNotes);
+            // 开罗钩子 ④：联赛收官名次奖（Stage1 D123 / Stage2 D233 收官日；守恒：同赛季同阶段只发一次）
+            PlacementPrize(state, dayNotes);
             // 成就评估（对齐 TS worker：日推进后）
             Achievements.EvaluateAchievements(state, dayNotes);
             // 解锁节奏提示（§9.1：首赛季按天开系统）
@@ -132,6 +134,44 @@ public static class AppLoop
         "stage1" => "Stage 1", "stage2" => "Stage 2", "cup" => "揭幕杯",
         "masters" => "Masters", "champions" => "Champions", _ => "友谊赛",
     };
+
+    /// <summary>联赛收官名次奖（§3.2 收入环）：收官次日按上一阶段我队名次发奖金（经济表 prizes）。
+    /// 收官日（D123/D233）榜单尚含末轮——次日用该阶段终榜；同赛季同阶段只发一次（state 侧记录，随存档走）。</summary>
+    public static void PlacementPrize(GameState state, List<NewsItem> notes)
+    {
+        if (state.MyTeamId == null) return;
+        (int Day, string Stage, string NextName)[] settlements =
+        {
+            (123, "stage1", "Stage 1"),
+            (233, "stage2", "Stage 2"),
+        };
+        foreach (var (day, stage, name) in settlements)
+        {
+            if (state.Day != day + 1) continue;
+            string key = $"{state.Year}:{stage}";
+            if (state.PlacementPrizePaid.Contains(key)) continue;
+            state.PlacementPrizePaid.Add(key);
+            var team = state.Teams[state.MyTeamId];
+            var compKey = $"stage2-{(string.IsNullOrEmpty(team.RegionId) ? "xia" : team.RegionId)}-t{team.Tier}";
+            if (stage == "stage1") compKey = compKey.Replace("stage2", "stage1");
+            if (!state.Comps.TryGetValue(compKey, out var comp) || comp.Standings.Count == 0) continue;
+            var table = comp.Standings.Values
+                .OrderByDescending(s => s.Pts).ThenByDescending(s => s.MapW - s.MapL).ThenByDescending(s => s.RoundW - s.RoundL)
+                .ToList();
+            int place = table.FindIndex(s => s.TeamId == state.MyTeamId) + 1;
+            if (place <= 0) continue;
+            var prizes = BaseOps.Table.PlacementPrize.Prizes;
+            int prize = prizes[Math.Min(place - 1, prizes.Count - 1)];
+            if (prize <= 0) continue;
+            team.Budget += prize;
+            Finance.LogFinance(state, $"奖金 · {name}第 {place} 名", prize);
+            notes.Add(new NewsItem
+            {
+                Day = state.Day, Kind = "club", Important = place <= 4,
+                Text = $"💰 {name}收官：第 {place} 名，联盟发放名次奖金 ${prize / 1000}K。",
+            });
+        }
+    }
 
     /// <summary>新闻入档（上限 400 条，优先裁非重要）——语义与 DaySim.AdvanceDay 尾部一致。</summary>
     private static void ArchiveNotes(GameState state, List<NewsItem> notes)

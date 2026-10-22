@@ -494,6 +494,8 @@ public sealed class GameState
     public List<CoachFreeAgent> CoachPool { get; set; } = new();
     /// <summary>基地建设（C# 侧开罗专属系统，TS 存档不含；null = 未开档）</summary>
     public BaseState? Base { get; set; }
+    /// <summary>已发名次奖（"year:stage"，防重发；随存档走）</summary>
+    public HashSet<string> PlacementPrizePaid { get; set; } = new();
 }
 
 public sealed class ScrimLogEntry
