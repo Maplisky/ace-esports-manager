@@ -66,6 +66,16 @@ jobs:
         run: dotnet build kairo.csproj -c Release --nologo
         working-directory: ${{ env.PROJECT_PATH }}
 
+      - name: Install Android build template (gradle)
+        run: |
+          set -e
+          TPL="$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.mono"
+          mkdir -p android/build
+          unzip -q -o "$TPL/android_source.zip" -d android/build
+          printf '%s' "${GODOT_VERSION}.mono" > android/.build_version
+          test -f android/build/build.gradle
+        working-directory: ${{ env.PROJECT_PATH }}
+
       - name: Export signed APK
         working-directory: ${{ env.PROJECT_PATH }}
         env:
