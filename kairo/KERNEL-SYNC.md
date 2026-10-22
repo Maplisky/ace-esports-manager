@@ -1,8 +1,9 @@
 # KERNEL-SYNC — 共享内核版本快照（M1 收口固化）
 
-- **快照基准**：本仓库 commit `6208fda`（v0.2-m1s，2026-10-22）。TS 侧内核（`ace/src/core/`）最后一次改动在 m1q（detmath/transfer 切 detPow）。
-- **状态**：TS 201/201 绿；C# 84/84 绿（+1 skip 诊断工具）。全部 24 个 sim 模块 + rng/worldgen/detmath 逐位一致。
+- **快照基准**：本仓库 commit `6208fda`（v0.2-m1s，2026-10-22）+ **m2a detExp 修复**（2026-10-22：fdlibm 忠实重写——旧实现 z·c/六系数/无补偿式导致全域 0.3-4.7% 失准；修复后 ±1 ulp 且双端逐位一致，受影响黄金 transfer/match/day/extra/rng 已全部重录）。
+- **状态**：TS 201/201 绿；C# 91/91 绿（+1 skip 诊断工具）。全部 24 个 sim 模块 + rng/worldgen/detmath 逐位一致。
 - **红线**：TS（`ace/src/core`）是唯一权威实现。改任何 TS 内核函数 → 重录对应黄金 → C# 回放必须仍逐位一致。
+- **M2 进行中**：基地经济表格模型已入库（`Core.Data/economy.json` + `Core/Economy.cs`，C# 侧原生系统无 TS 对应物，确定性=表格常量+零 RNG，单测而非黄金）。
 
 ## 模块对照表
 
@@ -36,6 +37,7 @@
 | sim/retirement.ts | Retirement.cs | golden-extra.mjs（合并） | extra.golden.json |
 | sim/challenge.ts | Challenge.cs | golden-extra.mjs（合并） | extra.golden.json |
 | sim/share.ts | Share.cs | golden-extra.mjs（合并） | extra.golden.json |
+| （C# 侧原生）BaseState/EconomyTable | Economy.cs + Core.Data/economy.json | —（表格常量+零 RNG，单测） | BaseEconomyTests |
 
 测试类：`Core.Tests/*GoldenTests.cs`（命名 = 模块 + GoldenTests）。
 

@@ -57,6 +57,8 @@ adb install -r builds/kairo-m0.apk && adb shell monkey -p com.maplisky.kairo 1
 16. **STJ 的 JsonValue 不跨数值类型 TryGetValue**（m1s）：`["seed"]=42` 是 int 承载，`TryGetValue<double>` 返回 false——解析外部 JSON 的数值要用 int/long/double 三连尝试。
 17. **JsonArray 不能用字符串索引器**（m1s）：`arr["0"]` 抛 InvalidOperationException；用 `as JsonArray` + 整数下标。
 18. **node 24 跑 `node --test tests/` 目录形式失效**（报 MODULE_NOT_FOUND），用 glob：`node --test tests/*.test.ts`。
+19. **fdlibm 移植必须对着 netlib 原版逐行核**（m2a 检错）：detExp 旧实现 `z·c`（应为 `r·c`）+ 六系数（fdlibm 只有 P1-P5 五个）+ 丢 k≠0 的 hi/lo 补偿式 `one-((lo-(x*c)/(2-c))-hi)`——不是 ulp 级误差而是全域 0.3-4.7% 失准，且因双端一致、黄金锁定而**静默存活**。教训：确定性 ≠ 正确性，黄金锁定的是实现不是语义；"移植精度比平台低"的注释不能当失准的遮羞布，发现失准就查原版。
+20. **设施升级期间按当前等级产出**（m2a）：Ready 判定看 Level≥1 而非"无施工"——L1→L2 施工中 L1 持续产出，首次建造（Level=0）才无产出。
 
 ## M0 场景结构（m0/）
 
