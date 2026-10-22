@@ -64,6 +64,11 @@ adb install -r builds/kairo-m0.apk && adb shell monkey -p com.maplisky.kairo 1
 23. **Android extra_args 进完整参数表而非 user args**（m3f）：设备端 `command_line/extra_args` 传入的参数出现在 `OS.GetCmdlineArgs()` 而**不在** `OS.GetCmdlineUserArgs()`（桌面 `--` 后才进 user args）——auto 审计检测必须双来源 `GetCmdlineArgs().Concat(GetCmdlineUserArgs())`，否则设备端审计静默不启动（应用挂菜单无输出，极似死锁）。
 24. **4.7 的 keystore 环境变量带 `_RELEASE_`/`_DEBUG_` 中缀**（m3f）：`GODOT_ANDROID_KEYSTORE_RELEASE_PATH/USER/PASSWORD`（源码 export_plugin.h 常量实证；旧文档的 `GODOT_ANDROID_KEYSTORE_PATH` 不被读取，报"找不到发布密钥库"）。签名方案为 v2（`keytool -printcert -jarfile` 看不到，用 `apksigner verify --print-certs`）。
 25. **Core.Data 打包路径**（m3f）：非资源 json 须在 preset `include_filter="*.json"` 才进包（打包形态 = `assets/Core.Data/*.json` 直挂 res:// 根）。导出后 `GlobalizePath` 直读失效而 Godot FileAccess 可读——宿主层 `AssetBridge.ExportDataDir`（FileAccess → user://core-data/）桥给 Core 的 File API，Core 保持引擎无关。
+26. **CI 出包四连坑**（m4b/c/d/e）：①mono Android 导出要求项目装 gradle 模板——模板目录被 `.gitignore`（`android/build/`），CI 须从模板包 `android_source.zip` 解压并写点分 `.build_version`（`4.7.2.stable.mono`，tag 连字符转点，否则 build version mismatch）；②`*_mono_linux_x86_64.zip` 内为同名目录，二进制实路径 `Godot_v*_mono_linux.x86_64`；③模板 `tpz` 是 zip 不是 tar；④workflow_dispatch 要求 workflow 文件存在于**默认分支**（构建代码可来自任意分支 `--ref`）。
+
+## CI 出包（M4）
+
+`.github/workflows/kairo-android.yml`（仓库根）：手动触发（workflow_dispatch）或发版触发（release published）。链路：JDK22 + dotnet8 + Godot 4.7.2 mono Linux（release 资产 `Godot_v*_mono_linux_x86_64.zip` / `Godot_v*_mono_export_templates.tpz`）→ repo secrets（`KAIRO_KEYSTORE_B64` / `KAIRO_KEYSTORE_PASSWORD`）还原 keystore → `GODOT_ANDROID_KEYSTORE_RELEASE_*` 注入 headless export-release → apksigner 验签 → artifact；发版时附加 APK。CI 特有步骤：解压模板包内 `android_source.zip` 安装 gradle 模板 + 写点分 `.build_version`（见坑 26）。已验证：run 39833863838 全绿，验签指纹与本地一致。
 
 ## M0 场景结构（m0/）
 
