@@ -78,7 +78,14 @@ public sealed class EconomyTable
         public string Desc { get; set; } = "";
     }
 
+    public sealed class TicketConfig
+    {
+        /// <summary>主场门票：收入 = 容量 × 票价（灰盒定值；后续可挂人气/声望曲线）</summary>
+        public int PricePerSeat { get; set; }
+    }
+
     public PlotConfig Plot { get; set; } = new();
+    public TicketConfig Ticket { get; set; } = new();
     public List<FacilityDef> Facilities { get; set; } = new();
     public List<ComboDef> Combos { get; set; } = new();
 

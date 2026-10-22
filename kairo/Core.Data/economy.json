@@ -8,6 +8,9 @@
       { "x": 0, "y": 0 }
     ]
   },
+  "ticket": {
+    "pricePerSeat": 20
+  },
   "facilities": [
     { "id": "range", "name": "射击房", "cat": "training", "cost": [400000, 900000, 1800000], "buildDays": [4, 8, 14], "effects": { "facilities": [3, 6, 10] } },
     { "id": "tactic", "name": "战术室", "cat": "training", "cost": [400000, 900000, 1800000], "buildDays": [4, 8, 14], "effects": { "facilities": [3, 6, 10] } },
