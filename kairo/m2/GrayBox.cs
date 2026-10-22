@@ -41,10 +41,24 @@ public partial class GrayBox : Node2D
         BaseOps.DataDirOverride = dataDir;
 
         _font = new SystemFont { FontNames = new[] { "Microsoft YaHei UI", "Microsoft YaHei", "sans-serif" } };
-        NewGame();
+        LoadWorld();
         BuildUi();
+        BuildStartMenu();
         Redraw();
-        if (OS.GetCmdlineUserArgs().Contains("--graybox-auto")) RunAutoAudit();
+        if (OS.GetCmdlineUserArgs().Contains("--graybox-auto"))
+        {
+            // 自动审计走自定义开局（覆盖最长的代码路径：建队/签约/赛程重建）
+            DoStart(new StartConfig { Mode = StartMode.Custom, TeamName = "自动验证队" });
+            RunAutoAudit();
+        }
+    }
+
+    private void LoadWorld()
+    {
+        Fixtures.ResetFixtureSeq();
+        _state = Worldgen.GenerateWorld(42, resetSeq: true);
+        DaySim.InitSeasonFixtures(_state);
+        _logLines.Clear();
     }
 
     /// <summary>启动实验（m0 方法论）：headless 脚本化跑一段赛季 + 经济自检 + 自退。</summary>
@@ -52,8 +66,8 @@ public partial class GrayBox : Node2D
     {
         Log("[auto] 脚本化灰盒实验开始");
         BuyPlot();
-        BuildRange();   // (1,0) 或 (0,1) 空地 → range
-        BuildRange();   // 另一块空地 → range（升级其中一块）
+        BuildRange();   // 空地 → range
+        BuildRange();   // 第二座（升级其一）
         TrainAwareness();
         Advance(90);
         var myTeam = _state.Teams[_state.MyTeamId!];
@@ -66,19 +80,67 @@ public partial class GrayBox : Node2D
         GetTree().Quit(ok ? 0 : 1);
     }
 
-    private void NewGame()
+    // ── 开档菜单（立项 §3.1 三选：2026-10-22 拍板 a/b/c 全开放）──
+
+    private readonly List<CanvasItem> _menu = new();
+    private LineEdit _nameInput = null!;
+
+    private void BuildStartMenu()
     {
-        Fixtures.ResetFixtureSeq();
-        _state = Worldgen.GenerateWorld(42, resetSeq: true);
-        _state.MyTeamId = _state.Teams.Values.ToList()[0].Id;
-        _state.Day = 0;
-        Career.InitCareer(_state, "analyst");
-        _state.Teams[_state.MyTeamId!].Budget = 5_000_000; // 灰盒起步资金
-        _state.Base = BaseOps.NewBase();
-        _logLines.Clear();
-        Log("灰盒开局：分析师出身 · $5M 起步资金 · 一块空地");
-        Log("目标：一个赛季内把基地从零建到有");
+        var back = new ColorRect { Position = new Vector2(0, 0), Size = new Vector2(720, 1280), Color = Color.FromHtml("#0d141b") };
+        AddChild(back);
+        _menu.Add(back);
+        var title = new Label { Position = new Vector2(0, 200), Size = new Vector2(720, 90), Text = "VCT冠军经理", HorizontalAlignment = HorizontalAlignment.Center };
+        title.AddThemeFontOverride("font", _font);
+        title.AddThemeFontSizeOverride("font_size", 52);
+        AddChild(title);
+        _menu.Add(title);
+        var sub = new Label { Position = new Vector2(0, 292), Size = new Vector2(720, 40), Text = "—— 白手起家 · 基地从零到有 ——", HorizontalAlignment = HorizontalAlignment.Center };
+        sub.AddThemeFontOverride("font", _font);
+        sub.AddThemeFontSizeOverride("font_size", 20);
+        AddChild(sub);
+        _menu.Add(sub);
+
+        _nameInput = new LineEdit { Position = new Vector2(160, 400), Size = new Vector2(400, 70), Text = "我的战队", PlaceholderText = "输入战队名" };
+        _nameInput.AddThemeFontOverride("font", _font);
+        _nameInput.AddThemeFontSizeOverride("font_size", 24);
+        AddChild(_nameInput);
+        _menu.Add(_nameInput);
+
+        MenuButton("(a) 原创加盟 · $5M · 自由市场签 5 人", 520, () =>
+            DoStart(new StartConfig { Mode = StartMode.Custom, TeamName = _nameInput.Text }));
+        MenuButton("(b) 接管最弱挑战者队 · 改名", 620, () =>
+            DoStart(new StartConfig { Mode = StartMode.Takeover, TeamName = _nameInput.Text }));
+        MenuButton("(c) 剧本「欠薪弱旅」· 仅 $800K", 720, () =>
+            DoStart(new StartConfig { Mode = StartMode.Script }));
+        MenuButton("重开世界（换 seed 前的占位）", 860, () => { LoadWorld(); Redraw(); });
     }
+
+    private void MenuButton(string text, int y, System.Action onClick)
+    {
+        var b = new Button { Position = new Vector2(110, y), Size = new Vector2(500, 80), Text = text };
+        b.AddThemeFontOverride("font", _font);
+        b.AddThemeFontSizeOverride("font_size", 20);
+        b.Pressed += onClick;
+        AddChild(b);
+        _menu.Add(b);
+    }
+
+    private void DoStart(StartConfig cfg)
+    {
+        var log = NewGame.Start(_state, cfg);
+        Career.InitCareer(_state, "analyst");
+        foreach (var line in log) Log(line);
+        SetMenuVisible(false);
+        Redraw();
+    }
+
+    private void SetMenuVisible(bool visible)
+    {
+        foreach (var n in _menu) n.Visible = visible;
+    }
+
+    // 旧 NewGame() 已由 LoadWorld() + 开档菜单（DoStart）取代
 
     private void BuildUi()
     {
@@ -134,7 +196,7 @@ public partial class GrayBox : Node2D
         AddButton("购地", new Vector2(20, 1120), BuyPlot);
         AddButton("建射击房", new Vector2(260, 1120), BuildRange);
         AddButton("全队练意识", new Vector2(500, 1120), TrainAwareness);
-        AddButton("重开", new Vector2(20, 1208), () => { NewGame(); Redraw(); });
+        AddButton("重开", new Vector2(20, 1208), () => { LoadWorld(); SetMenuVisible(true); });
     }
 
     private Button PanelButton(string text, Vector2 pos, System.Action onClick, bool isBuild = true)
@@ -290,6 +352,7 @@ public partial class GrayBox : Node2D
 
     private void Redraw()
     {
+        if (_state?.MyTeamId == null || _state.Base == null) return; // 开档菜单阶段：世界未定主队
         var myTeam = _state.Teams[_state.MyTeamId!];
         _top.Text = $"Y{_state.Year} D{_state.Day} · {_state.Stage}｜${myTeam.Budget / 1000.0:F0}K｜信任 {_state.BoardConfidence}｜训练加成 +{myTeam.Facilities}";
         int cap = _state.Base != null ? BaseOps.Capacity(_state.Base) : 0;
