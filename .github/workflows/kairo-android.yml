@@ -50,8 +50,8 @@ jobs:
           unzip -q godot.zip -d "$RUNNER_TEMP/godot-bin"
           chmod +x "$RUNNER_TEMP/godot-bin"/*
           mkdir -p "$HOME/.local/share/godot/export_templates"
-          tar -xzf templates.tpz
-          mv templates "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.mono"
+          unzip -q templates.tpz -d "$RUNNER_TEMP/tpl"
+          mv "$RUNNER_TEMP/tpl/templates" "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.mono"
           "$RUNNER_TEMP/godot-bin/Godot_v${GODOT_VERSION}_mono_linux_x86_64" --version
         working-directory: ${{ runner.temp }}
 
