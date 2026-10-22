@@ -28,10 +28,10 @@ public partial class GrayBox : Node2D
     private Label _panelInfo = null!;
     private (int X, int Y)? _selected;
 
-    private const int CellW = 156;
-    private const int CellH = 116;
-    private const int GridX = 30;
-    private const int GridY = 110;
+    public const int CellW = 156;
+    public const int CellH = 116;
+    public const int GridX = 30;
+    public const int GridY = 110;
 
     public override void _Ready()
     {
@@ -41,6 +41,8 @@ public partial class GrayBox : Node2D
         BaseOps.DataDirOverride = dataDir;
 
         _font = new SystemFont { FontNames = new[] { "Microsoft YaHei UI", "Microsoft YaHei", "sans-serif" } };
+        Sfx.Init(this);
+        _life = new BaseLife(this, _font);
         LoadWorld();
         BuildUi();
         BuildStartMenu();
@@ -52,6 +54,8 @@ public partial class GrayBox : Node2D
             RunAutoAudit();
         }
     }
+
+    private BaseLife _life = null!;
 
     private void LoadWorld()
     {
@@ -239,6 +243,7 @@ public partial class GrayBox : Node2D
         {
             string dir = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(ProjectSettings.GlobalizePath("user://")) ?? ".", "saves");
             SaveSystem.Save(_state, dir, slot, _startMode.ToString());
+            Sfx.Play("save");
             Log($"已存入槽位 {sLotLabel(slot)}（Y{_state.Year} D{_state.Day}）");
         }
         catch (Exception ex)
@@ -259,7 +264,11 @@ public partial class GrayBox : Node2D
     {
         // 观赏页：点按时编译最近一场已打比赛的真实 MatchRecord → 回放时间轴
         if (page == "watch") StartWatch();
-        // 市场页：进页即刷新一次赞助意向池（对齐内核 refreshCommercialWeek 的玩家侧入口）
+        if (page != "squad")
+        {
+            foreach (var a in _avatars) a.QueueFree(); // 头像列只属于选手页
+            _avatars.Clear();
+        }
         _page = page;
         _pageView.Visible = page != "base";
         _restartBtn.Visible = page == "base";
@@ -275,6 +284,7 @@ public partial class GrayBox : Node2D
 
     private string SquadPageText()
     {
+        RefreshAvatars();
         var team = _state.Teams[_state.MyTeamId!];
         var lines = new List<string> { $"── {team.Name} · 阵容 {team.Roster.Count}/7（资金 ${team.Budget / 1000.0:F0}K）──" };
         foreach (var pid in team.Roster)
@@ -366,6 +376,30 @@ public partial class GrayBox : Node2D
             .ThenBy(p => p.Id, StringComparer.Ordinal)
             .Take(12)
             .ToList();
+    }
+
+    /// <summary>选手页头像列（右侧 x=660；程序化像素脸，同 id 同脸）。离开页签即清除。</summary>
+    private readonly List<TextureRect> _avatars = new();
+
+    private void RefreshAvatars()
+    {
+        foreach (var a in _avatars) a.QueueFree();
+        _avatars.Clear();
+        var roster = _state.Teams[_state.MyTeamId!].Roster;
+        for (int i = 0; i < roster.Count; i++)
+        {
+            if (!_state.Players.TryGetValue(roster[i], out var p)) continue;
+            var rect = new TextureRect
+            {
+                Texture = AvatarFactory.Build(p.Id),
+                Position = new Vector2(660, 160 + i * 46),
+                CustomMinimumSize = new Vector2(32, 32),
+                ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+                StretchMode = TextureRect.StretchModeEnum.KeepAspect,
+            };
+            AddChild(rect);
+            _avatars.Add(rect);
+        }
     }
 
     private string MarketPageText()
@@ -741,11 +775,26 @@ public partial class GrayBox : Node2D
 
     private void Advance(int days)
     {
+        var before = SnapshotGrowth();
         var r = AppLoop.Advance(_state, days);
         foreach (var n in r.Notes.TakeLast(6)) Log(n);
         if (_state.Manager.Career?.Ending != null)
             Log($"—— 生涯终局（{_state.Manager.Career.Ending.Kind}）——世界冻结");
+        if (_page == "base" || _page == "squad") _life.ShowGrowth(_state, before); // 开罗式成长弹字
+        _life.Rebuild(_state); // 施工落成/阵容变动 → 小人重新就位
         Redraw();
+    }
+
+    /// <summary>成长快照（弹字 diff 用）：roster 每人经验总量 + overall。</summary>
+    private Dictionary<string, (double Xp, int Overall)> SnapshotGrowth()
+    {
+        var snap = new Dictionary<string, (double, int)>();
+        foreach (var pid in _state.Teams[_state.MyTeamId!].Roster)
+        {
+            if (!_state.Players.TryGetValue(pid, out var p)) continue;
+            snap[pid] = (p.Xp.Values.Sum(), p.Overall);
+        }
+        return snap;
     }
 
     private void BuyPlot()
@@ -924,6 +973,7 @@ public partial class GrayBox : Node2D
     public override void _Process(double delta)
     {
         if (_watchActive) WatchTick((float)delta);
+        _life.Update(_state, (float)delta, pageVisible: _page == "base" && _state.Base != null && _state.MyTeamId != null);
     }
 
     private void Log(string line)

@@ -37,6 +37,7 @@ public partial class Theater : Node2D
         BaseOps.DataDirOverride = dataDir;
 
         _font = new SystemFont { FontNames = new[] { "Microsoft YaHei UI", "Microsoft YaHei", "sans-serif" } };
+        Kairo.M2.Sfx.Init(this);
         BuildScene();
         if (OS.GetCmdlineUserArgs().Contains("--watch-auto")) AutoPlay();
     }
@@ -198,6 +199,7 @@ public partial class Theater : Node2D
                 victim.Die();
                 if (e.A < 5) { _killsA++; _aliveB--; } else { _killsB++; _aliveA--; }
                 killer.Flash();
+                Kairo.M2.Sfx.Play("kill");
                 Banner($"{(e.IgnA.Length > 0 ? e.IgnA : SideName(e.A))} 击倒 {(e.IgnB.Length > 0 ? e.IgnB : SideName(e.B))}{(e.Tag.Length > 0 ? " · " + e.Tag : "")}");
                 _mapLog.Enqueue($"{SideTag(e.A)}✕{SideTag(e.B)}");
                 while (_mapLog.Count > 6) _mapLog.Dequeue();
@@ -208,10 +210,12 @@ public partial class Theater : Node2D
                 if (e.Side == "A") { _roundA++; _aliveA = 5; _aliveB = 5; } else { _roundB++; _aliveA = 5; _aliveB = 5; }
                 for (int i = e.Side == "A" ? 0 : 5; i < (e.Side == "A" ? 5 : 10); i++) _players[i].Cheer();
                 for (int i = e.Side == "A" ? 5 : 0; i < (e.Side == "A" ? 10 : 5); i++) _players[i].Revive();
+                Kairo.M2.Sfx.Play("roundWin");
                 Banner(e.Tag, 1.6f);
                 RefreshScore();
                 break;
             case "ace":
+                Kairo.M2.Sfx.Play("cheer");
                 Banner($"{(e.IgnA.Length > 0 ? e.IgnA : SideName(e.A))} 五杀 ACE！", 1.8f);
                 break;
             case "clutch":

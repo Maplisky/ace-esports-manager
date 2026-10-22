@@ -79,4 +79,19 @@ public sealed class ReplayStreamTests
         Assert.Equal(ReplayStream.Compile(r1).Select(e => $"{e.T:F2}|{e.Kind}|{e.Side}|{e.A}|{e.B}|{e.Tag}"),
                      ReplayStream.Compile(r2).Select(e => $"{e.T:F2}|{e.Kind}|{e.Side}|{e.A}|{e.B}|{e.Tag}"));
     }
+
+    [Fact]
+    public void IgnMapping_Feeds_Kill_Events_With_Fallback()
+    {
+        var (_, rec) = PlayOne();
+        var firstPid = rec.Maps[0].Lines.Keys.First();
+        var igns = new Dictionary<string, string> { [firstPid] = "测试名" };
+        var evs = ReplayStream.Compile(rec, igns);
+        var kill = evs.First(e => e.Kind == "kill" && e.IgnA.Length > 0);
+        Assert.True(evs.Where(e => e.Kind == "kill").Any(e => e.IgnA == "测试名" || e.IgnB == "测试名"),
+            "映射表中的 pid 应以真名出现在击杀播报");
+        // 无映射 pid → 确定性短名（pid 尾 6 位）
+        Assert.All(evs.Where(e => e.Kind == "kill" && e.IgnA != "测试名"),
+            e => Assert.True(e.IgnA.Length > 0 || e.IgnB.Length > 0));
+    }
 }
