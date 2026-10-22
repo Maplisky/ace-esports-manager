@@ -48,11 +48,12 @@ jobs:
           curl -sSL -o templates.tpz "$BASE/Godot_v${GODOT_VERSION}_mono_export_templates.tpz"
           mkdir -p "$RUNNER_TEMP/godot-bin"
           unzip -q godot.zip -d "$RUNNER_TEMP/godot-bin"
-          chmod +x "$RUNNER_TEMP/godot-bin"/*
+          GODOT_BIN="$RUNNER_TEMP/godot-bin/Godot_v${GODOT_VERSION}_mono_linux_x86_64/Godot_v${GODOT_VERSION}_mono_linux.x86_64"
+          chmod +x "$GODOT_BIN"
           mkdir -p "$HOME/.local/share/godot/export_templates"
-          tar -xzf templates.tpz
-          mv templates "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.mono"
-          "$RUNNER_TEMP/godot-bin/Godot_v${GODOT_VERSION}_mono_linux_x86_64" --version
+          unzip -q templates.tpz -d "$RUNNER_TEMP/tpl"
+          mv "$RUNNER_TEMP/tpl/templates" "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.mono"
+          "$GODOT_BIN" --version
         working-directory: ${{ runner.temp }}
 
       - name: Restore keystore from secret
@@ -65,6 +66,17 @@ jobs:
         run: dotnet build kairo.csproj -c Release --nologo
         working-directory: ${{ env.PROJECT_PATH }}
 
+      - name: Install Android build template (gradle)
+        run: |
+          set -e
+          TPL="$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.mono"
+          mkdir -p android/build
+          unzip -q -o "$TPL/android_source.zip" -d android/build
+          # .build_version 用点分版本（tag 连字符转点：4.7.2-stable → 4.7.2.stable.mono）
+          printf '%s' "${GODOT_VERSION//-/.}.mono" > android/.build_version
+          test -f android/build/build.gradle
+        working-directory: ${{ env.PROJECT_PATH }}
+
       - name: Export signed APK
         working-directory: ${{ env.PROJECT_PATH }}
         env:
@@ -75,11 +87,13 @@ jobs:
           set -e
           mkdir -p builds
           APK="builds/vct-champion-manager-${{ github.ref_name }}.apk"
-          "${{ runner.temp }}/godot-bin/Godot_v${GODOT_VERSION}_mono_linux_x86_64" --headless --path . --export-release "Android" "$APK"
+          GODOT_BIN="${{ runner.temp }}/godot-bin/Godot_v${GODOT_VERSION}_mono_linux_x86_64/Godot_v${GODOT_VERSION}_mono_linux.x86_64"
+          "$GODOT_BIN" --headless --path . --export-release "Android" "$APK"
           test -s "$APK"
           echo "APK_PATH=$APK" >> "$GITHUB_ENV"
 
       - name: Verify signature (apksigner)
+        working-directory: ${{ env.PROJECT_PATH }}
         run: |
           set -e
           APKSIGNER=$(ls "$ANDROID_HOME/build-tools"/*/apksigner | sort -V | tail -1)
