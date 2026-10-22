@@ -93,6 +93,7 @@ jobs:
           echo "APK_PATH=$APK" >> "$GITHUB_ENV"
 
       - name: Verify signature (apksigner)
+        working-directory: ${{ env.PROJECT_PATH }}
         run: |
           set -e
           APKSIGNER=$(ls "$ANDROID_HOME/build-tools"/*/apksigner | sort -V | tail -1)
