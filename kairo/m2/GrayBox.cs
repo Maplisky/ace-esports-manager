@@ -203,7 +203,8 @@ public partial class GrayBox : Node2D
         AddButton("建射击房", new Vector2(260, 1120), BuildRange);
         AddButton("全队练意识", new Vector2(500, 1120), TrainAwareness);
         AddButton("基地", new Vector2(20, 1208), () => ShowPage("base"));
-        AddButton("赛程", new Vector2(260, 1208), () => ShowPage("schedule"));
+        AddButton("观赏", new Vector2(160, 1208), () => ShowPage("watch"));
+        AddButton("赛程", new Vector2(300, 1208), () => ShowPage("schedule"));
         AddButton("财务", new Vector2(500, 1208), () => ShowPage("finance"));
         _restartBtn = AddButton("重开", new Vector2(560, 1032), () => { LoadWorld(); SetMenuVisible(true); });
     }
@@ -216,10 +217,96 @@ public partial class GrayBox : Node2D
 
     private void ShowPage(string page)
     {
+        // 观赏页：点按时编译最近一场已打比赛的真实 MatchRecord → 回放时间轴
+        if (page == "watch") StartWatch();
         _page = page;
         _pageView.Visible = page != "base";
         _restartBtn.Visible = page == "base";
         Redraw();
+    }
+
+    // ── 观赏页（M3 动画管线预研）：真实 MatchRecord → ReplayStream 时间轴驱动小人演出 ──
+
+    private List<ReplayEvent> _stream = new();
+    private float _watchT;
+    private int _watchCursor;
+    private string _watchTitle = "";
+    private int _watchKillsA, _watchKillsB, _watchAliveA = 5, _watchAliveB = 5, _watchRoundA, _watchRoundB;
+    private readonly List<Chibi.MiniActor> _watchActors = new();
+    private bool _watchActive;
+
+    private void StartWatch()
+    {
+        var last = _state.Fixtures
+            .Where(f => f.Played && (f.TeamA == _state.MyTeamId || f.TeamB == _state.MyTeamId))
+            .OrderByDescending(f => f.Day).FirstOrDefault();
+        if (last == null) { Log("还没有已完成的比赛。"); return; }
+        long seed = Rng.HashString($"{_state.Seed}:{last.Id}");
+        var rec = Match.SimMatch(_state, last.TeamA, last.TeamB, last.Bo, seed, last.Id, last.MapLock, last.AgentLock);
+        _stream = ReplayStream.Compile(rec);
+        _watchT = 0;
+        _watchCursor = 0;
+        _watchKillsA = _watchKillsB = 0;
+        _watchAliveA = _watchAliveB = 5;
+        _watchRoundA = _watchRoundB = 0;
+        _watchTitle = $"{_state.Teams[last.TeamA].Tag} vs {_state.Teams[last.TeamB].Tag}（重模拟同 seed 回放）";
+        if (_watchActors.Count == 0)
+        {
+            for (int i = 0; i < 10; i++)
+            {
+                var actor = new Chibi.MiniActor();
+                actor.Init(this, i < 5);
+                _watchActors.Add(actor);
+            }
+        }
+        foreach (var a in _watchActors) a.Reset();
+        _watchActive = true;
+        Log($"观赏：重放 {_watchTitle}，时间轴 {_stream.Count} 事件 / {_stream.Count} 条");
+    }
+
+    /// <summary>观赏页时间轴推进（每帧）。</summary>
+    private void WatchTick(float dt)
+    {
+        if (!_watchActive) return;
+        _watchT += dt;
+        while (_watchCursor < _stream.Count && _stream[_watchCursor].T <= _watchT)
+        {
+            ApplyWatchEvent(_stream[_watchCursor]);
+            _watchCursor++;
+        }
+        foreach (var a in _watchActors) a.Update(dt);
+        _pageView.Text = _watchTitle + "\n\n" + string.Join("\n", _watchActors.Select((a, i) =>
+            $"{(i < 5 ? "A" : "B")}{i % 5 + 1} {(a.Dead ? "✖" : "●")}").Chunk(5).Select(g => string.Join("  ", g))) +
+            $"\n\n回合 {_watchRoundA}-{_watchRoundB}｜击杀 {_watchKillsA}-{_watchKillsB}｜存活 {_watchAliveA}-{_watchAliveB}" +
+            $"\n\n播报：{(_watchCursor > 0 ? _stream[Math.Min(_watchCursor, _stream.Count) - 1].Tag : "")}";
+        if (_watchCursor >= _stream.Count)
+        {
+            _watchActive = false;
+            _pageView.Text += "\n\n—— 回放结束 ——";
+        }
+    }
+
+    private void ApplyWatchEvent(ReplayEvent e)
+    {
+        switch (e.Kind)
+        {
+            case "kill":
+                var victim = _watchActors[e.B];
+                victim.Dead = true;
+                if (e.A < 5) { _watchKillsA++; _watchAliveB--; } else { _watchKillsB++; _watchAliveA--; }
+                _watchActors[e.A].Flash();
+                break;
+            case "round_win":
+                if (e.Side == "A") { _watchRoundA++; _watchAliveA = 5; _watchAliveB = 5; }
+                else { _watchRoundB++; _watchAliveA = 5; _watchAliveB = 5; }
+                for (int i = e.Side == "A" ? 0 : 5; i < (e.Side == "A" ? 5 : 10); i++) _watchActors[i].Cheer();
+                for (int i = e.Side == "A" ? 5 : 0; i < (e.Side == "A" ? 10 : 5); i++) _watchActors[i].Dead = false;
+                break;
+            case "map_end":
+                foreach (var a in _watchActors) { a.Dead = false; a.Cheer(); }
+                _watchKillsA = _watchKillsB = 0;
+                break;
+        }
     }
 
     /// <summary>赛程页：我的比赛前后 4 场 + 积分榜前 4（联赛主视角）。</summary>
@@ -473,8 +560,8 @@ public partial class GrayBox : Node2D
             }
         }
         _log.Text = string.Join("\n", _logLines.TakeLast(12));
-        // 分页视图联动
-        if (!_pageView.Visible) return;
+        // 分页视图联动（观赏页由 WatchTick 自绘，不走此路径）
+        if (_page == "watch" || !_pageView.Visible) return;
         _pageView.Text = _page switch
         {
             "schedule" => SchedulePageText(),
@@ -516,6 +603,11 @@ public partial class GrayBox : Node2D
         {
             SetPanelVisible(false);
         }
+    }
+
+    public override void _Process(double delta)
+    {
+        if (_watchActive) WatchTick((float)delta);
     }
 
     private void Log(string line)

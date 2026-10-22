@@ -740,6 +740,7 @@ public static class Match
             Map = mapId,
             ScoreA = a,
             ScoreB = b,
+            AAttacksFirst = aAttacksFirst,
             Rounds = rounds,
             Lines = lines,
             Mvp = mvp,

@@ -171,6 +171,8 @@ public sealed class MapRecord
     /// <summary>[A 得分, B 得分]</summary>
     public int ScoreA { get; set; }
     public int ScoreB { get; set; }
+    /// <summary>A 队上半场进攻（回放器推导每回合攻防方；2026-10-22 预研补：此前为 SimMatch 局部变量未落档）</summary>
+    public bool AAttacksFirst { get; set; }
     public List<RoundRecord> Rounds { get; set; } = new();
     /// <summary>lines（插入序=创建序）</summary>
     public OrderedDict<string, PlayerLine> Lines { get; set; } = new();
