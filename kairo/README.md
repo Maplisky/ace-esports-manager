@@ -50,14 +50,21 @@ adb install -r builds/kairo-m0.apk && adb shell monkey -p com.maplisky.kairo 1
 9. **归档图目录要放 `.gdignore`**（如 `m0/shots/`），否则 `all_resources` 导出会把截图打进 APK。
 10. **设备上视口纹理 = 窗口分辨率 ≠ 内容设计分辨率**（模拟器横屏信箱下实测 607×1080 vs 内容 720×1280）。任何按内容坐标写的像素断言/取色都必须按实际分辨率等比映射（见 `SelfAudit()` 的 kx/ky 处理）。
 11. **GLES3 设备的 Modulate 压暗在线性色彩空间**（桌面 GL 在 sRGB 空间直接乘），同参数压暗结果更亮；颜色断言要兼容两种空间（见 `DeadBlue` 谓词）。
+12. **C# int 参与除法即截断**（m1q）：`offer.SigningBonus / Math.Max(1, salaryExp)` 双 int → 500000/228870=2，TS 是 56.8056——TS 权威里所有 number 除法在 CS 必须有一侧 double。
+13. **TS number 语义字段一律 double/可空**（m1r/m1s 连环坑）：Morale/Form/Fatigue/Bond/Budget/MapPref/Wallet 初版按直觉写 int，周结算 `+0.06×差值`、retirement `budget -= salary*0.3` 等都会产生小数——int 字段静默截断且**写入点越多的字段漂移越早**。判别法：grep TS 里该字段的全部赋值点，出现任何非整数量纲就 double。
+14. **注释会骗人，按行为复刻**（m1r）：day.ts mineHold 注释写"调用方不拦截则正常打"，实际代码 `if (!mineHold(...)) continue;`——我的比赛被拒约后一律顺延为次日补赛。黄金逐位验证靠的是行为不是注释。
+15. **模块级序列会跨测试泄漏**（m1r）：fixture id 参与 `hash(seed:fixtureId)` 比赛种子，前一个测试消费 fixtureSeq 后第二个测试全盘漂移；BuildWorld 必须 `Fixtures.ResetFixtureSeq()`（playerSeq 同理由 GenerateWorld resetSeq 处理）。
+16. **STJ 的 JsonValue 不跨数值类型 TryGetValue**（m1s）：`["seed"]=42` 是 int 承载，`TryGetValue<double>` 返回 false——解析外部 JSON 的数值要用 int/long/double 三连尝试。
+17. **JsonArray 不能用字符串索引器**（m1s）：`arr["0"]` 抛 InvalidOperationException；用 `as JsonArray` + 整数下标。
+18. **node 24 跑 `node --test tests/` 目录形式失效**（报 MODULE_NOT_FOUND），用 glob：`node --test tests/*.test.ts`。
 
 ## M0 场景结构（m0/）
 
 `Main.tscn` = §3.5 四层分镜微缩版：顶部小地图事件窗 / 调色板小人走路带 / 场馆双方选手+击杀播报 / 底部战绩板。硬编码回放事件流驱动，演出层只消费事件（红线）。运行末尾对自存截图做 15 项像素自审计（`SelfAudit()`，桌面与设备同一实现，设备端结果在 logcat）；`shots/` 为桌面截图存档（已 .gdignore，不进包）。
 
-## M1：共享内核移植（进行中）
+## M1：共享内核移植（✅ 已完成，快照固化见 [KERNEL-SYNC.md](KERNEL-SYNC.md)）
 
-结构：`Core/`（Kairo.Core 类库，**纯 C# 零 Godot 依赖**，模拟内核的家）+ `Core.Tests/`（xUnit 黄金轨迹回放）+ TS 侧记录器 `../ace/tools/golden-rng.mjs`。
+结构：`Core/`（Kairo.Core 类库，**纯 C# 零 Godot 依赖**，模拟内核的家）+ `Core.Tests/`（xUnit 黄金轨迹回放）+ TS 侧记录器 `../ace/tools/golden-*.mjs`。
 
 - **黄金轨迹流程**：TS（`ace/src/core`，唯一权威实现）录制固定 seed 的 API 输出 → `Core.Tests/Golden/*.golden.json`（浮点为 IEEE754 位型 16-hex）→ C# 回放**逐位比对**（禁止十进制容差）。
 - **RNG 已完成**（xoshiro128\*\* + splitmix32）：7 seed × (64 next + 全 API ops) + fork/afterfork 逐位一致。
@@ -66,11 +73,10 @@ adb install -r builds/kairo-m0.apk && adb shell monkey -p com.maplisky.kairo 1
   1. Record/Map 语义一律 `OrderedDict`（TS 插入序枚举；C# Dictionary 无序）；
   2. 排序一律 LINQ `OrderBy/OrderByDescending`（稳定序 = ES2019+ sort；`List.Sort` 不稳定禁用）；
   3. 取整一律 `DetMath.JsRound`（JS 半数向 +∞；.NET 默认银行家舍入）；幂用 `DetMath.PowInt`（平台 pow 逐位不可靠）。
-- **TS 侧对应物**：`detmath.ts`（detLog/detCos/detSin/detPowInt，权威实现）；改任何 TS 内核函数后必须重录黄金。
-- 工作流：改 TS 内核 → `node tools/golden-rng.mjs && node tools/golden-worldgen.mjs`（ace/ 下）→ `dotnet test Core.Tests`（kairo/ 下）。
-- 下一步：sim/ 移植（match/day/transfer/finance…24 文件，按依赖序）。
-- **确定性数学已收敛**（`ace/src/core/detmath.ts` ↔ `Core/DetMath.cs`，双端必须逐操作对齐）：平台 Math.log/cos 在 V8 与 .NET 间存在 ±1 ulp 失配（探针 4096 输入：Log 310、Cos 106、Sqrt 0），`Rng.norm()` 改用自实现 detLog/detCos/detSin（fdlibm 系系数 + π/2 三段 Cody-Waite，纯 IEEE 四则）后双端零失配。TS 侧 201/201 测试绿（行为改变已验证无回归）。**detPowInt 同理收敛 Math.pow（worldgen 薪资曲线）。**
-- 下一步：sim/ 移植（match/day/transfer/finance…24 文件，按依赖序）。
+- **确定性数学已收敛**（`ace/src/core/detmath.ts` ↔ `Core/DetMath.cs`，双端必须逐操作对齐）：平台 Math.log/cos 在 V8 与 .NET 间存在 ±1 ulp 失配（探针 4096 输入：Log 310、Cos 106、Sqrt 0），`Rng.norm()` 改用自实现 detLog/detCos/detSin（fdlibm 系系数 + π/2 三段 Cody-Waite，纯 IEEE 四则）后双端零失配。**detPowInt/detPow 同理收敛 Math.pow（worldgen 薪资曲线 / transfer 身价）。**
+- **sim/ 24 模块全部移植完毕**（matchstats → intel/veto/tactics → match → fixtures → training/patch → events/finance → rumors → narrative → business → career → draft → transfer → **day** → scrim/achievements/retirement/challenge/share），每模块黄金逐位；day 黄金为全年 372 天逐日摘要 + 年末全量状态（含 Masters/Champions 赛程树推进、选秀、翻年重开、交互式比赛管线）。
+- 工作流：改 TS 内核 → `node tools/golden-<module>.mjs`（ace/ 下）→ `dotnet test Core.Tests`（kairo/ 下）。
+- 后续改内核的同步细则与已知刻意差异清单见 [KERNEL-SYNC.md](KERNEL-SYNC.md)。
 
 ```bash
 # 重录黄金（TS 侧，改内核后必须）
