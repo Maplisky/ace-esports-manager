@@ -54,8 +54,8 @@ public sealed class BaseEconomyTests
     public void PlotPrice_Curve()
     {
         Assert.Equal(800000, BaseOps.PlotPrice(1)); // 第一块地价 = basePrice
-        Assert.Equal(1080000, BaseOps.PlotPrice(2)); // 800000 × 1.35
-        Assert.Equal(1458000, BaseOps.PlotPrice(3));
+        Assert.Equal(1000000, BaseOps.PlotPrice(2)); // 800000 × 1.25
+        Assert.Equal(1250000, BaseOps.PlotPrice(3));
         // 千元取整
         Assert.Equal(0, BaseOps.PlotPrice(7) % 1000);
     }
@@ -77,7 +77,7 @@ public sealed class BaseEconomyTests
         // 已持有拒绝
         Assert.NotNull(BaseOps.BuyPlot(state, b, 1, 0));
         // 预算扣减 = 前两块地价
-        Assert.Equal(10_000_000 - 800000 - 1080000, (long)myTeam.Budget);
+        Assert.Equal(10_000_000 - 800000 - 1000000, (long)myTeam.Budget);
         // 预算不足拒绝
         myTeam.Budget = 100000;
         int before = b.Plots.Count;
@@ -168,7 +168,7 @@ public sealed class BaseEconomyTests
         myTeam.Budget = 50_000_000;
         Assert.Null(BaseOps.BuyPlot(state, b, 1, 0));
         Assert.Null(BaseOps.StartBuild(state, b, 0, 0, "dorm"));   // restBonus 2 + morale 1
-        Assert.Null(BaseOps.StartBuild(state, b, 1, 0, "shop"));   // weeklyIncome 3000
+        Assert.Null(BaseOps.StartBuild(state, b, 1, 0, "shop"));   // weeklyIncome 6000
         for (int i = 0; i < 4; i++) BaseOps.AdvanceBuildDay(b);
 
         var p = state.Players.Values.First(x => x.TeamId == myTeam.Id);
@@ -176,11 +176,11 @@ public sealed class BaseEconomyTests
         p.Fatigue = 80;
         double budgetBefore = myTeam.Budget;
         var (income, facilities, moraleGain, restGain) = BaseOps.ApplyWeekly(state, b);
-        Assert.Equal(3000, income);
+        Assert.Equal(6000, income);
         Assert.Equal(0, facilities);
         Assert.Equal(1, moraleGain);
         Assert.Equal(2, restGain);
-        Assert.Equal(budgetBefore + 3000, myTeam.Budget);
+        Assert.Equal(budgetBefore + 6000, myTeam.Budget);
         Assert.Equal(51, p.Morale);
         Assert.Equal(78, p.Fatigue);
         // 修正量输入落点：Team.Facilities 被覆写（内核 facF 的读取源）

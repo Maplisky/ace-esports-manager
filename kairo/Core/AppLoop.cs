@@ -39,17 +39,19 @@ public static class AppLoop
 
         for (int i = 0; i < maxDays; i++)
         {
-            var played = new List<(string FixtureId, bool Mine)>();
+            var played = new List<(string FixtureId, bool Mine, bool Won, string Stage)>();
             var r = DaySim.AdvanceDay(state, notes,
                 (rec, fixtureId, mine) =>
                 {
-                    played.Add((fixtureId, mine));
+                    var fx = state.Fixtures.FirstOrDefault(f => f.Id == fixtureId);
+                    bool won = mine && ((rec.Winner == "A" && fx?.TeamA == state.MyTeamId) || (rec.Winner == "B" && fx?.TeamB == state.MyTeamId));
+                    played.Add((fixtureId, mine, won, fx?.Stage ?? ""));
                     onMatch?.Invoke(rec, fixtureId, mine);
                 },
                 mineHold);
             result.PlayedMine.AddRange(r.PlayedMine);
-            // 开罗钩子 ①：主场门票收入（已建场馆容量 × 票价；补赛同样计）
-            int tickets = TicketIncome(state, played);
+            // 开罗钩子 ①：比赛奖金（胜场，按赛事级别）+ 主场门票（已建场馆容量 × 票价；补赛同样计）
+            int tickets = MatchRewards(state, played);
             // 开罗钩子 ②：基地施工日推进
             if (state.Base != null) BaseOps.AdvanceBuildDay(state.Base);
             // 开罗钩子 ③：周结算（与内核周块同日界）
@@ -75,24 +77,47 @@ public static class AppLoop
         return result;
     }
 
-    /// <summary>主场门票：我的主场比赛按已建成场馆容量计收入（零 RNG）。</summary>
-    public static int TicketIncome(GameState state, IEnumerable<(string FixtureId, bool Mine)> playedToday)
+    /// <summary>比赛奖金（胜场，按赛事级别表格）+ 主场门票（容量 × 票价）。返回合计入账。</summary>
+    public static int MatchRewards(GameState state, IEnumerable<(string FixtureId, bool Mine, bool Won, string Stage)> playedToday)
     {
-        if (state.Base == null || state.MyTeamId == null) return 0;
-        int capacity = BaseOps.Capacity(state.Base);
-        if (capacity <= 0) return 0;
-        int income = 0;
-        foreach (var (fixtureId, mine) in playedToday)
+        if (state.MyTeamId == null) return 0;
+        var myTeam = state.Teams[state.MyTeamId];
+        int capacity = state.Base != null ? BaseOps.Capacity(state.Base) : 0;
+        int total = 0;
+        foreach (var (fixtureId, mine, won, stage) in playedToday)
         {
             if (!mine) continue;
             var f = state.Fixtures.FirstOrDefault(x => x.Id == fixtureId);
-            if (f == null || f.TeamA != state.MyTeamId) continue; // teamA = 主队
-            income += capacity * BaseOps.Table.Ticket.PricePerSeat;
-            state.Teams[state.MyTeamId].Budget += capacity * BaseOps.Table.Ticket.PricePerSeat;
-            Finance.LogFinance(state, $"门票 · 主场票房（容量 {capacity}）", capacity * BaseOps.Table.Ticket.PricePerSeat);
+            if (f == null) continue;
+            int bonus = stage switch
+            {
+                "stage1" or "stage2" => BaseOps.Table.MatchBonus.LeagueWin,
+                "cup" => BaseOps.Table.MatchBonus.CupWin,
+                "masters" or "champions" => BaseOps.Table.MatchBonus.InternationalWin,
+                _ => 0,
+            };
+            if (won && bonus > 0)
+            {
+                myTeam.Budget += bonus;
+                Finance.LogFinance(state, $"奖金 · {StageCn(stage)}获胜", bonus);
+                total += bonus;
+            }
+            if (capacity > 0 && f.TeamA == state.MyTeamId)
+            {
+                int ticket = capacity * BaseOps.Table.Ticket.PricePerSeat;
+                myTeam.Budget += ticket;
+                Finance.LogFinance(state, $"门票 · 主场票房（容量 {capacity}）", ticket);
+                total += ticket;
+            }
         }
-        return income;
+        return total;
     }
+
+    private static string StageCn(string stage) => stage switch
+    {
+        "stage1" => "Stage 1", "stage2" => "Stage 2", "cup" => "揭幕杯",
+        "masters" => "Masters", "champions" => "Champions", _ => "友谊赛",
+    };
 
     /// <summary>基地周结算（训练加成/常驻收入/恢复士气）；有产出时出一条新闻。</summary>
     public static (int Income, int Facilities) ApplyBaseWeekly(GameState state, List<NewsItem> notes)
@@ -129,7 +154,7 @@ public static class AppLoop
         Action<MatchRecord, string, bool>? onMatch = null)
         => DaySim.InterveneHeldMatch(state, fixtureId, iv, onMatch);
 
-    /// <summary>结算我的交互式比赛 + 开罗钩子（主场门票 + 成就评估）。</summary>
+    /// <summary>结算我的交互式比赛 + 开罗钩子（主场门票 + 奖金 + 成就评估）。</summary>
     public static bool SettleHeld(
         GameState state, string fixtureId, MatchRecord? rec,
         Action<List<NewsItem>>? onNews = null)
@@ -137,9 +162,10 @@ public static class AppLoop
         bool settled = DaySim.SettleMatch(state, fixtureId, rec, onNews);
         if (!settled) return false;
         var f = state.Fixtures.FirstOrDefault(x => x.Id == fixtureId);
-        if (f != null && state.MyTeamId != null && f.TeamA == state.MyTeamId)
+        if (f != null && state.MyTeamId != null)
         {
-            TicketIncome(state, new[] { (fixtureId, true) });
+            bool won = rec!.Winner == "A" ? f.TeamA == state.MyTeamId : f.TeamB == state.MyTeamId;
+            MatchRewards(state, new[] { (fixtureId, true, won, f.Stage) });
         }
         var notes = new List<NewsItem>();
         Achievements.EvaluateAchievements(state, notes);

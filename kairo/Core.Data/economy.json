@@ -2,38 +2,376 @@
   "schemaVersion": 1,
   "plot": {
     "basePrice": 800000,
-    "growth": 1.35,
+    "growth": 1.25,
     "maxPlots": 16,
     "startPlots": [
-      { "x": 0, "y": 0 }
+      {
+        "x": 0,
+        "y": 0
+      }
     ]
   },
   "ticket": {
-    "pricePerSeat": 20
+    "pricePerSeat": 35
+  },
+  "matchBonus": {
+    "leagueWin": 25000,
+    "cupWin": 40000,
+    "internationalWin": 60000
   },
   "facilities": [
-    { "id": "range", "name": "射击房", "cat": "training", "cost": [400000, 900000, 1800000], "buildDays": [4, 8, 14], "effects": { "facilities": [3, 6, 10] } },
-    { "id": "tactic", "name": "战术室", "cat": "training", "cost": [400000, 900000, 1800000], "buildDays": [4, 8, 14], "effects": { "facilities": [3, 6, 10] } },
-    { "id": "gym", "name": "体能房", "cat": "training", "cost": [300000, 700000, 1400000], "buildDays": [3, 6, 11], "effects": { "facilities": [2, 5, 9], "restBonus": [1, 2, 3] } },
-    { "id": "dorm", "name": "宿舍", "cat": "rest", "cost": [350000, 800000, 1500000], "buildDays": [3, 7, 12], "effects": { "restBonus": [2, 4, 6], "morale": [1, 2, 3] } },
-    { "id": "arena", "name": "场馆", "cat": "arena", "cost": [1200000, 2600000, 5000000], "buildDays": [8, 16, 26], "effects": { "capacity": [800, 2000, 4500] } },
-    { "id": "shop", "name": "周边店", "cat": "commerce", "cost": [250000, 600000, 1200000], "buildDays": [2, 5, 9], "effects": { "weeklyIncome": [3000, 7000, 12000] } },
-    { "id": "cafe", "name": "餐饮车", "cat": "commerce", "cost": [150000, 400000, 900000], "buildDays": [2, 4, 7], "effects": { "weeklyIncome": [2000, 5000, 9000] } },
-    { "id": "billboard", "name": "赞助位", "cat": "commerce", "cost": [300000, 700000, 1400000], "buildDays": [3, 6, 10], "effects": { "weeklyIncome": [4000, 9000, 16000] } },
-    { "id": "clinic", "name": "医疗室", "cat": "support", "cost": [350000, 800000, 1600000], "buildDays": [3, 7, 12], "effects": { "restBonus": [1, 3, 5] } },
-    { "id": "data", "name": "数据室", "cat": "support", "cost": [350000, 850000, 1700000], "buildDays": [4, 7, 12], "effects": { "facilities": [1, 3, 6] } },
-    { "id": "lounge", "name": "休息室", "cat": "rest", "cost": [200000, 500000, 1000000], "buildDays": [2, 5, 8], "effects": { "morale": [2, 3, 5], "restBonus": [1, 2, 3] } },
-    { "id": "studio", "name": "内容工作室", "cat": "commerce", "cost": [500000, 1100000, 2200000], "buildDays": [5, 9, 15], "effects": { "weeklyIncome": [5000, 10000, 18000] } }
+    {
+      "id": "range",
+      "name": "射击房",
+      "cat": "training",
+      "cost": [
+        400000,
+        900000,
+        1800000
+      ],
+      "buildDays": [
+        4,
+        8,
+        14
+      ],
+      "effects": {
+        "facilities": [
+          3,
+          6,
+          10
+        ]
+      }
+    },
+    {
+      "id": "tactic",
+      "name": "战术室",
+      "cat": "training",
+      "cost": [
+        400000,
+        900000,
+        1800000
+      ],
+      "buildDays": [
+        4,
+        8,
+        14
+      ],
+      "effects": {
+        "facilities": [
+          3,
+          6,
+          10
+        ]
+      }
+    },
+    {
+      "id": "gym",
+      "name": "体能房",
+      "cat": "training",
+      "cost": [
+        300000,
+        700000,
+        1400000
+      ],
+      "buildDays": [
+        3,
+        6,
+        11
+      ],
+      "effects": {
+        "facilities": [
+          2,
+          5,
+          9
+        ],
+        "restBonus": [
+          1,
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "id": "dorm",
+      "name": "宿舍",
+      "cat": "rest",
+      "cost": [
+        350000,
+        800000,
+        1500000
+      ],
+      "buildDays": [
+        3,
+        7,
+        12
+      ],
+      "effects": {
+        "restBonus": [
+          2,
+          4,
+          6
+        ],
+        "morale": [
+          1,
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "id": "arena",
+      "name": "场馆",
+      "cat": "arena",
+      "cost": [
+        1200000,
+        2600000,
+        5000000
+      ],
+      "buildDays": [
+        8,
+        16,
+        26
+      ],
+      "effects": {
+        "capacity": [
+          800,
+          2000,
+          4500
+        ]
+      }
+    },
+    {
+      "id": "shop",
+      "name": "周边店",
+      "cat": "commerce",
+      "cost": [
+        250000,
+        600000,
+        1200000
+      ],
+      "buildDays": [
+        2,
+        5,
+        9
+      ],
+      "effects": {
+        "weeklyIncome": [
+          6000,
+          13000,
+          22000
+        ]
+      }
+    },
+    {
+      "id": "cafe",
+      "name": "餐饮车",
+      "cat": "commerce",
+      "cost": [
+        150000,
+        400000,
+        900000
+      ],
+      "buildDays": [
+        2,
+        4,
+        7
+      ],
+      "effects": {
+        "weeklyIncome": [
+          4500,
+          10000,
+          17000
+        ]
+      }
+    },
+    {
+      "id": "billboard",
+      "name": "赞助位",
+      "cat": "commerce",
+      "cost": [
+        300000,
+        700000,
+        1400000
+      ],
+      "buildDays": [
+        3,
+        6,
+        10
+      ],
+      "effects": {
+        "weeklyIncome": [
+          8000,
+          16000,
+          26000
+        ]
+      }
+    },
+    {
+      "id": "clinic",
+      "name": "医疗室",
+      "cat": "support",
+      "cost": [
+        350000,
+        800000,
+        1600000
+      ],
+      "buildDays": [
+        3,
+        7,
+        12
+      ],
+      "effects": {
+        "restBonus": [
+          1,
+          3,
+          5
+        ]
+      }
+    },
+    {
+      "id": "data",
+      "name": "数据室",
+      "cat": "support",
+      "cost": [
+        350000,
+        850000,
+        1700000
+      ],
+      "buildDays": [
+        4,
+        7,
+        12
+      ],
+      "effects": {
+        "facilities": [
+          1,
+          3,
+          6
+        ]
+      }
+    },
+    {
+      "id": "lounge",
+      "name": "休息室",
+      "cat": "rest",
+      "cost": [
+        200000,
+        500000,
+        1000000
+      ],
+      "buildDays": [
+        2,
+        5,
+        8
+      ],
+      "effects": {
+        "morale": [
+          2,
+          3,
+          5
+        ],
+        "restBonus": [
+          1,
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "id": "studio",
+      "name": "内容工作室",
+      "cat": "commerce",
+      "cost": [
+        500000,
+        1100000,
+        2200000
+      ],
+      "buildDays": [
+        5,
+        9,
+        15
+      ],
+      "effects": {
+        "weeklyIncome": [
+          10000,
+          20000,
+          32000
+        ]
+      }
+    }
   ],
   "combos": [
-    { "a": "range", "b": "tactic", "bonus": { "facilities": 2 }, "desc": "射击配战术：演练闭环" },
-    { "a": "gym", "b": "dorm", "bonus": { "restBonus": 1 }, "desc": "练完就睡" },
-    { "a": "shop", "b": "arena", "bonus": { "weeklyIncome": 2000 }, "desc": "观赛客流" },
-    { "a": "cafe", "b": "arena", "bonus": { "weeklyIncome": 1500 }, "desc": "观赛餐饮" },
-    { "a": "clinic", "b": "dorm", "bonus": { "restBonus": 1 }, "desc": "医疗保障" },
-    { "a": "data", "b": "tactic", "bonus": { "facilities": 1 }, "desc": "数据支撑复盘" },
-    { "a": "lounge", "b": "dorm", "bonus": { "morale": 1 }, "desc": "生活区氛围" },
-    { "a": "billboard", "b": "shop", "bonus": { "weeklyIncome": 1000 }, "desc": "商业街联动" },
-    { "a": "studio", "b": "arena", "bonus": { "weeklyIncome": 2500 }, "desc": "赛事内容化" }
+    {
+      "a": "range",
+      "b": "tactic",
+      "bonus": {
+        "facilities": 2
+      },
+      "desc": "射击配战术：演练闭环"
+    },
+    {
+      "a": "gym",
+      "b": "dorm",
+      "bonus": {
+        "restBonus": 1
+      },
+      "desc": "练完就睡"
+    },
+    {
+      "a": "shop",
+      "b": "arena",
+      "bonus": {
+        "weeklyIncome": 2000
+      },
+      "desc": "观赛客流"
+    },
+    {
+      "a": "cafe",
+      "b": "arena",
+      "bonus": {
+        "weeklyIncome": 1500
+      },
+      "desc": "观赛餐饮"
+    },
+    {
+      "a": "clinic",
+      "b": "dorm",
+      "bonus": {
+        "restBonus": 1
+      },
+      "desc": "医疗保障"
+    },
+    {
+      "a": "data",
+      "b": "tactic",
+      "bonus": {
+        "facilities": 1
+      },
+      "desc": "数据支撑复盘"
+    },
+    {
+      "a": "lounge",
+      "b": "dorm",
+      "bonus": {
+        "morale": 1
+      },
+      "desc": "生活区氛围"
+    },
+    {
+      "a": "billboard",
+      "b": "shop",
+      "bonus": {
+        "weeklyIncome": 1000
+      },
+      "desc": "商业街联动"
+    },
+    {
+      "a": "studio",
+      "b": "arena",
+      "bonus": {
+        "weeklyIncome": 2500
+      },
+      "desc": "赛事内容化"
+    }
   ]
 }

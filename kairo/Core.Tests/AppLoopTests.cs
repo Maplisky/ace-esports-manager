@@ -57,8 +57,8 @@ public sealed class AppLoopTests
         BaseOps.StartBuild(state, b, 1, 0, "shop");  // weeklyIncome 3000
         var r = AppLoop.Advance(state, 7);           // 7 天：施工 4 天落成，末日触发周结算
         Assert.Equal(3, myTeam.Facilities);          // 修正量输入落点
-        // 预算精确账：50M − 地 800K − 射击房 400K − 周边店 250K + 基地周收入 3000 + 内核商务周收入 4833
-        Assert.Equal(50_000_000L - 1_450_000 + 7_833, (long)myTeam.Budget);
+        // 预算精确账：50M − 地 800K − 射击房 400K − 周边店 250K + 基地周收入 6000 + 内核商务周收入 4833
+        Assert.Equal(50_000_000L - 1_450_000 + 10_833, (long)myTeam.Budget);
         Assert.True(r.Notes.Any(n => n.Contains("基地周报")));
     }
 
@@ -78,10 +78,10 @@ public sealed class AppLoopTests
         double budgetBefore = myTeam.Budget;
         var r = AppLoop.Advance(state, 50); // 推进到首轮之后
         Assert.Equal(800, BaseOps.Capacity(b));
-        // 首轮主场票房已入账（财务流水锚定，金额=容量×票价）
+        // 首轮主场票房已入账（财务流水锚定，金额=容量×票价 35）
         var ticketEntry = state.Finances.Log.FirstOrDefault(e => e.Label.StartsWith("门票"));
         Assert.NotNull(ticketEntry);
-        Assert.Equal(800 * 20, ticketEntry!.Amount);
+        Assert.Equal(800 * 35, ticketEntry!.Amount);
         _ = budgetBefore;
         Assert.True(r.Notes.Count > 0);
     }

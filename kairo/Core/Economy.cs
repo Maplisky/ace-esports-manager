@@ -84,8 +84,20 @@ public sealed class EconomyTable
         public int PricePerSeat { get; set; }
     }
 
+    /// <summary>比赛奖金（立项 §3.2 收入环：战绩 → 奖金 → 再投资；C# 侧开罗新增，内核无此流）。</summary>
+    public sealed class MatchBonusConfig
+    {
+        /// <summary>联赛胜场（stage1/stage2）</summary>
+        public int LeagueWin { get; set; }
+        /// <summary>揭幕杯胜场</summary>
+        public int CupWin { get; set; }
+        /// <summary>Masters/Champions 胜场</summary>
+        public int InternationalWin { get; set; }
+    }
+
     public PlotConfig Plot { get; set; } = new();
     public TicketConfig Ticket { get; set; } = new();
+    public MatchBonusConfig MatchBonus { get; set; } = new();
     public List<FacilityDef> Facilities { get; set; } = new();
     public List<ComboDef> Combos { get; set; } = new();
 
