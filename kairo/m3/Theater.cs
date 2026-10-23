@@ -17,6 +17,8 @@ public partial class Theater : Node2D
     private List<ReplayEvent> _stream = new();
     private Dictionary<string, string> _igns = new();
     private string _recSeedInfo = "";
+    private string _tagA = "A";
+    private string _tagB = "B";
     private float _t;
     private int _cursor;
     private readonly List<Actor> _players = new();
@@ -139,15 +141,17 @@ public partial class Theater : Node2D
         var igns = _state.Players.Values.ToDictionary(p => p.Id, p => p.Ign);
         var stream = ReplayStream.Compile(rec, igns);
         GD.Print($"[theater] auto: compiled {stream.Count} events");
-        Load(rec, $"{_state.Teams[last.TeamA].Tag} vs {_state.Teams[last.TeamB].Tag}", igns);
+        Load(rec, $"{_state.Teams[last.TeamA].Tag} vs {_state.Teams[last.TeamB].Tag}", igns,
+            (_state.Teams[last.TeamA].Tag, _state.Teams[last.TeamB].Tag));
         GD.Print($"[theater] auto: stream={_stream.Count} playing");
     }
 
     /// <summary>装载一场比赛回放（宿主入口）。</summary>
-    public void Load(MatchRecord rec, string title, IReadOnlyDictionary<string, string>? igns = null)
+    public void Load(MatchRecord rec, string title, IReadOnlyDictionary<string, string>? igns = null, (string A, string B)? sideTags = null)
     {
         _stream = ReplayStream.Compile(rec, igns);
         _igns = igns?.ToDictionary(kv => kv.Key, kv => kv.Value) ?? new Dictionary<string, string>();
+        (_tagA, _tagB) = sideTags ?? ("A", "B");
         // 演出序号 → pid（头像键）：Lines 插入序前 5 = A 队，其后 = B 队（与 Compile 同规则）
         _slotPid.Clear();
         int i = 0;
@@ -250,7 +254,8 @@ public partial class Theater : Node2D
         return $"P{idx}";
     }
 
-    private string SideTag(int idx) => idx < 5 ? "A" : "B";
+    /// <summary>小地图窗击杀记号：真实队 Tag（Load 时由 sideTags 注入；未注入退化为 A/B）。</summary>
+    private string SideTag(int idx) => idx < 5 ? _tagA : _tagB;
 
     /// <summary>播报行（可带击杀者像素头像）；行容器统一渐隐回收。</summary>
     private void Banner(string text, float ttl = 1.4f, string? avatarPid = null)
@@ -279,7 +284,7 @@ public partial class Theater : Node2D
     }
 
     private void RefreshScore() =>
-        _score.Text = $"回合 {_roundA} - {_roundB}\n存活 A×{_aliveA}  B×{_aliveB}\n击杀 {_killsA} : {_killsB}";
+        _score.Text = $"回合 {_tagA} {_roundA} - {_roundB} {_tagB}\n存活 {_tagA}×{_aliveA}  {_tagB}×{_aliveB}\n击杀 {_killsA} : {_killsB}";
 
     private void OnPlaybackDone()
     {

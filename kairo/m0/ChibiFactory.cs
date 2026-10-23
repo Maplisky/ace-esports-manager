@@ -48,6 +48,22 @@ public static class ChibiFactory
         return copy;
     }
 
+    private static readonly string[] HairColors = { "#3a2a20", "#201810", "#604022", "#807060", "#282830", "#a05018" };
+
+    /// <summary>
+    /// 玩家 pid 确定性调色板（M3 扩容）：队服从六套演示色取一，肤色/发色由 pid 哈希派生——
+    /// 同 id 永远同一套（与 AvatarFactory 同理念），跨场景可对照。
+    /// </summary>
+    public static Color[] PlayerPalette(string pid, int shirtShade = 0)
+    {
+        uint h = Kairo.Core.Rng.HashString("chibi:" + pid);
+        var p = (Color[])TeamPalettes[h % (uint)TeamPalettes.Length].Clone();
+        p[2] = Color.FromHtml(SkinVariants[h / (uint)SkinVariants.Length % (uint)SkinVariants.Length]);
+        p[3] = Color.FromHtml(HairColors[h / (uint)HairColors.Length % (uint)HairColors.Length]);
+        if (shirtShade % 2 == 1) p[4] = p[4].Lightened(0.12f); // 同队选手两档明度
+        return p;
+    }
+
     public static Texture2D[] BuildFrames(Color[] pal)
     {
         var frames = new Texture2D[5];

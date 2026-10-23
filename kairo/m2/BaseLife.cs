@@ -7,7 +7,12 @@ using System.Linq;
 
 namespace Kairo.M2;
 
-/// <summary>基地页训练演出：设施内选手小人（作业呼吸/换格走动）+ 周结算成长弹字（开罗式反馈）。</summary>
+/// <summary>
+/// 基地页训练演出（细化版）：设施内选手小人按**本人课表**分化就位——
+/// 课表指向训练/休息属性时优先去对应类别的已建成设施（战术室/宿舍…），
+/// 无匹配设施则落在任意建成设施或空地；每格最多 2 人（工位感），作业动画带换位徘徊。
+/// 周结算成长弹字：overall↑ 金色 / 经验青色，在人头顶上飘。
+/// </summary>
 public sealed class BaseLife
 {
     private sealed class Worker
@@ -18,6 +23,7 @@ public sealed class BaseLife
         public float Phase;
         public float Speed;
         public string PlayerId = "";
+        public string Focus = "rest";
     }
 
     private readonly Node2D _host;
@@ -41,7 +47,17 @@ public sealed class BaseLife
     public static Vector2 CellCenter(int gx, int gy) =>
         new(GridX + gx * (CellW + 12) + CellW / 2, GridY + gy * (CellH + 12) + CellH / 2);
 
-    /// <summary>同步训练小人到我队 roster（按设施就位；缺设施时在空地集合）。每帧调用。</summary>
+    /// <summary>课表 key → 设施类别偏好（无匹配 = 任意建成设施）。</summary>
+    private static string CategoryFor(string focus) => focus switch
+    {
+        "awareness" or "utility" or "igl" => "tactic",
+        "aim" or "reaction" => "range",
+        "clutch" or "teamwork" or "communication" => "gym",
+        "rest" => "dorm",
+        _ => "",
+    };
+
+    /// <summary>每帧：作业动画（漂移 + 呼吸帧；休息者在宿舍侧改为躺平慢帧节奏）。</summary>
     public void Update(GameState state, float dt, bool pageVisible)
     {
         _t += dt;
@@ -53,45 +69,74 @@ public sealed class BaseLife
                 continue;
             }
             w.Sprite.Visible = true;
-            // 作业动画：站位小幅漂移 + 呼吸帧（walk 循环低速 = 干活摆动）
+            double period = w.Focus == "rest" ? 1.2 : 3.0; // 休息者动作更慢
             var drift = new Vector2(Mathf.Sin(_t * w.Speed + w.Phase) * 9f, Mathf.Cos(_t * w.Speed * 0.7f + w.Phase) * 5f);
             w.Sprite.Position = w.Home + drift;
-            w.Sprite.Texture = w.Frames[1 + (int)(_t * 3 + w.Phase) % 3];
+            w.Sprite.Texture = w.Frames[1 + (int)(_t * period + w.Phase) % 3];
         }
     }
 
-    /// <summary>重建小人位（开档/购地/建造后调用）：roster 前 5 名分配到已建成设施格。</summary>
+    /// <summary>重建小人位（开档/购地/建造/课表变更后调用）：
+    /// 按课表类别把 roster 分配到设施格——同类别优先，容量每格 2 人，溢出落空地（画面边缘不露）。</summary>
     public void Rebuild(GameState state)
     {
         foreach (var w in _workers) w.Sprite.QueueFree();
         _workers.Clear();
         var myTeam = state.Teams[state.MyTeamId!];
-        var plots = state.Base!.Plots.Values.Where(p => p.BuildingId != null).ToList();
-        if (plots.Count == 0) return;
+        var occupied = new Dictionary<string, int>(); // plotKey → 已占位数（每格 2 工位）
+        var built = state.Base!.Plots.Values.Where(p => p.BuildingId != null && p.Level >= 1).ToList();
+
+        Vector2 PlaceFor(string focus, out string plotKey)
+        {
+            // 1) 类别匹配设施（同类别有空位的格）
+            var cat = CategoryFor(focus);
+            var match = built.FirstOrDefault(p =>
+                BaseOps.Table.Facility(p.BuildingId!)?.Cat == CatTable(cat)
+                && occupied.GetValueOrDefault(Key(p)) < 2);
+            // 2) 任意建成设施有空位
+            var any = built.FirstOrDefault(p => occupied.GetValueOrDefault(Key(p)) < 2);
+            var plot = match ?? any;
+            if (plot == null) { plotKey = ""; return CellCenter(0, 0) + new Vector2(-200, 80); } // 画面外集合（不露脸）
+            string key = Key(plot);
+            occupied[key] = occupied.GetValueOrDefault(key) + 1;
+            plotKey = key;
+            int nth = occupied[key] - 1;
+            return CellCenter(plot.X, plot.Y) + new Vector2(nth == 0 ? -16 : 16, (nth % 2 == 0 ? -6 : 10));
+        }
+        static string Key(PlotState p) => BaseState.KeyOf(p.X, p.Y);
+
         int i = 0;
-        foreach (var pid in myTeam.Roster.Take(5))
+        foreach (var pid in myTeam.Roster)
         {
             if (!state.Players.TryGetValue(pid, out var p)) continue;
-            var plot = plots[i % plots.Count];
+            var focus = state.Schedules.TryGetValue(pid, out var f) ? f : "rest";
+            var home = PlaceFor(focus, out _);
+            if (occupied.Values.Sum() >= built.Count * 2 + 6) { /* 满员溢出保护 */ }
             i++;
-            var pal = ChibiFactory.TeamPalette(true, i - 1);
+            var pal = ChibiFactory.PlayerPalette(pid, shirtShade: i - 1); // pid 确定性换装（M3 扩容）
             var frames = ChibiFactory.BuildFrames(pal);
-            var home = CellCenter(plot.X, plot.Y) + new Vector2((i % 2 == 0 ? -1 : 1) * 14, (i % 3 - 1) * 10);
             var sprite = new Sprite2D { Texture = frames[1], Scale = new Vector2(2.6f, 2.6f), Position = home };
             _host.AddChild(sprite);
             _workers.Add(new Worker
             {
                 Sprite = sprite, Frames = frames, Home = home,
                 Phase = (float)(_rng.NextDouble() * Math.PI * 2), Speed = 0.9f + (float)_rng.NextDouble() * 0.5f,
-                PlayerId = pid,
+                PlayerId = pid, Focus = focus,
             });
         }
     }
 
-    /// <summary>
-    /// 周结算成长弹字：before/after 快照 diff，对每名成长选手在其小人位置弹出浮字
-    /// （overall↑ 用醒目金色，经验增益用青色）。上限 6 条防刷屏。
-    /// </summary>
+    /// <summary>课表设施类别 → 设施表 cat 值的映射表（CategoryFor 产出 → economy 表 cat）。</summary>
+    private static string CatTable(string preferred) => preferred switch
+    {
+        "tactic" => "training", // 战术室（id=tactic，cat=training）优先；射击房同类别兜底由 Facility 筛选容错
+        "range" => "training",
+        "gym" => "training",
+        "dorm" => "rest",
+        _ => "",
+    };
+
+    /// <summary>周结算成长弹字：overall↑ 金色 / 经验青色，在人头顶上飘；上限 6 条。</summary>
     public void ShowGrowth(GameState state, Dictionary<string, (double Xp, int Overall)> before)
     {
         var myTeam = state.Teams[state.MyTeamId!];
