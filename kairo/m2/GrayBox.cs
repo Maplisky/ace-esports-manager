@@ -1218,6 +1218,7 @@ public partial class GrayBox : Node2D
 
         var byKey = new Dictionary<string, PlotState>();
         foreach (var p in _state.Base!.Plots.Values) byKey[BaseState.KeyOf(p.X, p.Y)] = p;
+        bool basePage = _page == "base"; // 非 base 页隐藏全部基地格视觉（草地/设施图/文字）
         int i = 0;
         for (int gy = 0; gy < 4; gy++)
         {
@@ -1225,7 +1226,14 @@ public partial class GrayBox : Node2D
             {
                 var (rect, text, grass) = _cells[i++];
                 string key = BaseState.KeyOf(gx, gy);
-                _cellArtRects[i - 1].Visible = false; // 默认隐藏：空地/未拥有格无设施图
+                _cellArtRects[i - 1].Visible = false;
+                if (!basePage)
+                {
+                    rect.Color = Color.FromHtml("#14202a");
+                    text.Text = "";
+                    grass.Visible = false;
+                    continue;
+                }
                 if (!byKey.TryGetValue(key, out var plot))
                 {
                     rect.Color = Color.FromHtml("#14202a");
