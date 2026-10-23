@@ -66,6 +66,9 @@ public static class Sfx
             case "save": tone = Blip(880, 0.05, 0.3); break;
             case "levelUp": tone = Arp(new double[] { 523, 659, 784 }, 0.07); break;
             case "cheer": tone = Arp(new double[] { 659, 784, 988, 1175 }, 0.06); break;
+            case "sign": tone = TwoTone(659, 880, 0.08); break;             // 签约：笔尖落纸双音
+            case "title": tone = Fanfare(); break;                          // 夺冠：号角式三连升
+            case "prize": tone = Arp(new double[] { 659, 784 }, 0.06); break; // 名次奖：短双音
             default: tone = Blip(440, 0.06, 0.3); break;
         }
         var wav = new AudioStreamWav
@@ -76,6 +79,19 @@ public static class Sfx
         };
         System.Buffer.BlockCopy(tone, 0, wav.Data, 0, wav.Data.Length);
         return wav;
+    }
+
+    /// <summary>号角式夺冠音：大三和弦上行长音。</summary>
+    private static short[] Fanfare()
+    {
+        var seq = new[] { (523.0, 0.10), (659.0, 0.10), (784.0, 0.10), (1046.5, 0.28) };
+        var parts = new List<short[]>();
+        foreach (var (f, d) in seq) parts.Add(Blip(f, d, 0.7));
+        int total = parts.Sum(p => p.Length);
+        var outp = new short[total];
+        int at = 0;
+        foreach (var p in parts) { Array.Copy(p, 0, outp, at, p.Length); at += p.Length; }
+        return outp;
     }
 
     /// <summary>单音 + 指数衰减。</summary>

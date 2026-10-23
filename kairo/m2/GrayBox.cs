@@ -125,13 +125,74 @@ public partial class GrayBox : Node2D
         AddChild(_nameInput);
         _menu.Add(_nameInput);
 
-        MenuButton("(a) 原创加盟 · $5M · 自由市场签 5 人", 520, () =>
+        MenuButton("(a) 原创加盟 · $5M · 自由市场签 5 人", 490, () =>
             DoStart(new StartConfig { Mode = StartMode.Custom, TeamName = _nameInput.Text }));
-        MenuButton("(b) 接管最弱挑战者队 · 改名", 620, () =>
-            DoStart(new StartConfig { Mode = StartMode.Takeover, TeamName = _nameInput.Text }));
-        MenuButton("(c) 剧本「欠薪弱旅」· 仅 $800K", 720, () =>
+        MenuButton("(b) 接管挑战者队 · 挑队改名", 580, () => { SetMenuVisible(false); OpenTakeoverMenu(); });
+        MenuButton("(c) 剧本「欠薪弱旅」· 仅 $800K", 670, () =>
             DoStart(new StartConfig { Mode = StartMode.Script }));
-        MenuButton("存档管理（读取 / 删除）", 860, () => { SetMenuVisible(false); OpenSaveMenu(); });
+        MenuButton("存档管理（读取 / 删除）", 790, () => { SetMenuVisible(false); OpenSaveMenu(); });
+    }
+
+    // ── (b) 接管模式挑队列表：全部 t2 队按预算升序（弱旅在前），点选即开档 ──
+
+    private readonly List<CanvasItem> _takeoverMenu = new();
+
+    private void OpenTakeoverMenu()
+    {
+        // 世界在 LoadWorld 时已生成；菜单重开循环内 _state 始终有效
+        ClearNodeGroup(_takeoverMenu);
+        var back = new ColorRect { Position = new Vector2(0, 0), Size = new Vector2(720, 1280), Color = Color.FromHtml("#0d141b") };
+        AddChild(back);
+        _takeoverMenu.Add(back);
+        var title = new Label { Position = new Vector2(0, 100), Size = new Vector2(720, 60), Text = "接管挑战者队（按预算升序）", HorizontalAlignment = HorizontalAlignment.Center };
+        title.AddThemeFontOverride("font", _font);
+        title.AddThemeFontSizeOverride("font_size", 30);
+        AddChild(title);
+        _takeoverMenu.Add(title);
+
+        var t2 = _state.Teams.Values.Where(t => t.Tier == 2)
+            .OrderBy(t => t.Budget).ThenBy(t => t.Id, StringComparer.Ordinal).ToList();
+        for (int i = 0; i < t2.Count; i++)
+        {
+            var t = t2[i];
+            var overall = (int)Math.Round(t.Roster.Where(id => _state.Players.ContainsKey(id))
+                .Select(id => _state.Players[id].Overall).DefaultIfEmpty(0).Average());
+            var b = new Button
+            {
+                Position = new Vector2(60, 180 + i * 74),
+                Size = new Vector2(600, 64),
+                Text = $"{t.Name}｜${t.Budget / 1000.0:F0}K｜均 overall {overall}",
+            };
+            b.AddThemeFontOverride("font", _font);
+            b.AddThemeFontSizeOverride("font_size", 18);
+            var captured = t.Id;
+            b.Pressed += () =>
+            {
+                var name = _nameInput.Text.Length > 0 ? _nameInput.Text : t.Name; // 输入框为空则保留原名
+                DoStart(new StartConfig { Mode = StartMode.Takeover, TeamName = name, TakeoverTeamId = captured });
+            };
+            AddChild(b);
+            _takeoverMenu.Add(b);
+        }
+        var backButton = new Button { Position = new Vector2(260, 180 + t2.Count * 74 + 20), Size = new Vector2(200, 64), Text = "返回" };
+        backButton.AddThemeFontOverride("font", _font);
+        backButton.AddThemeFontSizeOverride("font_size", 20);
+        backButton.Pressed += () => { SetTakeoverMenuVisible(false); SetMenuVisible(true); };
+        AddChild(backButton);
+        _takeoverMenu.Add(backButton);
+        SetTakeoverMenuVisible(true);
+    }
+
+    /// <summary>清空动态节点组并移除引用（QueueFree 由引擎回收）。</summary>
+    private void ClearNodeGroup(List<CanvasItem> group)
+    {
+        foreach (var n in group) n.QueueFree();
+        group.Clear();
+    }
+
+    private void SetTakeoverMenuVisible(bool visible)
+    {
+        foreach (var n in _takeoverMenu) n.Visible = visible;
     }
 
     // ── 存档管理菜单（SaveSystem.List/Load/Delete 接线）：3 槽信息行 + 存入/读档/删除 ──
@@ -909,6 +970,10 @@ public partial class GrayBox : Node2D
             Log($"—— 生涯终局（{_state.Manager.Career.Ending.Kind}）——世界冻结");
         // 建造完成音：设施就绪数增加（升级也计）
         if (_state.Base!.Plots.Values.Count(p => p.Level > 0 && p.BuildRemainDays <= 0) > readyBefore) Sfx.Play("levelUp");
+        // 强反馈音效细分：按本批新闻关键词匹配专属音（夺冠 > 名次奖 > 签约，取最高优先级一枚防叠音）
+        if (r.Notes.Any(n => n.Contains("夺得") && n.Contains("冠军"))) Sfx.Play("title");
+        else if (r.Notes.Any(n => n.Contains("名次奖金"))) Sfx.Play("prize");
+        else if (r.Notes.Any(n => n.Contains("接受") && n.Contains("报价") || n.Contains("签下"))) Sfx.Play("sign");
         if (_page == "base" || _page == "squad") _life.ShowGrowth(_state, before); // 开罗式成长弹字
         _life.Rebuild(_state); // 施工落成/阵容变动 → 小人重新就位
         // 比赛日联动：今天有我的比赛打完 → 提示去观赏页（开罗式「事件发生」轻引导）

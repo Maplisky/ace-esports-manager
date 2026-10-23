@@ -1,5 +1,7 @@
 using Godot;
 using System;
+using System.Collections.Generic;
+using System.IO;
 
 namespace Kairo.M2;
 
@@ -7,10 +9,17 @@ namespace Kairo.M2;
 /// 程序化像素头像（GDD §美术管线：特征驱动量产）：16×16 索引脸，从 pid 哈希确定性生成——
 /// 肤色 4 / 发型 6 / 发色 6 / 瞳色 3 / 嘴型 3；人人戴电竞耳机（队色头梁，开罗式统一配件）。
 /// 同 id 永远同一张脸（多次导出/跨场景可对照）。
+/// AI 精修管线（§7）：精修图放 覆盖目录/{pid}.png 即自动替换程序化生成（宿主经 SetOverrideDir 注入；
+/// 缺目录/缺文件回退程序化——量产保底、精修可选，逐实例目检只覆盖小批量）。
 /// </summary>
 public static class AvatarFactory
 {
     public const int Size = 16;
+
+    private static string? _overrideDir;
+
+    /// <summary>精修头像覆盖目录注入点（宿主启动时调用一次；null = 无覆盖，全程序化）。</summary>
+    public static void SetOverrideDir(string? dir) => _overrideDir = dir;
 
     private static readonly string[] SkinTones = { "#f0c8a0", "#e0b088", "#c89068", "#a87050" };
     private static readonly string[] HairColors = { "#3a2a20", "#201810", "#604022", "#807060", "#282830", "#a05018" };
@@ -19,6 +28,12 @@ public static class AvatarFactory
 
     public static Texture2D Build(string pid)
     {
+        // AI 精修覆盖：覆盖目录存在 {pid}.png 时优先用（美术精修路径，小批量目检后入库）
+        if (_overrideDir != null)
+        {
+            string path = System.IO.Path.Combine(_overrideDir, pid + ".png");
+            if (File.Exists(path)) return ImageTexture.CreateFromImage(Image.LoadFromFile(path));
+        }
         uint h = Kairo.Core.Rng.HashString("avatar:" + pid);
         var skin = Color.FromHtml(SkinTones[h % SkinTones.Length]); h /= (uint)SkinTones.Length;
         var hair = Color.FromHtml(HairColors[h % HairColors.Length]); h /= (uint)HairColors.Length;
