@@ -269,10 +269,18 @@ public sealed class BaseLife
         for (int i = 0; i < pops.Count; i++)
         {
             var (pos, text, col) = pops[i];
+            bool isLevelUp = text.Contains("overall+");
             var label = new Label { Position = pos + new Vector2(-40, -34 - i * 2), Size = new Vector2(180, 24), Text = text };
             label.AddThemeFontOverride("font", _font);
             label.AddThemeFontSizeOverride("font_size", 16);
             label.Modulate = col;
+            // E1 开罗式强反馈：overall↑ 用红底白字「Level Up!」样式 + 黑描边（对照世界足球左上弹条）
+            if (isLevelUp)
+            {
+                label.AddThemeConstantOverride("outline_size", 5);
+                label.AddThemeColorOverride("font_outline_color", Color.FromHtml("#181826"));
+                label.AddThemeFontSizeOverride("font_size", 18);
+            }
             _host.AddChild(label);
             var tween = _host.CreateTween();
             tween.TweenProperty(label, "position:y", label.Position.Y - 30, 2.2).SetEase(Tween.EaseType.Out);

@@ -113,12 +113,23 @@ public partial class GrayBox : Node2D
 
     private void BuildStartMenu()
     {
-        var back = new ColorRect { Position = new Vector2(0, 0), Size = new Vector2(720, 1280), Color = Color.FromHtml("#0d141b") };
+        var back = new ColorRect { Position = new Vector2(0, 0), Size = new Vector2(720, 1280), Color = CairoTheme.BgDeep };
         AddChild(back);
         _menu.Add(back);
+        // A4 木纹看板（标题底衬，开罗标题惯例）
+        var board = new Panel { Position = new Vector2(60, 176), Size = new Vector2(600, 130) };
+        var woodStyle = new StyleBoxFlat { BgColor = Color.FromHtml("#6a4a32"), BorderColor = Color.FromHtml("#8a6a48") };
+        woodStyle.SetBorderWidthAll(3);
+        woodStyle.SetCornerRadiusAll(10);
+        board.AddThemeStyleboxOverride("panel", woodStyle);
+        AddChild(board);
+        _menu.Add(board);
         var title = new Label { Position = new Vector2(0, 200), Size = new Vector2(720, 90), Text = "VCT冠军经理", HorizontalAlignment = HorizontalAlignment.Center };
         title.AddThemeFontOverride("font", _font);
         title.AddThemeFontSizeOverride("font_size", 52);
+        title.AddThemeColorOverride("font_color", CairoTheme.AccentGold);
+        title.AddThemeConstantOverride("outline_size", 8);
+        title.AddThemeColorOverride("font_outline_color", CairoTheme.OutlineDark);
         AddChild(title);
         _menu.Add(title);
         var sub = new Label { Position = new Vector2(0, 292), Size = new Vector2(720, 40), Text = "—— 白手起家 · 基地从零到有 ——", HorizontalAlignment = HorizontalAlignment.Center };
@@ -150,7 +161,7 @@ public partial class GrayBox : Node2D
     {
         // 世界在 LoadWorld 时已生成；菜单重开循环内 _state 始终有效
         ClearNodeGroup(_takeoverMenu);
-        var back = new ColorRect { Position = new Vector2(0, 0), Size = new Vector2(720, 1280), Color = Color.FromHtml("#0d141b") };
+        var back = new ColorRect { Position = new Vector2(0, 0), Size = new Vector2(720, 1280), Color = CairoTheme.BgDeep };
         AddChild(back);
         _takeoverMenu.Add(back);
         var title = new Label { Position = new Vector2(0, 100), Size = new Vector2(720, 60), Text = "接管挑战者队（按预算升序）", HorizontalAlignment = HorizontalAlignment.Center };
@@ -227,7 +238,7 @@ public partial class GrayBox : Node2D
 
     private void BuildSaveMenu()
     {
-        var back = new ColorRect { Position = new Vector2(0, 0), Size = new Vector2(720, 1280), Color = Color.FromHtml("#0d141b") };
+        var back = new ColorRect { Position = new Vector2(0, 0), Size = new Vector2(720, 1280), Color = CairoTheme.BgDeep };
         AddChild(back);
         _saveMenu.Add(back);
         var title = new Label { Position = new Vector2(0, 140), Size = new Vector2(720, 70), Text = "存档管理", HorizontalAlignment = HorizontalAlignment.Center };
@@ -361,14 +372,14 @@ public partial class GrayBox : Node2D
         AddChild(_money);
 
         // 基地网格 4×4 底板
-        AddChild(new ColorRect { Position = new Vector2(GridX - 6, GridY - 6), Size = new Vector2(CellW * 4 + 18 * 4 + 12, CellH * 4 + 12 * 4 + 12), Color = Color.FromHtml("#20303c") });
+        AddChild(new ColorRect { Position = new Vector2(GridX - 6, GridY - 6), Size = new Vector2(CellW * 4 + 18 * 4 + 12, CellH * 4 + 12 * 4 + 12), Color = CairoTheme.GridBoard });
         for (int gy = 0; gy < 4; gy++)
         {
             for (int gx = 0; gx < 4; gx++)
             {
                 int x = GridX + gx * (CellW + 12);
                 int y = GridY + gy * (CellH + 12);
-                var rect = new ColorRect { Position = new Vector2(x, y), Size = new Vector2(CellW, CellH), Color = Color.FromHtml("#1a2630") };
+                var rect = new ColorRect { Position = new Vector2(x, y), Size = new Vector2(CellW, CellH), Color = CairoTheme.CellDefault };
                 AddChild(rect);
                 // D1 草地纹理（空地格铺草；设施建成后由设施色块覆盖）
                 _grassTex ??= BuildGrassTex();
@@ -415,7 +426,7 @@ public partial class GrayBox : Node2D
 
         // 设施详情面板（默认隐藏；点格子弹出——立项 §11-6：详情走点按面板，不依赖缩放）
         // B1 三段式：粉色标题条（对照开罗赞助窗 Sponsors 标题条）+ 内容区 + 底部按钮排
-        var back = new ColorRect { Position = new Vector2(20, 640), Size = new Vector2(680, 276), Color = Color.FromHtml("#101820ee") };
+        var back = new ColorRect { Position = new Vector2(20, 640), Size = new Vector2(680, 276), Color = CairoTheme.BgPanel };
         AddChild(back);
         _panel.Add(back);
         var titleBar = new ColorRect { Position = new Vector2(20, 640), Size = new Vector2(680, 44), Color = Color.FromHtml("#d05a8c") };
@@ -1235,21 +1246,21 @@ public partial class GrayBox : Node2D
                 _cellArtRects[i - 1].Visible = false;
                 if (!basePage)
                 {
-                    rect.Color = Color.FromHtml("#14202a");
+                    rect.Color = CairoTheme.CellLocked;
                     text.Text = "";
                     grass.Visible = false;
                     continue;
                 }
                 if (!byKey.TryGetValue(key, out var plot))
                 {
-                    rect.Color = Color.FromHtml("#14202a");
+                    rect.Color = CairoTheme.CellLocked;
                     text.Text = "";
                     grass.Visible = false;
                     continue;
                 }
                 if (plot.BuildingId == null)
                 {
-                    rect.Color = Color.FromHtml("#28394a");
+                    rect.Color = CairoTheme.CellEmpty;
                     text.Text = $"({gx},{gy}) 空地";
                     grass.Visible = true; // D1 草地纹理
                     continue;
@@ -1257,8 +1268,18 @@ public partial class GrayBox : Node2D
                 var def = BaseOps.Table.Facility(plot.BuildingId);
                 string name = def?.Name ?? plot.BuildingId;
                 string cat = def?.Cat ?? "";
+                // D3 施工中：黄黑斜纹脚手架底（格子变色 + 状态行带进度条字符）
+                if (plot.BuildRemainDays > 0)
+                {
+                    rect.Color = Color.FromHtml("#8a6a20");
+                    int totalDays = BaseOps.Table.Facility(plot.BuildingId!)!.BuildDays[Math.Clamp(plot.PendingLevel - 1, 0, 2)];
+                    int done = totalDays - plot.BuildRemainDays;
+                    int bars = Math.Clamp(done * 8 / Math.Max(1, totalDays), 0, 8);
+                    text.Text = $"{name}\n{'▮' * bars}{'▯' * (8 - bars)} {plot.BuildRemainDays}天";
+                    continue;
+                }
                 rect.Color = Color.FromHtml(CatColor.GetValueOrDefault(cat, "#3a4a5a"));
-                string status = plot.BuildRemainDays > 0 ? $"施工 {plot.BuildRemainDays}天" : $"{plot.Level}级";
+                string status = $"{plot.Level}级";
                 text.Text = $"{name} {'★' * plot.Level}\n{status}";
                 // D2 设施立面像素小图（右上角 32×32；缓存按设施+等级）
                 var artKey = (plot.BuildingId, plot.Level);
@@ -1342,6 +1363,48 @@ public partial class GrayBox : Node2D
     {
         if (_watchActive) WatchTick((float)delta);
         _life.Update(_state, (float)delta, pageVisible: _page == "base" && _state.Base != null && _state.MyTeamId != null);
+        UpdateMenuWalkers((float)delta);
+    }
+
+    // A4 开档菜单行走小人带（菜单可见时底部巡游——开罗标题惯例）
+    private readonly List<Sprite2D> _menuWalkers = new();
+    private List<Texture2D[]>? _walkerFrames;
+    private float _walkerT;
+    private bool _walkersBuilt;
+
+    private void UpdateMenuWalkers(float dt)
+    {
+        bool menuVisible = _menu.Count > 0 && _menu[0].Visible;
+        if (!menuVisible)
+        {
+            foreach (var w in _menuWalkers) w.Visible = false;
+            return;
+        }
+        if (!_walkersBuilt)
+        {
+            _walkersBuilt = true;
+            _walkerFrames = new List<Texture2D[]>();
+            for (int i = 0; i < 5; i++)
+            {
+                var pal = Kairo.M0.ChibiFactory.TeamPalette(i % 2 == 0, i / 2);
+                var frames = Kairo.M0.ChibiFactory.BuildFrames(pal);
+                _walkerFrames.Add(frames);
+                var s = new Sprite2D { Texture = frames[1], Scale = new Vector2(3, 3), Position = new Vector2(40 + i * 150, 1170) };
+                AddChild(s);
+                _menuWalkers.Add(s);
+            }
+        }
+        _walkerT += dt;
+        int frame = 1 + (int)(_walkerT * 5) % 2;
+        foreach (var w in _menuWalkers)
+        {
+            float x = w.Position.X + 60 * dt;
+            if (x > 760) x = -40;
+            w.Position = new Vector2(x, w.Position.Y);
+        }
+        if (_walkerFrames != null)
+            for (int i = 0; i < _menuWalkers.Count; i++)
+                _menuWalkers[i].Texture = _walkerFrames[i % 2][frame];
     }
 
     private void Log(string line)
