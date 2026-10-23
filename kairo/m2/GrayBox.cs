@@ -323,9 +323,22 @@ public partial class GrayBox : Node2D
         AddButton("选手", new Vector2(20, 1120), () => ShowPage("squad"));
         AddButton("市场", new Vector2(260, 1120), () => ShowPage("market"));
         AddButton("赞助", new Vector2(500, 1120), () => ShowPage("biz"));
-        // 行动按钮（基地页=推进/购地/建造/课表；选手页=选择/课表/续约/挂牌/解约；市场页=选择/出价/答复报价；赞助页=签赞助/接邀约）
-        _act1 = AddButton("推进 1 天", new Vector2(20, 1032), () => { if (_page == "market") SelectNextFree(); else if (_page == "squad" || _page == "biz") SelectNextSquad(); else Advance(1); });
-        _act2 = AddButton("推进 7 天", new Vector2(260, 1032), () => { if (_page == "market") SignFree(); else if (_page == "squad") CycleFocus(); else if (_page == "biz") SignSponsor(); else Advance(7); });
+        // 行动按钮（随页签切语义：基地=推进/购地/建造/课表；选手=选择/课表/续约/挂牌/解约；市场=选择/出价/答复；赞助=签/接；观赏=倍速/跳图）
+        _act1 = AddButton("推进 1 天", new Vector2(20, 1032), () =>
+        {
+            if (_page == "market") SelectNextFree();
+            else if (_page == "squad" || _page == "biz") SelectNextSquad();
+            else if (_page == "watch") { _watchSpeed = _watchSpeed switch { 1 => 4, 4 => 20, _ => 1 }; Log($"回放倍速 ×{_watchSpeed}"); }
+            else Advance(1);
+        });
+        _act2 = AddButton("推进 7 天", new Vector2(260, 1032), () =>
+        {
+            if (_page == "market") SignFree();
+            else if (_page == "squad") CycleFocus();
+            else if (_page == "biz") SignSponsor();
+            else if (_page == "watch") SkipToNextMap();
+            else Advance(7);
+        });
         _act3 = AddButton("推进 30 天", new Vector2(500, 1032), () => { if (_page == "market") RespondBid(true); else if (_page == "squad") RenewContract(); else if (_page == "biz") AcceptGigOne(); else Advance(30); });
         _act4 = AddButton("购地", new Vector2(20, 1120), () => { if (_page == "market") RespondBid(false); else if (_page == "squad") ToggleListed(); else BuyPlot(); });
         _act5 = AddButton("建射击房", new Vector2(260, 1120), () => { if (_page == "squad") ReleaseOne(); else BuildRange(); });
@@ -693,11 +706,13 @@ public partial class GrayBox : Node2D
         Log($"观赏：重放 {_watchTitle}，时间轴 {_stream.Count} 事件 / {_stream.Count} 条");
     }
 
+    private float _watchSpeed = 1f; // 回放倍速（1/4/20 循环切换；长回放可快进）
+
     /// <summary>观赏页时间轴推进（每帧）。</summary>
     private void WatchTick(float dt)
     {
         if (!_watchActive) return;
-        _watchT += dt;
+        _watchT += dt * _watchSpeed;
         while (_watchCursor < _stream.Count && _stream[_watchCursor].T <= _watchT)
         {
             ApplyWatchEvent(_stream[_watchCursor]);
@@ -975,6 +990,20 @@ public partial class GrayBox : Node2D
         Log($"全队 {n} 人课表 → 意识特训（周结算生效）");
     }
 
+    /// <summary>观赏页快进：消费时间轴至下一 map_end（含），比分板与回放游标同步。</summary>
+    private void SkipToNextMap()
+    {
+        if (!_watchActive) { Log("当前没有进行中的回放。"); return; }
+        while (_watchCursor < _stream.Count)
+        {
+            var e = _stream[_watchCursor];
+            ApplyWatchEvent(e);
+            _watchCursor++;
+            if (e.Kind == "map_end") break;
+        }
+        _watchT = _watchCursor < _stream.Count ? _stream[_watchCursor].T : _watchT;
+    }
+
     // ── 渲染 ──
 
     private static readonly Dictionary<string, string> CatColor = new()
@@ -1032,6 +1061,10 @@ public partial class GrayBox : Node2D
                 break;
             case "squad":
                 _act1.Text = "下一位"; _act2.Text = "课表"; _act3.Text = "续约"; _act4.Text = "挂牌"; _act5.Text = "解约"; _act6.Text = "—";
+                break;
+            case "watch":
+                _act1.Text = "倍速×" + (_watchSpeed switch { 1 => "1", 4 => "4", _ => "20" });
+                _act2.Text = "下一图 ▶"; _act3.Text = "—"; _act4.Text = "—"; _act5.Text = "—"; _act6.Text = "—";
                 break;
             default:
                 _act1.Text = "推进 1 天"; _act2.Text = "推进 7 天"; _act3.Text = "推进 30 天"; _act4.Text = "购地"; _act5.Text = "建射击房"; _act6.Text = "全队练意识";
