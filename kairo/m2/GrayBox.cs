@@ -20,6 +20,8 @@ public partial class GrayBox : Node2D
     private Label _log = null!;
     private readonly List<string> _logLines = new();
     private readonly List<(ColorRect Rect, Label Text)> _cells = new();
+    private readonly List<TextureRect> _cellArtRects = new();
+    private readonly Dictionary<(string, int), Texture2D> _cellArtTex = new();
 
     // 设施详情面板（点格子弹出）：容器节点集，Visible 切换
     private readonly List<CanvasItem> _panel = new();
@@ -367,6 +369,18 @@ public partial class GrayBox : Node2D
                 text.AddThemeFontOverride("font", _font);
                 text.AddThemeFontSizeOverride("font_size", 17);
                 AddChild(text);
+                // D2 设施立面小图（格右上角；TextureRect 常驻，Redraw 换纹理/显隐）
+                var art = new TextureRect
+                {
+                    Position = new Vector2(x + CellW - 38, y + 4),
+                    CustomMinimumSize = new Vector2(32, 32),
+                    ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+                    StretchMode = TextureRect.StretchModeEnum.KeepAspect,
+                    TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+                    Visible = false,
+                };
+                AddChild(art);
+                _cellArtRects.Add(art);
                 _cells.Add((rect, text));
             }
         }
@@ -383,21 +397,31 @@ public partial class GrayBox : Node2D
         AddChild(_pageView);
 
         // 设施详情面板（默认隐藏；点格子弹出——立项 §11-6：详情走点按面板，不依赖缩放）
+        // B1 三段式：粉色标题条（对照开罗赞助窗 Sponsors 标题条）+ 内容区 + 底部按钮排
         var back = new ColorRect { Position = new Vector2(20, 640), Size = new Vector2(680, 276), Color = Color.FromHtml("#101820ee") };
         AddChild(back);
         _panel.Add(back);
-        _panelInfo = new Label { Position = new Vector2(36, 650), Size = new Vector2(648, 90) };
+        var titleBar = new ColorRect { Position = new Vector2(20, 640), Size = new Vector2(680, 44), Color = Color.FromHtml("#d05a8c") };
+        AddChild(titleBar);
+        _panel.Add(titleBar);
+        var title = new Label { Position = new Vector2(36, 646), Size = new Vector2(648, 34), Text = "设施详情", HorizontalAlignment = HorizontalAlignment.Center };
+        title.AddThemeFontOverride("font", _font);
+        title.AddThemeFontSizeOverride("font_size", 20);
+        AddChild(title);
+        _panel.Add(title);
+        _panelInfo = new Label { Position = new Vector2(36, 692), Size = new Vector2(648, 90) };
         _panelInfo.AddThemeFontOverride("font", _font);
         _panelInfo.AddThemeFontSizeOverride("font_size", 18);
         AddChild(_panelInfo);
         _panel.Add(_panelInfo);
-        PanelButton("升级", new Vector2(36, 748), () => UpgradeAt(_selected!.Value.X, _selected!.Value.Y), isBuild: false);
-        PanelButton("拆除", new Vector2(216, 748), () => DemolishAt(_selected!.Value.X, _selected!.Value.Y), isBuild: false);
-        PanelButton("射击房", new Vector2(36, 748), () => BuildAt(_selected!.Value.X, _selected!.Value.Y, "range"));
-        PanelButton("商店", new Vector2(216, 748), () => BuildAt(_selected!.Value.X, _selected!.Value.Y, "shop"));
-        PanelButton("场馆", new Vector2(396, 748), () => BuildAt(_selected!.Value.X, _selected!.Value.Y, "arena"));
-        PanelButton("宿舍", new Vector2(556, 748), () => BuildAt(_selected!.Value.X, _selected!.Value.Y, "dorm"));
-        PanelButton("关闭", new Vector2(556, 838), () => { _selected = null; Redraw(); }, isBuild: false);
+        PanelButton("升级", new Vector2(36, 796), () => UpgradeAt(_selected!.Value.X, _selected!.Value.Y), isBuild: false);
+        PanelButton("拆除", new Vector2(216, 796), () => DemolishAt(_selected!.Value.X, _selected!.Value.Y), isBuild: false);
+        PanelButton("射击房", new Vector2(36, 796), () => BuildAt(_selected!.Value.X, _selected!.Value.Y, "range"));
+        PanelButton("商店", new Vector2(216, 796), () => BuildAt(_selected!.Value.X, _selected!.Value.Y, "shop"));
+        PanelButton("场馆", new Vector2(396, 796), () => BuildAt(_selected!.Value.X, _selected!.Value.Y, "arena"));
+        PanelButton("宿舍", new Vector2(556, 796), () => BuildAt(_selected!.Value.X, _selected!.Value.Y, "dorm"));
+        PanelButton("关闭", new Vector2(556, 852), () => { _selected = null; Redraw(); }, isBuild: false);
+        SetPanelVisible(false);
         SetPanelVisible(false);
 
         AddButton("推进 1 天", new Vector2(20, 1032), () => Advance(1));
@@ -1153,6 +1177,7 @@ public partial class GrayBox : Node2D
             {
                 var (rect, text) = _cells[i++];
                 string key = BaseState.KeyOf(gx, gy);
+                _cellArtRects[i - 1].Visible = false; // 默认隐藏：空地/未拥有格无设施图
                 if (!byKey.TryGetValue(key, out var plot))
                 {
                     rect.Color = Color.FromHtml("#14202a");
@@ -1170,7 +1195,14 @@ public partial class GrayBox : Node2D
                 string cat = def?.Cat ?? "";
                 rect.Color = Color.FromHtml(CatColor.GetValueOrDefault(cat, "#3a4a5a"));
                 string status = plot.BuildRemainDays > 0 ? $"施工 {plot.BuildRemainDays}天" : $"{plot.Level}级";
-                text.Text = $"{name}\n{status}";
+                text.Text = $"{name} {'★' * plot.Level}\n{status}";
+                // D2 设施立面像素小图（右上角 32×32；缓存按设施+等级）
+                var artKey = (plot.BuildingId, plot.Level);
+                if (!_cellArtTex.TryGetValue(artKey, out var tex))
+                    _cellArtTex[artKey] = tex = FacilityArtFactory.Build(plot.BuildingId, plot.Level);
+                var artRect = _cellArtRects[i - 1];
+                artRect.Texture = tex;
+                artRect.Visible = true;
             }
         }
         _log.Text = string.Join("\n", _logLines.TakeLast(12));

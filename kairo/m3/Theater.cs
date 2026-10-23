@@ -223,6 +223,64 @@ public partial class Theater : Node2D
         _mapCount = rec.Maps.Count;
         _mapLog.Clear();
         RefreshScore();
+        ShowVsBoard(rec);
+    }
+
+    /// <summary>
+    /// C1 赛前对阵板（对照开罗摔角 VS 板）：红蓝斜分割 + 金色 VS 徽章 + 双方队 Tag。
+    /// 开场显示 2.5s 后淡出（演出层纯表现）。
+    /// </summary>
+    private void ShowVsBoard(MatchRecord rec)
+    {
+        var board = new Control { Position = new Vector2(90, 480), Size = new Vector2(540, 220) };
+        // 红蓝斜分割底（多段色块近似斜线，像素风）
+        for (int s = 0; s < 10; s++)
+        {
+            float x = s * 54f;
+            bool red = s < 5;
+            board.AddChild(new ColorRect
+            {
+                Position = new Vector2(x, s % 2 == 0 ? 0 : 8),
+                Size = new Vector2(54, 220 - (s % 2 == 0 ? 0 : 16)),
+                Color = red ? Color.FromHtml("#b02020") : Color.FromHtml("#2050b0"),
+            });
+        }
+        var vs = new Label { Position = new Vector2(0, 70), Size = new Vector2(540, 80), Text = "VS", HorizontalAlignment = HorizontalAlignment.Center };
+        vs.AddThemeFontOverride("font", _font);
+        vs.AddThemeFontSizeOverride("font_size", 64);
+        vs.AddThemeColorOverride("font_color", Color.FromHtml("#ffd75e"));
+        vs.AddThemeConstantOverride("outline_size", 10);
+        vs.AddThemeColorOverride("font_outline_color", Color.FromHtml("#181826"));
+        board.AddChild(vs);
+        var tagA = new Label { Position = new Vector2(20, 30), Size = new Vector2(240, 40), Text = _tagA };
+        tagA.AddThemeFontOverride("font", _font);
+        tagA.AddThemeFontSizeOverride("font_size", 32);
+        board.AddChild(tagA);
+        var tagB = new Label { Position = new Vector2(280, 30), Size = new Vector2(240, 40), Text = _tagB, HorizontalAlignment = HorizontalAlignment.Right };
+        tagB.AddThemeFontOverride("font", _font);
+        tagB.AddThemeFontSizeOverride("font_size", 32);
+        board.AddChild(tagB);
+        // 双方首发 5 人名条
+        var names = rec.Maps.Count > 0 ? rec.Maps[0].Lines.Keys.Take(10).ToList() : new List<string>();
+        for (int k = 0; k < names.Count && k < 10; k++)
+        {
+            bool left = k < 5;
+            var n = new Label
+            {
+                Position = new Vector2(left ? 20 : 290, 150 + (k % 5) * 14),
+                Size = new Vector2(230, 14),
+                Text = _igns.GetValueOrDefault(names[k], names[k]),
+            };
+            n.AddThemeFontOverride("font", _font);
+            n.AddThemeFontSizeOverride("font_size", 12);
+            n.Modulate = new Color(1, 1, 1, 0.85f);
+            board.AddChild(n);
+        }
+        AddChild(board);
+        var tween = CreateTween();
+        tween.TweenInterval(2.5);
+        tween.TweenProperty(board, "modulate:a", 0f, 0.6);
+        tween.TweenCallback(Callable.From(board.QueueFree));
     }
 
     public override void _Process(double delta)
