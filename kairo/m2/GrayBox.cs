@@ -44,6 +44,9 @@ public partial class GrayBox : Node2D
         string dataDir = AssetBridge.ExportDataDir("res://Core.Data");
         Worldgen.LoadData(dataDir);
         BaseOps.DataDirOverride = dataDir;
+        // P1-2 AI 精修头像管线：user://avatars 存在即启用精修覆盖（缺目录回退程序化量产）
+        if (DirAccess.DirExistsAbsolute("user://avatars"))
+            Kairo.M2.AvatarFactory.SetOverrideDir(ProjectSettings.GlobalizePath("user://avatars"));
 
         _font = new SystemFont { FontNames = new[] { "Microsoft YaHei UI", "Microsoft YaHei", "sans-serif" } };
         _sharedFont = _font;
@@ -908,14 +911,16 @@ public partial class GrayBox : Node2D
         }
     }
 
-    /// <summary>赛程页：我的比赛前后 4 场 + 积分榜前 4（联赛主视角）。</summary>
+    /// <summary>赛程页：未来 6 场 + 已赛 6 场 + 我队实际联赛积分榜前 4（按 tier）。</summary>
     private string SchedulePageText()
     {
         var lines = new List<string>();
         var my = _state.MyTeamId!;
+        var myTeam = _state.Teams[my];
+        // 完整赛程浏览：未来 6 场（跨杯赛/联赛/国际赛）+ 已赛 6 场
         var upcoming = _state.Fixtures
             .Where(f => !f.Played && (f.TeamA == my || f.TeamB == my))
-            .OrderBy(f => f.Day).Take(4);
+            .OrderBy(f => f.Day).Take(6);
         foreach (var f in upcoming)
         {
             string home = f.TeamA == my ? "主" : "客";
@@ -924,20 +929,21 @@ public partial class GrayBox : Node2D
         }
         var past = _state.Fixtures
             .Where(f => f.Played && (f.TeamA == my || f.TeamB == my) && f.WinnerTeamId != null)
-            .OrderByDescending(f => f.Day).Take(4);
+            .OrderByDescending(f => f.Day).Take(6);
         foreach (var f in past)
         {
             bool won = f.WinnerTeamId == my;
-            lines.Add($"（{f.Day}日）{(won ? "胜" : "负")}｜{f.Label}");
+            lines.Add($"（D{f.Day}）{(won ? "✔" : "✘")}｜{f.Label}");
         }
-        // 我队所在挑战者联赛积分榜前 4
-        var compKey = $"stage2-{_state.Teams[my].RegionId}-t2";
+        // 我队实际所在联赛积分榜前 4（按 tier——晋级后自动切到 VCT 联赛榜）
+        var compKey = $"stage2-{(string.IsNullOrEmpty(myTeam.RegionId) ? "xia" : myTeam.RegionId)}-t{myTeam.Tier}";
         if (_state.Comps.TryGetValue(compKey, out var comp))
         {
             var table = comp.Standings.Values
                 .OrderByDescending(s => s.Pts).ThenByDescending(s => s.MapW - s.MapL)
                 .Take(4).ToList();
-            lines.Add("── 挑战者联赛积分 ──");
+            string leagueName = myTeam.Tier == 1 ? "VCT 联赛" : "挑战者联赛";
+            lines.Add($"── {leagueName}积分 ──");
             foreach (var s in table)
             {
                 string mark = s.TeamId == my ? "▶" : " ";
