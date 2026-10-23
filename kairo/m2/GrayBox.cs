@@ -246,6 +246,7 @@ public partial class GrayBox : Node2D
             SaveMenuButton("删除", new Vector2(360, 360 + i * 130), () => { SaveSystem.Delete(SaveDir, slot); RefreshSaveMenu(); Sfx.Play("save"); });
         }
         SaveMenuButton("返回", new Vector2(110, 700), () => { SetSaveMenuVisible(false); SetMenuVisible(true); });
+        SetSaveMenuVisible(false); // 默认隐藏：仅「存档管理」入口显示（否则启动即盖住开档菜单）
     }
 
     private void SaveMenuButton(string text, Vector2 pos, System.Action onClick)
@@ -443,10 +444,11 @@ public partial class GrayBox : Node2D
         AddButton("购地", new Vector2(20, 1120), BuyPlot);
         AddButton("建射击房", new Vector2(260, 1120), BuildRange);
         AddButton("全队练意识", new Vector2(500, 1120), TrainAwareness);
-        AddButton("基地", new Vector2(20, 1208), () => ShowPage("base"));
-        AddButton("观赏", new Vector2(160, 1208), () => ShowPage("watch"));
-        AddButton("赛程", new Vector2(300, 1208), () => ShowPage("schedule"));
-        AddButton("财务", new Vector2(500, 1208), () => ShowPage("finance"));
+        // 页签行均分 720px（4 页签 ×180，无重叠——此前财务 500-700 与菜单 560-760 重叠致误触重开）
+        AddButton("基地", new Vector2(10, 1208), () => ShowPage("base"));
+        AddButton("观赏", new Vector2(190, 1208), () => ShowPage("watch"));
+        AddButton("赛程", new Vector2(370, 1208), () => ShowPage("schedule"));
+        AddButton("财务", new Vector2(550, 1208), () => ShowPage("finance"));
         AddButton("选手", new Vector2(20, 1120), () => ShowPage("squad"));
         AddButton("市场", new Vector2(260, 1120), () => ShowPage("market"));
         AddButton("赞助", new Vector2(500, 1120), () => ShowPage("biz"));
@@ -470,7 +472,11 @@ public partial class GrayBox : Node2D
         _act4 = AddButton("购地", new Vector2(20, 1120), () => { if (_page == "market") RespondBid(false); else if (_page == "squad") ToggleListed(); else BuyPlot(); });
         _act5 = AddButton("建射击房", new Vector2(260, 1120), () => { if (_page == "squad") ReleaseOne(); else BuildRange(); });
         _act6 = AddButton("全队练意识", new Vector2(500, 1120), TrainAwareness);
-        _restartBtn = AddButton("菜单", new Vector2(560, 1208), () => { LoadWorld(); SetMenuVisible(true); });
+        // 「菜单」（重开回开档）移到 act6 行右端，避开页签行重叠区
+        // 「菜单」（重开回开档）缩为小钮放状态栏右上角空位（避开所有页签/行动钮；620,14 80x40 无碰撞）
+        _restartBtn = AddButton("菜单", new Vector2(630, 8), () => { LoadWorld(); SetMenuVisible(true); });
+        _restartBtn.Size = new Vector2(80, 40);
+        _restartBtn.AddThemeFontSizeOverride("font_size", 14);
         // 存档快捷钮（1-3：点按=保存；读档/删除走开档菜单「存档管理」）
         for (int i = 0; i < 3; i++)
         {
@@ -518,6 +524,15 @@ public partial class GrayBox : Node2D
         _page = page;
         _pageView.Visible = page != "base";
         _restartBtn.Visible = page == "base";
+        // 非 base 页隐藏基地网格层（草地/设施图/文字），避免与分页内容叠影
+        bool gridVisible = page == "base";
+        foreach (var (rect, text, grass) in _cells)
+        {
+            grass.Visible = gridVisible;
+            text.Visible = gridVisible;
+        }
+        foreach (var art in _cellArtRects) art.Visible = gridVisible;
+        _life.SetVisible(gridVisible);
         Redraw();
     }
 

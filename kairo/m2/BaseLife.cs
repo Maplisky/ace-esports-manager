@@ -94,6 +94,16 @@ public sealed class BaseLife
     };
 
     /// <summary>基地小人按课表分化就位（细化版）走位 + 气泡更新。</summary>
+    /// <summary>基地小人按课表分化就位（细化版）走位 + 气泡更新；SetVisible 控制基地页外隐藏。</summary>
+    public void SetVisible(bool visible)
+    {
+        foreach (var w in _workers)
+        {
+            w.Sprite.Visible = visible;
+            w.Bubble.Visible = visible;
+        }
+    }
+
     public void Update(GameState state, float dt, bool pageVisible)
     {
         _t += dt;
