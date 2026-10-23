@@ -1,5 +1,6 @@
 using Godot;
 using Kairo.Core;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -33,6 +34,8 @@ public partial class Theater : Node2D
     private readonly Queue<string> _mapLog = new();
     private bool _done;
     private int _mapCount;
+    /// <summary>回放倍速（1/4/20 循环；auto 审计恒 20 倍）。</summary>
+    private int _speed = 1;
 
     public override void _Ready()
     {
@@ -222,7 +225,8 @@ public partial class Theater : Node2D
     {
         // auto 审计加速播放（headless 无观感需求；24s/回合 × 56 回合 ≈ 800 实秒远超 CI 超时）
         var allArgs = OS.GetCmdlineArgs().Concat(OS.GetCmdlineUserArgs());
-        float dt = (float)delta * (allArgs.Any(a => a.Contains("watch-auto")) ? 20f : 1f);
+        bool auto = allArgs.Any(a => a.Contains("watch-auto"));
+        float dt = (float)delta * (auto ? 20f : _speed);
         _t += dt;
         while (_cursor < _stream.Count && _stream[_cursor].T <= _t)
         {
@@ -230,11 +234,11 @@ public partial class Theater : Node2D
             _cursor++;
         }
         foreach (var p in _players) p.Update(dt);
-        CrowdUpdate(dt);
+        CrowdUpdate(dt / Math.Max(1, _speed));
         for (int i = _feed.Count - 1; i >= 0; i--)
         {
             var (row, ttl) = _feed[i];
-            float left = ttl - dt;
+            float left = ttl - dt / Math.Max(1, _speed);
             if (left <= 0)
             {
                 row.QueueFree();
@@ -251,6 +255,33 @@ public partial class Theater : Node2D
             _done = true;
             OnPlaybackDone();
         }
+    }
+
+    /// <summary>键盘控制（M3 打磨）：Space=倍速 ×1→×4→×20 循环；→（右方向）=跳到下一图。</summary>
+    public override void _Input(InputEvent e)
+    {
+        if (e is InputEventKey { Pressed: true, Keycode: Key.Space })
+        {
+            _speed = _speed switch { 1 => 4, 4 => 20, _ => 1 };
+            Banner($"倍速 ×{_speed}", 1.0f);
+        }
+        else if (e is InputEventKey { Pressed: true, Keycode: Key.Right })
+        {
+            SkipToNextMap();
+        }
+    }
+
+    /// <summary>跳图：消费时间轴至下一 map_end（含），比分板与播报同步刷新。</summary>
+    private void SkipToNextMap()
+    {
+        while (_cursor < _stream.Count)
+        {
+            var e = _stream[_cursor];
+            Apply(e);
+            _cursor++;
+            if (e.Kind == "map_end") break;
+        }
+        RefreshScore();
     }
 
     private void Apply(ReplayEvent e)
