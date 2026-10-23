@@ -747,12 +747,17 @@ public partial class GrayBox : Node2D
                 victim.Dead = true;
                 if (e.A < 5) { _watchKillsA++; _watchAliveB--; } else { _watchKillsB++; _watchAliveA--; }
                 _watchActors[e.A].Flash();
+                Sfx.Play("kill");
                 break;
             case "round_win":
                 if (e.Side == "A") { _watchRoundA++; _watchAliveA = 5; _watchAliveB = 5; }
                 else { _watchRoundB++; _watchAliveA = 5; _watchAliveB = 5; }
                 for (int i = e.Side == "A" ? 0 : 5; i < (e.Side == "A" ? 5 : 10); i++) _watchActors[i].Cheer();
                 for (int i = e.Side == "A" ? 5 : 0; i < (e.Side == "A" ? 10 : 5); i++) _watchActors[i].Dead = false;
+                Sfx.Play("roundWin");
+                break;
+            case "ace":
+                Sfx.Play("cheer");
                 break;
             case "map_end":
                 foreach (var a in _watchActors) { a.Dead = false; a.Cheer(); }
