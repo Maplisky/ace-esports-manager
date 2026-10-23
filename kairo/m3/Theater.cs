@@ -384,6 +384,9 @@ public partial class Theater : Node2D
                 break;
             case "map_end":
                 Banner(e.Tag, 2.4f);
+                Kairo.M2.Sfx.Play("cheer");
+                // C4 结算窗：本图比分 + MVP（对照开罗电影上映 Next 窗）
+                ShowMapResult(e);
                 _killsA = _killsB = 0;
                 _mapLog.Clear();
                 _mapWin.Text = "";
@@ -429,6 +432,33 @@ public partial class Theater : Node2D
 
     private void RefreshScore() =>
         _score.Text = $"回合 {_tagA} {_roundA} - {_roundB} {_tagB}\n存活 {_tagA}×{_aliveA}  {_tagB}×{_aliveB}\n击杀 {_killsA} : {_killsB}";
+
+    /// <summary>C4 图末结算窗（对照开罗电影上映 Next 窗）：深蓝面板+比分大字，3s 自动淡出（演出层）。</summary>
+    private void ShowMapResult(ReplayEvent mapEndEvent)
+    {
+        var win = new Control { Position = new Vector2(110, 480), Size = new Vector2(500, 200) };
+        win.AddChild(new ColorRect { Position = Vector2.Zero, Size = new Vector2(500, 200), Color = Color.FromHtml("#0c2416ee") });
+        var head = new Label { Position = new Vector2(0, 12), Size = new Vector2(500, 36), Text = "本图结束", HorizontalAlignment = HorizontalAlignment.Center };
+        head.AddThemeFontOverride("font", _font);
+        head.AddThemeFontSizeOverride("font_size", 24);
+        win.AddChild(head);
+        var score = new Label { Position = new Vector2(0, 60), Size = new Vector2(500, 70), Text = mapEndEvent.Tag, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+        score.AddThemeFontOverride("font", _font);
+        score.AddThemeFontSizeOverride("font_size", 34);
+        score.AddThemeColorOverride("font_color", Color.FromHtml("#ffd75e"));
+        score.AddThemeConstantOverride("outline_size", 5);
+        score.AddThemeColorOverride("font_outline_color", Color.FromHtml("#181826"));
+        win.AddChild(score);
+        var next = new Label { Position = new Vector2(0, 150), Size = new Vector2(500, 30), Text = "Next ▶", HorizontalAlignment = HorizontalAlignment.Center };
+        next.AddThemeFontOverride("font", _font);
+        next.AddThemeFontSizeOverride("font_size", 20);
+        win.AddChild(next);
+        AddChild(win);
+        var tween = CreateTween();
+        tween.TweenInterval(2.4);
+        tween.TweenProperty(win, "modulate:a", 0f, 0.5);
+        tween.TweenCallback(Callable.From(win.QueueFree));
+    }
 
     private void OnPlaybackDone()
     {

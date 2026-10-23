@@ -29,6 +29,8 @@ public sealed class BaseLife
         public Vector2 WalkFrom;
         public float WalkT;
         public float WalkDur = 1.2f;
+        /// <summary>D4 课表气泡（头顶 8×8 像素图标，随 Focus 变化）。</summary>
+        public Sprite2D Bubble = null!;
     }
 
     private readonly Node2D _host;
@@ -48,6 +50,33 @@ public sealed class BaseLife
     private const int GridX = GrayBox.GridX;
     private const int GridY = GrayBox.GridY;
 
+    private readonly Dictionary<string, Texture2D> _bubbleCache = new();
+
+    /// <summary>D4 课表气泡：8×8 白底气泡 + 属性图标（枪=准星/床=Zzz…），同 key 缓存。</summary>
+    private Texture2D BubbleTex(string focus)
+    {
+        if (_bubbleCache.TryGetValue(focus, out var cached)) return cached;
+        var img = Godot.Image.CreateEmpty(8, 8, false, Godot.Image.Format.Rgba8);
+        var ink = Color.FromHtml("#181826");
+        var bg = Color.FromHtml("#f4f6f8");
+        for (int y = 0; y < 6; y++)
+            for (int x = 0; x < 8; x++)
+                img.SetPixel(x, y, bg);
+        img.SetPixel(2, 6, bg); img.SetPixel(3, 7, bg); // 气泡尾巴
+        // 图标（按课表画 2-4 px 特征）
+        switch (focus)
+        {
+            case "aim": img.SetPixel(4, 3, ink); img.SetPixel(3, 3, ink); img.SetPixel(5, 3, ink); img.SetPixel(4, 2, ink); break; // 靶心
+            case "reaction": img.SetPixel(3, 3, ink); img.SetPixel(4, 2, ink); img.SetPixel(4, 4, ink); img.SetPixel(5, 3, ink); break; // 闪电
+            case "awareness": img.SetPixel(4, 2, ink); img.SetPixel(3, 3, ink); img.SetPixel(4, 3, ink); img.SetPixel(5, 3, ink); img.SetPixel(4, 4, ink); break; // 眼
+            case "igl": img.SetPixel(4, 2, ink); img.SetPixel(4, 3, ink); img.SetPixel(3, 4, ink); img.SetPixel(5, 4, ink); break; // 旗
+            default: img.SetPixel(3, 3, ink); img.SetPixel(4, 3, ink); break; // 通用两点
+        }
+        var tex = Godot.ImageTexture.CreateFromImage(img);
+        _bubbleCache[focus] = tex;
+        return tex;
+    }
+
     /// <summary>格中心（与 Redraw 网格同公式）。</summary>
     public static Vector2 CellCenter(int gx, int gy) =>
         new(GridX + gx * (CellW + 12) + CellW / 2, GridY + gy * (CellH + 12) + CellH / 2);
@@ -62,7 +91,7 @@ public sealed class BaseLife
         _ => "",
     };
 
-    /// <summary>每帧：作业动画（漂移 + 呼吸帧；休息者慢节奏）与走位补间（walk 帧移动）。</summary>
+    /// <summary>每帧：作业动画（漂移 + 呼吸帧；休息者慢节奏）与走位补间（walk 帧移动）；气泡随小人移动。</summary>
     public void Update(GameState state, float dt, bool pageVisible)
     {
         _t += dt;
@@ -71,9 +100,12 @@ public sealed class BaseLife
             if (!pageVisible)
             {
                 w.Sprite.Visible = false;
+                w.Bubble.Visible = false;
                 continue;
             }
             w.Sprite.Visible = true;
+            w.Bubble.Visible = true;
+            Vector2 drift;
             if (w.Walking != null)
             {
                 // 走位补间：walk 循环帧 + 匀速直线，到达回作业态
@@ -81,13 +113,16 @@ public sealed class BaseLife
                 float k = Math.Clamp(w.WalkT / w.WalkDur, 0f, 1f);
                 w.Sprite.Position = w.WalkFrom.Lerp(w.Home, k);
                 w.Sprite.Texture = w.Frames[(int)(_t * 6) % 4]; // 走路循环帧 0-3
-                if (k >= 1) w.Walking = null;
-                continue;
+                drift = Vector2.Zero;
             }
-            double period = w.Focus == "rest" ? 1.2 : 3.0; // 休息者动作更慢
-            var drift = new Vector2(Mathf.Sin(_t * w.Speed + w.Phase) * 9f, Mathf.Cos(_t * w.Speed * 0.7f + w.Phase) * 5f);
-            w.Sprite.Position = w.Home + drift;
-            w.Sprite.Texture = w.Frames[1 + (int)(_t * period + w.Phase) % 3];
+            else
+            {
+                double period = w.Focus == "rest" ? 1.2 : 3.0; // 休息者动作更慢
+                drift = new Vector2(Mathf.Sin(_t * w.Speed + w.Phase) * 9f, Mathf.Cos(_t * w.Speed * 0.7f + w.Phase) * 5f);
+                w.Sprite.Position = w.Home + drift;
+                w.Sprite.Texture = w.Frames[1 + (int)(_t * period + w.Phase) % 3];
+            }
+            w.Bubble.Position = w.Sprite.Position + new Vector2(10, -26); // D4 头顶气泡随漂移
         }
     }
 
@@ -153,12 +188,15 @@ public sealed class BaseLife
             var frames = ChibiFactory.BuildFrames(pal);
             var sprite = new Sprite2D { Texture = frames[1], Scale = new Vector2(2.6f, 2.6f), Position = home };
             _host.AddChild(sprite);
+            var bubble = new Sprite2D { Texture = BubbleTex(pid), Scale = new Vector2(2, 2), Position = home + new Vector2(10, -26) };
+            _host.AddChild(bubble);
             _workers.Add(new Worker
             {
                 Sprite = sprite, Frames = frames, Home = home,
                 Phase = (float)(_rng.NextDouble() * Math.PI * 2), Speed = 0.9f + (float)_rng.NextDouble() * 0.5f,
                 PlayerId = pid,
                 Focus = state.Schedules.TryGetValue(pid, out var f2) ? f2 : "rest",
+                Bubble = bubble,
             });
         }
     }

@@ -19,9 +19,10 @@ public partial class GrayBox : Node2D
     private Label _money = null!;
     private Label _log = null!;
     private readonly List<string> _logLines = new();
-    private readonly List<(ColorRect Rect, Label Text)> _cells = new();
+    private readonly List<(ColorRect Rect, Label Text, TextureRect Grass)> _cells = new();
     private readonly List<TextureRect> _cellArtRects = new();
     private readonly Dictionary<(string, int), Texture2D> _cellArtTex = new();
+    private Texture2D? _grassTex; // D1 草地纹理（程序化生成一次）
 
     // 设施详情面板（点格子弹出）：容器节点集，Visible 切换
     private readonly List<CanvasItem> _panel = new();
@@ -365,6 +366,18 @@ public partial class GrayBox : Node2D
                 int y = GridY + gy * (CellH + 12);
                 var rect = new ColorRect { Position = new Vector2(x, y), Size = new Vector2(CellW, CellH), Color = Color.FromHtml("#1a2630") };
                 AddChild(rect);
+                // D1 草地纹理（空地格铺草；设施建成后由设施色块覆盖）
+                _grassTex ??= BuildGrassTex();
+                var grass = new TextureRect
+                {
+                    Position = new Vector2(x, y),
+                    Size = new Vector2(CellW, CellH),
+                    Texture = _grassTex,
+                    StretchMode = TextureRect.StretchModeEnum.Tile,
+                    TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+                    Visible = false,
+                };
+                AddChild(grass);
                 var text = new Label { Position = new Vector2(x + 6, y + 8), Size = new Vector2(CellW - 12, CellH - 16) };
                 text.AddThemeFontOverride("font", _font);
                 text.AddThemeFontSizeOverride("font_size", 17);
@@ -381,7 +394,7 @@ public partial class GrayBox : Node2D
                 };
                 AddChild(art);
                 _cellArtRects.Add(art);
-                _cells.Add((rect, text));
+                _cells.Add((rect, text, grass));
             }
         }
 
@@ -1158,6 +1171,26 @@ public partial class GrayBox : Node2D
         ["commerce"] = "#8a6d1f", ["support"] = "#4c5c8a",
     };
 
+    /// <summary>D1 草地纹理（64×64 程序化生成一次：深绿底 + 双色草点，整数像素风）。</summary>
+    private static Texture2D BuildGrassTex()
+    {
+        var img = Godot.Image.CreateEmpty(64, 64, false, Godot.Image.Format.Rgba8);
+        var baseC = Color.FromHtml("#2f4a2f");
+        var g1 = Color.FromHtml("#3a5a3a");
+        var g2 = Color.FromHtml("#26402b");
+        for (int y = 0; y < 64; y++)
+            for (int x = 0; x < 64; x++)
+                img.SetPixel(x, y, baseC);
+        var rng = new Random(4242);
+        for (int i = 0; i < 340; i++)
+        {
+            int x = rng.Next(64), y = rng.Next(64);
+            img.SetPixel(x, y, rng.Next(2) == 0 ? g1 : g2);
+            if (x < 63) img.SetPixel(x + 1, y, g2); // 双像素草叶
+        }
+        return Godot.ImageTexture.CreateFromImage(img);
+    }
+
     private void Redraw()
     {
         if (_state?.MyTeamId == null || _state.Base == null) return; // 开档菜单阶段：世界未定主队
@@ -1175,19 +1208,21 @@ public partial class GrayBox : Node2D
         {
             for (int gx = 0; gx < 4; gx++)
             {
-                var (rect, text) = _cells[i++];
+                var (rect, text, grass) = _cells[i++];
                 string key = BaseState.KeyOf(gx, gy);
                 _cellArtRects[i - 1].Visible = false; // 默认隐藏：空地/未拥有格无设施图
                 if (!byKey.TryGetValue(key, out var plot))
                 {
                     rect.Color = Color.FromHtml("#14202a");
                     text.Text = "";
+                    grass.Visible = false;
                     continue;
                 }
                 if (plot.BuildingId == null)
                 {
                     rect.Color = Color.FromHtml("#28394a");
                     text.Text = $"({gx},{gy}) 空地";
+                    grass.Visible = true; // D1 草地纹理
                     continue;
                 }
                 var def = BaseOps.Table.Facility(plot.BuildingId);
