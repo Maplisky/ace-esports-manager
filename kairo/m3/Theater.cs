@@ -100,6 +100,10 @@ public partial class Theater : Node2D
         _score = new Label { Position = new Vector2(24, 990), Size = new Vector2(672, 170) };
         _score.AddThemeFontOverride("font", _font);
         _score.AddThemeFontSizeOverride("font_size", 30);
+        // A3 关键数字强调：金色 + 黑描边（开罗惯例大数字）
+        _score.AddThemeColorOverride("font_color", Color.FromHtml("#ffd75e"));
+        _score.AddThemeConstantOverride("outline_size", 5);
+        _score.AddThemeColorOverride("font_outline_color", Color.FromHtml("#181826"));
         AddChild(_score);
 
         // 观众席（③ 场馆底部：按场馆容量比例点亮点阵——主场容量可视，主队得分时跳动）

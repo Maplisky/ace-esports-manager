@@ -16,6 +16,7 @@ public partial class GrayBox : Node2D
     private GameState _state = null!;
     private SystemFont _font = null!;
     private Label _top = null!;
+    private Label _money = null!;
     private Label _log = null!;
     private readonly List<string> _logLines = new();
     private readonly List<(ColorRect Rect, Label Text)> _cells = new();
@@ -42,6 +43,7 @@ public partial class GrayBox : Node2D
         BaseOps.DataDirOverride = dataDir;
 
         _font = new SystemFont { FontNames = new[] { "Microsoft YaHei UI", "Microsoft YaHei", "sans-serif" } };
+        _sharedFont = _font;
         Sfx.Init(this);
         _life = new BaseLife(this, _font);
         LoadWorld();
@@ -246,8 +248,7 @@ public partial class GrayBox : Node2D
     private void SaveMenuButton(string text, Vector2 pos, System.Action onClick)
     {
         var b = new Button { Position = pos, Size = new Vector2(150, 60), Text = text };
-        b.AddThemeFontOverride("font", _font);
-        b.AddThemeFontSizeOverride("font_size", 19);
+        ApplyCairoStyle(b, 19);
         b.Pressed += onClick;
         AddChild(b);
         _saveMenu.Add(b);
@@ -306,8 +307,7 @@ public partial class GrayBox : Node2D
     private void MenuButton(string text, int y, System.Action onClick)
     {
         var b = new Button { Position = new Vector2(110, y), Size = new Vector2(500, 80), Text = text };
-        b.AddThemeFontOverride("font", _font);
-        b.AddThemeFontSizeOverride("font_size", 20);
+        ApplyCairoStyle(b, 20);
         b.Pressed += onClick;
         AddChild(b);
         _menu.Add(b);
@@ -334,10 +334,24 @@ public partial class GrayBox : Node2D
 
     private void BuildUi()
     {
-        _top = new Label { Position = new Vector2(20, 14), Size = new Vector2(680, 88) };
+        _top = new Label { Position = new Vector2(20, 14), Size = new Vector2(560, 88) };
         _top.AddThemeFontOverride("font", _font);
         _top.AddThemeFontSizeOverride("font_size", 24);
         AddChild(_top);
+        // B3 资源条：资金独立右上（💰 金色大数字 + 黑描边——开罗惯例钱币常驻右上）
+        _money = new Label
+        {
+            Position = new Vector2(430, 14),
+            Size = new Vector2(270, 60),
+            Text = "💰 0K",
+            HorizontalAlignment = HorizontalAlignment.Right,
+        };
+        _money.AddThemeFontOverride("font", _font);
+        _money.AddThemeFontSizeOverride("font_size", 34);
+        _money.AddThemeColorOverride("font_color", Color.FromHtml("#ffd75e"));
+        _money.AddThemeConstantOverride("outline_size", 6);
+        _money.AddThemeColorOverride("font_outline_color", Color.FromHtml("#181826"));
+        AddChild(_money);
 
         // 基地网格 4×4 底板
         AddChild(new ColorRect { Position = new Vector2(GridX - 6, GridY - 6), Size = new Vector2(CellW * 4 + 18 * 4 + 12, CellH * 4 + 12 * 4 + 12), Color = Color.FromHtml("#20303c") });
@@ -908,8 +922,7 @@ public partial class GrayBox : Node2D
     private Button PanelButton(string text, Vector2 pos, System.Action onClick, bool isBuild = true)
     {
         var b = new Button { Position = pos, Size = new Vector2(150, 64), Text = text };
-        b.AddThemeFontOverride("font", _font);
-        b.AddThemeFontSizeOverride("font_size", 19);
+        ApplyCairoStyle(b, 19);
         b.Pressed += onClick;
         AddChild(b);
         _panel.Add(b);
@@ -966,12 +979,36 @@ public partial class GrayBox : Node2D
     private Button AddButton(string text, Vector2 pos, System.Action onClick)
     {
         var b = new Button { Position = pos, Size = new Vector2(200, 76), Text = text };
-        b.AddThemeFontOverride("font", _font);
-        b.AddThemeFontSizeOverride("font_size", 22);
+        ApplyCairoStyle(b, 22);
         b.Pressed += onClick;
         AddChild(b);
         return b;
     }
+
+    /// <summary>
+    /// 开罗式控件样式（ART-POLISH A2）：米色底 + 棕描边圆角，按下/悬停加深。
+    /// </summary>
+    internal static void ApplyCairoStyle(Button b, int fontSize)
+    {
+        b.AddThemeFontOverride("font", _sharedFont!);
+        b.AddThemeFontSizeOverride("font_size", fontSize);
+        var normal = new StyleBoxFlat { BgColor = Color.FromHtml("#f5e7c8"), BorderColor = Color.FromHtml("#8a5a2a") };
+        normal.SetBorderWidthAll(2);
+        normal.SetCornerRadiusAll(8);
+        normal.ContentMarginLeft = 8; normal.ContentMarginRight = 8;
+        var hover = (StyleBoxFlat)normal.Duplicate();
+        hover.BgColor = Color.FromHtml("#fdf2d8");
+        var pressed = (StyleBoxFlat)normal.Duplicate();
+        pressed.BgColor = Color.FromHtml("#e8cf9e");
+        b.AddThemeStyleboxOverride("normal", normal);
+        b.AddThemeStyleboxOverride("hover", hover);
+        b.AddThemeStyleboxOverride("pressed", pressed);
+        b.AddThemeColorOverride("font_color", Color.FromHtml("#3a2a18"));
+        b.AddThemeColorOverride("font_hover_color", Color.FromHtml("#3a2a18"));
+        b.AddThemeColorOverride("font_pressed_color", Color.FromHtml("#241809"));
+    }
+
+    internal static SystemFont? _sharedFont;
 
     // ── 操作 ──
 
@@ -1101,9 +1138,11 @@ public partial class GrayBox : Node2D
     {
         if (_state?.MyTeamId == null || _state.Base == null) return; // 开档菜单阶段：世界未定主队
         var myTeam = _state.Teams[_state.MyTeamId!];
-        _top.Text = $"Y{_state.Year} D{_state.Day} · {_state.Stage}｜${myTeam.Budget / 1000.0:F0}K｜信任 {_state.BoardConfidence}｜训练加成 +{myTeam.Facilities}";
+        _top.Text = $"Y{_state.Year} D{_state.Day} · {_state.Stage}｜信任 {_state.BoardConfidence}｜训练加成 +{myTeam.Facilities}";
         int cap = _state.Base != null ? BaseOps.Capacity(_state.Base) : 0;
         if (cap > 0) _top.Text += $"｜场馆 {cap} 座";
+        // B3 资源条：资金独立右上金色大数字（开罗惯例：钱币常驻右上）
+        _money.Text = $"💰 {myTeam.Budget / 1000.0:F0}K";
 
         var byKey = new Dictionary<string, PlotState>();
         foreach (var p in _state.Base!.Plots.Values) byKey[BaseState.KeyOf(p.X, p.Y)] = p;
