@@ -24,6 +24,11 @@ public sealed class BaseLife
         public float Speed;
         public string PlayerId = "";
         public string Focus = "rest";
+        /// <summary>走位补间：非 null 时向该点匀速移动（walk 帧），到达后回作业态。</summary>
+        public Vector2? Walking;
+        public Vector2 WalkFrom;
+        public float WalkT;
+        public float WalkDur = 1.2f;
     }
 
     private readonly Node2D _host;
@@ -57,7 +62,7 @@ public sealed class BaseLife
         _ => "",
     };
 
-    /// <summary>每帧：作业动画（漂移 + 呼吸帧；休息者在宿舍侧改为躺平慢帧节奏）。</summary>
+    /// <summary>每帧：作业动画（漂移 + 呼吸帧；休息者慢节奏）与走位补间（walk 帧移动）。</summary>
     public void Update(GameState state, float dt, bool pageVisible)
     {
         _t += dt;
@@ -69,6 +74,16 @@ public sealed class BaseLife
                 continue;
             }
             w.Sprite.Visible = true;
+            if (w.Walking != null)
+            {
+                // 走位补间：walk 循环帧 + 匀速直线，到达回作业态
+                w.WalkT += dt;
+                float k = Math.Clamp(w.WalkT / w.WalkDur, 0f, 1f);
+                w.Sprite.Position = w.WalkFrom.Lerp(w.Home, k);
+                w.Sprite.Texture = w.Frames[(int)(_t * 6) % 4]; // 走路循环帧 0-3
+                if (k >= 1) w.Walking = null;
+                continue;
+            }
             double period = w.Focus == "rest" ? 1.2 : 3.0; // 休息者动作更慢
             var drift = new Vector2(Mathf.Sin(_t * w.Speed + w.Phase) * 9f, Mathf.Cos(_t * w.Speed * 0.7f + w.Phase) * 5f);
             w.Sprite.Position = w.Home + drift;
@@ -77,43 +92,64 @@ public sealed class BaseLife
     }
 
     /// <summary>重建小人位（开档/购地/建造/课表变更后调用）：
-    /// 按课表类别把 roster 分配到设施格——同类别优先，容量每格 2 人，溢出落空地（画面边缘不露）。</summary>
+    /// 按**新课表**重算全员工位——已有小人保留 Sprite 走位补间（walk 帧移动到新工位），
+    /// 新增者直接落位，离队者移除。同类别优先，每格 2 工位，溢出落画面外集合。</summary>
     public void Rebuild(GameState state)
     {
-        foreach (var w in _workers) w.Sprite.QueueFree();
-        _workers.Clear();
         var myTeam = state.Teams[state.MyTeamId!];
         var occupied = new Dictionary<string, int>(); // plotKey → 已占位数（每格 2 工位）
         var built = state.Base!.Plots.Values.Where(p => p.BuildingId != null && p.Level >= 1).ToList();
-
-        Vector2 PlaceFor(string focus, out string plotKey)
-        {
-            // 1) 类别匹配设施（同类别有空位的格）
-            var cat = CategoryFor(focus);
-            var match = built.FirstOrDefault(p =>
-                BaseOps.Table.Facility(p.BuildingId!)?.Cat == CatTable(cat)
-                && occupied.GetValueOrDefault(Key(p)) < 2);
-            // 2) 任意建成设施有空位
-            var any = built.FirstOrDefault(p => occupied.GetValueOrDefault(Key(p)) < 2);
-            var plot = match ?? any;
-            if (plot == null) { plotKey = ""; return CellCenter(0, 0) + new Vector2(-200, 80); } // 画面外集合（不露脸）
-            string key = Key(plot);
-            occupied[key] = occupied.GetValueOrDefault(key) + 1;
-            plotKey = key;
-            int nth = occupied[key] - 1;
-            return CellCenter(plot.X, plot.Y) + new Vector2(nth == 0 ? -16 : 16, (nth % 2 == 0 ? -6 : 10));
-        }
         static string Key(PlotState p) => BaseState.KeyOf(p.X, p.Y);
 
+        // 目标工位表：pid → Home（按新分配计算）
+        var targets = new Dictionary<string, Vector2>();
         int i = 0;
         foreach (var pid in myTeam.Roster)
         {
             if (!state.Players.TryGetValue(pid, out var p)) continue;
             var focus = state.Schedules.TryGetValue(pid, out var f) ? f : "rest";
-            var home = PlaceFor(focus, out _);
-            if (occupied.Values.Sum() >= built.Count * 2 + 6) { /* 满员溢出保护 */ }
+            var cat = CategoryFor(focus);
+            var match = built.FirstOrDefault(pl =>
+                BaseOps.Table.Facility(pl.BuildingId!)?.Cat == CatTable(cat)
+                && occupied.GetValueOrDefault(Key(pl)) < 2);
+            var any = built.FirstOrDefault(pl => occupied.GetValueOrDefault(Key(pl)) < 2);
+            var plot = match ?? any;
+            if (plot == null) { targets[pid] = CellCenter(0, 0) + new Vector2(-200, 80); continue; }
+            string key = Key(plot);
+            occupied[key] = occupied.GetValueOrDefault(key) + 1;
+            int nth = occupied[key] - 1;
+            targets[pid] = CellCenter(plot.X, plot.Y) + new Vector2(nth == 0 ? -16 : 16, (nth % 2 == 0 ? -6 : 10));
             i++;
-            var pal = ChibiFactory.PlayerPalette(pid, shirtShade: i - 1); // pid 确定性换装（M3 扩容）
+        }
+
+        // ① 更新/保留已有小人（目标变 → 走位补间；pi 变 → 换装帧）
+        var retired = new List<Worker>();
+        foreach (var w in _workers)
+        {
+            if (targets.TryGetValue(w.PlayerId, out var home))
+            {
+                w.Focus = state.Schedules.TryGetValue(w.PlayerId, out var f) ? f : "rest";
+                if ((w.Home - home).LengthSquared() > 1)
+                {
+                    w.WalkFrom = w.Sprite.Position;
+                    w.Home = home;
+                    w.WalkT = 0;
+                    w.Walking = home;
+                }
+                targets.Remove(w.PlayerId);
+            }
+            else retired.Add(w);
+        }
+        foreach (var w in retired)
+        {
+            w.Sprite.QueueFree();
+            _workers.Remove(w);
+        }
+        // ② 新增小人（直接落位）
+        foreach (var (pid, home) in targets)
+        {
+            var pal = ChibiFactory.PlayerPalette(pid, shirtShade: i - 1);
+            i++;
             var frames = ChibiFactory.BuildFrames(pal);
             var sprite = new Sprite2D { Texture = frames[1], Scale = new Vector2(2.6f, 2.6f), Position = home };
             _host.AddChild(sprite);
@@ -121,7 +157,8 @@ public sealed class BaseLife
             {
                 Sprite = sprite, Frames = frames, Home = home,
                 Phase = (float)(_rng.NextDouble() * Math.PI * 2), Speed = 0.9f + (float)_rng.NextDouble() * 0.5f,
-                PlayerId = pid, Focus = focus,
+                PlayerId = pid,
+                Focus = state.Schedules.TryGetValue(pid, out var f2) ? f2 : "rest",
             });
         }
     }

@@ -891,6 +891,12 @@ public partial class GrayBox : Node2D
         if (_state.Base!.Plots.Values.Count(p => p.Level > 0 && p.BuildRemainDays <= 0) > readyBefore) Sfx.Play("levelUp");
         if (_page == "base" || _page == "squad") _life.ShowGrowth(_state, before); // 开罗式成长弹字
         _life.Rebuild(_state); // 施工落成/阵容变动 → 小人重新就位
+        // 比赛日联动：今天有我的比赛打完 → 提示去观赏页（开罗式「事件发生」轻引导）
+        if (r.PlayedMine.Count > 0)
+        {
+            Sfx.Play("cheer");
+            Log($"⚖ 今日 {r.PlayedMine.Count} 场比赛完赛——「观赏」页签可回放。");
+        }
         Redraw();
     }
 
