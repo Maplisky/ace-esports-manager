@@ -31,6 +31,8 @@ public sealed class BaseLife
         public float WalkDur = 1.2f;
         /// <summary>D4 课表气泡（头顶 8×8 像素图标，随 Focus 变化）。</summary>
         public Sprite2D Bubble = null!;
+        /// <summary>场景气泡剩余显示时间（>0 可见，归零隐藏）。</summary>
+        public float BubbleTtl;
     }
 
     private readonly Node2D _host;
@@ -91,7 +93,7 @@ public sealed class BaseLife
         _ => "",
     };
 
-    /// <summary>每帧：作业动画（漂移 + 呼吸帧；休息者慢节奏）与走位补间（walk 帧移动）；气泡随小人移动。</summary>
+    /// <summary>基地小人按课表分化就位（细化版）走位 + 气泡更新。</summary>
     public void Update(GameState state, float dt, bool pageVisible)
     {
         _t += dt;
@@ -123,6 +125,11 @@ public sealed class BaseLife
                 w.Sprite.Texture = w.Frames[1 + (int)(_t * period + w.Phase) % 3];
             }
             w.Bubble.Position = w.Sprite.Position + new Vector2(10, -26); // D4 头顶气泡随漂移
+            if (w.BubbleTtl > 0)
+            {
+                w.BubbleTtl -= dt;
+                if (w.BubbleTtl <= 0) w.Bubble.Visible = false;
+            }
         }
     }
 
@@ -188,7 +195,7 @@ public sealed class BaseLife
             var frames = ChibiFactory.BuildFrames(pal);
             var sprite = new Sprite2D { Texture = frames[1], Scale = new Vector2(2.6f, 2.6f), Position = home };
             _host.AddChild(sprite);
-            var bubble = new Sprite2D { Texture = BubbleTex(pid), Scale = new Vector2(2, 2), Position = home + new Vector2(10, -26) };
+            var bubble = new Sprite2D { Texture = BubbleTex(state.Schedules.TryGetValue(pid, out var f3) ? f3 : "rest"), Scale = new Vector2(2, 2), Position = home + new Vector2(10, -26) };
             _host.AddChild(bubble);
             _workers.Add(new Worker
             {
@@ -210,6 +217,22 @@ public sealed class BaseLife
         "dorm" => "rest",
         _ => "",
     };
+
+    /// <summary>E2 场景气泡：确定性轮换让 2 个小人头顶冒课表气泡 4 秒（对照开罗 Practice time! 气泡；演出非随机源）。</summary>
+    public void ShowSceneBubbles(GameState state, int day)
+    {
+        var visible = _workers.Where(w => !w.Bubble.Visible).ToList();
+        if (visible.Count == 0) return;
+        // 确定性轮换：day 作为相位，避免每次同批人
+        int start = day % visible.Count;
+        int count = Math.Min(2, visible.Count);
+        for (int i = 0; i < count; i++)
+        {
+            var w = visible[(start + i) % visible.Count];
+            w.Bubble.Visible = true;
+            w.BubbleTtl = 4f;
+        }
+    }
 
     /// <summary>周结算成长弹字：overall↑ 金色 / 经验青色，在人头顶上飘；上限 6 条。</summary>
     public void ShowGrowth(GameState state, Dictionary<string, (double Xp, int Overall)> before)

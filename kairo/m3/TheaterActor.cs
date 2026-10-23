@@ -13,6 +13,13 @@ public sealed class Actor
     private float _cheerTtl;
     private bool _dead;
     private float _flash;
+    private bool _walker;
+    private float _walkSpeed;
+    private float _anim;
+
+    public bool Dead => _dead;
+
+    public Vector2 Position => _sprite != null ? _sprite.Position : Vector2.Zero;
 
     public void Init(Node2D host, bool sideA, int k)
     {
@@ -27,6 +34,29 @@ public sealed class Actor
         host.AddChild(new ColorRect { Position = new Vector2(x - 12, y + 18), Size = new Vector2(26, 16), Color = Color.FromHtml("#3a4152") });
         host.AddChild(new ColorRect { Position = new Vector2(x - 8, y + 21), Size = new Vector2(18, 10), Color = Color.FromHtml("#7fd4c8") });
         host.AddChild(new ColorRect { Position = new Vector2(x - 30, y + 38), Size = new Vector2(64, 14), Color = Color.FromHtml("#6b4a32") });
+    }
+
+    /// <summary>C2 走路带变体：小尺寸 + 横向环绕行走（到边折返）。speed 单位 px/s。</summary>
+    public void InitWalker(Node2D host, int k, float y, float speed)
+    {
+        var pal = ChibiFactory.TeamPalette(k % 2 == 0, k / 2);
+        _frames = ChibiFactory.BuildFrames(pal);
+        _home = new Vector2(30 + k * 20, y);
+        _sprite = new Sprite2D { Texture = _frames[1], Scale = new Vector2(3, 3), Position = _home, FlipH = true };
+        _walkSpeed = speed;
+        _walker = true;
+        host.AddChild(_sprite);
+    }
+
+    /// <summary>走路带推进（InitWalker 场景专用）：横走到边折返（FlipH 转向）。</summary>
+    public void WalkStep(float dt)
+    {
+        if (!_walker || _dead) return;
+        float x = _sprite.Position.X + _walkSpeed * dt;
+        if (x > 690) { x = 30; _sprite.Position = new Vector2(x, _sprite.Position.Y); }
+        _sprite.Position = new Vector2(x, _sprite.Position.Y);
+        _sprite.Texture = _frames[1 + (int)(_anim * 8) % 2];
+        _anim += dt;
     }
 
     public void Die()
@@ -48,6 +78,7 @@ public sealed class Actor
     public void Update(float dt)
     {
         _t += dt;
+        if (_walker) { WalkStep(dt); return; } // 走路带模式：横走循环
         if (_flash > 0)
         {
             _flash -= dt;

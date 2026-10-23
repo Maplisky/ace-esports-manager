@@ -69,6 +69,7 @@ public static class Sfx
             case "sign": tone = TwoTone(659, 880, 0.08); break;             // 签约：笔尖落纸双音
             case "title": tone = Fanfare(); break;                          // 夺冠：号角式三连升
             case "prize": tone = Arp(new double[] { 659, 784 }, 0.06); break; // 名次奖：短双音
+            case "fail": tone = Sweep(200, 80, 0.28, 1.1); break;           // 失败：低音下扫
             default: tone = Blip(440, 0.06, 0.3); break;
         }
         var wav = new AudioStreamWav

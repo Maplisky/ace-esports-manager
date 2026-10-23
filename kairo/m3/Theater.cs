@@ -34,6 +34,8 @@ public partial class Theater : Node2D
     private readonly Queue<string> _mapLog = new();
     private bool _done;
     private int _mapCount;
+    private readonly List<Actor> _walkers = new();
+    private Label _seasonLabel = null!;
     /// <summary>回放倍速（1/4/20 循环；auto 审计恒 20 倍）。</summary>
     private int _speed = 1;
 
@@ -82,6 +84,19 @@ public partial class Theater : Node2D
             };
             AddChild(dot);
         }
+
+        // C2 赛季小人带：5 小人匀速行走 + 赛季进度提示（对照开罗 @goal 巡游条）
+        for (int i = 0; i < 5; i++)
+        {
+            var walker = new Actor();
+            walker.InitWalker(this, i, 300 + (i % 2) * 22, 26f + i * 3);
+            _walkers.Add(walker);
+        }
+        _seasonLabel = new Label { Position = new Vector2(470, 288), Size = new Vector2(230, 30) };
+        _seasonLabel.AddThemeFontOverride("font", _font);
+        _seasonLabel.AddThemeFontSizeOverride("font_size", 16);
+        _seasonLabel.Modulate = new Color(1, 1, 1, 0.8f);
+        AddChild(_seasonLabel);
 
         // ③ 场馆双方选手（真实 roster 名）
         for (int i = 0; i < 10; i++)
@@ -296,6 +311,7 @@ public partial class Theater : Node2D
             _cursor++;
         }
         foreach (var p in _players) p.Update(dt);
+        foreach (var w in _walkers) w.Update(dt);
         CrowdUpdate(dt / Math.Max(1, _speed));
         for (int i = _feed.Count - 1; i >= 0; i--)
         {
