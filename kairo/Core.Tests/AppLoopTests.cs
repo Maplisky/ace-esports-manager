@@ -75,14 +75,12 @@ public sealed class AppLoopTests
         AppLoop.Advance(state, 10);
         Assert.Equal(1, b.Plots[BaseState.KeyOf(0, 0)].Level);
         // 联赛首轮 day 55，我的主场（worldgen 排期 KRÜ 为 teamA）
-        double budgetBefore = myTeam.Budget;
         var r = AppLoop.Advance(state, 50); // 推进到首轮之后
         Assert.Equal(800, BaseOps.Capacity(b));
         // 首轮主场票房已入账（财务流水锚定，金额=容量×票价 35）
         var ticketEntry = state.Finances.Log.FirstOrDefault(e => e.Label.StartsWith("门票"));
         Assert.NotNull(ticketEntry);
         Assert.Equal(800 * 35, ticketEntry!.Amount);
-        _ = budgetBefore;
         Assert.True(r.Notes.Count > 0);
     }
 
@@ -135,7 +133,7 @@ public sealed class AppLoopTests
         // 世界中存在 ≥29 岁 AI 选手 → 检定必有退役流（留档/劝留卡/续约新闻至少其一）
         Assert.True(state.RetireLog.Count > 0 || state.PendingEvents.Any(e => e.CardId == "retire"),
             "赛季末退役检定未触发");
-        _ = r;
+        Assert.DoesNotContain(r.Notes, n => n.Contains("DEBUG"));
     }
 
     [Fact]
