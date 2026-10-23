@@ -136,6 +136,7 @@ public partial class GrayBox : Node2D
     // ── (b) 接管模式挑队列表：全部 t2 队按预算升序（弱旅在前），点选即开档 ──
 
     private readonly List<CanvasItem> _takeoverMenu = new();
+    private LineEdit _renameInput = null!;
 
     private void OpenTakeoverMenu()
     {
@@ -149,32 +150,46 @@ public partial class GrayBox : Node2D
         title.AddThemeFontSizeOverride("font_size", 30);
         AddChild(title);
         _takeoverMenu.Add(title);
+        // 改名输入框（本菜单专属；留空 = 保留原队名——开档菜单的默认值「我的战队」不适用于接管）
+        _renameInput = new LineEdit { Position = new Vector2(110, 174), Size = new Vector2(500, 56), PlaceholderText = "新队名（留空保留原名）" };
+        _renameInput.AddThemeFontOverride("font", _font);
+        _renameInput.AddThemeFontSizeOverride("font_size", 20);
+        AddChild(_renameInput);
+        _takeoverMenu.Add(_renameInput);
 
         var t2 = _state.Teams.Values.Where(t => t.Tier == 2)
             .OrderBy(t => t.Budget).ThenBy(t => t.Id, StringComparer.Ordinal).ToList();
+        // 两列布局（15 队单列 1374px 溢出 1280 屏；两列 8 行 = 828px 安全）
         for (int i = 0; i < t2.Count; i++)
         {
             var t = t2[i];
             var overall = (int)Math.Round(t.Roster.Where(id => _state.Players.ContainsKey(id))
                 .Select(id => _state.Players[id].Overall).DefaultIfEmpty(0).Average());
+            int col = i % 2, row = i / 2;
             var b = new Button
             {
-                Position = new Vector2(60, 180 + i * 74),
-                Size = new Vector2(600, 64),
-                Text = $"{t.Name}｜${t.Budget / 1000.0:F0}K｜均 overall {overall}",
+                Position = new Vector2(30 + col * 330, 250 + row * 74),
+                Size = new Vector2(320, 64),
+                Text = $"{t.Name}\n${t.Budget / 1000.0:F0}K · 均{overall}",
             };
             b.AddThemeFontOverride("font", _font);
-            b.AddThemeFontSizeOverride("font_size", 18);
+            b.AddThemeFontSizeOverride("font_size", 16);
             var captured = t.Id;
             b.Pressed += () =>
             {
-                var name = _nameInput.Text.Length > 0 ? _nameInput.Text : t.Name; // 输入框为空则保留原名
+                var name = _renameInput.Text.Length > 0 ? _renameInput.Text : t.Name; // 留空保留原名
                 DoStart(new StartConfig { Mode = StartMode.Takeover, TeamName = name, TakeoverTeamId = captured });
             };
             AddChild(b);
             _takeoverMenu.Add(b);
         }
-        var backButton = new Button { Position = new Vector2(260, 180 + t2.Count * 74 + 20), Size = new Vector2(200, 64), Text = "返回" };
+        int bottomY = 250 + ((t2.Count + 1) / 2) * 74 + 16;
+        var hint = new Label { Position = new Vector2(30, bottomY), Size = new Vector2(660, 30), Text = "提示：改名可在上方输入新队名（留空保留原名）", Modulate = new Color(1, 1, 1, 0.6f) };
+        hint.AddThemeFontOverride("font", _font);
+        hint.AddThemeFontSizeOverride("font_size", 15);
+        AddChild(hint);
+        _takeoverMenu.Add(hint);
+        var backButton = new Button { Position = new Vector2(260, bottomY + 40), Size = new Vector2(200, 64), Text = "返回" };
         backButton.AddThemeFontOverride("font", _font);
         backButton.AddThemeFontSizeOverride("font_size", 20);
         backButton.Pressed += () => { SetTakeoverMenuVisible(false); SetMenuVisible(true); };
